@@ -1,0 +1,49 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the Falcon package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Falcon\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-03-18 18:49+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: app.py:38
+msgid "終了"
+msgstr ""
+
+#: app.py:40 app.py:66
+msgid "バージョン情報"
+msgstr ""
+
+#: app.py:43
+msgid "ファイル"
+msgstr ""
+
+#: app.py:44
+msgid "ヘルプ"
+msgstr ""
+
+#: app.py:57
+msgid "エラー"
+msgstr ""
+
+#: app.py:57
+msgid "操作が定義されていないメニューです。"
+msgstr ""
+
+#: app.py:66
+#, python-format
+msgid ""
+"%(app)s Version %(ver)s.\n"
+"Copyright (C) %(year)s %(names)s"
+msgstr ""

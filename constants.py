@@ -1,0 +1,18 @@
+# -*- coding: utf-8 -*-
+#Filer constant values and strings
+#Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Note: All comments except these top lines will be written in Japanese. 
+
+APP_NAME="Falcon Test"
+APP_VERSION="0.01"
+APP_COPYRIGHT_YEAR="2019"
+APP_DEVELOPERS="Yukio Nozawa and Yuki Kochi"
+
+SETTING_FILE_NAME="settings.ini"
+
+APP_WINDOW_SIZE_X=1200
+APP_WINDOW_SIZE_Y=800
+
+MENUITEM_FILE_EXIT=30
+MENUITEM_HELP_VERINFO=31
+

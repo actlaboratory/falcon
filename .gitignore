@@ -1,0 +1,5 @@
+*.pyc
+*.log
+data/options.dat
+__pycache__
+settings.ini
