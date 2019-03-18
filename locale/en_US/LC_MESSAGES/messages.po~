@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Falcon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-18 22:25+0900\n"
+"POT-Creation-Date: 2019-03-18 18:49+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,53 +17,33 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: app.py:54
+#: app.py:38
 msgid "終了"
-msgstr ""
+msgstr "Exit"
 
-#: app.py:56 app.py:111
+#: app.py:40 app.py:66
 msgid "バージョン情報"
-msgstr ""
+msgstr "Version info"
 
-#: app.py:59
+#: app.py:43
 msgid "ファイル"
-msgstr ""
+msgstr "File"
 
-#: app.py:60
+#: app.py:44
 msgid "ヘルプ"
-msgstr ""
+msgstr "Help"
 
-#: app.py:102
+#: app.py:57
 msgid "エラー"
-msgstr ""
+msgstr "Error"
 
-#: app.py:102
+#: app.py:57
 msgid "操作が定義されていないメニューです。"
-msgstr ""
+msgstr "Controls undefined for this menu."
 
-#: app.py:111
+#: app.py:66
 #, python-format
 msgid ""
 "%(app)s Version %(ver)s.\n"
 "Copyright (C) %(year)s %(names)s"
-msgstr ""
-
-#: tabObjects.py:37
-msgid "ファイル名"
-msgstr ""
-
-#: tabObjects.py:37
-msgid "サイズ"
-msgstr ""
-
-#: tabObjects.py:37
-msgid "更新"
-msgstr ""
-
-#: tabObjects.py:37
-msgid "属性"
-msgstr ""
-
-#: tabObjects.py:37
-msgid "種類"
 msgstr ""

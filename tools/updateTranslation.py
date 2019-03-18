@@ -22,12 +22,17 @@ print("Detected languages:")
 for l in langs:
 	print(l)
 
+files=glob.glob("*.py")
+print("Detected files:")
+for f in files:
+	print(f)
+
 print("Updating the base dictionary(pot)")
-subprocess.call("xgettext.exe -p locale --from-code utf-8 --package-name Falcon app.py".split())
+subprocess.call(("tools\\xgettext.exe -p locale --from-code utf-8 --package-name=Falcon %s" % (" ".join(files))).split())
 for l in langs:
 	if os.path.exists("locale/%s/LC_MESSAGES/messages.po" % (l)):
 		print("Merging %s" % l)
-		subprocess.call("msgmerge.exe locale/%s/LC_MESSAGES/messages.po locale/messages.po" % l.split())
+		subprocess.call(("tools\\msgmerge.exe -U locale/%s/LC_MESSAGES/messages.po locale/messages.po" % (l)).split())
 	else:
 		print("Creating %s" % l)
 		if not os.path.exists("locale/%s/LC_MESSAGES" % l):
