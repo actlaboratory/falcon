@@ -83,7 +83,7 @@ class falconAppMain(wx.App):
 		"""リストコントロールを設定する。"""
 		#パネルには複数のコントロールを設置できる。
 		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0, 0), size=(1000, 400))
-		self.hListCtrl=wx.ListCtrl(self.hListPanel, wx.ID_ANY, style=wx.LC_REPORT)
+		self.hListCtrl=wx.ListCtrl(self.hListPanel, wx.ID_ANY, style=wx.LC_REPORT,size=(1000,400))
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
