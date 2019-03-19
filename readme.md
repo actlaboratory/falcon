@@ -6,7 +6,19 @@ python:python 3.7
 python -m pip install wxpython  
 
 ## Às  
-python fal.py  
+python falcon.py  
+
+## exeƒtƒ@ƒCƒ‹‚Ìƒrƒ‹ƒh  
+64-bit ƒo[ƒWƒ‡ƒ“‚Ìƒrƒ‹ƒh•û–@‚Å‚·B32ƒrƒbƒg‚Åƒrƒ‹ƒh‚µ‚½‚¢l‚Í“K“–‚ÉB  
+MinGW‚ÌCƒRƒ“ƒpƒCƒ‰‚ğƒ_ƒEƒ“ƒ[ƒh ( https://sourceforge.net/projects/mingw-w64/ )  
+ƒCƒ“ƒXƒg[ƒ‹æ‚ğ C:\MinGW64 ‚Æ“ü—Í‚µ‚ÄƒCƒ“ƒXƒg[ƒ‹  
+ƒVƒXƒeƒ€ŠÂ‹«•Ï”‚Ì path ‚É C:\MinGW64\mingw64\bin ‚ğ’Ç‰Á
+gcc --version ‚Å‚¿‚á‚ñ‚Æ“ü‚Á‚½‚©Šm”F  
+nuitka(exe‚É‚·‚éƒc[ƒ‹)‚ğƒCƒ“ƒXƒg[ƒ‹  
+python -m pip install nuitka  
+ƒrƒ‹ƒh  
+python tools\build.py  
+5•ª‚®‚ç‚¢ŠÔ‚©‚©‚é‚Ì‚Å‹C’·‚É‘Ò‚Á‚Ä  
 
 ## ƒR[ƒfƒBƒ“ƒO‹K‘¥  
 docs ƒtƒHƒ‹ƒ_‚Ì’†‚É‘‚¢‚Ä‚ ‚è‚Ü‚·B  
@@ -17,4 +29,3 @@ locale ƒtƒHƒ‹ƒ_‚ğŸè‚É’T‚µ‚ÄApoƒtƒ@ƒCƒ‹‚ğ”z’u‚µ‚Ä‚­‚ê‚Ü‚·B‚È‚Ì‚ÅAŒ¾Œê‚ğ’Ç‰Á‚
 
 ## –|–ó‚µ‚½‚ç  
 python tools\buildTranslation.py  
-

@@ -3,3 +3,5 @@
 data/options.dat
 __pycache__
 settings.ini
+falcon.build/
+falcon.dist/
