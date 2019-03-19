@@ -6,18 +6,24 @@
 import sys
 import os
 import gettext
+import logging
+from logging import getLogger, FileHandler, Formatter
 import wx
 import configparser
 import constants
 import tabObjects
+import misc
 from simpleDialog import *
 
 class falconAppMain(wx.App):
 
 	def initialize(self, ttl, x, y):
 		"""タイトルとウィンドウサイズを指定して、ウィンドウを初期化する。"""
+		t=misc.Timer()
+		self.InitLogger()
 		self.LoadSettings()
 		self.InitTranslation()
+		self.log.debug("finished environment setup (%d milliseconds from start)" % t.elapsed)
 		#フレームはウィンドウの中に部品を設置するための枠。
 		self.hFrame=wx.Frame(None, -1, ttl,size=(x,y))
 		self.SetTopWindow(self.hFrame)
@@ -28,7 +34,19 @@ class falconAppMain(wx.App):
 		self.tabs=[]
 		self.MakeFirstTab()
 		self.hFrame.Show()
+		self.log.debug("Finished window setup (%d milliseconds from start)" % t.elapsed)
 		return True
+
+	def InitLogger(self):
+		"""ロギング機能を初期化して準備する。"""
+		self.hLogHandler=FileHandler("falcon.log", mode="w", encoding="utf-8")
+		self.hLogHandler.setLevel(logging.DEBUG)
+		self.hLogFormatter=Formatter("%(name)s - %(levelname)s - %(message)s (%(asctime)s)")
+		self.hLogHandler.setFormatter(self.hLogFormatter)
+		self.log=getLogger("falcon")
+		self.log.setLevel(logging.DEBUG)
+		self.log.addHandler(self.hLogHandler)
+		self.log.info("Starting Falcon.")
 
 	def LoadSettings(self):
 		"""設定ファイルを読み込む。なければデフォルト設定を適用し、設定ファイルを書く。"""
