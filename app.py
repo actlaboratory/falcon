@@ -94,6 +94,7 @@ class falconAppMain(wx.App):
 	def AppendTab(self,tab,active=False):
 		"""タブを追加する。active=True で、追加したタブをその場でアクティブにする。"""
 		self.tabs.append(tab)
+		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
 		if active is True: self.ActivateTab(tab)
 
 	def ActivateTab(self,tab):
@@ -107,21 +108,27 @@ class falconAppMain(wx.App):
 		#内容設定
 		for elem in tab.GetItems():
 			self.hListCtrl.Append(elem)
+		#end 追加
+		self.log.debug("Tab selection changed.")
 
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
 		selected=event.GetId()#メニュー識別しの数値が出る
+		self.log.debug("Menu item selected (identifier %d)" % selected)
 		if selected==constants.MENUITEM_FILE_EXIT:
 			self.OnExit()
 			return
 		if selected==constants.MENUITEM_HELP_VERINFO:
 			self.ShowVersionInfo()
 			return
+		self.log.warning("Menu identifier %d is undefined in OnMenuSelect." % selected)
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
 
 	def OnExit(self):
 		"""アプリケーションを終了させる。"""
+		self.log.info("Exiting Falcon...")
+		self.log.info("Bye bye!")
 		sys.exit()
 
 	def ShowVersionInfo(self):

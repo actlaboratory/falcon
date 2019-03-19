@@ -4,15 +4,13 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 """
-タブは、必ずリストビューです。カラムの数と名前と、それに対応するリストの要素がタブを構成します。たとえば、ファイル一覧では「ファイル名」や「サイズ」などがカラムになり、その情報がリストに格納されています。ファイル操作の状況を示すタブの場合は、「進行率」や「状態」などがカラムの名前として想定されています。
+タブは、必ずリストビューです。カラムの数と名前と、それに対応するリストの要素がタブを構成します。たとえば、ファイル一覧では「ファイル名」や「サイズ」などがカラムになり、その情報がリストに格納されています。ファイル操作の状況を示すタブの場合は、「進行率」や「状態」などがカラムの名前として想定されています。リスト上でエンターを押すことで、アクションを実行できます。ファイルビューではファイルやフォルダを開き、ファイル操作では問い合わせに応答することができます。
 """
 
-import sys
 import os
 import gettext
-import constants
+import logging
 import listObjects
-from simpleDialog import *
 
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
@@ -35,6 +33,8 @@ class FileListTab(FalconTabBase):
 		"""タブを初期化する。ディレクトリ名の指定で、ファイルリストを作成する。"""
 		#カラム設定
 		self.columns=[_("ファイル名"),_("サイズ"),_("更新"),_("属性"),_("種類")]
+		self.log=logging.getLogger("falcon.fileListTab")
+		self.log.debug("Created.")
 		self.listObject=listObjects.FileList()
 		self.listObject.Initialize(dir)
 
