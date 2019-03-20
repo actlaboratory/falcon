@@ -6,7 +6,7 @@
 import time
 
 class Timer:
-	"""シンプルなタイマー。経過時間や処理時間を計測するのに使う。単位はミリ秒。"""
+	"""シンプルなタイマー。経過時間や処理時間を計測するのに使う。単位は秒で、float。"""
 	def __init__(self):
 		self.started=time.time()
 
@@ -31,3 +31,6 @@ def ConvertBytesTo(b, unit):
 	if unit==UNIT_TB: return b/1024/1024/1024/1024
 	return 0
 
+def PTime2string(ptime):
+	"""ptime 形式のオブジェクトを受け取って、人間が読めるタイムスタンプ文字列に変換して返す。"""
+	return "%04d/%02d/%02d %02d:%02d:%02d" % (ptime.year, ptime.month, ptime.day, ptime.hour, ptime.minute, ptime.second)

@@ -23,7 +23,7 @@ class falconAppMain(wx.App):
 		self.InitLogger()
 		self.LoadSettings()
 		self.InitTranslation()
-		self.log.debug("finished environment setup (%d milliseconds from start)" % t.elapsed)
+		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 		#フレームはウィンドウの中に部品を設置するための枠。
 		self.hFrame=wx.Frame(None, -1, ttl,size=(x,y))
 		self.SetTopWindow(self.hFrame)
@@ -34,7 +34,7 @@ class falconAppMain(wx.App):
 		self.tabs=[]
 		self.MakeFirstTab()
 		self.hFrame.Show()
-		self.log.debug("Finished window setup (%d milliseconds from start)" % t.elapsed)
+		self.log.debug("Finished window setup (%f seconds from start)" % t.elapsed)
 		return True
 
 	def InitLogger(self):
