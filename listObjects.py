@@ -5,6 +5,7 @@
 
 import os
 import logging
+import win32api
 import misc
 class FalconListBase(object):
 	"""全てのリストに共通する基本クラス。"""
@@ -22,17 +23,18 @@ class FileList(FalconListBase):
 		self.rootDirectory=dir
 		self.log.debug("Getting file list for %s..." % self.rootDirectory)
 		t=misc.Timer()
-		lst=os.listdir(dir )
+		lst=win32api.FindFiles(dir+"\\*")
 		self.files=[]
 		self.folders=[]
+		del lst[0:2]
 		for elem in lst:
-			fullpath=dir+"\\"+elem
+			fullpath=dir+"\\"+elem[8]
 			add=[]
-			add.append(elem)
-			add.append("undefined")
-			add.append("undefined")
-			add.append("undefined")
-			add.append("undefined")
+			add.append(elem[8])#ファイル名
+			add.append((elem[4]<<32)+elem[5])#ファイルサイズ
+			add.append("undefined")#更新
+			add.append("undefined")#属性
+			add.append("undefined")#種類
 			if os.path.isfile(fullpath):
 				self.files.append(add)
 			else:
