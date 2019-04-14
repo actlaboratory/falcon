@@ -5,7 +5,9 @@
 
 import os
 import logging
+import win32api
 import misc
+import browsableObjects
 class FalconListBase(object):
 	"""全てのリストに共通する基本クラス。"""
 	def __init__(self):
@@ -22,25 +24,30 @@ class FileList(FalconListBase):
 		self.rootDirectory=dir
 		self.log.debug("Getting file list for %s..." % self.rootDirectory)
 		t=misc.Timer()
-		lst=os.listdir(dir )
+		lst=win32api.FindFiles(dir+"\\*")
 		self.files=[]
 		self.folders=[]
+		del lst[0:2]
 		for elem in lst:
-			fullpath=dir+"\\"+elem
-			add=[]
-			add.append(elem)
-			add.append("undefined")
-			add.append("undefined")
-			add.append("undefined")
-			add.append("undefined")
+			fullpath=dir+"\\"+elem[8]
 			if os.path.isfile(fullpath):
-				self.files.append(add)
+				f=browsableObjects.File()
+				f.Initialize(dir,elem[8],fullpath,(elem[4]<<32)+elem[5], elem[3], elem[0], "undefined")
+				self.files.append(f)
 			else:
-				self.folders.append(add)
+				f=browsableObjects.Folder()
+				f.Initialize(dir,elem[8],fullpath,0,elem[3], elem[0], "undefined")
+				self.folders.append(f)
 			#end どっちについかするか？
 		#end 追加ループ
 		self.log.debug("File list created in %d milliseconds." % t.elapsed)
 
 	def GetItems(self):
 		"""リストの中身を取得する。フォルダが上にくる。"""
-		return self.folders+self.files
+		lst=[]
+		for elem in self.folders:
+			lst.append(elem.GetListTuple())
+		for elem in self.files:
+			lst.append(elem.GetListTuple())
+		return lst
+
