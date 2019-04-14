@@ -52,6 +52,10 @@ class FileList(FalconListBase):
 			lst.append(elem.GetListTuple())
 		return lst
 
+	def GetElement(self,index):
+		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
+		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
+
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
 	def Initialize(self):
