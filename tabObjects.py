@@ -10,7 +10,13 @@
 import os
 import gettext
 import logging
+import errorCodes
 import listObjects
+import browsableObjects
+
+#アクションの識別子
+ACTION_FORWARD=0#ファイル/フォルダ/副ストリームのオープン
+ACTION_BACKWARD=1#内包しているフォルダ/内包しているドライブ/副ストリームのクローズ
 
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
@@ -27,6 +33,10 @@ class FalconTabBase(object):
 		"""タブのリストの中身を取得する。"""
 		return self.listObject.GetItems() if self.listObject is not None else []
 
+	def TriggerAction(self, index, action):
+		"""タブの指定要素に対してアクションを実行する。成功した場合は、errorCodes.OK を返し、失敗した場合は、その他のエラーコードを返す。"""
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
 class FileListTab(FalconTabBase):
 	"""ファイルリストが表示されているタブ。"""
 	def Initialize(self,dir):
@@ -37,4 +47,24 @@ class FileListTab(FalconTabBase):
 		self.log.debug("Created.")
 		self.listObject=listObjects.FileList()
 		self.listObject.Initialize(dir)
+
+	def TriggerAction(self, index, action):
+		if action==ACTION_FORWARD:
+			elem=self.listObject.GetElement(index)
+			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
+				newList=listObjects.FileList()
+				newList.Initialize(elem.fullpath)
+				self.listObject=newList
+				return errorCodes.OK
+			#end フォルダ開く
+			else:
+				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
+			#end フォルダ以外のタイプ
+		#end ACTION_FORWARD
+		if action==ACTION_BACKWARD:
+			preDir=os.path.split(self.listObject.rootDirectory)[0]
+			if "\\" not in predir: return errorCodes.BOUNDARY#ファイルリストはこれ以上下がれないので、通知
+			newList=listObjects.FileList()
+			newList.Initialize(predir)
+			self.listObject=newList
 

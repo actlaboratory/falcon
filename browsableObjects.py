@@ -34,3 +34,33 @@ class Folder(File):
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。フォルダなのでサイズは <dir> にする。"""
 		return (self.basename, "<dir>", misc.PTime2string(self.modDate), self.attributes, self.typeString)
+
+class Drive(FalconBrowsableBase):
+	"""ドライブを表す。"""
+	def Initialize(self, letter, free, total, type, name=""):
+		"""必要な情報をセットする"""
+		self.letter=letter
+		self.free=free
+		self.total=total
+		self.type=type
+		self.UpdateTypeString()
+		self.name=name
+
+	def UpdateTypeString(self):
+		"""タイプの数値を文字列に変換し、self.typeString にセットする。"""
+		if self.type==win32file.DRIVE_CDROM:
+			self.typeString=_("CD-ROMドライブ")
+		elif self.type==win32file.DRIVE_FIXED:
+			self.typeString=_("ローカル ディスク")
+		elif self.type==win32file.DRIVE_NO_ROOT_DIR:
+			self.typeString=_("ルートディレクトリなし")
+		elif self.type==win32file.DRIVE_RAMDISK:
+			self.typeString=_("RAM ディスク")
+		elif self.type==win32file.DRIVE_REMOVABLE:
+			self.typeString=_("リムーバブル ディスク")
+		elif self.type==win32file.DRIVE_UNKNOWN:
+			self.typeString=_("不明")
+
+	def GetListTuple(self):
+		"""表示に必要なタプルを返す。"""
+		return (self.name+"("+self.letter+")", misc.ConvertBytesTo(self.free, misc.UNIT_AUTO, True), misc.ConvertBytesTo(self.total, misc.UNIT_AUTO, True), self.typeString)
