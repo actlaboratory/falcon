@@ -47,4 +47,4 @@ class Drive(FalconBrowsableBase):
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
-		return (self.name+"("+self.letter+")", misc.ConvertBytesTo(self.free, misc.UNIT_GB), misc.ConvertBytesTo(self.total, misc.UNIT_GB), self.type)
+		return (self.name+"("+self.letter+")", misc.ConvertBytesTo(self.free, misc.UNIT_AUTO, True), misc.ConvertBytesTo(self.total, misc.UNIT_AUTO, True), self.type)
