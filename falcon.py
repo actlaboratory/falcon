@@ -9,7 +9,7 @@ import constants
 def main():
 	global app
 	app=falconAppMain()
-	app.initialize(constants.APP_NAME,constants.APP_WINDOW_SIZE_X,constants.APP_WINDOW_SIZE_Y)
+	app.initialize(constants.APP_NAME)
 	app.MainLoop()
 
 #global schope

@@ -20,7 +20,7 @@ import DefaultSettings
 
 class falconAppMain(wx.App):
 
-	def initialize(self, ttl, x, y):
+	def initialize(self, ttl):
 		"""タイトルとウィンドウサイズを指定して、ウィンドウを初期化する。"""
 		t=misc.Timer()
 		self.InitLogger()
@@ -29,14 +29,15 @@ class falconAppMain(wx.App):
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 		#フレームはウィンドウの中に部品を設置するための枠。
 		self.hFrame=wx.Frame(None, -1, ttl,size=(self.config.getint("MainView","sizeX"),self.config.getint("MainView","sizeY")))
-		self.SetTopWindow(self.hFrame)
 		self.hFrame.Bind(wx.EVT_CLOSE, self.OnExit)
+
 		self.InstallMenu()
 		self.InstallListCtrl()
 		self.hFrame.SetMenuBar(self.hMenuBar)
 		self.tabs=[]
 		self.MakeFirstTab()
 		self.hFrame.Show()
+		self.SetTopWindow(self.hFrame)
 		self.log.debug("Finished window setup (%f seconds from start)" % t.elapsed)
 		return True
 
@@ -81,10 +82,26 @@ class falconAppMain(wx.App):
 		self.hFrame.Bind(wx.EVT_MENU,self.OnMenuSelect)
 
 	def InstallListCtrl(self):
+#		self.font = wx.Font(24,"HGSｺﾞｼｯｸE",wx.NORMAL,wx.FONTWEIGHT_BOLD)
+		self.font = wx.Font(24,wx.FONTFAMILY_MODERN,wx.NORMAL,wx.FONTWEIGHT_BOLD)
+
 		"""リストコントロールを設定する。"""
 		#パネルには複数のコントロールを設置できる。
-		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0, 0), size=(1000, 400))
-		self.hListCtrl=wx.ListCtrl(self.hListPanel, wx.ID_ANY, style=wx.LC_REPORT,size=(1000,400))
+
+		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0,0),size=(800,300))
+		self.hListPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
+		self.hListPanel.SetAutoLayout(True)
+
+		self.hListCtrl=wx.ListCtrl(self.hListPanel, wx.ID_ANY, style=wx.LC_REPORT,size=wx.DefaultSize)
+		self.hListCtrl.SetThemeEnabled(False)
+		self.hListCtrl.SetBackgroundColour("#000000")		#項目のない部分の背景色
+		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
+		self.hListCtrl.SetTextColour("#ffffff")				#文字色
+		self.hListCtrl.SetFont(self.font)
+
+		self.sizer=wx.BoxSizer(wx.HORIZONTAL)
+		self.hListPanel.SetSizer(self.sizer)
+		self.sizer.Add(self.hListCtrl,1,wx.EXPAND)
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
