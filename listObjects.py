@@ -50,3 +50,4 @@ class FileList(FalconListBase):
 		for elem in self.files:
 			lst.append(elem.GetListTuple())
 		return lst
+
