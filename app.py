@@ -8,6 +8,7 @@ import os
 import gettext
 import logging
 from logging import getLogger, FileHandler, Formatter
+
 import wx
 import configparser
 import constants
@@ -125,7 +126,7 @@ class falconAppMain(wx.App):
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
 
-	def OnExit(self):
+	def OnExit(self,event=None):
 		"""アプリケーションを終了させる。"""
 		self.log.info("Exiting Falcon...")
 		self.log.info("Bye bye!")
