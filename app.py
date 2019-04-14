@@ -16,6 +16,8 @@ import tabObjects
 import misc
 from simpleDialog import *
 
+import DefaultSettings
+
 class falconAppMain(wx.App):
 
 	def initialize(self, ttl, x, y):
@@ -26,7 +28,7 @@ class falconAppMain(wx.App):
 		self.InitTranslation()
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 		#フレームはウィンドウの中に部品を設置するための枠。
-		self.hFrame=wx.Frame(None, -1, ttl,size=(x,y))
+		self.hFrame=wx.Frame(None, -1, ttl,size=(self.config.getint("MainView","sizeX"),self.config.getint("MainView","sizeY")))
 		self.SetTopWindow(self.hFrame)
 		self.hFrame.Bind(wx.EVT_CLOSE, self.OnExit)
 		self.InstallMenu()
@@ -51,12 +53,10 @@ class falconAppMain(wx.App):
 
 	def LoadSettings(self):
 		"""設定ファイルを読み込む。なければデフォルト設定を適用し、設定ファイルを書く。"""
-		self.config = configparser.ConfigParser()
+		self.config = DefaultSettings.DefaultSettings.get()
 		if os.path.exists(constants.SETTING_FILE_NAME):
 			self.config.read(constants.SETTING_FILE_NAME)
-		else:
-			self.config["general"]={"language": "ja-JP"}
-			with open(constants.SETTING_FILE_NAME, "w") as f: self.config.write(f)
+		with open(constants.SETTING_FILE_NAME, "w") as f: self.config.write(f)
 
 	def InitTranslation(self):
 		"""翻訳を初期化する。"""
@@ -89,7 +89,8 @@ class falconAppMain(wx.App):
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
 		tab=tabObjects.FileListTab()
-		tab.Initialize(os.getcwd())
+#		tab.Initialize(os.getcwd())
+		tab.Initialize(os.path.expandvars(self.config["Browse"]["startPath"]))
 		self.AppendTab(tab,active=True)
 
 	def AppendTab(self,tab,active=False):
