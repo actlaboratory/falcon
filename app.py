@@ -12,6 +12,7 @@ from logging import getLogger, FileHandler, Formatter
 import wx
 import configparser
 import constants
+import errorCodes
 import tabObjects
 import misc
 from simpleDialog import *
@@ -30,7 +31,6 @@ class falconAppMain(wx.App):
 		#フレームはウィンドウの中に部品を設置するための枠。
 		self.hFrame=wx.Frame(None, -1, ttl,size=(self.config.getint("MainView","sizeX"),self.config.getint("MainView","sizeY")))
 		self.hFrame.Bind(wx.EVT_CLOSE, self.OnExit)
-
 		self.InstallMenu()
 		self.InstallListCtrl()
 		self.hFrame.SetMenuBar(self.hMenuBar)
@@ -91,8 +91,8 @@ class falconAppMain(wx.App):
 		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0,0),size=(800,300))
 		self.hListPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
 		self.hListPanel.SetAutoLayout(True)
-
 		self.hListCtrl=wx.ListCtrl(self.hListPanel, wx.ID_ANY, style=wx.LC_REPORT,size=wx.DefaultSize)
+		self.hListCtrl.Bind(wx.EVT_LIST_KEY_DOWN, self.onKeyPress)
 		self.hListCtrl.SetThemeEnabled(False)
 		self.hListCtrl.SetBackgroundColour("#000000")		#項目のない部分の背景色
 		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
@@ -117,17 +117,22 @@ class falconAppMain(wx.App):
 
 	def ActivateTab(self,tab):
 		"""指定されたタブをアクティブにする。内部で管理しているタブリストに入っていない他部でも表示できる。"""
+		self.activeTab=tab
+		self.UpdateList()
+
+	def UpdateList(self):
+		"""リストの情報を、フォーカスしているタブの最新情報にアップデートする。"""
 		self.hListCtrl.ClearAll()
 		#カラム設定
 		i=0
-		for elem in tab.GetColumns():
+		for elem in self.activeTab.GetColumns():
 			self.hListCtrl.InsertColumn(i,elem,format=wx.LIST_FORMAT_LEFT,width=wx.LIST_AUTOSIZE)
 			i+=1
 		#内容設定
-		for elem in tab.GetItems():
+		for elem in self.activeTab.GetItems():
 			self.hListCtrl.Append(elem)
 		#end 追加
-		self.log.debug("Tab selection changed.")
+		self.log.debug("List control updated.")
 
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
@@ -143,6 +148,12 @@ class falconAppMain(wx.App):
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
 
+	def onKeyPress(self,event):
+		"""キーが押されたときのコールバック。"""
+		keycode=event.GetKeyCode()
+		if keycode==wx.WXK_BACK: self.TriggerBackwardAction()
+		if keycode==wx.WXK_RIGHT: self.TriggerForwardAction()
+
 	def OnExit(self, event=None):
 		"""アプリケーションを終了させる。"""
 		self.log.info("Exiting Falcon...")
@@ -152,3 +163,23 @@ class falconAppMain(wx.App):
 	def ShowVersionInfo(self):
 		"""バージョン情報を表示する。"""
 		dialog(_("バージョン情報"),_("%(app)s Version %(ver)s.\nCopyright (C) %(year)s %(names)s") % {"app":constants.APP_NAME, "ver":constants.APP_VERSION, "year":constants.APP_COPYRIGHT_YEAR, "names":constants.APP_DEVELOPERS})
+
+	def TriggerBackwardAction(self):
+		"""back アクションを実行"""
+		ret=self.activeTab.TriggerAction(self.hListCtrl.GetFocusedItem(),tabObjects.ACTION_BACKWARD)
+		if ret==errorCodes.NOT_SUPPORTED:
+			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
+		elif ret==errorCodes.BOUNDARY:
+			dialog("test","mada")
+		else:
+			self.UpdateList()
+
+	def TriggerForwardAction(self):
+		"""forward アクションを実行"""
+		ret=self.activeTab.TriggerAction(self.hListCtrl.GetFocusedItem(),tabObjects.ACTION_FORWARD)
+		if ret==errorCodes.NOT_SUPPORTED:
+			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
+		elif ret==errorCodes.BOUNDARY:
+			dialog("test","mada")
+		else:
+			self.UpdateList()

@@ -62,7 +62,7 @@ class FileListTab(FalconTabBase):
 			#end フォルダ以外のタイプ
 		#end ACTION_FORWARD
 		if action==ACTION_BACKWARD:
-			preDir=os.path.split(self.listObject.rootDirectory)[0]
+			predir=os.path.split(self.listObject.rootDirectory)[0]
 			if "\\" not in predir: return errorCodes.BOUNDARY#ファイルリストはこれ以上下がれないので、通知
 			newList=listObjects.FileList()
 			newList.Initialize(predir)
