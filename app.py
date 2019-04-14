@@ -89,7 +89,6 @@ class falconAppMain(wx.App):
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
 		tab=tabObjects.FileListTab()
-#		tab.Initialize(os.getcwd())
 		tab.Initialize(os.path.expandvars(self.config["Browse"]["startPath"]))
 		self.AppendTab(tab,active=True)
 
