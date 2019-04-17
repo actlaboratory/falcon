@@ -45,7 +45,7 @@ class falconAppMain(wx.App):
 
 	def InitLogger(self):
 		"""ロギング機能を初期化して準備する。"""
-		self.hLogHandler=FileHandler("falcon.log", mode="w", encoding="utf-8")
+		self.hLogHandler=FileHandler("falcon.log", mode="w", encoding="UTF-8")
 		self.hLogHandler.setLevel(logging.DEBUG)
 		self.hLogFormatter=Formatter("%(name)s - %(levelname)s - %(message)s (%(asctime)s)")
 		self.hLogHandler.setFormatter(self.hLogFormatter)
@@ -133,7 +133,9 @@ class falconAppMain(wx.App):
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
 		tab=tabObjects.FileListTab()
-		tab.Initialize(os.path.expandvars(self.config["Browse"]["startPath"]))
+		ok=tab.Initialize(os.path.expandvars(self.config["Browse"]["startPath"]))
+		if not ok: dialog(_("エラー"),_("指定されたフォルダを開けませんでした。"))
+		#end error
 		self.AppendTab(tab,active=True)
 
 	def AppendTab(self,tab,active=False):

@@ -4,5 +4,6 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 defaultKeymap={
-	"MOVE_BACKWARD": "back"
+	"MOVE_BACKWARD": "BACK",
+	"MOVE_FORWARD": "RETURN"
 }

@@ -7,6 +7,7 @@ import os
 import logging
 import win32api
 import win32file
+import pywintypes
 import misc
 import browsableObjects
 class FalconListBase(object):
@@ -20,12 +21,17 @@ class FalconListBase(object):
 class FileList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
 	def Initialize(self,dir):
-		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。"""
+		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。"""
 		self.log=logging.getLogger("falcon.fileList")
 		self.rootDirectory=dir
 		self.log.debug("Getting file list for %s..." % self.rootDirectory)
 		t=misc.Timer()
-		lst=win32api.FindFiles(dir+"\\*")
+		try:
+			lst=win32api.FindFiles(dir+"\\*")
+		except pywintypes.error as err:
+			self.log.error("Cannot open the directory! {0}".format(err))
+			return False
+		#end except
 		self.files=[]
 		self.folders=[]
 		del lst[0:2]
