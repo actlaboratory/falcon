@@ -3,21 +3,21 @@
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-import sys
-import os
+import configparser
 import gettext
 import logging
+import os
+import sys
+import wx
 from logging import getLogger, FileHandler, Formatter
 
-import wx
-import configparser
 import constants
-import errorCodes
-import tabObjects
-import misc
-from simpleDialog import *
-
 import DefaultSettings
+import errorCodes
+import keyHandler
+import misc
+import tabObjects
+from simpleDialog import *
 
 class falconAppMain(wx.App):
 
@@ -26,6 +26,7 @@ class falconAppMain(wx.App):
 		t=misc.Timer()
 		self.InitLogger()
 		self.LoadSettings()
+		self.InitKeyHandler()
 		self.InitTranslation()
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 		#フレームはウィンドウの中に部品を設置するための枠。
@@ -51,6 +52,12 @@ class falconAppMain(wx.App):
 		self.log.setLevel(logging.DEBUG)
 		self.log.addHandler(self.hLogHandler)
 		self.log.info("Starting Falcon.")
+
+	def InitKeyHandler(self):
+		"""キーハンドラを初期化する。"""
+		self.log.debug("Initializing keyHandler...")
+		self.keyHandler=keyHandler.KeyHandler()
+		self.keyHandler.Initialize()
 
 	def LoadSettings(self):
 		"""設定ファイルを読み込む。なければデフォルト設定を適用し、設定ファイルを書く。"""
@@ -92,7 +99,8 @@ class falconAppMain(wx.App):
 		self.hListPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
 		self.hListPanel.SetAutoLayout(True)
 		self.hListCtrl=wx.ListCtrl(self.hListPanel, wx.ID_ANY, style=wx.LC_REPORT,size=wx.DefaultSize)
-		self.hListCtrl.Bind(wx.EVT_LIST_KEY_DOWN, self.onKeyPress)
+		self.hListCtrl.Bind(wx.EVT_LIST_KEY_DOWN, self.OnKeyDown)
+		self.hListCtrl.Bind(wx.EVT_LIST_KEY_UP, self.OnKeyUp)
 		self.hListCtrl.SetThemeEnabled(False)
 		self.hListCtrl.SetBackgroundColour("#000000")		#項目のない部分の背景色
 		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
@@ -148,11 +156,13 @@ class falconAppMain(wx.App):
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
 
-	def onKeyPress(self,event):
+	def onKeyDown(self,event):
 		"""キーが押されたときのコールバック。"""
-		keycode=event.GetKeyCode()
-		if keycode==wx.WXK_BACK: self.TriggerBackwardAction()
-		if keycode==wx.WXK_RIGHT: self.TriggerForwardAction()
+		self.keyHandler.ProcessKeyDown(event)
+
+	def onKeyUp(self,event):
+		"""キーが離されたときのコールバック。"""
+		self.keyHandler.ProcessKeyUp(event)
 
 	def OnExit(self, event=None):
 		"""アプリケーションを終了させる。"""

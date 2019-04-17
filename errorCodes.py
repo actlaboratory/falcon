@@ -10,3 +10,7 @@
 OK=0#成功(エラーなし)
 NOT_SUPPORTED=1#サポートされていない呼び出し
 BOUNDARY=2#協会に到達したためリジェクト
+FILE_NOT_FOUND=3#ファイルが存在しない
+PARSING_FAILED=4#パーシングエラー
+FATAL=5#続行不可能なエラー
+
