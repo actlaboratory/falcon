@@ -4,6 +4,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import win32file
+import wx
 
 APP_NAME="Falcon Test"
 APP_VERSION="0.01"
@@ -11,6 +12,11 @@ APP_COPYRIGHT_YEAR="2019"
 APP_DEVELOPERS="Yukio Nozawa and Yuki Kochi"
 
 SETTING_FILE_NAME="settings.ini"
+KEYMAP_FILE_NAME="keymap.ini"
 
-MENUITEM_FILE_EXIT=30
-MENUITEM_HELP_VERINFO=31
+MENU_ITEMS={
+	"FILE_EXIT": wx.NewIdRef(),
+	"MOVE_BACKWARD": wx.NewIdRef(),
+	"MOVE_FORWARD": wx.NewIdRef(),
+	"HELP_VERINFO": wx.NewIdRef()
+}

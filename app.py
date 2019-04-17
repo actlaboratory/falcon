@@ -75,15 +75,29 @@ class falconAppMain(wx.App):
 		"""メニューバーを作り、フレームに接続する。"""
 		#メニューの大項目を作る
 		self.hFileMenu=wx.Menu()
+		self.hEditMenu=wx.Menu()
+		self.hMoveMenu=wx.Menu()
+		self.hReadMenu=wx.Menu()
+		self.hToolMenu=wx.Menu()
+		self.hViewMenu=wx.Menu()
+		self.hEnvMenu=wx.Menu()
 		self.hHelpMenu=wx.Menu()
-		#今のところ、トップレベルのメニューは30個のスペースを確保してある。つまり、ファイルメニューには30個までの項目を入れられる。
 		#ファイルメニューの中身
-		self.hFileMenu.Append(constants.MENUITEM_FILE_EXIT,_("終了"))
+		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_EXIT"].GetValue(),_("終了"))
+		#移動メニューの中身
+		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く"))
+		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue(),_("閉じる"))
 		#ヘルプメニューの中身
-		self.hHelpMenu.Append(constants.MENUITEM_HELP_VERINFO,_("バージョン情報"))
+		self.hHelpMenu.Append(constants.MENU_ITEMS["HELP_VERINFO"].GetValue(),_("バージョン情報"))
 		#メニューバー
 		self.hMenuBar=wx.MenuBar()
 		self.hMenuBar.Append(self.hFileMenu,_("ファイル"))
+		self.hMenuBar.Append(self.hEditMenu,_("編集"))
+		self.hMenuBar.Append(self.hMoveMenu,_("移動"))
+		self.hMenuBar.Append(self.hReadMenu,_("読み"))
+		self.hMenuBar.Append(self.hToolMenu,_("ツール"))
+		self.hMenuBar.Append(self.hViewMenu,_("表示"))
+		self.hMenuBar.Append(self.hEnvMenu,_("環境"))
 		self.hMenuBar.Append(self.hHelpMenu,_("ヘルプ"))
 		self.hFrame.SetMenuBar(self.hMenuBar)
 		self.hFrame.Bind(wx.EVT_MENU,self.OnMenuSelect)
@@ -99,8 +113,6 @@ class falconAppMain(wx.App):
 		self.hListPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
 		self.hListPanel.SetAutoLayout(True)
 		self.hListCtrl=wx.ListCtrl(self.hListPanel, wx.ID_ANY, style=wx.LC_REPORT,size=wx.DefaultSize)
-		self.hListCtrl.Bind(wx.EVT_LIST_KEY_DOWN, self.OnKeyDown)
-		self.hListCtrl.Bind(wx.EVT_LIST_KEY_UP, self.OnKeyUp)
 		self.hListCtrl.SetThemeEnabled(False)
 		self.hListCtrl.SetBackgroundColour("#000000")		#項目のない部分の背景色
 		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
@@ -146,21 +158,21 @@ class falconAppMain(wx.App):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
 		selected=event.GetId()#メニュー識別しの数値が出る
 		self.log.debug("Menu item selected (identifier %d)" % selected)
-		if selected==constants.MENUITEM_FILE_EXIT:
+		if selected==constants.MENU_ITEMS["FILE_EXIT"].getValue():
 			self.OnExit()
 			return
-		if selected==constants.MENUITEM_HELP_VERINFO:
+		if selected==constants.MENU_ITEMS["HELP_VERINFO"]:
 			self.ShowVersionInfo()
 			return
 		self.log.warning("Menu identifier %d is undefined in OnMenuSelect." % selected)
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
 
-	def onKeyDown(self,event):
+	def OnKeyDown(self,event):
 		"""キーが押されたときのコールバック。"""
 		self.keyHandler.ProcessKeyDown(event)
 
-	def onKeyUp(self,event):
+	def OnKeyUp(self,event):
 		"""キーが離されたときのコールバック。"""
 		self.keyHandler.ProcessKeyUp(event)
 
