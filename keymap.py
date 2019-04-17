@@ -6,6 +6,7 @@ import configparser
 import logging
 import os
 import wx
+import constants
 import defaultKeymap
 import errorCodes
 
@@ -26,6 +27,7 @@ str2key={
 	"PAGEDOWN":wx.WXK_PAGEDOWN, "NUMPAD_SPACE":wx.WXK_NUMPAD_SPACE, "NUMPAD_TAB":wx.WXK_NUMPAD_TAB, "NUMPAD_ENTER":wx.WXK_NUMPAD_ENTER, "NUMPAD_F1":wx.WXK_NUMPAD_F1, "NUMPAD_F2":wx.WXK_NUMPAD_F2, "NUMPAD_F3":wx.WXK_NUMPAD_F3, "NUMPAD_F4":wx.WXK_NUMPAD_F4, "NUMPAD_HOME":wx.WXK_NUMPAD_HOME, "NUMPAD_LEFT":wx.WXK_NUMPAD_LEFT, 
 	"NUMPAD_UP":wx.WXK_NUMPAD_UP, "NUMPAD_RIGHT":wx.WXK_NUMPAD_RIGHT, "NUMPAD_DOWN":wx.WXK_NUMPAD_DOWN, "NUMPAD_PAGEUP":wx.WXK_NUMPAD_PAGEUP, "NUMPAD_PAGEDOWN":wx.WXK_NUMPAD_PAGEDOWN, "NUMPAD_END":wx.WXK_NUMPAD_END, "NUMPAD_BEGIN":wx.WXK_NUMPAD_BEGIN, "NUMPAD_INSERT":wx.WXK_NUMPAD_INSERT, "NUMPAD_DELETE":wx.WXK_NUMPAD_DELETE, "NUMPAD_EQUAL":wx.WXK_NUMPAD_EQUAL, 
 	"NUMPAD_MULTIPLY":wx.WXK_NUMPAD_MULTIPLY, "NUMPAD_ADD":wx.WXK_NUMPAD_ADD, "NUMPAD_SEPARATOR":wx.WXK_NUMPAD_SEPARATOR, "NUMPAD_SUBTRACT":wx.WXK_NUMPAD_SUBTRACT, "NUMPAD_DECIMAL":wx.WXK_NUMPAD_DECIMAL, "NUMPAD_DIVIDE":wx.WXK_NUMPAD_DIVIDE, "WINDOWS_LEFT":wx.WXK_WINDOWS_LEFT, "WINDOWS_RIGHT":wx.WXK_WINDOWS_RIGHT, "WINDOWS_MENU":wx.WXK_WINDOWS_MENU, "COMMAND":wx.WXK_COMMAND, 
+	"A": ord('A'), "B": ord('B'), "C": ord('C'), "D": ord('D'), "E": ord('E'), "F": ord('F'), "G": ord('G'), "H": ord('H'), "I": ord('I'), "J": ord('J'), "K": ord('K'), "L": ord('L'), "M": ord('M'), "N": ord('N'), "O": ord('O'), "P": ord('P'), "Q": ord('Q'), "R": ord('R'), "S": ord('S'), "T": ord('T'), "U": ord('U'), "V": ord('V'), "W": ord('W'), "X": ord('X'), "Y": ord('Y'), "Z": ord('Z'), 
 }
 
 class KeymapHandler():
@@ -61,7 +63,8 @@ class KeymapHandler():
 			if ctrl: flags=wx.ACCEL_CTRL
 			if alt: flags=flags|wx.ACCEL_ALT
 			if shift: flags=flags|wx.ACCEL_SHIFT
-			entry=wx.AcceleratorEntry(flags,str2key[codestr[len(codestr)-1]],MENU_ITEMS[key(0).upper()])
+
+			entry=wx.AcceleratorEntry(flags,str2key[codestr[len(codestr)-1]],constants.MENU_ITEMS[elem[0].upper()])
 			tbl.append(entry)
 		#end 追加
-		return tbl
+		return wx.AcceleratorTable(tbl)

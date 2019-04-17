@@ -14,7 +14,7 @@ from logging import getLogger, FileHandler, Formatter
 import constants
 import DefaultSettings
 import errorCodes
-import keyHandler
+import keymap
 import misc
 import tabObjects
 from simpleDialog import *
@@ -26,13 +26,13 @@ class falconAppMain(wx.App):
 		t=misc.Timer()
 		self.InitLogger()
 		self.LoadSettings()
-		self.InitKeyHandler()
 		self.InitTranslation()
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 		#フレームはウィンドウの中に部品を設置するための枠。
 		self.hFrame=wx.Frame(None, -1, ttl,size=(self.config.getint("MainView","sizeX"),self.config.getint("MainView","sizeY")))
 		self.hFrame.Bind(wx.EVT_CLOSE, self.OnExit)
 		self.InstallMenu()
+		self.InstallShortcut()
 		self.InstallListCtrl()
 		self.hFrame.SetMenuBar(self.hMenuBar)
 		self.tabs=[]
@@ -40,6 +40,7 @@ class falconAppMain(wx.App):
 		self.hFrame.Show()
 		self.SetTopWindow(self.hFrame)
 		self.log.debug("Finished window setup (%f seconds from start)" % t.elapsed)
+#		self.hListCtrl.Destroy()
 		return True
 
 	def InitLogger(self):
@@ -102,6 +103,12 @@ class falconAppMain(wx.App):
 		self.hFrame.SetMenuBar(self.hMenuBar)
 		self.hFrame.Bind(wx.EVT_MENU,self.OnMenuSelect)
 
+	def InstallShortcut(self):
+		"""アクセラレーターテーブルを設定する。"""
+		self.keymap=keymap.KeymapHandler()
+		self.keymap.Initialize(constants.KEYMAP_FILE_NAME)
+		self.hFrame.SetAcceleratorTable(self.keymap.GenerateTable())
+
 	def InstallListCtrl(self):
 #		self.font = wx.Font(24,"HGSｺﾞｼｯｸE",wx.NORMAL,wx.FONTWEIGHT_BOLD)
 		self.font = wx.Font(24,wx.FONTFAMILY_MODERN,wx.NORMAL,wx.FONTWEIGHT_BOLD)
@@ -158,10 +165,10 @@ class falconAppMain(wx.App):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
 		selected=event.GetId()#メニュー識別しの数値が出る
 		self.log.debug("Menu item selected (identifier %d)" % selected)
-		if selected==constants.MENU_ITEMS["FILE_EXIT"].getValue():
+		if selected==constants.MENU_ITEMS["FILE_EXIT"].GetValue():
 			self.OnExit()
 			return
-		if selected==constants.MENU_ITEMS["HELP_VERINFO"]:
+		if selected==constants.MENU_ITEMS["HELP_VERINFO"].GetValue():
 			self.ShowVersionInfo()
 			return
 		self.log.warning("Menu identifier %d is undefined in OnMenuSelect." % selected)
