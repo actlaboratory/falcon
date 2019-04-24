@@ -19,6 +19,8 @@ import misc
 import tabObjects
 from simpleDialog import *
 
+import Events.OnExit
+
 class falconAppMain(wx.App):
 
 	def initialize(self, ttl):
@@ -30,7 +32,6 @@ class falconAppMain(wx.App):
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 		#フレームはウィンドウの中に部品を設置するための枠。
 		self.hFrame=wx.Frame(None, -1, ttl,size=(self.config.getint("MainView","sizeX"),self.config.getint("MainView","sizeY")))
-		self.hFrame.Bind(wx.EVT_CLOSE, self.OnExit)
 		self.InstallMenu()
 		self.InstallShortcut()
 		self.hFrame.SetMenuBar(self.hMenuBar)
@@ -100,6 +101,7 @@ class falconAppMain(wx.App):
 		self.hMenuBar.Append(self.hEnvMenu,_("環境"))
 		self.hMenuBar.Append(self.hHelpMenu,_("ヘルプ"))
 		self.hFrame.SetMenuBar(self.hMenuBar)
+		self.onExit=Events.OnExit.OnExit(self.hFrame,self.log)
 		self.hFrame.Bind(wx.EVT_MENU,self.OnMenuSelect)
 
 	def InstallShortcut(self):
@@ -143,7 +145,7 @@ class falconAppMain(wx.App):
 		selected=event.GetId()#メニュー識別しの数値が出る
 		self.log.debug("Menu item selected (identifier %d)" % selected)
 		if selected==constants.MENU_ITEMS["FILE_EXIT"].GetValue():
-			self.OnExit()
+			self.onExit.onExit()
 			return
 		if selected==constants.MENU_ITEMS["HELP_VERINFO"].GetValue():
 			self.ShowVersionInfo()
@@ -151,20 +153,6 @@ class falconAppMain(wx.App):
 		self.log.warning("Menu identifier %d is undefined in OnMenuSelect." % selected)
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
-
-	def OnKeyDown(self,event):
-		"""キーが押されたときのコールバック。"""
-		self.keyHandler.ProcessKeyDown(event)
-
-	def OnKeyUp(self,event):
-		"""キーが離されたときのコールバック。"""
-		self.keyHandler.ProcessKeyUp(event)
-
-	def OnExit(self, event=None):
-		"""アプリケーションを終了させる。"""
-		self.log.info("Exiting Falcon...")
-		self.log.info("Bye bye!")
-		sys.exit()
 
 	def ShowVersionInfo(self):
 		"""バージョン情報を表示する。"""

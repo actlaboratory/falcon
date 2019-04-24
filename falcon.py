@@ -5,10 +5,12 @@
 #See window.py for application entry point
 from app import *
 import constants
+import globalVars
 
 def main():
 	global app
 	app=falconAppMain()
+	globalVars.app=app
 	app.initialize(constants.APP_NAME)
 	app.MainLoop()
 
