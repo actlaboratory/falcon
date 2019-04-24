@@ -10,6 +10,7 @@
 import os
 import gettext
 import logging
+import wx
 import errorCodes
 import listObjects
 import browsableObjects
@@ -26,20 +27,51 @@ class FalconTabBase(object):
 	def __del__(self):
 		pass
 
-	def GetColumns(self):
+	def InstallListCtrl(self,parent):
+		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
+		self.font = wx.Font(24,wx.FONTFAMILY_MODERN,wx.NORMAL,wx.FONTWEIGHT_BOLD)
+		self.hListCtrl=wx.ListCtrl(parent, wx.ID_ANY, style=wx.LC_REPORT,size=wx.DefaultSize)
+		self.hListCtrl.SetThemeEnabled(False)
+		self.hListCtrl.SetBackgroundColour("#000000")		#項目のない部分の背景色
+		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
+		self.hListCtrl.SetTextColour("#ffffff")				#文字色
+		self.hListCtrl.SetFont(self.font)
+
+	def GetListColumns(self):
 		return self.columns
 
 	def GetItems(self):
 		"""タブのリストの中身を取得する。"""
 		return self.listObject.GetItems() if self.listObject is not None else []
 
-	def TriggerAction(self, index, action):
+	def GetFocusedItem(self):
+		"""現在フォーカスが当たっているアイテムのインデックス番号を取得する。"""
+		return self.listCtrl.GetFocusedItem()
+
+	def GetListCtrl(self):
+		return self.hListCtrl
+
+	def SetListColumns(self,col):
+		"""リストコントロールにカラムを設定する。"""
+		i=0
+		for elem in col:
+			self.hListCtrl.InsertColumn(i,elem,format=wx.LIST_FORMAT_LEFT,width=wx.LIST_AUTOSIZE)
+			i+=1
+
+	def UpdateListContent(self,content):
+		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
+		for elem in content:
+			self.hListCtrl.Append(elem)
+		#end 追加
+		self.log.debug("List control updated.")
+
+	def TriggerAction(self, action):
 		"""タブの指定要素に対してアクションを実行する。成功した場合は、errorCodes.OK を返し、失敗した場合は、その他のエラーコードを返す。"""
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
 class FileListTab(FalconTabBase):
 	"""ファイルリストが表示されているタブ。"""
-	def Initialize(self,dir):
+	def Initialize(self,parent,dir):
 		"""タブを初期化する。ディレクトリ名の指定で、ファイルリストを作成する。"""
 		#カラム設定
 		self.columns=[_("ファイル名"),_("サイズ"),_("更新"),_("属性"),_("種類")]
@@ -47,14 +79,19 @@ class FileListTab(FalconTabBase):
 		self.log.debug("Created.")
 		self.listObject=listObjects.FileList()
 		self.listObject.Initialize(dir)
+		self.InstallListCtrl(parent)
+		self.SetListColumns(self.columns)
+		self.UpdateListContent(self.listObject.GetItems())
 
-	def TriggerAction(self, index, action):
+	def TriggerAction(self, action):
+		index=self.GetFocusedItem()
 		if action==ACTION_FORWARD:
 			elem=self.listObject.GetElement(index)
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
 				newList=listObjects.FileList()
 				newList.Initialize(elem.fullpath)
 				self.listObject=newList
+				self.UpdateListContent(self.listObject.GetItems())
 				return errorCodes.OK
 			#end フォルダ開く
 			else:
@@ -67,4 +104,4 @@ class FileListTab(FalconTabBase):
 			newList=listObjects.FileList()
 			newList.Initialize(predir)
 			self.listObject=newList
-
+			self.UpdateListContent(self.listObject.GetItems())

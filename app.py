@@ -33,14 +33,13 @@ class falconAppMain(wx.App):
 		self.hFrame.Bind(wx.EVT_CLOSE, self.OnExit)
 		self.InstallMenu()
 		self.InstallShortcut()
-		self.InstallListCtrl()
 		self.hFrame.SetMenuBar(self.hMenuBar)
+		self.InstallListPanel()
 		self.tabs=[]
 		self.MakeFirstTab()
 		self.hFrame.Show()
 		self.SetTopWindow(self.hFrame)
 		self.log.debug("Finished window setup (%f seconds from start)" % t.elapsed)
-#		self.hListCtrl.Destroy()
 		return True
 
 	def InitLogger(self):
@@ -109,31 +108,20 @@ class falconAppMain(wx.App):
 		self.keymap.Initialize(constants.KEYMAP_FILE_NAME)
 		self.hFrame.SetAcceleratorTable(self.keymap.GenerateTable())
 
-	def InstallListCtrl(self):
-#		self.font = wx.Font(24,"HGSｺﾞｼｯｸE",wx.NORMAL,wx.FONTWEIGHT_BOLD)
-		self.font = wx.Font(24,wx.FONTFAMILY_MODERN,wx.NORMAL,wx.FONTWEIGHT_BOLD)
-
-		"""リストコントロールを設定する。"""
-		#パネルには複数のコントロールを設置できる。
-
+	def InstallListPanel(self):
+		"""リストコントロールが表示されるパネルを設定する。"""
 		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0,0),size=(800,300))
 		self.hListPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
 		self.hListPanel.SetAutoLayout(True)
-		self.hListCtrl=wx.ListCtrl(self.hListPanel, wx.ID_ANY, style=wx.LC_REPORT,size=wx.DefaultSize)
-		self.hListCtrl.SetThemeEnabled(False)
-		self.hListCtrl.SetBackgroundColour("#000000")		#項目のない部分の背景色
-		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
-		self.hListCtrl.SetTextColour("#ffffff")				#文字色
-		self.hListCtrl.SetFont(self.font)
-
 		self.sizer=wx.BoxSizer(wx.HORIZONTAL)
 		self.hListPanel.SetSizer(self.sizer)
-		self.sizer.Add(self.hListCtrl,1,wx.EXPAND)
+
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
+		self.activeTab=None#最初なのでなにもなし
 		tab=tabObjects.FileListTab()
-		tab.Initialize(os.path.expandvars(self.config["Browse"]["startPath"]))
+		tab.Initialize(self.hListPanel, os.path.expandvars(self.config["Browse"]["startPath"]))
 		self.AppendTab(tab,active=True)
 
 	def AppendTab(self,tab,active=False):
@@ -144,22 +132,9 @@ class falconAppMain(wx.App):
 
 	def ActivateTab(self,tab):
 		"""指定されたタブをアクティブにする。内部で管理しているタブリストに入っていない他部でも表示できる。"""
+		if self.activeTab: self.activeTab.getListCtrl().Hide()
 		self.activeTab=tab
-		self.UpdateList()
-
-	def UpdateList(self):
-		"""リストの情報を、フォーカスしているタブの最新情報にアップデートする。"""
-		self.hListCtrl.ClearAll()
-		#カラム設定
-		i=0
-		for elem in self.activeTab.GetColumns():
-			self.hListCtrl.InsertColumn(i,elem,format=wx.LIST_FORMAT_LEFT,width=wx.LIST_AUTOSIZE)
-			i+=1
-		#内容設定
-		for elem in self.activeTab.GetItems():
-			self.hListCtrl.Append(elem)
-		#end 追加
-		self.log.debug("List control updated.")
+		self.activeTab.GetListCtrl().Show(True)
 
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
