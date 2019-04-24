@@ -127,6 +127,7 @@ class falconAppMain(wx.App):
 	def AppendTab(self,tab,active=False):
 		"""タブを追加する。active=True で、追加したタブをその場でアクティブにする。"""
 		self.tabs.append(tab)
+		self.sizer.Add(tab.GetListCtrl(),1,wx.EXPAND)
 		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
 		if active is True: self.ActivateTab(tab)
 
@@ -134,7 +135,8 @@ class falconAppMain(wx.App):
 		"""指定されたタブをアクティブにする。内部で管理しているタブリストに入っていない他部でも表示できる。"""
 		if self.activeTab: self.activeTab.getListCtrl().Hide()
 		self.activeTab=tab
-		self.activeTab.GetListCtrl().Show(True)
+		l=self.activeTab.GetListCtrl()
+		l.Show(True)
 
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
