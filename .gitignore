@@ -7,3 +7,4 @@ falcon.build/
 falcon.dist/
 PyWin32.chm
 PyWin32.chw
+*.bat
