@@ -14,6 +14,8 @@ import wx
 import errorCodes
 import listObjects
 import browsableObjects
+import globalVars
+import constants
 
 #アクションの識別子
 ACTION_FORWARD=0#ファイル/フォルダ/副ストリームのオープン
@@ -24,6 +26,8 @@ class FalconTabBase(object):
 	def __init__(self):
 		self.colums=[]#タブに表示されるカラムの一覧。外からは読み取りのみ。
 		self.listObject=None#リストの中身を保持している listObjects のうちのどれかのオブジェクト・インスタンス
+		self.type=None
+
 	def __del__(self):
 		pass
 
@@ -36,6 +40,7 @@ class FalconTabBase(object):
 		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
 		self.hListCtrl.SetTextColour("#ffffff")				#文字色
 		self.hListCtrl.SetFont(self.font)
+		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 
 	def GetListColumns(self):
 		return self.columns
@@ -105,3 +110,17 @@ class FileListTab(FalconTabBase):
 			newList.Initialize(predir)
 			self.listObject=newList
 			self.UpdateListContent(self.listObject.GetItems())
+
+	def col_resize(self,event):
+		no=event.GetColumn()
+		width=self.hListCtrl.GetColumnWidth(no)
+		print("Column:"+str(no)+" resize to "+str(width))
+		globalVars.app.config["MainView"]["column_width_"+str(no)]=str(width)
+		with open(constants.SETTING_FILE_NAME, "w") as f: globalVars.app.config.write(f)
+
+
+
+
+
+
+
