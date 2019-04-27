@@ -190,7 +190,8 @@ class KeymapHandler():
 
 	def Initialize(self, filename):
 		"""キーマップ情報を初期かします。デフォルトキーマップを適用してから、指定されたファイルを読もうと試みます。ファイルが見つからなかった場合は、FILE_NOT_FOUND を返します。ファイルがパースできなかった場合は、PARSING_FAILED を返します。いずれの場合も、デフォルトキーマップは適用されています。"""
-		self.map=configparser.ConfigParser(defaultKeymap.defaultKeymap)
+		self.map=configparser.ConfigParser()
+		self.map.read_dict(defaultKeymap.defaultKeymap)
 		if not os.path.exists(filename):
 			self.log.warning("Cannot find %s" % filename)
 			return errorCodes.FILE_NOT_FOUND
@@ -200,10 +201,10 @@ class KeymapHandler():
 			self.log.warning("Cannot parse %s" % filename)
 		return ret
 
-	def GenerateTable(self):
-		"""アクセラレーターテーブルを生成します。"""
+	def GenerateTable(self, identifier):
+		"""アクセラレーターテーブルを生成します。identifier で、どのビューでのテーブルを生成するかを指定します。"""
 		tbl=[]
-		commands=self.map.items("keymap")
+		commands=self.map.items(identifier)
 		for elem in commands:
 			key=elem[1].upper()
 			flags=0

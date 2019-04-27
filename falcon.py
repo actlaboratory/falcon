@@ -11,7 +11,7 @@ def main():
 	global app
 	app=falconAppMain()
 	globalVars.app=app
-	app.initialize(constants.APP_NAME)
+	app.initialize()
 	app.MainLoop()
 
 #global schope
