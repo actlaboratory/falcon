@@ -12,11 +12,11 @@ class DefaultSettings:
 		config["general"]={
 			"language": "ja-JP",
 			}
-		config["MainView"]={
+		config["mainView"]={
 			"sizeX": "800",
 			"sizeY": "600",
 			}
-		config["Browse"]={
+		config["browse"]={
 			"startPath": "%%%%HOMEDRIVE%%%%\\documents"
 			}
 		return config

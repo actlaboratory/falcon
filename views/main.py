@@ -3,7 +3,6 @@
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-import configparser
 import gettext
 import logging
 import os
@@ -11,31 +10,32 @@ import sys
 import wx
 from logging import getLogger, FileHandler, Formatter
 
+from .base import BaseView
 import constants
 import DefaultSettings
 import errorCodes
+import globalVars
 import keymap
 import misc
 import tabObjects
 
-import .base
-
-class View(base.View):
+class View(BaseView):
 	def Initialize(self):
 		t=misc.Timer()
 		self.identifier="mainView"#このビューを表す文字列
 		self.log=getLogger("falcon.%s" % self.identifier)
+		self.log.debug("created")
 		self.app=globalVars.app
-		super().Initialize(constants.APP_NAME,size=(self.app.config.getint("MainView","sizeX"),self.app.config.getint("MainView","sizeY"))
+		super().Initialize(constants.APP_NAME,self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"))
 		self.menu=Menu()
-		self.events=Events()
-		self.InstallMenuEvent(self.menu,self.event)
-		self.InstallShortcutEvent(self.identifier,self.event)
+		self.events=Events(self.hFrame)
+		self.InstallMenuEvent(self.menu,self.events)
+		self.InstallShortcutEvent(self.identifier,self.events)
 		self.InstallListPanel()
 		self.tabs=[]
 		self.MakeFirstTab()
 		self.hFrame.Show()
-		self.SetTopWindow(self.hFrame)
+		self.app.SetTopWindow(self.hFrame)
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
@@ -51,7 +51,7 @@ class View(base.View):
 		"""最初のタブを作成する。"""
 		self.activeTab=None#最初なのでなにもなし
 		tab=tabObjects.FileListTab()
-		tab.Initialize(self.hListPanel, os.path.expandvars(self.config["Browse"]["startPath"]))
+		tab.Initialize(self.hListPanel, os.path.expandvars(self.app.config["brows"]["startPath"]))
 		self.AppendTab(tab,active=True)
 
 	def AppendTab(self,tab,active=False):
@@ -69,7 +69,7 @@ class View(base.View):
 		l.Show(True)
 
 class Menu():
-	def Apply(target,event):
+	def Apply(self,target,event):
 		"""指定されたウィンドウに、メニューを適用する。"""
 		#メニューの大項目を作る
 		self.hFileMenu=wx.Menu()
@@ -98,21 +98,21 @@ class Menu():
 		self.hMenuBar.Append(self.hEnvMenu,_("環境"))
 		self.hMenuBar.Append(self.hHelpMenu,_("ヘルプ"))
 		target.SetMenuBar(self.hMenuBar)
-		self.hFrame.Bind(wx.EVT_MENU,event.OnMenuSelect)
+		target.Bind(wx.EVT_MENU,event.OnMenuSelect)
 
-
+class Events:
+	def __init__(self,parent):
+		self.parent=parent
 
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
 		selected=event.GetId()#メニュー識別しの数値が出る
-		self.log.debug("Menu item selected (identifier %d)" % selected)
 		if selected==constants.MENU_ITEMS["FILE_EXIT"].GetValue():
-			self.onExit.onExit()
+			self.Exit(event)
 			return
 		if selected==constants.MENU_ITEMS["HELP_VERINFO"].GetValue():
 			self.ShowVersionInfo()
 			return
-		self.log.warning("Menu identifier %d is undefined in OnMenuSelect." % selected)
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
 
@@ -139,3 +139,7 @@ class Menu():
 			dialog("test","mada")
 		else:
 			self.UpdateList()
+
+	def Exit(self,event):
+		self.parent.Destroy()
+

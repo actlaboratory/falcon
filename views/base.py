@@ -3,15 +3,19 @@
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-class View(object):
-		"""falconのビューの基本クラス。"""
+import wx
+import constants
+import keymap
+class BaseView(object):
+	"""falconのビューの基本クラス。"""
 	def __init__(self):
 		pass
 
 	def Initialize(self, ttl, x, y):
 		"""タイトルとウィンドウサイズを指定して、ウィンドウを初期化する。"""
+		self.hFrame=wx.Frame(None,-1, ttl, size=(x,y))
 
-def InstallMenuEvent(self,menu):
+	def InstallMenuEvent(self,menu,event):
 		"""メニューを作り、指定されたイベント処理用オブジェクトと結びつける。"""
 		menu.Apply(self.hFrame,event)
 

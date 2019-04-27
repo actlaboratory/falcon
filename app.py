@@ -6,18 +6,19 @@
 import configparser
 import gettext
 import logging
+import os
 import wx
 from logging import getLogger, FileHandler, Formatter
 
 import constants
 import DefaultSettings
 import errorCodes
-
+import misc
 from views import main
 
 class falconAppMain(wx.App):
-	def initialize(self, ttl):
-		"""タイトル"""
+	def initialize(self):
+		"""アプリを初期化する。"""
 		t=misc.Timer()
 		self.InitLogger()
 		self.LoadSettings()
@@ -25,6 +26,7 @@ class falconAppMain(wx.App):
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 		#メインビューを表示
 		self.hMainView=main.View()
+		self.hMainView.Initialize()
 		self.log.debug("Finished mainView setup (%f seconds from start)" % t.elapsed)
 		return True
 
