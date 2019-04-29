@@ -42,6 +42,7 @@ class FalconTabBase(object):
 		self.hListCtrl.SetTextColour("#ffffff")				#文字色
 		self.hListCtrl.SetFont(self.font)
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
+		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
 
 	def GetListColumns(self):
 		return self.columns
@@ -75,6 +76,10 @@ class FalconTabBase(object):
 	def TriggerAction(self, action):
 		"""タブの指定要素に対してアクションを実行する。成功した場合は、errorCodes.OK を返し、失敗した場合は、その他のエラーコードを返す。"""
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
+	def EnterItem(self):
+		"""アイテムの上でエンターを押したときに実行される。本当はビューのショートカットキーにしたかったんだけど、エンターの入力だけはこっちでとらないとできなかった。"""
+		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
 class FileListTab(FalconTabBase):
 	"""ファイルリストが表示されているタブ。"""
@@ -130,9 +135,9 @@ class FileListTab(FalconTabBase):
 		globalVars.app.config["MainView"]["column_width_"+str(no)]=str(width)
 		with open(constants.SETTING_FILE_NAME, "w") as f: globalVars.app.config.write(f)
 
-
-
-
+	def EnterItem(self,event):
+		"""forward アクションを実行する。"""
+		self.TriggerAction(ACTION_FORWARD)
 
 
 
