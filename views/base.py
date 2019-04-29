@@ -24,3 +24,11 @@ class BaseView(object):
 		self.keymap=keymap.KeymapHandler()
 		self.keymap.Initialize(constants.KEYMAP_FILE_NAME)
 		self.hFrame.SetAcceleratorTable(self.keymap.GenerateTable(identifier))
+
+class BaseEvents(object):
+	"""イベント処理のデフォルトの動作をいくつか定義してあります。"""
+	def __init__(self,parent):
+		self.parent=parent
+
+	def Exit(self,event):
+		self.parent.hFrame.Destroy()

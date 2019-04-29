@@ -10,7 +10,7 @@ import sys
 import wx
 from logging import getLogger, FileHandler, Formatter
 
-from .base import BaseView
+from .base import *
 import constants
 import DefaultSettings
 import errorCodes
@@ -28,7 +28,7 @@ class View(BaseView):
 		self.app=globalVars.app
 		super().Initialize(constants.APP_NAME,self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"))
 		self.menu=Menu()
-		self.events=Events(self.hFrame)
+		self.events=Events(self)
 		self.InstallMenuEvent(self.menu,self.events)
 		self.InstallShortcutEvent(self.identifier,self.events)
 		self.InstallListPanel()
@@ -100,12 +100,12 @@ class Menu():
 		target.SetMenuBar(self.hMenuBar)
 		target.Bind(wx.EVT_MENU,event.OnMenuSelect)
 
-class Events:
-	def __init__(self,parent):
-		self.parent=parent
-
+class Events(BaseEvents):
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
+		if selected==constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue():
+			self.GoBackward()
+			return
 		selected=event.GetId()#メニュー識別しの数値が出る
 		if selected==constants.MENU_ITEMS["FILE_EXIT"].GetValue():
 			self.Exit(event)
@@ -120,15 +120,16 @@ class Events:
 		"""バージョン情報を表示する。"""
 		dialog(_("バージョン情報"),_("%(app)s Version %(ver)s.\nCopyright (C) %(year)s %(names)s") % {"app":constants.APP_NAME, "ver":constants.APP_VERSION, "year":constants.APP_COPYRIGHT_YEAR, "names":constants.APP_DEVELOPERS})
 
-	def TriggerBackwardAction(self):
+	def GoBackward(self):
 		"""back アクションを実行"""
-		ret=self.activeTab.TriggerAction(self.hListCtrl.GetFocusedItem(),tabObjects.ACTION_BACKWARD)
+		p=self.parent
+		ret=p.activeTab.TriggerAction(p.hListCtrl.GetFocusedItem(),tabObjects.ACTION_BACKWARD)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
 			dialog("test","mada")
 		else:
-			self.UpdateList()
+			p.UpdateList()
 
 	def TriggerForwardAction(self):
 		"""forward アクションを実行"""
@@ -139,7 +140,4 @@ class Events:
 			dialog("test","mada")
 		else:
 			self.UpdateList()
-
-	def Exit(self,event):
-		self.parent.Destroy()
 
