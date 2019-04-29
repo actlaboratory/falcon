@@ -8,5 +8,5 @@ defaultKeymap={}
 
 defaultKeymap["mainView"]={
 	"MOVE_BACKWARD": "BACK",
-	"MOVE_FORWARD": "RETURN"
+	"MOVE_FORWARD": "RIGHT"
 }

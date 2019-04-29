@@ -17,6 +17,7 @@ import browsableObjects
 import globalVars
 import constants
 
+from simpleDialog import *
 #アクションの識別子
 ACTION_FORWARD=0#ファイル/フォルダ/副ストリームのオープン
 ACTION_BACKWARD=1#内包しているフォルダ/内包しているドライブ/副ストリームのクローズ
@@ -51,7 +52,7 @@ class FalconTabBase(object):
 
 	def GetFocusedItem(self):
 		"""現在フォーカスが当たっているアイテムのインデックス番号を取得する。"""
-		return self.listCtrl.GetFocusedItem()
+		return self.hListCtrl.GetFocusedItem()
 
 	def GetListCtrl(self):
 		return self.hListCtrl
@@ -65,6 +66,7 @@ class FalconTabBase(object):
 
 	def UpdateListContent(self,content):
 		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
+		self.hListCtrl.DeleteAllItems()
 		for elem in content:
 			self.hListCtrl.Append(elem)
 		#end 追加
@@ -88,14 +90,24 @@ class FileListTab(FalconTabBase):
 		self.SetListColumns(self.columns)
 		self.UpdateListContent(self.listObject.GetItems())
 
+	def Brows(self,dir):
+		"""特定のフォルダの閲覧を試みる。アクセスできたら、ファイルリストを返す。アクセスできなかったら None を返す。"""
+		newList=listObjects.FileList()
+		ok=newList.Initialize(dir)
+		if not ok:
+			dialog(_("エラー"),_("アクセスが拒否されました。"))
+			return None
+				#end アクセス拒否
+		return newList
+
 	def TriggerAction(self, action):
 		index=self.GetFocusedItem()
 		if action==ACTION_FORWARD:
 			elem=self.listObject.GetElement(index)
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
-				newList=listObjects.FileList()
-				newList.Initialize(elem.fullpath)
-				self.listObject=newList
+				l=self.Brows(elem.fullpath)
+				if not l: return#アクセス負荷
+				self.listObject=l
 				self.UpdateListContent(self.listObject.GetItems())
 				return errorCodes.OK
 			#end フォルダ開く
@@ -106,9 +118,9 @@ class FileListTab(FalconTabBase):
 		if action==ACTION_BACKWARD:
 			predir=os.path.split(self.listObject.rootDirectory)[0]
 			if "\\" not in predir: return errorCodes.BOUNDARY#ファイルリストはこれ以上下がれないので、通知
-			newList=listObjects.FileList()
-			newList.Initialize(predir)
-			self.listObject=newList
+			l=self.Brows(predir)
+			if not l: return#アクセス負荷
+			self.listObject=l
 			self.UpdateListContent(self.listObject.GetItems())
 
 	def col_resize(self,event):

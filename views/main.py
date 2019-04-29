@@ -17,6 +17,7 @@ import errorCodes
 import globalVars
 import keymap
 import misc
+from simpleDialog import *
 import tabObjects
 
 class View(BaseView):
@@ -103,10 +104,13 @@ class Menu():
 class Events(BaseEvents):
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
+		selected=event.GetId()#メニュー識別しの数値が出る
 		if selected==constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue():
 			self.GoBackward()
 			return
-		selected=event.GetId()#メニュー識別しの数値が出る
+		if selected==constants.MENU_ITEMS["MOVE_FORWARD"].GetValue():
+			self.GoForward()
+			return
 		if selected==constants.MENU_ITEMS["FILE_EXIT"].GetValue():
 			self.Exit(event)
 			return
@@ -123,21 +127,17 @@ class Events(BaseEvents):
 	def GoBackward(self):
 		"""back アクションを実行"""
 		p=self.parent
-		ret=p.activeTab.TriggerAction(p.hListCtrl.GetFocusedItem(),tabObjects.ACTION_BACKWARD)
+		ret=p.activeTab.TriggerAction(tabObjects.ACTION_BACKWARD)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
 			dialog("test","mada")
-		else:
-			p.UpdateList()
 
-	def TriggerForwardAction(self):
+	def GoForward(self):
 		"""forward アクションを実行"""
-		ret=self.activeTab.TriggerAction(self.hListCtrl.GetFocusedItem(),tabObjects.ACTION_FORWARD)
+		p=self.parent
+		ret=p.activeTab.TriggerAction(tabObjects.ACTION_FORWARD)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
 			dialog("test","mada")
-		else:
-			self.UpdateList()
-

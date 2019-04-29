@@ -21,7 +21,7 @@ class FalconListBase(object):
 class FileList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
 	def Initialize(self,dir):
-		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。"""
+		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。取得できたら、Trueが帰る。"""
 		self.log=logging.getLogger("falcon.fileList")
 		self.rootDirectory=dir
 		self.log.debug("Getting file list for %s..." % self.rootDirectory)
@@ -48,9 +48,9 @@ class FileList(FalconListBase):
 			#end どっちについかするか？
 		#end 追加ループ
 		self.log.debug("File list created in %d milliseconds." % t.elapsed)
-
+		return True
 	def GetItems(self):
-		"""リストの中身を取得する。フォルダが上にくる。"""
+		"""リストの中身を文字列タプルで取得する。フォルダが上にくる。"""
 		lst=[]
 		for elem in self.folders:
 			lst.append(elem.GetListTuple())
