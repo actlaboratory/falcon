@@ -206,17 +206,18 @@ class KeymapHandler():
 		tbl=[]
 		commands=self.map.items(identifier)
 		for elem in commands:
-			key=elem[1].upper()
+			keyList=elem[1].upper().split("/")
 			flags=0
-			ctrl="CTRL+" in key
-			alt="ALT+" in key
-			shift="SHIFT+" in key
-			codestr=key.split("+")
-			if ctrl: flags=wx.ACCEL_CTRL
-			if alt: flags=flags|wx.ACCEL_ALT
-			if shift: flags=flags|wx.ACCEL_SHIFT
-
-			entry=wx.AcceleratorEntry(flags,str2key[codestr[len(codestr)-1]],constants.MENU_ITEMS[elem[0].upper()])
-			tbl.append(entry)
-		#end 追加
+			for key in keyList:
+				ctrl="CTRL+" in key
+				alt="ALT+" in key
+				shift="SHIFT+" in key
+				codestr=key.split("+")
+				if ctrl: flags=wx.ACCEL_CTRL
+				if alt: flags=flags|wx.ACCEL_ALT
+				if shift: flags=flags|wx.ACCEL_SHIFT
+				entry=wx.AcceleratorEntry(flags,str2key[codestr[len(codestr)-1]],constants.MENU_ITEMS[elem[0].upper()])
+				tbl.append(entry)
+			#end スラッシュで並んでいるコマンドの数だけ
+		#end 設定値1行ごと
 		return wx.AcceleratorTable(tbl)
