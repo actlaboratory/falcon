@@ -52,7 +52,7 @@ class View(BaseView):
 		"""最初のタブを作成する。"""
 		self.activeTab=None#最初なのでなにもなし
 		tab=tabObjects.FileListTab()
-		tab.Initialize(self.hListPanel, os.path.expandvars(self.app.config["brows"]["startPath"]))
+		tab.Initialize(self.hListPanel, os.path.expandvars(self.app.config["browse"]["startPath"]))
 		self.AppendTab(tab,active=True)
 
 	def AppendTab(self,tab,active=False):

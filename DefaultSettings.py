@@ -17,7 +17,7 @@ class DefaultSettings:
 			"sizeY": "600",
 			}
 		config["browse"]={
-			"startPath": "%%%%HOMEDRIVE%%%%\\documents"
+			"startPath": "%%%%HOMEDRIVE%%%%"
 			}
 		return config
 

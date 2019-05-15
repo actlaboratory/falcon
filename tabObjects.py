@@ -90,7 +90,8 @@ class FileListTab(FalconTabBase):
 		self.log=logging.getLogger("falcon.fileListTab")
 		self.log.debug("Created.")
 		self.listObject=listObjects.FileList()
-		self.listObject.Initialize(dir)
+		if not self.listObject.Initialize(dir):
+			return False
 		self.InstallListCtrl(parent)
 		self.SetListColumns(self.columns)
 		self.UpdateListContent(self.listObject.GetItems())
