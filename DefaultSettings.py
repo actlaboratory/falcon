@@ -16,6 +16,10 @@ class DefaultSettings:
 			"sizeX": "800",
 			"sizeY": "600",
 			}
+		config["wxTestView"]={
+			"sizeX": "800",
+			"sizeY": "600",
+			}
 		config["browse"]={
 			"startPath": "%%%%HOMEDRIVE%%%%"
 			}

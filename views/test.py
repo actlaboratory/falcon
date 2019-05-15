@@ -41,12 +41,12 @@ class View(BaseView):
 		self.hButton=wx.Button(self.hPanel, wx.ID_ANY, '何かする')
 		self.hButton.Bind(wx.EVT_BUTTON, self.OnButton)
 		#その2　チェックボックス
-		self.hCheckBox=wx.CheckBox(hPanel, wx.ID_ANY, "何かを切り替える")
+		self.hCheckBox=wx.CheckBox(self.hPanel, wx.ID_ANY, "何かを切り替える")
 		self.hCheckBox.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
 		#その3　ラジオボタン
 		radioitems=["猫","犬","サル"]
-		self.radioBox = wx.RadioBox(hPanel, label='何かを選ぶ', choices=radioitems)
-		self.radioBox.Bind(wx.EVT_RADIOBOX,self.OnRadioBox)
+		self.hRadioBox=wx.RadioBox(self.hPanel, label='何かを選ぶ', choices=radioitems)
+		self.hRadioBox.Bind(wx.EVT_RADIOBOX,self.OnRadioBox)
 		#その4　入力ボックス
 		self.hStaticText=wx.StaticText(self.hPanel, -1, "入力")
 		self.hTextCtrl=wx.TextCtrl(self.hPanel, -1)

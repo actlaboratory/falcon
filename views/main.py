@@ -11,14 +11,13 @@ import wx
 from logging import getLogger, FileHandler, Formatter
 
 from .base import *
+import misc
+import views.test
 import constants
-import DefaultSettings
 import errorCodes
 import globalVars
-import keymap
-import misc
-from simpleDialog import *
 import tabObjects
+from simpleDialog import *
 
 class View(BaseView):
 	def Initialize(self):
@@ -87,7 +86,7 @@ class Menu():
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く"))
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue(),_("閉じる"))
 		#環境メニューの中身
-		self.hEnvMenu.Append(constants.MENU_ITEMS["TEST_DIALOG"].GetValue(),_("テストダイアログを表示"))
+		self.hEnvMenu.Append(constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue(),_("テストダイアログを表示"))
 		#ヘルプメニューの中身
 		self.hHelpMenu.Append(constants.MENU_ITEMS["HELP_VERINFO"].GetValue(),_("バージョン情報"))
 		#メニューバー
@@ -114,7 +113,8 @@ class Events(BaseEvents):
 			self.GoForward()
 			return
 		if selected==constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue():
-			self.testdialog=test.View()
+			self.testdialog=views.test.View()
+			self.testdialog.Initialize()
 			return
 		if selected==constants.MENU_ITEMS["FILE_EXIT"].GetValue():
 			self.Exit(event)

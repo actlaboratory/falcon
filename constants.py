@@ -18,6 +18,6 @@ MENU_ITEMS={
 	"FILE_EXIT": wx.NewIdRef(),
 	"MOVE_BACKWARD": wx.NewIdRef(),
 	"MOVE_FORWARD": wx.NewIdRef(),
-	"TEST_DIALOG": wx.NewIdRef(),
+	"ENV_TESTDIALOG": wx.NewIdRef(),
 	"HELP_VERINFO": wx.NewIdRef()
 }
