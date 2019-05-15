@@ -75,3 +75,12 @@ def makePanel(mode,parent):
 		hPanel.SetBackgroundColour("#ffffff")		#項目のない部分の背景色＝白
 		hPanel.SetAutoLayout(True)
 	return hPanel
+
+
+
+
+"""
+	ラジオボタン関連サンプルコード
+	https://www.python-izm.com/gui/wxpython/wxpython_radiobox/
+
+"""

@@ -47,21 +47,24 @@ class View(BaseView):
 		self.hCheckBox=self.creator.checkbox("何かを切り替える",self.OnCheckBox)
 #		self.hCheckBox=wx.CheckBox(self.hPanel, wx.ID_ANY, "何かを切り替える")
 #		self.hCheckBox.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
+
 		#その3　ラジオボタン
 		self.hPanel=self.creator.getPanel()
 		self.hRadioBox=wx.StaticBox(self.hPanel, -1, '何かを選ぶ')
+		self.hRadioBox.SetForegroundColour("#ffffff")
+		self.hRadioBox.SetAutoLayout(True)
+
 		self.hRadioBoxSizer=wx.StaticBoxSizer(self.hRadioBox, wx.HORIZONTAL)
 		radioitems=["猫","犬","サル"]
-		for i in range(len(radioitems)):
+		for i in range(len(radioitems)) :
 			if i==0:
 				btn=wx.RadioButton(self.hRadioBox, -1, radioitems[i], style=wx.RB_GROUP)
 			else:
 				btn=wx.RadioButton(self.hRadioBox, -1, radioitems[i])
 			#end 最初の項目かどうか
-			self.hRadioBoxSizer.Add(btn)
 			btn.SetForegroundColour("#ffffff")
+			self.hRadioBoxSizer.Add(btn)
 		#end ボタン追加
-		self.hRadioBox.SetSizer(self.hRadioBoxSizer)
 
 		#その4　入力ボックス
 		self.hStaticText,self.hTextCtrl=self.creator.inputbox("何か書く")
@@ -72,7 +75,7 @@ class View(BaseView):
 		self.sizer=wx.BoxSizer(wx.HORIZONTAL)
 		self.sizer.Add(self.hButton)
 		self.sizer.Add(self.hCheckBox)
-#		self.sizer.Add(self.hRadioBox)
+		self.sizer.Add(self.hRadioBoxSizer)
 		self.sizer.Add(self.hStaticText)
 		self.sizer.Add(self.hTextCtrl)
 		self.creator.getPanel().SetSizer(self.sizer)
