@@ -18,6 +18,7 @@ import globalVars
 import keymap
 import misc
 from simpleDialog import *
+import views.ViewCreator
 
 class View(BaseView):
 	def Initialize(self):
@@ -34,30 +35,38 @@ class View(BaseView):
 
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
-		self.hPanel=wx.Panel(self.hFrame, wx.ID_ANY)
-		self.hPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
-		self.hPanel.SetAutoLayout(True)
+		self.creator=views.ViewCreator.ViewCreator(1,self.hFrame)
+#		self.hPanel=wx.Panel(self.hFrame, wx.ID_ANY)
+#		self.hPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
+#		self.hPanel.SetAutoLayout(True)
 		#その1　ボタン
-		self.hButton=wx.Button(self.hPanel, wx.ID_ANY, '何かする')
-		self.hButton.Bind(wx.EVT_BUTTON, self.OnButton)
+		self.hButton=self.creator.button("何かする",self.OnButton)
+#		self.hButton=wx.Button(self.hPanel, wx.ID_ANY, '何かする')
+#		self.hButton.Bind(wx.EVT_BUTTON, self.OnButton)
 		#その2　チェックボックス
-		self.hCheckBox=wx.CheckBox(self.hPanel, wx.ID_ANY, "何かを切り替える")
-		self.hCheckBox.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
+		self.hCheckBox=self.creator.checkbox("何かを切り替える",self.OnCheckBox)
+#		self.hCheckBox=wx.CheckBox(self.hPanel, wx.ID_ANY, "何かを切り替える")
+#		self.hCheckBox.Bind(wx.EVT_CHECKBOX, self.OnCheckBox)
+
 		#その3　ラジオボタン
 		radioitems=["猫","犬","サル"]
-		self.hRadioBox=wx.RadioBox(self.hPanel, label='何かを選ぶ', choices=radioitems)
-		self.hRadioBox.Bind(wx.EVT_RADIOBOX,self.OnRadioBox)
+		self.hRadioBox=self.creator.radiobox("何かを選ぶ",radioitems,self.OnRadioBox)
+#		self.hRadioBox=wx.RadioBox(self.hPanel, label='何かを選ぶ', choices=radioitems)
+#		self.hRadioBox.Bind(wx.EVT_RADIOBOX,self.OnRadioBox)
+
 		#その4　入力ボックス
-		self.hStaticText=wx.StaticText(self.hPanel, -1, "入力")
-		self.hTextCtrl=wx.TextCtrl(self.hPanel, -1)
+		self.hStaticText,self.hTextCtrl=self.creator.inputbox("何か書く")
+#		self.hStaticText=wx.StaticText(self.hPanel, -1, "入力")
+#		self.hTextCtrl=wx.TextCtrl(self.hPanel, -1)
 		#ここまで
+
 		self.sizer=wx.BoxSizer(wx.HORIZONTAL)
 		self.sizer.Add(self.hButton)
 		self.sizer.Add(self.hCheckBox)
 		self.sizer.Add(self.hRadioBox)
 		self.sizer.Add(self.hStaticText)
 		self.sizer.Add(self.hTextCtrl)
-		self.hPanel.SetSizer(self.sizer)
+		self.creator.getPanel().SetSizer(self.sizer)
 
 	def OnButton(self,evt):
 		dialog("Button pressed","Input box content: %s" % self.hTextCtrl.GetValue())
@@ -68,3 +77,4 @@ class View(BaseView):
 	def OnRadioBox(self,evt):
 		obj=evt.GetEventObject()
 		dialog("radiobutton changed","Selected: %s" % obj.GetStringSelection())
+
