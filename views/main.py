@@ -52,7 +52,7 @@ class View(BaseView):
 		"""最初のタブを作成する。"""
 		self.activeTab=None#最初なのでなにもなし
 		tab=tabObjects.FileListTab()
-		tab.Initialize(self.hListPanel, os.path.expandvars(self.app.config["brows"]["startPath"]))
+		tab.Initialize(self.hListPanel, os.path.expandvars(self.app.config["browse"]["startPath"]))
 		self.AppendTab(tab,active=True)
 
 	def AppendTab(self,tab,active=False):
@@ -86,6 +86,8 @@ class Menu():
 		#移動メニューの中身
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く"))
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue(),_("閉じる"))
+		#環境メニューの中身
+		self.hEnvMenu.Append(constants.MENU_ITEMS["TEST_DIALOG"].GetValue(),_("テストダイアログを表示"))
 		#ヘルプメニューの中身
 		self.hHelpMenu.Append(constants.MENU_ITEMS["HELP_VERINFO"].GetValue(),_("バージョン情報"))
 		#メニューバー
@@ -110,6 +112,9 @@ class Events(BaseEvents):
 			return
 		if selected==constants.MENU_ITEMS["MOVE_FORWARD"].GetValue():
 			self.GoForward()
+			return
+		if selected==constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue():
+			self.testdialog=test.View()
 			return
 		if selected==constants.MENU_ITEMS["FILE_EXIT"].GetValue():
 			self.Exit(event)
