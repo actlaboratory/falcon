@@ -2,14 +2,18 @@
 #Falcon wx test view
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
-
+import ctypes
 import gettext
 import logging
 import os
 import sys
 import wx
+import win32con
+import win32gui
+import _winxptheme
 from logging import getLogger, FileHandler, Formatter
 
+dll=ctypes.cdll.LoadLibrary("whelper.dll")
 from .base import *
 import constants
 import DefaultSettings
@@ -53,19 +57,19 @@ class View(BaseView):
 		self.hRadioBox=wx.StaticBox(self.hPanel, -1, '何かを選ぶ')
 		self.hRadioBox.SetForegroundColour("#FFFFFF")
 		self.hRadioBox.SetAutoLayout(True)
+		dll.ScRadioButton(self.hRadioBox.GetHandle())
+
 
 		self.hRadioBoxSizer=wx.StaticBoxSizer(self.hRadioBox, wx.HORIZONTAL)
 		radioitems=["猫","犬","サル"]
 		for i in range(len(radioitems)) :
-			if i==0:
-				btn=wx.RadioButton(self.hRadioBox, -1, radioitems[i], style=wx.RB_GROUP)
-			else:
-				btn=wx.RadioButton(self.hRadioBox, -1, radioitems[i])
-			#end 最初の項目かどうか
-			btn.SetThemeEnabled(False)
-			btn.SetOwnForegroundColour("#000000")
-			print(btn.GetForegroundColour().Get())
+			btn=wx.RadioButton(self.hRadioBox, -1, radioitems[i])
+			_winxptheme.SetWindowTheme(btn.GetHandle(),"","")
+			btn.SetBackgroundColour("#0000ff")
+			btn.SetForegroundColour("#ff0000")
 			self.hRadioBoxSizer.Add(btn)
+			handle=btn.GetHandle()
+
 		#end ボタン追加
 
 		#その4　入力ボックス
