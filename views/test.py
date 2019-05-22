@@ -51,7 +51,7 @@ class View(BaseView):
 		#その3　ラジオボタン
 		self.hPanel=self.creator.getPanel()
 		self.hRadioBox=wx.StaticBox(self.hPanel, -1, '何かを選ぶ')
-		self.hRadioBox.SetForegroundColour("#ffffff")
+		self.hRadioBox.SetForegroundColour("#FFFFFF")
 		self.hRadioBox.SetAutoLayout(True)
 
 		self.hRadioBoxSizer=wx.StaticBoxSizer(self.hRadioBox, wx.HORIZONTAL)
@@ -62,7 +62,9 @@ class View(BaseView):
 			else:
 				btn=wx.RadioButton(self.hRadioBox, -1, radioitems[i])
 			#end 最初の項目かどうか
-			btn.SetForegroundColour("#ffffff")
+			btn.SetThemeEnabled(False)
+			btn.SetOwnForegroundColour("#000000")
+			print(btn.GetForegroundColour().Get())
 			self.hRadioBoxSizer.Add(btn)
 		#end ボタン追加
 
