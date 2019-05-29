@@ -91,26 +91,27 @@ class MainListTab(FalconTabBase):
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
+		if type(self.listObject)!=lst:
+			self.columns=lst.GetColumns()
+			self.SetListColumns(self.columns)
+		#end 違う種類のリストかどうか
 		self.listObject=lst
-		self.columns=lst.GetColumns()
-		self.SetListColumns(self.columns)
 		self.UpdateListContent(self.listObject.GetItems())
-
 
 	def TriggerAction(self, action):
 		index=self.GetFocusedItem()
 		if action==ACTION_FORWARD:
 			elem=self.listObject.GetElement(index)
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
-				l=self.Brows(elem.fullpath)
-				if not l: return#アクセス負荷
-				self.listObject=l
-				self.UpdateListContent(self.listObject.GetItems())
+				lst=listObjects.FileList()
+				ok=lst.Initialize(elem.fullpath)
+				if not ok: return#アクセス負荷
+				self.Update(lst)
 				return errorCodes.OK
 			#end フォルダ開く
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				lst=listObjects.FileList()
-				lst.Initialize(elem.letter+":\\")
+				lst.Initialize(elem.letter+":")
 				self.Update(lst)
 				return errorCodes.OK
 			#end フォルダ開く
@@ -120,17 +121,18 @@ class MainListTab(FalconTabBase):
 			#end フォルダ以外のタイプ
 		#end ACTION_FORWARD
 		if action==ACTION_BACKWARD:
-			predir=os.path.split(self.listObject.rootDirectory)[0]
-			if "\\" not in predir:#ドライブリスト
+			dir=self.listObject.rootDirectory
+			if len(dir)<=3:#ドライブリスト
 				lst=listObjects.DriveList()
 				lst.Initialize()
 				self.Update(lst)
 				return
 			#end ドライブ一覧表示
-			l=self.Brows(predir)
-			if not l: return#アクセス負荷
-			self.listObject=l
-			self.UpdateListContent(self.listObject.GetItems())
+			predir=os.path.split(self.listObject.rootDirectory)[0]
+			lst=listObjects.FileList()
+			ok=lst.Initialize(predir)
+			if not ok: return#アクセス負荷
+			self.Update(lst)
 
 	def col_resize(self,event):
 		no=event.GetColumn()

@@ -2,7 +2,7 @@
 #Falcon app GUI implementation
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
-
+import accessible_output2.outputs.auto
 import configparser
 import gettext
 import logging
@@ -23,6 +23,7 @@ class falconAppMain(wx.App):
 		self.InitLogger()
 		self.LoadSettings()
 		self.InitTranslation()
+		self.speech=accessible_output2.outputs.auto.Auto()
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 		#メインビューを表示
 		self.hMainView=main.View()
@@ -52,3 +53,7 @@ class falconAppMain(wx.App):
 		"""翻訳を初期化する。"""
 		self.translator=gettext.translation("messages","locale", languages=[self.config["general"]["language"]], fallback=True)
 		self.translator.install()
+
+	def say(self,s):
+		"""スクリーンリーダーでしゃべらせる。"""
+		self.speech.speak(s)

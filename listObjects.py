@@ -10,6 +10,8 @@ import win32file
 import pywintypes
 import misc
 import browsableObjects
+import globalVars
+from simpleDialog import dialog
 class FalconListBase(object):
 	"""全てのリストに共通する基本クラス。"""
 	def __init__(self):
@@ -22,6 +24,10 @@ class FileList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
 	def Initialize(self,dir):
 		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。取得できたら、Trueが帰る。"""
+		dir=dir.rstrip("\\")
+		dir_spl=dir.split("\\")
+		level=len(dir_spl)
+		globalVars.app.say("%s%d %s" % (dir[0],level,dir_spl[level-1]))
 		self.log=logging.getLogger("falcon.fileList")
 		self.rootDirectory=dir
 		self.log.debug("Getting file list for %s..." % self.rootDirectory)
@@ -30,6 +36,7 @@ class FileList(FalconListBase):
 			lst=win32api.FindFiles(dir+"\\*")
 		except pywintypes.error as err:
 			self.log.error("Cannot open the directory! {0}".format(err))
+			dialog(_("エラー"), _("フォルダを開くことができませんでした(%(error)s)") % {"error": str(err)})
 			return False
 		#end except
 		self.files=[]
@@ -70,6 +77,7 @@ class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
 	def Initialize(self):
 		"""ドライブ情報を取得し、リストを初期化する。入力は絶対パスでなければならない。"""
+		globalVars.app.say(_("ドライブ洗濯"))
 		self.log=logging.getLogger("falcon.driveList")
 		self.log.debug("Getting drives list...")
 		t=misc.Timer()
