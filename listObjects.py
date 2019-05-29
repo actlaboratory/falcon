@@ -49,6 +49,10 @@ class FileList(FalconListBase):
 		#end 追加ループ
 		self.log.debug("File list created in %d milliseconds." % t.elapsed)
 		return True
+	def GetColumns(self):
+		"""このリストのカラム情報を返す。"""
+		return [_("ファイル名"),_("サイズ"),_("更新"),_("属性"),_("種類")]
+
 	def GetItems(self):
 		"""リストの中身を文字列タプルで取得する。フォルダが上にくる。"""
 		lst=[]

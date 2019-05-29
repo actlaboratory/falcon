@@ -16,6 +16,7 @@ import views.test
 import constants
 import errorCodes
 import globalVars
+import listObjects
 import tabObjects
 from simpleDialog import *
 
@@ -50,8 +51,11 @@ class View(BaseView):
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
 		self.activeTab=None#最初なのでなにもなし
-		tab=tabObjects.FileListTab()
-		tab.Initialize(self.hListPanel, os.path.expandvars(self.app.config["browse"]["startPath"]))
+		tab=tabObjects.MainListTab()
+		tab.Initialize(self.hListPanel)
+		lst=listObjects.FileList()
+		lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]))
+		tab.Update(lst)
 		self.AppendTab(tab,active=True)
 
 	def AppendTab(self,tab,active=False):

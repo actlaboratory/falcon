@@ -81,30 +81,21 @@ class FalconTabBase(object):
 		"""アイテムの上でエンターを押したときに実行される。本当はビューのショートカットキーにしたかったんだけど、エンターの入力だけはこっちでとらないとできなかった。"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
-class FileListTab(FalconTabBase):
-	"""ファイルリストが表示されているタブ。"""
-	def Initialize(self,parent,dir):
-		"""タブを初期化する。ディレクトリ名の指定で、ファイルリストを作成する。"""
-		#カラム設定
-		self.columns=[_("ファイル名"),_("サイズ"),_("更新"),_("属性"),_("種類")]
-		self.log=logging.getLogger("falcon.fileListTab")
+class MainListTab(FalconTabBase):
+	"""ファイル/フォルダ/ドライブリストが表示されているタブ。"""
+	def Initialize(self,parent):
+		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。"""
+		self.log=logging.getLogger("falcon.mainListTab")
 		self.log.debug("Created.")
-		self.listObject=listObjects.FileList()
-		if not self.listObject.Initialize(dir):
-			return False
 		self.InstallListCtrl(parent)
+
+	def Update(self,lst):
+		"""指定された要素をタブに適用する。"""
+		self.listObject=lst
+		self.columns=lst.GetColumns()
 		self.SetListColumns(self.columns)
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def Brows(self,dir):
-		"""特定のフォルダの閲覧を試みる。アクセスできたら、ファイルリストを返す。アクセスできなかったら None を返す。"""
-		newList=listObjects.FileList()
-		ok=newList.Initialize(dir)
-		if not ok:
-			dialog(_("エラー"),_("アクセスが拒否されました。"))
-			return None
-				#end アクセス拒否
-		return newList
 
 	def TriggerAction(self, action):
 		index=self.GetFocusedItem()
