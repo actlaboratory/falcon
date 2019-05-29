@@ -82,6 +82,10 @@ class DriveList(FalconListBase):
 		#end ドライブ25個分調べる
 		self.log.debug("Drives list created in %d seconds." % t.elapsed)
 
+	def GetColumns(self):
+		"""このリストのカラム情報を返す。"""
+		return [_("名称"),_("空き"),_("合計"),_("種類")]
+
 	def Append(self,index):
 		"""ドライブ情報を調べて、リストに追加する。Aドライブが0、Zドライブが25。"""
 		letter=chr(index+65)
@@ -94,8 +98,12 @@ class DriveList(FalconListBase):
 		self.drives.append(d)
 
 	def GetItems(self):
-		"""リストの中身を取得する。フォルダが上にくる。"""
+		"""リストの中身を取得する。"""
 		lst=[]
 		for elem in self.drives:
 			lst.append(elem.GetListTuple())
 		return lst
+
+	def GetElement(self,index):
+		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
+		return self.drives[index]

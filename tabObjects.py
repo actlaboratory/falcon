@@ -108,13 +108,25 @@ class MainListTab(FalconTabBase):
 				self.UpdateListContent(self.listObject.GetItems())
 				return errorCodes.OK
 			#end フォルダ開く
+			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
+				lst=listObjects.FileList()
+				lst.Initialize(elem.letter+":\\")
+				self.Update(lst)
+				return errorCodes.OK
+			#end フォルダ開く
+
 			else:
 				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
 			#end フォルダ以外のタイプ
 		#end ACTION_FORWARD
 		if action==ACTION_BACKWARD:
 			predir=os.path.split(self.listObject.rootDirectory)[0]
-			if "\\" not in predir: return errorCodes.BOUNDARY#ファイルリストはこれ以上下がれないので、通知
+			if "\\" not in predir:#ドライブリスト
+				lst=listObjects.DriveList()
+				lst.Initialize()
+				self.Update(lst)
+				return
+			#end ドライブ一覧表示
 			l=self.Brows(predir)
 			if not l: return#アクセス負荷
 			self.listObject=l
@@ -130,6 +142,3 @@ class MainListTab(FalconTabBase):
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
 		self.TriggerAction(ACTION_FORWARD)
-
-
-
