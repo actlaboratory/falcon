@@ -5,6 +5,7 @@
 
 import os
 import misc
+import win32file
 
 class FalconBrowsableBase(object):
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
