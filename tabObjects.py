@@ -11,6 +11,7 @@ import os
 import gettext
 import logging
 import wx
+import win32api
 import errorCodes
 import listObjects
 import browsableObjects
@@ -109,6 +110,14 @@ class MainListTab(FalconTabBase):
 				self.Update(lst)
 				return errorCodes.OK
 			#end フォルダ開く
+			elif isinstance(elem,browsableObjects.File):#このファイルを開く
+				try:
+					globalVars.app.say(_("起動"))
+					win32api.ShellExecute(0,"open",elem.fullpath,"","",1)
+				except win32api.error as er:
+					dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": str(er)})
+				#end ファイル開けなかった
+			#ファイルを開く
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				lst=listObjects.FileList()
 				lst.Initialize(elem.letter+":")
