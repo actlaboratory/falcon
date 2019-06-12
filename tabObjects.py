@@ -37,7 +37,7 @@ class FalconTabBase(object):
 	def InstallListCtrl(self,parent):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
 		self.font = wx.Font(24,wx.FONTFAMILY_MODERN,wx.NORMAL,wx.FONTWEIGHT_BOLD)
-		self.hListCtrl=wx.ListCtrl(parent, wx.ID_ANY, style=wx.LC_REPORT,size=wx.DefaultSize)
+		self.hListCtrl=wx.ListCtrl(parent, wx.ID_ANY, style=wx.LC_REPORT|wx.LC_EDIT_LABELS,size=wx.DefaultSize)
 		self.hListCtrl.SetThemeEnabled(False)
 		self.hListCtrl.SetBackgroundColour("#000000")		#項目のない部分の背景色
 		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
@@ -104,6 +104,7 @@ class MainListTab(FalconTabBase):
 		index=self.GetFocusedItem()
 		if action==ACTION_FORWARD or action==ACTION_FORWARD_STREAM:
 			elem=self.listObject.GetElement(index)
+			self.lastBasename=elem.basename#あとでバックスペースで戻ったときに使う
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
 				lst=listObjects.FileList()
 				ok=lst.Initialize(elem.fullpath)
@@ -115,13 +116,15 @@ class MainListTab(FalconTabBase):
 				if action==ACTION_FORWARD: self.RunFile(elem)
 				if action==ACTION_FORWARD_STREAM: self.OpenStream(elem)
 			#ファイルを開く
+			elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
+				self.RunFile(elem)
+			#end ストリームを開く
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				lst=listObjects.FileList()
 				lst.Initialize(elem.letter+":")
 				self.Update(lst)
 				return errorCodes.OK
 			#end フォルダ開く
-
 			else:
 				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
 			#end フォルダ以外のタイプ
@@ -139,9 +142,11 @@ class MainListTab(FalconTabBase):
 			ok=lst.Initialize(predir)
 			if not ok: return#アクセス負荷
 			self.Update(lst)
+			self.hListCtrl.Focus(self.hListCtrl.FindItem(-1,self.lastBasename))
 
 	def RunFile(self,elem):
 		"""ファイルを起動する。"""
+		self.log.debug("running %s" % elem.fullpath)
 		try:
 			globalVars.app.say(_("起動"))
 			win32api.ShellExecute(0,"open",elem.fullpath,"","",1)

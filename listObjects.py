@@ -14,11 +14,19 @@ import globalVars
 from simpleDialog import dialog
 class FalconListBase(object):
 	"""全てのリストに共通する基本クラス。"""
-	def __init__(self):
-		pass
-
-	def __del__(self):
-		pass
+	def Search(self,search):
+		"""文字列からインデックス番号に変換する。"""
+		lst=self.GetItems()
+		found=-1
+		i=0
+		for elem in lst:
+			if elem[0]==search:
+				found=i
+				i+=1
+				break
+			#end 検索
+		#end for
+		return found
 
 class FileList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
@@ -135,7 +143,7 @@ class StreamList(FalconListBase):
 		#end 情報取得失敗
 		self.streams=[]
 		for elem in lst:
-			fullpath=file+":"+elem[1]
+			fullpath=file+elem[1]
 			s=browsableObjects.Stream()
 			s.Initialize(file,elem[1],fullpath,elem[0])
 			self.streams.append(s)
