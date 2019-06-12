@@ -7,6 +7,7 @@ defaultKeymap={}
 
 
 defaultKeymap["mainView"]={
+	"FILE_RENAME": "F2",
 	"MOVE_BACKWARD": "BACK/LEFT",
 	"MOVE_FORWARD_STREAM": "RIGHT"
 }

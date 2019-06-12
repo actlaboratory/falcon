@@ -15,6 +15,7 @@ SETTING_FILE_NAME="settings.ini"
 KEYMAP_FILE_NAME="keymap.ini"
 
 MENU_ITEMS={
+	"FILE_RENAME": wx.NewIdRef(),
 	"FILE_EXIT": wx.NewIdRef(),
 	"MOVE_BACKWARD": wx.NewIdRef(),
 	"MOVE_FORWARD": wx.NewIdRef(),

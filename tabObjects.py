@@ -30,9 +30,7 @@ class FalconTabBase(object):
 		self.colums=[]#タブに表示されるカラムの一覧。外からは読み取りのみ。
 		self.listObject=None#リストの中身を保持している listObjects のうちのどれかのオブジェクト・インスタンス
 		self.type=None
-
-	def __del__(self):
-		pass
+		self.isRenaming=False
 
 	def InstallListCtrl(self,parent):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
@@ -44,6 +42,8 @@ class FalconTabBase(object):
 		self.hListCtrl.SetTextColour("#ffffff")				#文字色
 		self.hListCtrl.SetFont(self.font)
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
+		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
+		self.hListCtrl.Bind(wx.EVT_LIST_END_LABEL_EDIT,self.OnLabelEditEnd)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
 
 	def GetListColumns(self):
@@ -89,7 +89,8 @@ class MainListTab(FalconTabBase):
 		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。"""
 		self.log=logging.getLogger("falcon.mainListTab")
 		self.log.debug("Created.")
-		self.InstallListCtrl(parent)
+		self.parent=parent
+		self.InstallListCtrl(parent.hListPanel)
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
@@ -169,6 +170,20 @@ class MainListTab(FalconTabBase):
 		globalVars.app.config["MainView"]["column_width_"+str(no)]=str(width)
 		with open(constants.SETTING_FILE_NAME, "w") as f: globalVars.app.config.write(f)
 
+	def OnLabelEditStart(self,evt):
+		self.isRenaming=True
+		self.parent.SetShortcutEnabled(False)
+
+	def OnLabelEditEnd(self,evt):
+		self.isRenaming=False
+		self.parent.SetShortcutEnabled(True)
+
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
 		self.TriggerAction(ACTION_FORWARD)
+
+	def StartRename(self):
+		"""リネームを開始する。"""
+		print("edit")
+		index=self.GetFocusedItem()
+		self.hListCtrl.EditLabel(index)

@@ -52,7 +52,7 @@ class View(BaseView):
 		"""最初のタブを作成する。"""
 		self.activeTab=None#最初なのでなにもなし
 		tab=tabObjects.MainListTab()
-		tab.Initialize(self.hListPanel)
+		tab.Initialize(self)
 		lst=listObjects.FileList()
 		lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]))
 		tab.Update(lst)
@@ -124,6 +124,9 @@ class Events(BaseEvents):
 			self.testdialog=views.test.View()
 			self.testdialog.Initialize()
 			return
+		if selected==constants.MENU_ITEMS["FILE_RENAME"].GetValue():
+			self.StartRename()
+			return
 		if selected==constants.MENU_ITEMS["FILE_EXIT"].GetValue():
 			self.Exit(event)
 			return
@@ -132,6 +135,11 @@ class Events(BaseEvents):
 			return
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
+
+	def StartRename(self):
+		"""リネームを開始する。"""
+		self.parent.activeTab.StartRename()
+	#end StartRename
 
 	def ShowVersionInfo(self):
 		"""バージョン情報を表示する。"""

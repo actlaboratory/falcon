@@ -23,7 +23,14 @@ class BaseView(object):
 		"""指定されたビューのショートカットキーを読み込んで、イベント処理用クラスと結びつける。"""
 		self.keymap=keymap.KeymapHandler()
 		self.keymap.Initialize(constants.KEYMAP_FILE_NAME)
-		self.hFrame.SetAcceleratorTable(self.keymap.GenerateTable(identifier))
+		self.acceleratorTable=self.keymap.GenerateTable(identifier)
+		self.hFrame.SetAcceleratorTable(self.acceleratorTable)
+
+	def SetShortcutEnabled(self,en):
+		"""ショートカットキーの有効/無効を切り替える。"""
+		t=self.acceleratorTable if en else wx.AcceleratorTable()
+		self.hFrame.SetAcceleratorTable(t)
+	#end SetShortcutEnabled
 
 class BaseEvents(object):
 	"""イベント処理のデフォルトの動作をいくつか定義してあります。"""
