@@ -9,11 +9,13 @@ import win32file
 
 class FalconBrowsableBase(object):
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
-	def __init__(self):
-		pass
-
-	def __del__(self):
-		pass
+	def GetAttributesString(self):
+		"""属性の文字列を設定する。"""
+		attrib=self.attributes
+		self.attributesString=""
+		self.attributesString+= "R" if attrib&win32file.FILE_ATTRIBUTE_READONLY else "-"
+		self.attributesString+="H" if attrib&win32file.FILE_ATTRIBUTE_HIDDEN else "-"
+		self.attributesString+="S" if attrib&win32file.FILE_ATTRIBUTE_SYSTEM else "-"
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
@@ -25,16 +27,17 @@ class File(FalconBrowsableBase):
 		self.size=size
 		self.modDate=modDate
 		self.attributes=attributes
+		self.GetAttributesString()
 		self.typeString=typeString
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
-		return (self.basename, self.size, misc.PTime2string(self.modDate), self.attributes, self.typeString)
+		return (self.basename, self.size, misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
 class Folder(File):
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。フォルダなのでサイズは <dir> にする。"""
-		return (self.basename, "<dir>", misc.PTime2string(self.modDate), self.attributes, self.typeString)
+		return (self.basename, "<dir>", misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
 class Drive(FalconBrowsableBase):
 	"""ドライブを表す。"""
