@@ -20,8 +20,9 @@ import constants
 
 from simpleDialog import *
 #アクションの識別子
-ACTION_FORWARD=0#ファイル/フォルダ/副ストリームのオープン
-ACTION_BACKWARD=1#内包しているフォルダ/内包しているドライブ/副ストリームのクローズ
+ACTION_FORWARD=0#ファイル/フォルダのオープン
+ACTION_FORWARD_STREAM=1#ファイル/フォルダ/副ストリームのオープン
+ACTION_BACKWARD=2#内包しているフォルダ/内包しているドライブ/副ストリームのクローズ
 
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
@@ -101,7 +102,7 @@ class MainListTab(FalconTabBase):
 
 	def TriggerAction(self, action):
 		index=self.GetFocusedItem()
-		if action==ACTION_FORWARD:
+		if action==ACTION_FORWARD or action==ACTION_FORWARD_STREAM:
 			elem=self.listObject.GetElement(index)
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
 				lst=listObjects.FileList()
@@ -111,12 +112,8 @@ class MainListTab(FalconTabBase):
 				return errorCodes.OK
 			#end フォルダ開く
 			elif isinstance(elem,browsableObjects.File):#このファイルを開く
-				try:
-					globalVars.app.say(_("起動"))
-					win32api.ShellExecute(0,"open",elem.fullpath,"","",1)
-				except win32api.error as er:
-					dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": str(er)})
-				#end ファイル開けなかった
+				if action==ACTION_FORWARD: self.RunFile(elem)
+				if action==ACTION_FORWARD_STREAM: self.OpenStream(elem)
 			#ファイルを開く
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				lst=listObjects.FileList()
@@ -142,6 +139,23 @@ class MainListTab(FalconTabBase):
 			ok=lst.Initialize(predir)
 			if not ok: return#アクセス負荷
 			self.Update(lst)
+
+	def RunFile(self,elem):
+		"""ファイルを起動する。"""
+		try:
+			globalVars.app.say(_("起動"))
+			win32api.ShellExecute(0,"open",elem.fullpath,"","",1)
+		except win32api.error as er:
+			dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": str(er)})
+		#end ファイル開けなかった
+	#end RunFile
+
+	def OpenStream(self,elem):
+		"""副ストリームリストを開く。"""
+		lst=listObjects.StreamList()
+		lst.Initialize(elem.fullpath)
+		self.Update(lst)
+	#end OpenStream
 
 	def col_resize(self,event):
 		no=event.GetColumn()

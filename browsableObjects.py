@@ -65,3 +65,16 @@ class Drive(FalconBrowsableBase):
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
 		return (self.name+"("+self.letter+")", misc.ConvertBytesTo(self.free, misc.UNIT_AUTO, True), misc.ConvertBytesTo(self.total, misc.UNIT_AUTO, True), self.typeString)
+
+class Stream(FalconBrowsableBase):
+	"""NTFS 副ストリームを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
+	def Initialize(self,file="", basename="", fullpath="", size=-1):
+		"""必要な情報をセットする"""
+		self.file=file
+		self.basename=basename
+		self.fullpath=fullpath
+		self.size=size
+
+	def GetListTuple(self):
+		"""表示に必要なタプルを返す。"""
+		return (self.basename, self.size)

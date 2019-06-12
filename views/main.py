@@ -88,6 +88,7 @@ class Menu():
 		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_EXIT"].GetValue(),_("終了"))
 		#移動メニューの中身
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く"))
+		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue(),_("開く(ストリーム)"))
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue(),_("閉じる"))
 		#環境メニューの中身
 		self.hEnvMenu.Append(constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue(),_("テストダイアログを表示"))
@@ -114,7 +115,10 @@ class Events(BaseEvents):
 			self.GoBackward()
 			return
 		if selected==constants.MENU_ITEMS["MOVE_FORWARD"].GetValue():
-			self.GoForward()
+			self.GoForward(False)
+			return
+		if selected==constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue():
+			self.GoForward(True)
 			return
 		if selected==constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue():
 			self.testdialog=views.test.View()
@@ -142,10 +146,11 @@ class Events(BaseEvents):
 		elif ret==errorCodes.BOUNDARY:
 			dialog("test","mada")
 
-	def GoForward(self):
-		"""forward アクションを実行"""
+	def GoForward(self,st):
+		"""forward アクションを実行。st=True で、ファイルを開く代わりにストリームを開く。"""
 		p=self.parent
-		ret=p.activeTab.TriggerAction(tabObjects.ACTION_FORWARD)
+		act=tabObjects.ACTION_FORWARD if st is False else tabObjects.ACTION_FORWARD_STREAM
+		ret=p.activeTab.TriggerAction(act)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
