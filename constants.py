@@ -21,5 +21,6 @@ MENU_ITEMS={
 	"MOVE_FORWARD": wx.NewIdRef(),
 	"MOVE_FORWARD_STREAM": wx.NewIdRef(),
 	"ENV_TESTDIALOG": wx.NewIdRef(),
+	"ENV_FONTTEST": wx.NewIdRef(),
 	"HELP_VERINFO": wx.NewIdRef()
 }
