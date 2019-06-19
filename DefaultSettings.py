@@ -12,6 +12,9 @@ class DefaultSettings:
 		config["general"]={
 			"language": "ja-JP",
 			}
+		config["view"]={
+			"font": "bold 'ＭＳ ゴシック' 22 windows-932"
+			}
 		config["mainView"]={
 			"sizeX": "800",
 			"sizeY": "600",

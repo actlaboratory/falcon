@@ -14,6 +14,10 @@ APP_DEVELOPERS="Yukio Nozawa and Yuki Kochi"
 SETTING_FILE_NAME="settings.ini"
 KEYMAP_FILE_NAME="keymap.ini"
 
+FONT_MIN_SIZE=5
+FONT_MAX_SIZE=35
+
+
 MENU_ITEMS={
 	"FILE_RENAME": wx.NewIdRef(),
 	"FILE_EXIT": wx.NewIdRef(),

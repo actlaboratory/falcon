@@ -19,6 +19,9 @@ import keymap
 import misc
 from simpleDialog import *
 import views.ViewCreator
+from .fontManager import *
+
+
 
 class View(BaseView):
 	def Initialize(self):
@@ -28,9 +31,11 @@ class View(BaseView):
 		self.log.debug("created")
 		self.app=globalVars.app
 		super().Initialize("wxテスト",800,600)
+		manager=fontManager()
 		self.InstallControls()
 		self.hFrame.Show()
 
+		"""
 		# FontDataを生成し、設定を行う
 		fontData=wx.FontData()
 		fontData.EnableEffects(False)		#取り消し線などは設定できない
@@ -42,11 +47,20 @@ class View(BaseView):
 		if not font.IsOk():
 			dialog("エラー","有効なフォントではありません。")
 			return True
-	#アサーションエラーの対策
+		#アサーションエラーの対策
+		"""
+		font=manager.getFont()
 		dialog("test",str(font.GetPointSize()))
 		dialog("test",font.GetNativeFontInfoUserDesc())
-		dialog("test",font.GetNativeFontInfo())
+		dialog("test",font.GetNativeFontInfoDesc())
+
+		manager.showSettingDialog(self.hFrame)
+		font=manager.getFont()
+		dialog("test",str(font.GetPointSize()))
+		dialog("test",font.GetNativeFontInfoUserDesc())
+		dialog("test",font.GetNativeFontInfoDesc())
 		return True
+
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
 		self.creator=views.ViewCreator.ViewCreator(1,self.hFrame)
