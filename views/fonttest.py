@@ -36,16 +36,16 @@ class View(BaseView):
 		fontData.EnableEffects(False)		#取り消し線などは設定できない
 		fontData.SetAllowSymbols(False)		#シンボルフォントの設定は認めない
 		fontData.SetRange(5,35)
-
-		fontchooser=wx.FontDialog(self.hFrame,fontData)#第2パラにフォントデータを指定しても良い。デフォルトとして使われる。
-		ret=fontchooser.ShowModal()
-		s="OK" if ret==wx.ID_OK else "cancel"
-		dialog("result",s)
-		font=fontData.GetChosenFont()					#wx.FontDataがとれる
-		dialog (str(font.GetPointSize()))
-		dialog(font.GetNativeFontInfoUserDesc())
-		dialog(font.GetNativeFontInfo())
-
+		fontchooser=wx.FontDialog(self.hFrame,fontData)
+		fontchooser.ShowModal()
+		font=fontchooser.GetFontData().GetChosenFont()
+		if not font.IsOk():
+			dialog("エラー","有効なフォントではありません。")
+			return True
+	#アサーションエラーの対策
+		dialog("test",str(font.GetPointSize()))
+		dialog("test",font.GetNativeFontInfoUserDesc())
+		dialog("test",font.GetNativeFontInfo())
 		return True
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
