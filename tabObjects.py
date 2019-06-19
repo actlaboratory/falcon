@@ -17,6 +17,7 @@ import listObjects
 import browsableObjects
 import globalVars
 import constants
+import fileOperator
 
 from simpleDialog import *
 #アクションの識別子
@@ -177,6 +178,16 @@ class MainListTab(FalconTabBase):
 	def OnLabelEditEnd(self,evt):
 		self.isRenaming=False
 		self.parent.SetShortcutEnabled(True)
+		e=self.hListCtrl.GetEditControl()
+		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
+		inst={"operation": "rename", "files": [f.fullpath], "to": [f.directory+"\\"+e.GetLineText(0)]}
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		if op.CheckSucceeded()==0:
+			dialog(_("エラー"),_("名前が変更できません。"))
+			evt.Veto()
+		#end fail
+	#end onLabelEditEnd
 
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
@@ -184,6 +195,5 @@ class MainListTab(FalconTabBase):
 
 	def StartRename(self):
 		"""リネームを開始する。"""
-		print("edit")
 		index=self.GetFocusedItem()
 		self.hListCtrl.EditLabel(index)
