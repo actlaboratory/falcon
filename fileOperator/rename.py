@@ -5,7 +5,8 @@
 import logging
 import os
 import win32file
-from . import failedElement
+from . import helper
+
 log=logging.getLogger("falcon.rename")
 
 def Execute(instructions,output):
@@ -26,22 +27,17 @@ def Execute(instructions,output):
 				try:
 					win32file.SetVolumeLabel(d,to[i])
 				except win32file.error as err:
-					CommonFailure(output,elem,str(err))
+					helper.CommonFailure(output,{"file": elem, "to": to[i]},err,log)
 					continue
 				#end except
 			else:#ファイルだからリネーム
 				try:
 					win32file.MoveFile(elem,to[i])
 				except win32file.error as err:
-					CommonFailure(output,elem,str(err))
+					helper.CommonFailure(output,{"file": elem, "to": to[i]},err,log)
 					continue
 				#end except
 			#end ファイルかドライブか
 			output["succeeded"]+=1
 			i+=1
 		#end 項目の数だけ
-def CommonFailure(output,elem,err):
-	"""共通の失敗処理。"""
-	log.error("file op error %s %s" % (elem, err))
-	output["failed"].append(failedElement.FailedElement(elem,str(err)))
-	output["all_OK"]=False

@@ -8,6 +8,7 @@ import pickle
 import random
 import threading
 import win32api
+from simpleDialog import dialog
 
 import misc
 
@@ -23,13 +24,19 @@ class FileOperator(object):
 		self.working=False#ファイルオペレーション実行中かどうか
 		self.log=logging.getLogger("falcon.fileOperator")
 		self.log.debug("Created.")
-		self.instructions=instructions
 		self.output={}
 		self.output["succeeded"]=0#オペレーション成功した数
 		self.output["finished"]=False#オペレーション終了したかどうか
 		self.output["failed"]=[]#失敗したファイル立ちの情報
+		self.output["retry"]=[]#権限昇格して自動的にリトライするファイル
 		self.output["all_OK"]=False#全て成功ならTrueにする
 		self.started=False#スタートしたかどうか
+		self.instructions=None
+		if isinstance(instructions,str):
+			self.unpickle(instructions)
+		else:
+			self.instructions=instructions
+		#end str or dict
 	#end __init__
 
 	def Execute(self, threaded=False):
@@ -73,9 +80,14 @@ class FileOperator(object):
 		if op=="rename":#リネーム
 			rename.Execute(self.instructions,self.output)
 		#end rename
+		if len(self.output["retry"])>0: self._elevate()#昇格してリトライ
 		self.working=False
 		self.log.info("Finished (%f sec)" % self.opTimer.elapsed)
 	#end _process
+
+	def _elevate(self):
+		"""権限昇格し、アクセス拒否になった項目を再実行する。"""
+		dialog("test","retry %d" % len(self.output["retry"]))
 
 	def CheckFinished(self):
 		"""ファイルオペレーションが終了したかどうかを取得する。"""
@@ -108,7 +120,7 @@ class FileOperator(object):
 		#end 保存できるファイル名を探す処理
 		self.log.debug("Saving file operation status: directory=%s, filename=%s, %s" % (temp, fi, fo))
 		try:
-			f=open(fi,"wb")
+			f=open(temp+"\\"+fi,"wb")
 		except IOError:
 			self.log.error("Failed to write to %s" % fi)
 			return False
@@ -116,23 +128,24 @@ class FileOperator(object):
 		pickle.dump(self.instructions,f)
 		f.close()
 		try:
-			f=open(fo,"wb")
+			f=open(temp+"\\"+fo,"wb")
 		except IOError as er:
 			self.debug.error("Failed to write to %s" % fo)
 			return False
 		#end except
 		pickle.dump(self.output,f)
 		f.close()
-		return "falcon%04" % r
+		return "falcon%04d" % r
 	#end pickle
 
 	def unpickle(self,name):
 		"""ファイルから状態を読み込む。よみこめなかったらFalse。"""
+		temp=win32api.GetEnvironmentVariable("TEMP")
 		self.log.debug("Loading fileOp state from %s" % name)
 		fi=name+"i"
 		fo=name+"o"
 		try:
-			f=open(fi,"rb")
+			f=open(temp+"\\"+fi,"rb")
 		except IOError as er:
 			self.log.error("Cannot read %s (%s)" % (fi, str(er)))
 			return False
@@ -143,8 +156,9 @@ class FileOperator(object):
 			self.log.error("Cannot extract %s(%s)" % (fi, str(err)))
 			return False
 		#end except
+		f.close()
 		try:
-			f=open(fo,"rb")
+			f=open(temp+"\\"+fo,"rb")
 		except IOError as er:
 			self.log.error("Cannot read %s (%s)" % (fo, str(er)))
 			return False
@@ -155,5 +169,8 @@ class FileOperator(object):
 			self.log.error("Cannot extract %s(%s)" % (fo, str(err)))
 			return False
 		#end except
-		self.log.debug("Loaded")
+		f.close()
+		self.log.debug("Loaded (operation %s, infile %s" % (self.instructions["operation"], str(self.instructions["files"])))
+		os.remove(temp+"\\"+fi)
+		os.remove(temp+"\\"+fo)
 		return True
