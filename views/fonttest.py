@@ -30,13 +30,23 @@ class View(BaseView):
 		super().Initialize("wxテスト",800,600)
 		self.InstallControls()
 		self.hFrame.Show()
-		fontchooser=wx.FontDialog(self.hFrame)#第2パラにフォントデータを指定しても良い。デフォルトとして使われる。
+
+		# FontDataを生成し、設定を行う
+		fontData=wx.FontData()
+		fontData.EnableEffects(False)		#取り消し線などは設定できない
+		fontData.SetAllowSymbols(False)		#シンボルフォントの設定は認めない
+		fontData.SetRange(5,35)
+
+		fontchooser=wx.FontDialog(self.hFrame,fontData)#第2パラにフォントデータを指定しても良い。デフォルトとして使われる。
 		ret=fontchooser.ShowModal()
 		s="OK" if ret==wx.ID_OK else "cancel"
 		dialog("result",s)
-		fontData=fontchooser.GetFontData()#wx.FontDataがとれる
-		return True
+		font=fontData.GetChosenFont()					#wx.FontDataがとれる
+		dialog (str(font.GetPointSize()))
+		dialog(font.GetNativeFontInfoUserDesc())
+		dialog(font.GetNativeFontInfo())
 
+		return True
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
 		self.creator=views.ViewCreator.ViewCreator(1,self.hFrame)
