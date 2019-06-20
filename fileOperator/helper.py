@@ -16,8 +16,6 @@ def IsAccessDenied(err):
 def CommonFailure(output,elem,err,log):
 	"""共通の失敗処理。"""
 	log.error("file op error %s %s" % (elem, str(err)))
-	if IsAccessDenied(err):#アクセス拒否ならリトライへ
-		output["retry"].append(failedElement.FailedElement(elem,str(err)))
-	else:#失敗へ
-		output["failed"].append(failedElement.FailedElement(elem,str(err)))
-		output["all_OK"]=False
+	r=IsAccessDenied(err)
+	if not r: output["all_OK"]=False
+	return r

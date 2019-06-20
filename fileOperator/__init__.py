@@ -28,7 +28,7 @@ class FileOperator(object):
 		self.output["succeeded"]=0#オペレーション成功した数
 		self.output["finished"]=False#オペレーション終了したかどうか
 		self.output["failed"]=[]#失敗したファイル立ちの情報
-		self.output["retry"]=[]#権限昇格して自動的にリトライするファイル
+		self.output["retry"]={"files": []}#権限昇格して自動的にリトライするオペレーション
 		self.output["all_OK"]=False#全て成功ならTrueにする
 		self.started=False#スタートしたかどうか
 		self.instructions=None
@@ -78,16 +78,19 @@ class FileOperator(object):
 		self.log.info("Starting file operation: %s" % op)
 		self.opTimer=misc.Timer()
 		if op=="rename":#リネーム
-			rename.Execute(self.instructions,self.output)
+			retry=rename.Execute(self.instructions,self.output)
 		#end rename
-		if len(self.output["retry"])>0: self._elevate()#昇格してリトライ
+		if retry: self._elevate()#昇格してリトライ
 		self.working=False
 		self.log.info("Finished (%f sec)" % self.opTimer.elapsed)
 	#end _process
 
 	def _elevate(self):
 		"""権限昇格し、アクセス拒否になった項目を再実行する。"""
-		dialog("test","retry %d" % len(self.output["retry"]))
+		dialog("retrying","retrying")
+		o=FileOperator(self.output["retry"])
+		fn=o.pickle()
+		dialog("pickled",fn)
 
 	def CheckFinished(self):
 		"""ファイルオペレーションが終了したかどうかを取得する。"""
