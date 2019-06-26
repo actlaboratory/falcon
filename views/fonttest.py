@@ -20,7 +20,7 @@ import keymap
 import misc
 from simpleDialog import *
 import views.ViewCreator
-from .FontManager import *
+from .fontManager import *
 
 
 

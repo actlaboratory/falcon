@@ -4,7 +4,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
-import views.FontManager
+from . import fontManager
 
 class ViewCreator():
 
@@ -15,7 +15,7 @@ class ViewCreator():
 			self.hPanel=parent
 		else:
 			self.hPanel=makePanel(mode,parent)
-		self.font=views.FontManager.FontManager()
+		self.font=fontManager.FontManager()
 
 
 	def button(self,text,event):

@@ -100,6 +100,7 @@ class MainListTab(FalconTabBase):
 			self.columns=lst.GetColumns()
 			self.SetListColumns(self.columns)
 			for i in range(0,len(self.columns)):
+				print(type(globalVars.app.config[self.__class__.__name__]))
 				self.hListCtrl.SetColumnWidth(i,globalVars.app.config[self.__class__.__name__]["column_width_"+str(i)])
 		#end 違う種類のリストかどうか
 		self.listObject=lst
