@@ -2,6 +2,7 @@
 #Falcon wx test view
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
+
 import gettext
 import logging
 import os
@@ -19,7 +20,7 @@ import keymap
 import misc
 from simpleDialog import *
 import views.ViewCreator
-from .fontManager import *
+from .FontManager import *
 
 
 
@@ -31,7 +32,7 @@ class View(BaseView):
 		self.log.debug("created")
 		self.app=globalVars.app
 		super().Initialize("wxテスト",800,600)
-		manager=fontManager()
+		manager=FontManager()
 		self.InstallControls()
 		self.hFrame.Show()
 
@@ -49,16 +50,13 @@ class View(BaseView):
 			return True
 		#アサーションエラーの対策
 		"""
-		font=manager.getFont()
-		dialog("test",str(font.GetPointSize()))
-		dialog("test",font.GetNativeFontInfoUserDesc())
-		dialog("test",font.GetNativeFontInfoDesc())
+		font=manager.GetFont()
 
-		manager.showSettingDialog(self.hFrame)
-		font=manager.getFont()
-		dialog("test",str(font.GetPointSize()))
-		dialog("test",font.GetNativeFontInfoUserDesc())
-		dialog("test",font.GetNativeFontInfoDesc())
+		manager.ShowSettingDialog(self.hFrame)
+		font=manager.GetFont()
+		dialog("test",str(manager.GetSize()))
+		dialog("test",manager.GetName())
+		globalVars.app.config["view"]["font"]=manager.GetInfo()
 		return True
 
 	def InstallControls(self):

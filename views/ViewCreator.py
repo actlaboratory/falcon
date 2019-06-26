@@ -4,10 +4,9 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
+import views.FontManager
 
 class ViewCreator():
-
-
 
 	# mode=1で白黒反転。その他は白。
 	def __init__(self,mode,parent):
@@ -16,53 +15,51 @@ class ViewCreator():
 			self.hPanel=parent
 		else:
 			self.hPanel=makePanel(mode,parent)
+		self.font=views.FontManager.FontManager()
+
 
 	def button(self,text,event):
 		hButton=wx.Button(self.hPanel, wx.ID_ANY,text)
 		hButton.Bind(wx.EVT_BUTTON,event)
-		if self.mode==1:
-			hButton.SetBackgroundColour("#222222")		#背景色＝グレー
-			hButton.SetForegroundColour("#ffffff")		#文字色＝白
-		else:
-			hButton.SetBackgroundColour("#eeeeee")		#背景色＝白
-			hButton.SetForegroundColour("#000000")		#文字色＝黒
+		self.SetFace(hButton)
 		return hButton
 
 	def checkbox(self,text,event):
 		hCheckBox=wx.CheckBox(self.hPanel,wx.ID_ANY,text)
 		hCheckBox.Bind(wx.EVT_CHECKBOX,event)
-		if self.mode==1:
-			hCheckBox.SetBackgroundColour("#222222")	#背景色＝グレー
-			hCheckBox.SetForegroundColour("#ffffff")	#文字色＝白
-		else:
-			hCheckBox.SetBackgroundColour("#eeeeee")	#背景色＝白
-			hCheckBox.SetForegroundColour("#000000")	#文字色＝黒
+		self.SetFace(hCheckBox)
 		return hCheckBox
 
 	def radiobox(self,text,items,event):
 		hRadioBox=wx.RadioBox(self.hPanel,label=text,choices=items)
 		hRadioBox.Bind(wx.EVT_RADIOBOX,event)
-		if self.mode==1:
-			hRadioBox.SetBackgroundColour("#000000")	#背景色＝黒
-			hRadioBox.SetForegroundColour("#ffffff")	#文字色＝白
-		else:
-			hRadioBox.SetBackgroundColour("#ffffff")	#背景色＝白
-			hRadioBox.SetForegroundColour("#000000")	#文字色＝黒
+		self.SetFace(hRadioBox)
 		return hRadioBox
+
+	def ListCtrl(self,**settings):
+		hListCtrl=wx.ListCtrl(self.hPanel,wx.ID_ANY,**settings)
+		self.SetFace(hListCtrl)
+		hListCtrl.SetTextColour("#ffffff")				#文字色
+		return hListCtrl
 
 	def inputbox(self,text):
 		hStaticText=wx.StaticText(self.hPanel, -1, "入力")
 		hTextCtrl=wx.TextCtrl(self.hPanel, -1)
-		if self.mode==1:
-			hTextCtrl.SetBackgroundColour("#222222")	#背景色＝グレー
-			hTextCtrl.SetForegroundColour("#ffffff")	#文字色＝白
-		else:
-			hTextCtrl.SetBackgroundColour("#eeeeee")	#背景色＝白
-			hTextCtrl.SetForegroundColour("#000000")	#文字色＝黒
+		self.SetFace(hTextCtrl)
 		return hStaticText,hTextCtrl
 
 	def getPanel(self):
 		return self.hPanel
+
+	def SetFace(self,target):
+		if self.mode==1:
+			target.SetBackgroundColour("#000000")		#背景色＝黒
+			target.SetForegroundColour("#ffffff")		#文字色＝白
+		else:
+			target.SetBackgroundColour("#ffffff")		#背景色＝白
+			target.SetForegroundColour("#000000")		#文字色＝黒
+		target.SetThemeEnabled(False)
+		target.SetFont(self.font.GetFont())
 
 
 # parentで指定されたフレームにパネルを設置する

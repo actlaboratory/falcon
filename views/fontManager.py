@@ -14,7 +14,7 @@ import misc
 from simpleDialog import *
 
 
-class fontManager():
+class FontManager():
 	def __init__(self):
 		t=misc.Timer()
 		self.identifier="wxFontManager"
@@ -31,9 +31,9 @@ class fontManager():
 			self.app.config.set("view","font",DefaultSettings.get("view","font"))
 			with open(constants.SETTING_FILE_NAME, "w") as f: self.config.write(f)
 
-# フォント設定ダイアログを表示
+	# フォント設定ダイアログを表示
 	# 引数に親オブジェクトを指定
-	def showSettingDialog(self,parent):
+	def ShowSettingDialog(self,parent):
 		# FontDataを生成し、設定を行う
 		fontData=wx.FontData()
 		fontData.EnableEffects(False)		#取り消し線などは設定できない
@@ -42,9 +42,10 @@ class fontManager():
 		fontData.SetInitialFont(self.font)
 
 		fontchooser=wx.FontDialog(parent,fontData)
-		fontchooser.ShowModal()
-		font=fontchooser.GetFontData().GetChosenFont()
-
+		if (fontchooser.ShowModal()==wx.ID_OK):
+			font=fontchooser.GetFontData().GetChosenFont()
+		else:
+			self.log.info("font change was canceled.")
 		#アサーションエラーの対策
 		if not font.IsOk():
 			dialog(_("エラー"),_("原因不明のエラーにより、フォントの変更に失敗しました。"))
@@ -53,6 +54,14 @@ class fontManager():
 		self.font=font
 		return True
 
-	def getFont(self):
+	def GetFont(self):
 		return self.font
 
+	def GetName(self):
+		return self.font.GetFaceName()
+
+	def GetSize(self):
+		return self.font.GetPointSize()
+
+	def GetInfo(self):
+		return self.font.GetNativeFontInfoUserDesc()

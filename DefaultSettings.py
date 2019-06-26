@@ -3,12 +3,13 @@
 #Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-from configparser import *
+from FalconConfigParser import *
+
 
 class DefaultSettings:
 
 	def get():
-		config = ConfigParser()
+		config = FalconConfigParser()
 		config["general"]={
 			"language": "ja-JP",
 			}
@@ -24,7 +25,7 @@ class DefaultSettings:
 			"sizeY": "600",
 			}
 		config["browse"]={
-			"startPath": "%%%%HOMEDRIVE%%%%"
+			"startPath": "%%HOMEDRIVE%%"
 			}
 		return config
 

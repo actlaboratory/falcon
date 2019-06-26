@@ -8,6 +8,7 @@
 """
 
 import os
+import views.ViewCreator
 import gettext
 import logging
 import wx
@@ -20,6 +21,7 @@ import constants
 import fileOperator
 
 from simpleDialog import *
+
 #アクションの識別子
 ACTION_FORWARD=0#ファイル/フォルダのオープン
 ACTION_FORWARD_STREAM=1#ファイル/フォルダ/副ストリームのオープン
@@ -35,13 +37,11 @@ class FalconTabBase(object):
 
 	def InstallListCtrl(self,parent):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
-		self.font = wx.Font(24,wx.FONTFAMILY_MODERN,wx.NORMAL,wx.FONTWEIGHT_BOLD)
-		self.hListCtrl=wx.ListCtrl(parent, wx.ID_ANY, style=wx.LC_REPORT|wx.LC_EDIT_LABELS,size=wx.DefaultSize)
-		self.hListCtrl.SetThemeEnabled(False)
-		self.hListCtrl.SetBackgroundColour("#000000")		#項目のない部分の背景色
-		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
-		self.hListCtrl.SetTextColour("#ffffff")				#文字色
-		self.hListCtrl.SetFont(self.font)
+		self.creator=views.ViewCreator.ViewCreator(1,parent)
+		self.hListCtrl=self.creator.ListCtrl(style=wx.LC_REPORT|wx.LC_EDIT_LABELS,size=wx.DefaultSize)
+#		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
+#		self.hListCtrl.SetTextColour("#ffffff")				#文字色
+
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
 		self.hListCtrl.Bind(wx.EVT_LIST_END_LABEL_EDIT,self.OnLabelEditEnd)

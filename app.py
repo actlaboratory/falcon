@@ -3,7 +3,8 @@
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
 import accessible_output2.outputs.auto
-import configparser
+
+import FalconConfigParser
 import gettext
 import logging
 import os
@@ -47,7 +48,8 @@ class falconAppMain(wx.App):
 		self.config = DefaultSettings.DefaultSettings.get()
 		if os.path.exists(constants.SETTING_FILE_NAME):
 			self.config.read(constants.SETTING_FILE_NAME)
-		with open(constants.SETTING_FILE_NAME, "w") as f: self.config.write(f)
+
+		self.config.write()
 
 	def InitTranslation(self):
 		"""翻訳を初期化する。"""
