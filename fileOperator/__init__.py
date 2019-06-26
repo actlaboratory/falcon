@@ -5,10 +5,11 @@
 import logging
 import os
 import pickle
+import pywintypes
 import random
 import threading
 import win32api
-import pywintypes
+import win32event
 from win32com.shell import shell, shellcon
 from simpleDialog import dialog
 
@@ -93,7 +94,7 @@ class FileOperator(object):
 		o=FileOperator(self.output["retry"])
 		fn=o.pickle()
 		try:
-			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas","dist/fileOp.exe",fn)
+			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas","dist\\fileop.exe",fn)
 		except pywintypes.error as e:
 			self.log.error("Cannot elevate (%s)" % str(e))
 			self.output["failed"].append(o.FailAll())
@@ -101,7 +102,8 @@ class FileOperator(object):
 			return
 		#end except
 		pid=ret["hProcess"]
-		dialog("p","%s" % pid)
+		win32event.WaitForSingleObject(pid,win32event.INFINITE)
+		win32api.CloseHandle(pid)
 
 	def FailAll(self):
 		"""今ある要素を、全部失敗したことにする。権限昇格失敗したときに使う。"""
