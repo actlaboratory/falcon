@@ -34,13 +34,14 @@ class FalconTabBase(object):
 		self.listObject=None#リストの中身を保持している listObjects のうちのどれかのオブジェクト・インスタンス
 		self.type=None
 		self.isRenaming=False
+		globalVars.app.config.add_section(self.__class__.__name__)
+		globalVars.app.config[self.__class__.__name__]["a"]="a"
+		globalVars.app.config.write()
 
 	def InstallListCtrl(self,parent):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
 		self.creator=views.ViewCreator.ViewCreator(1,parent)
 		self.hListCtrl=self.creator.ListCtrl(style=wx.LC_REPORT|wx.LC_EDIT_LABELS,size=wx.DefaultSize)
-#		#self.hListCtrl.SetForegroundColour("#ff0000")		#効果なし？
-#		self.hListCtrl.SetTextColour("#ffffff")				#文字色
 
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
@@ -98,6 +99,8 @@ class MainListTab(FalconTabBase):
 		if type(self.listObject)!=lst:
 			self.columns=lst.GetColumns()
 			self.SetListColumns(self.columns)
+			for i in range(0,len(self.columns)):
+				self.hListCtrl.SetColumnWidth(i,globalVars.app.config[self.__class__.__name__]["column_width_"+str(i)])
 		#end 違う種類のリストかどうか
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
@@ -168,8 +171,7 @@ class MainListTab(FalconTabBase):
 		no=event.GetColumn()
 		width=self.hListCtrl.GetColumnWidth(no)
 		print("Column:"+str(no)+" resize to "+str(width))
-		globalVars.app.config["MainView"]["column_width_"+str(no)]=str(width)
-		with open(constants.SETTING_FILE_NAME, "w") as f: globalVars.app.config.write(f)
+		globalVars.app.config[__class__.__name__]["column_width_"+str(no)]=str(width)
 
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True

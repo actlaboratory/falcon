@@ -22,3 +22,18 @@ class FalconConfigParser(configparser.ConfigParser):
 	def write(self):
 		with open(self.fileName,"w") as f: return super().write(f)
 
+	# 存在しないキーで読み出しを試行した場合、自動的にそのキーが生成される
+	def __getitem__(self,key):
+		try:
+			print(key)
+			return super().__getitem__(key)
+		except KeyError as e:
+			print("except")
+			self.__setitem__(key,"")
+			return ""
+	#既に存在してもエラーにならないように変更
+	def add_section(self,name):
+		if not self.has_section(name):
+			return super().add_section(name)
+
+
