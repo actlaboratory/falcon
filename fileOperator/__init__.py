@@ -8,11 +8,13 @@ import pickle
 import random
 import threading
 import win32api
+import pywintypes
+from win32com.shell import shell, shellcon
 from simpleDialog import dialog
 
 import misc
 
-from . import rename
+from . import rename, failedElement
 
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
 
@@ -87,10 +89,27 @@ class FileOperator(object):
 
 	def _elevate(self):
 		"""権限昇格し、アクセス拒否になった項目を再実行する。"""
-		dialog("retrying","retrying")
+		dialog("elevating","elevating")
 		o=FileOperator(self.output["retry"])
 		fn=o.pickle()
-		dialog("pickled",fn)
+		try:
+			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas","dist/fileOp.exe",fn)
+		except pywintypes.error as e:
+			self.log.error("Cannot elevate (%s)" % str(e))
+			self.output["failed"].append(o.FailAll())
+			dialog("error","error")
+			return
+		#end except
+		pid=ret["hProcess"]
+		dialog("p","%s" % pid)
+
+	def FailAll(self):
+		"""今ある要素を、全部失敗したことにする。権限昇格失敗したときに使う。"""
+		lst=[]
+		for elem in self.instructions["files"]:
+			lst.append(failedElement.FailedElement(elem,"Access denied and elevation failed"))
+		#end for
+		return lst
 
 	def CheckFinished(self):
 		"""ファイルオペレーションが終了したかどうかを取得する。"""
