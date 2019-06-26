@@ -38,6 +38,7 @@ class FileOperator(object):
 		self.instructions=None
 		if isinstance(instructions,str):
 			self.unpickle(instructions)
+			self.writeBack=instructions
 		else:
 			self.instructions=instructions
 		#end str or dict
@@ -82,9 +83,11 @@ class FileOperator(object):
 		self.log.info("Starting file operation: %s" % op)
 		self.opTimer=misc.Timer()
 		if op=="rename":#リネーム
-			retry=rename.Execute(self.instructions,self.output)
+			retry=rename.Execute(self)
 		#end rename
-		if retry: self._elevate()#昇格してリトライ
+		self.log.debug("success %s, retry %s, failure %s." % (self.output["succeeded"], retry, len(self.output["failed"])))
+		if not self.elevated and retry>0: self._elevate()#昇格してリトライ
+		if self.elevated: self._postElevation()#昇格した後の後処理
 		self.working=False
 		self.log.info("Finished (%f sec)" % self.opTimer.elapsed)
 	#end _process
@@ -105,6 +108,17 @@ class FileOperator(object):
 		pid=ret["hProcess"]
 		win32event.WaitForSingleObject(pid,win32event.INFINITE)
 		win32api.CloseHandle(pid)
+		#昇格先で失敗した項目を拾ってくる
+		o=FileOperator(fn)
+		self.output["succeeded"]+=o.output["succeeded"]
+		l=len(self.output["failed"])
+		self.output["failed"][l:l]=o.output["failed"]
+		self.log.debug("after elevation: success %s, failure %s." % (self.output["succeeded"], len(self.output["failed"])))
+
+	def _postElevation(self):
+		"""昇格して処理したので、状態を書き戻す。"""
+		self.log.debug("Processing post elevation, write back to %s." % self.writeBack)
+		self.pickle(self.writeBack)
 
 	def FailAll(self):
 		"""今ある要素を、全部失敗したことにする。権限昇格失敗したときに使う。"""
@@ -133,16 +147,21 @@ class FileOperator(object):
 		"""終了したファイルオペレーションに対して、処理失敗となった項目の情報を取得する。"""
 		return self.output["failed"]
 
-	def pickle(self):
-		"""ファイルオペレーションの現在の状態を、テンポラリフォルダに保存する。保存したファイル名(完全なファイル名ではない)を帰す。これをそのまま unpickle に渡す。固められなかったらFalse。"""
+	def pickle(self,name=""):
+		"""ファイルオペレーションの現在の状態を、テンポラリフォルダに保存する。保存したファイル名(完全なファイル名ではない)を帰す。これをそのまま unpickle に渡す。固められなかったらFalse。name に指定すると、強制的にその名前で書く。"""
 		temp=win32api.GetEnvironmentVariable("TEMP")
-		while(True):
-			r=random.randint(0,9999)
-			fi="falcon%04di" % r
-			fo="falcon%04do" % r
-			if os.path.isfile(fi) or os.path.isfile(fo): continue
-			break
-		#end 保存できるファイル名を探す処理
+		if name!="":
+			fi=name+"i"
+			fo=name+"o"
+		else:
+			while(True):
+				r=random.randint(0,9999)
+				fi="falcon%04di" % r
+				fo="falcon%04do" % r
+				if os.path.isfile(fi) or os.path.isfile(fo): continue
+				break
+			#end 保存できるファイル名を探す処理
+		#end 強制指定かそうでないか
 		self.log.debug("Saving file operation status: directory=%s, filename=%s, %s" % (temp, fi, fo))
 		try:
 			f=open(temp+"\\"+fi,"wb")
@@ -160,7 +179,7 @@ class FileOperator(object):
 		#end except
 		pickle.dump(self.output,f)
 		f.close()
-		return "falcon%04d" % r
+		return "falcon%04d" % (r) if name=="" else name
 	#end pickle
 
 	def unpickle(self,name):
@@ -195,7 +214,6 @@ class FileOperator(object):
 			return False
 		#end except
 		f.close()
-		self.log.debug("Loaded (operation %s, infile %s" % (self.instructions["operation"], str(self.instructions["files"])))
 		os.remove(temp+"\\"+fi)
 		os.remove(temp+"\\"+fo)
 		return True

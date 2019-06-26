@@ -7,21 +7,22 @@ import os
 import win32file
 from . import helper
 
-log=logging.getLogger("falcon.rename")
+VERB="rename"
+log=logging.getLogger("falcon.%s" % VERB)
 
-def Execute(instructions,output):
-	"""実行処理。昇格してリトライする必要があるかどうかを帰す。"""
+def Execute(op):
+	"""実行処理。リトライが必要になった項目数を返す。"""
 	try:
-		to=instructions["to"]
+		to=op.instructions["to"]
 	except KeyError:
 		log.error("To is not specified.")
 		return False
 	#end 変更先がない
-	output["all_OK"]=True
-	output["retry"]["to"]=[]
+	op.output["all_OK"]=True
+	op.output["retry"]["to"]=[]
 	i=0
-	retry=False
-	for elem in instructions["files"]:
+	retry=0
+	for elem in op.instructions["files"]:
 		isdrive=not "\\" in elem
 		log.debug("from %s, to %s, isdrive %s" % (elem, to[i], isdrive))
 		if isdrive:
@@ -29,23 +30,23 @@ def Execute(instructions,output):
 			try:
 				win32file.SetVolumeLabel(d,to[i])
 			except win32file.error as err:
-				if helper.CommonFailure(output,elem, err,log): appendRetry(output,elem,to[i])
+				if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem,to[i])
 				continue
 			#end except
 		else:#ファイルだからリネーム
 			try:
 				win32file.MoveFile(elem,to[i])
 			except win32file.error as err:
-				if helper.CommonFailure(output,elem, err,log): appendRetry(output,elem,to[i])
+				if helper.CommonFailure(op,elem, err,log): appendRetry(op.output,elem,to[i])
 				continue
 			#end except
 		#end ファイルかドライブか
-		output["succeeded"]+=1
+		op.output["succeeded"]+=1
 		i+=1
 	#end 項目の数だけ
-	if len(output["retry"]["files"])>0:
-		output["retry"]["operation"]="rename"
-		retry=True
+	if len(op.output["retry"]["files"])>0:
+		op.output["retry"]["operation"]=VERB
+		retry=len(op.output["retry"]["files"])
 	#end リトライあるか
 	return retry
 

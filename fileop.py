@@ -5,16 +5,11 @@
 import logging
 from logging import getLogger, FileHandler, Formatter
 import sys
+import traceback
 import fileOperator
 
 def main():
-	hLogHandler=FileHandler("falconFOP.log", mode="w", encoding="UTF-8")
-	hLogHandler.setLevel(logging.DEBUG)
-	hLogFormatter=Formatter("%(name)s - %(levelname)s - %(message)s (%(asctime)s)")
-	hLogHandler.setFormatter(hLogFormatter)
-	log=getLogger("falcon")
-	log.setLevel(logging.DEBUG)
-	log.addHandler(hLogHandler)
+	global log
 	log.info("Starting Falcon external file operation.")
 	if len(sys.argv)<2:
 		log.error("No parameter specified.")
@@ -27,5 +22,22 @@ def main():
 	log.info("End")
 	sys.exit(0)
 
+def Onerror(type, exc, tb):
+	global log
+	log.error("crashed!")
+	for elem in traceback.format_exception(type, exc, tb):
+		log.error(elem.strip())
+	#end writing
+	sys.exit(0)
+
 #global schope
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+	hLogHandler=FileHandler("falconFOP.log", mode="w", encoding="UTF-8")
+	hLogHandler.setLevel(logging.DEBUG)
+	hLogFormatter=Formatter("%(name)s - %(levelname)s - %(message)s (%(asctime)s)")
+	hLogHandler.setFormatter(hLogFormatter)
+	log=getLogger("falcon")
+	log.setLevel(logging.DEBUG)
+	log.addHandler(hLogHandler)
+	sys.excepthook=Onerror
+	main()

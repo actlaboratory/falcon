@@ -4,18 +4,32 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 from . import failedElement
+import winerror
 
 #ヘルパー関数
-def IsAccessDenied(err):
-	"""このエラーオブジェクトが、アクセス拒否(権限昇格が必要)なエラーならTrueを帰す。"""
-	import winerror
+def GetErrorNumber(err):
+	"""windows 例外文字列から、エラーナンバーを取得する。"""
 	s=str(err)
 	s=s.lstrip("(")
-	return int(s.split(",")[0])==winerror.ERROR_ACCESS_DENIED
+	return int(s.split(",")[0])
 
-def CommonFailure(output,elem,err,log):
+def IsAccessDenied(num):
+	"""エラーナンバーから、アクセス拒否のエラーかどうかを調べる。"""
+	return num==winerror.ERROR_ACCESS_DENIED
+
+def AppendFailed(op,elem,num):
+	"""失敗したリストに項目を追加。"""
+	op.output["failed"].append(failedElement.FailedElement(elem,(num,"fail")))
+	output["all_OK"]=False
+
+def CommonFailure(op,elem,err,log):
 	"""共通の失敗処理。"""
 	log.error("file op error %s %s" % (elem, str(err)))
-	r=IsAccessDenied(err)
-	if not r: output["all_OK"]=False
+	r=IsAccessDenied(GetErrorNumber(err))
+	if not r:
+		AppendFailed(op,elem)
+	else:
+		if op.elevated: AppendFailed(op,elem)#昇格してる状態でも無理だった
+	#end denied かどうか
 	return r
+
