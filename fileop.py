@@ -22,7 +22,7 @@ def main():
 	#end error
 	file=sys.argv[1]
 	log.info("given:%s" % file)
-	o=fileOperator.FileOperator(file)
+	o=fileOperator.FileOperator(file,elevated=True)
 	o.Execute()
 	log.info("End")
 	sys.exit(0)

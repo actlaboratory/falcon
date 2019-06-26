@@ -20,8 +20,9 @@ from . import rename, failedElement
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
 
 class FileOperator(object):
-	def __init__(self,instructions=None):
+	def __init__(self,instructions=None, elevated=False):
 		"""指示を与える。まだ実行しない。"""
+		self.elevated=elevated#昇格してるかどうか
 		self.thread=None
 		self.opTimer=None
 		self.working=False#ファイルオペレーション実行中かどうか
