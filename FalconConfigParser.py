@@ -25,10 +25,8 @@ class FalconConfigParser(configparser.ConfigParser):
 	# 存在しないキーで読み出しを試行した場合、自動的にそのキーが生成される
 	def __getitem__(self,key):
 		try:
-			print(key)
 			return FalconConfigSection(super().__getitem__(key))
 		except KeyError as e:
-			print("except")
 			self.__setitem__(key,"")
 			return ""
 	#既に存在してもエラーにならないように変更
