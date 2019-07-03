@@ -26,6 +26,7 @@ from simpleDialog import *
 ACTION_FORWARD=0#ファイル/フォルダのオープン
 ACTION_FORWARD_STREAM=1#ファイル/フォルダ/副ストリームのオープン
 ACTION_BACKWARD=2#内包しているフォルダ/内包しているドライブ/副ストリームのクローズ
+ACTION_SORTNEXT=3#次の並び順
 
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
@@ -109,6 +110,12 @@ class MainListTab(FalconTabBase):
 		self.UpdateListContent(self.listObject.GetItems())
 
 	def TriggerAction(self, action):
+		if action==ACTION_SORTNEXT:
+			self.listObject.SortNext()
+			self.listObject.ApplySort(False)
+			self.UpdateListContent(self.listObject.GetItems())
+			return
+		#end sortNext
 		index=self.GetFocusedItem()
 		if action==ACTION_FORWARD or action==ACTION_FORWARD_STREAM:
 			elem=self.listObject.GetElement(index)

@@ -87,6 +87,8 @@ class Menu():
 		self.hHelpMenu=wx.Menu()
 		#ファイルメニューの中身
 		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_EXIT"].GetValue(),_("終了"))
+		#ファイルメニューの中身
+		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue(),_("次の並び順"))
 		#移動メニューの中身
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く"))
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue(),_("開く(ストリーム)"))
@@ -121,6 +123,9 @@ class Events(BaseEvents):
 			return
 		if selected==constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue():
 			self.GoForward(True)
+			return
+		if selected==constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue():
+			self.SortNext()
 			return
 		if selected==constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue():
 			self.testdialog=views.test.View()
@@ -169,3 +174,11 @@ class Events(BaseEvents):
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
 			dialog("test","mada")
+
+	def SortNext(self):
+		"""sortNext アクションを実行。st=True で、ファイルを開く代わりにストリームを開く。"""
+		p=self.parent
+		act=tabObjects.ACTION_SORTNEXT
+		ret=p.activeTab.TriggerAction(act)
+		if ret==errorCodes.NOT_SUPPORTED:
+			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
