@@ -124,6 +124,9 @@ class Events(BaseEvents):
 		if selected==constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue():
 			self.GoForward(True)
 			return
+		if selected==constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue():
+			self.SortNext()
+			return
 		if selected==constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue():
 			self.testdialog=views.test.View()
 			self.testdialog.Initialize()
@@ -171,3 +174,11 @@ class Events(BaseEvents):
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
 			dialog("test","mada")
+
+	def SortNext(self):
+		"""sortNext アクションを実行。st=True で、ファイルを開く代わりにストリームを開く。"""
+		p=self.parent
+		act=tabObjects.ACTION_SORTNEXT
+		ret=p.activeTab.TriggerAction(act)
+		if ret==errorCodes.NOT_SUPPORTED:
+			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))

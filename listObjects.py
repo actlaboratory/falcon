@@ -22,7 +22,7 @@ SORT_TYPE_MODDATE=3
 SORT_TYPE_ATTRIBUTES=4
 SORT_TYPE_TYPESTRING=5
 
-def _getSortDescription(self,attrib):
+def _getSortDescription(attrib):
 	SORT_DESCRIPTIONS={
 		SORT_TYPE_BASENAME: _("ファイル名"),
 		SORT_TYPE_FILESIZE: _("ファイルサイズ"),
@@ -65,7 +65,7 @@ class FalconListBase(object):
 	def ApplySort(self,ad):
 		"""ソートを適用。直接 sort メソッドでソートしてもよい。ad=Ascending or descending。"""
 		if len(self.supportedSorts)==0: return
-		self.sort(self.supportedSorts[self.sortCursor],ad)
+		self.Sort(self.supportedSorts[self.sortCursor],ad)
 
 	def _getSortFunction(self,attrib):
 		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename
@@ -131,7 +131,7 @@ class FileList(FalconListBase):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
 
-	def Sort(attrib, ad):
+	def Sort(self,attrib, ad):
 		"""指定した要素で、リストを並べ替える。ad=asscending or descending。"""
 		self.log.debug("Begin sorting (attrib %s, ad %s)" % (attrib, ad))
 		t=misc.Timer()
