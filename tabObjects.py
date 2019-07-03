@@ -96,14 +96,14 @@ class MainListTab(FalconTabBase):
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
-		if type(self.listObject)!=type(lst):
-			self.hListCtrl.DeleteAllItems()
+		if type(self.listObject)!=lst:
 			self.columns=lst.GetColumns()
 			self.SetListColumns(self.columns)
 			for i in range(0,len(self.columns)):
+				print(type(globalVars.app.config[self.__class__.__name__]))
 				w=globalVars.app.config[self.__class__.__name__]["column_width_"+str(i)]
 				w=100 if w=="" else int(w)
-#				self.hListCtrl.SetColumnWidth(i,w)
+				self.hListCtrl.SetColumnWidth(i,w)
 		#end 違う種類のリストかどうか
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
@@ -179,12 +179,16 @@ class MainListTab(FalconTabBase):
 
 	def col_click(self,event):
 		no=event.GetColumn()
-		self.listObject.SetSortCursor(no)
-		self.listObject.ApplySort(False);
+		if self.listObject.GetSortCursor==no:
+			self.listObject.SetSortCursor(no)
+			self.listObject.ApplySort(False)
+		else:
+			self.listObject.ApplySort(True)
 
 	def col_resize(self,event):
 		no=event.GetColumn()
 		width=self.hListCtrl.GetColumnWidth(no)
+		print("Column:"+str(no)+" resize to "+str(width))
 		globalVars.app.config[__class__.__name__]["column_width_"+str(no)]=str(width)
 
 	def OnLabelEditStart(self,evt):

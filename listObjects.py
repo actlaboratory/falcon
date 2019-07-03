@@ -52,6 +52,9 @@ class FalconListBase(object):
 		#end for
 		return found
 
+	def GetSortCursor(self):
+		return self.sortCursor
+
 	def SortNext(self):
 		"""次のソートへ。実際にソートを適用するには、ApplySort を実行する。"""
 		sortCursor=self.sortCursor
