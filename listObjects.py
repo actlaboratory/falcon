@@ -54,13 +54,21 @@ class FalconListBase(object):
 
 	def SortNext(self):
 		"""次のソートへ。実際にソートを適用するには、ApplySort を実行する。"""
+		sortCursor=self.sortCursor
+		sortCursor+=1
+		if sortCursor==len(self.supportedSorts): sortCursor=0
+		self.SetSortCursor(sortCursor)
+
+	def SetSortCursor(self,cursor):
 		if len(self.supportedSorts)==0:
 			globalVars.app.say(_("このリストはソートできません。"))
 			return
 		#ソート非対応
-		self.sortCursor+=1
-		if self.sortCursor==len(self.supportedSorts): self.sortCursor=0
+		if cursor>=len(self.supportedSorts):
+			return
+		self.sortCursor=cursor
 		globalVars.app.say(_getSortDescription(self.supportedSorts[self.sortCursor]))
+
 
 	def ApplySort(self,ad):
 		"""ソートを適用。直接 sort メソッドでソートしてもよい。ad=Ascending or descending。"""

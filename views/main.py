@@ -88,11 +88,11 @@ class Menu():
 		#ファイルメニューの中身
 		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_EXIT"].GetValue(),_("終了"))
 		#ファイルメニューの中身
-		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue(),_("次の並び順"))
+		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue(),_("次の並び順\tCtrl+S"))
 		#移動メニューの中身
-		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く"))
+		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く\tEnter"))
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue(),_("開く(ストリーム)"))
-		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue(),_("閉じる"))
+		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue(),_("上の階層へ\tBackSpace"))
 		#環境メニューの中身
 		self.hEnvMenu.Append(constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue(),_("テストダイアログを表示"))
 		self.hEnvMenu.Append(constants.MENU_ITEMS["ENV_FONTTEST"].GetValue(),_("フォントテストダイアログを表示"))
