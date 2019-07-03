@@ -17,6 +17,7 @@ KEYMAP_FILE_NAME="keymap.ini"
 MENU_ITEMS={
 	"FILE_RENAME": wx.NewIdRef(),
 	"FILE_EXIT": wx.NewIdRef(),
+	"EDIT_SORTNEXT": wx.NewIdRef(),
 	"MOVE_BACKWARD": wx.NewIdRef(),
 	"MOVE_FORWARD": wx.NewIdRef(),
 	"MOVE_FORWARD_STREAM": wx.NewIdRef(),

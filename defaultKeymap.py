@@ -8,6 +8,7 @@ defaultKeymap={}
 
 defaultKeymap["mainView"]={
 	"FILE_RENAME": "F2",
+	"EDIT_SORTNEXT": "shift+F1",
 	"MOVE_BACKWARD": "BACK/LEFT",
 	"MOVE_FORWARD_STREAM": "RIGHT"
 }

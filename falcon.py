@@ -3,6 +3,9 @@
 #run python fal.py to execute Falcon
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #See window.py for application entry point
+
+def _(string): pass#dummy
+
 from app import *
 import constants
 import globalVars

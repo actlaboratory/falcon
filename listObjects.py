@@ -2,7 +2,7 @@
 #Falcon generic list management
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
-
+import gettext
 import os
 import logging
 import win32api
@@ -16,15 +16,28 @@ from simpleDialog import dialog
 SORT_ASCENDING=False
 SORT_DESCENDING=True
 
-
 SORT_TYPE_BASENAME=1
 SORT_TYPE_FILESIZE=2
 SORT_TYPE_MODDATE=3
 SORT_TYPE_ATTRIBUTES=4
 SORT_TYPE_TYPESTRING=5
 
+def _getSortDescription(self,attrib):
+	SORT_DESCRIPTIONS={
+		SORT_TYPE_BASENAME: _("ファイル名"),
+		SORT_TYPE_FILESIZE: _("ファイルサイズ"),
+		SORT_TYPE_MODDATE:_("更新日時"),
+		SORT_TYPE_ATTRIBUTES:_("属性"),
+		SORT_TYPE_TYPESTRING:_("種類")
+	}
+	return SORT_DESCRIPTIONS[attrib]
+
 class FalconListBase(object):
 	"""全てのリストに共通する基本クラス。"""
+	def __init__(self):
+		self.supportedSorts=[]
+		self.sortCursor=0
+
 	def Search(self,search):
 		"""文字列からインデックス番号に変換する。"""
 		lst=self.GetItems()
@@ -39,10 +52,36 @@ class FalconListBase(object):
 		#end for
 		return found
 
+	def SortNext(self):
+		"""次のソートへ。実際にソートを適用するには、ApplySort を実行する。"""
+		if len(self.supportedSorts)==0:
+			globalVars.app.say(_("このリストはソートできません。"))
+			return
+		#ソート非対応
+		self.sortCursor+=1
+		if self.sortCursor==len(self.supportedSorts): self.sortCursor=0
+		globalVars.app.say(_getSortDescription(self.supportedSorts[self.sortCursor]))
+
+	def ApplySort(self,ad):
+		"""ソートを適用。直接 sort メソッドでソートしてもよい。ad=Ascending or descending。"""
+		if len(self.supportedSorts)==0: return
+		self.sort(self.supportedSorts[self.sortCursor],ad)
+
+	def _getSortFunction(self,attrib):
+		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename
+		if attrib==SORT_TYPE_FILESIZE: return lambda x: x.size
+		if attrib==SORT_TYPE_MODDATE: return lambda x: x.modDate
+		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributes
+		if attrib==SORT_TYPE_TYPESTRING: return lambda x: x.typeString
+
 class FileList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
+	def __init__(self):
+		super().__init__()
+
 	def Initialize(self,dir):
 		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。取得できたら、Trueが帰る。"""
+		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
 		dir=dir.rstrip("\\")
 		dir_spl=dir.split("\\")
 		level=len(dir_spl)
@@ -96,17 +135,10 @@ class FileList(FalconListBase):
 		"""指定した要素で、リストを並べ替える。ad=asscending or descending。"""
 		self.log.debug("Begin sorting (attrib %s, ad %s)" % (attrib, ad))
 		t=misc.Timer()
-		f=getSortFunction(attrib)
+		f=self._getSortFunction(attrib)
 		self.files.sort(key=f, reverse=ad)
 		self.folders.sort(key=f, reverse=ad)
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
-
-	def _getSortFunction(self,attrib):
-		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename
-		if attrib==SORT_TYPE_FILESIZE: return lambda x: x.size
-		if attrib==SORT_TYPE_MODDATE: return lambda x: x.modDate
-		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributes
-		if attrib==SORT_TYPE_TYPESTRING: return lambda x: x.typeString
 
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
