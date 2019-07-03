@@ -9,3 +9,4 @@ PyWin32.chm
 PyWin32.chw
 *.bat
 *log.txt
+build/

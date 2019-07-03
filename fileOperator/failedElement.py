@@ -4,6 +4,6 @@
 #Note: All comments except these top lines will be written in Japanese. 
 """ファイルオペレーションに失敗したファイルの情報を表します。"""
 class FailedElement(object):
-	def __init__(self,name,msg):
-		self.name=name
+	def __init__(self,elem,msg):
+		self.elem=elem
 		self.msg=msg
