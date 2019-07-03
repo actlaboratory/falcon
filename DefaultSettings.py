@@ -28,10 +28,10 @@ class DefaultSettings:
 			"startPath": "%%HOMEDRIVE%%"
 			}
 		config["MainListTab"]={
-			"column_width_0" : "750"
-			"column_width_1" : "150"
-			"column_width_2" : "320"
-			"column_width_3" : "70"
+			"column_width_0" : "750",
+			"column_width_1" : "150",
+			"column_width_2" : "320",
+			"column_width_3" : "70",
 			"column_width_4" : "240"
 			}
 		return config
