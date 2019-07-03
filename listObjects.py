@@ -12,6 +12,17 @@ import misc
 import browsableObjects
 import globalVars
 from simpleDialog import dialog
+
+SORT_ASCENDING=False
+SORT_DESCENDING=True
+
+
+SORT_TYPE_BASENAME=1
+SORT_TYPE_FILESIZE=2
+SORT_TYPE_MODDATE=3
+SORT_TYPE_ATTRIBUTES=4
+SORT_TYPE_TYPESTRING=5
+
 class FalconListBase(object):
 	"""全てのリストに共通する基本クラス。"""
 	def Search(self,search):
@@ -80,6 +91,22 @@ class FileList(FalconListBase):
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
+
+	def Sort(attrib, ad):
+		"""指定した要素で、リストを並べ替える。ad=asscending or descending。"""
+		self.log.debug("Begin sorting (attrib %s, ad %s)" % (attrib, ad))
+		t=misc.Timer()
+		f=getSortFunction(attrib)
+		self.files.sort(key=f, reverse=ad)
+		self.folders.sort(key=f, reverse=ad)
+		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
+
+	def _getSortFunction(self,attrib):
+		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename
+		if attrib==SORT_TYPE_FILESIZE: return lambda x: x.size
+		if attrib==SORT_TYPE_MODDATE: return lambda x: x.modDate
+		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributes
+		if attrib==SORT_TYPE_TYPESTRING: return lambda x: x.typeString
 
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
