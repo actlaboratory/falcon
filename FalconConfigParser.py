@@ -26,7 +26,7 @@ class FalconConfigParser(configparser.ConfigParser):
 	def __getitem__(self,key):
 		try:
 			print(key)
-			return super().__getitem__(key)
+			return FalconConfigSection(super().__getitem__(key))
 		except KeyError as e:
 			print("except")
 			self.__setitem__(key,"")
@@ -36,4 +36,14 @@ class FalconConfigParser(configparser.ConfigParser):
 		if not self.has_section(name):
 			return super().add_section(name)
 
+class FalconConfigSection(configparser.SectionProxy):
+	def __init__(self,proxy):
+		super().__init__(proxy._parser, proxy._name)
+
+	def __getitem__(self,key):
+		try:
+			return super().__getitem__(key)
+		except KeyError:
+			self._parser[self._name][key]=""
+			return ""
 
