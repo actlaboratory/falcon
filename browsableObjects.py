@@ -48,7 +48,8 @@ class Drive(FalconBrowsableBase):
 		self.total=total
 		self.type=type
 		self.UpdateTypeString()
-		self.name=name
+		self.basename=name
+		self.fullpath=letter+":"
 
 	def UpdateTypeString(self):
 		"""タイプの数値を文字列に変換し、self.typeString にセットする。"""
@@ -67,7 +68,7 @@ class Drive(FalconBrowsableBase):
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
-		return (self.name+"("+self.letter+")", self.letter, misc.ConvertBytesTo(self.free, misc.UNIT_AUTO, True), misc.ConvertBytesTo(self.total, misc.UNIT_AUTO, True), self.typeString)
+		return (self.basename, self.letter, misc.ConvertBytesTo(self.free, misc.UNIT_AUTO, True), misc.ConvertBytesTo(self.total, misc.UNIT_AUTO, True), self.typeString)
 
 class Stream(FalconBrowsableBase):
 	"""NTFS 副ストリームを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""

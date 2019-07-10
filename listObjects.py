@@ -101,7 +101,7 @@ class FalconListBase(object):
 		if attrib==SORT_TYPE_MODDATE: return lambda x: x.modDate
 		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributes
 		if attrib==SORT_TYPE_TYPESTRING: return lambda x: x.typeString
-		if attrib==SORT_TYPE_VOLUMELABEL: return lambda x: x.name
+		if attrib==SORT_TYPE_VOLUMELABEL: return lambda x: x.basename
 		if attrib==SORT_TYPE_DRIVELETTER: return lambda x: x.letter
 		if attrib==SORT_TYPE_FREESPACE: return lambda x: x.free
 		if attrib==SORT_TYPE_TOTALSPACE: return lambda x: x.total
