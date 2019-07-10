@@ -28,9 +28,9 @@ class View(BaseView):
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
 		self.app=globalVars.app
+		self.events=Events(self)
 		super().Initialize(constants.APP_NAME,self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"))
 		self.menu=Menu()
-		self.events=Events(self)
 		self.InstallMenuEvent(self.menu,self.events)
 		self.InstallShortcutEvent(self.identifier,self.events)
 		self.InstallListPanel()

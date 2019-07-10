@@ -6,6 +6,8 @@
 import wx
 import constants
 import keymap
+from simpleDialog import dialog
+
 class BaseView(object):
 	"""falconのビューの基本クラス。"""
 	def __init__(self):
@@ -14,7 +16,7 @@ class BaseView(object):
 	def Initialize(self, ttl, x, y):
 		"""タイトルとウィンドウサイズを指定して、ウィンドウを初期化する。"""
 		self.hFrame=wx.Frame(None,-1, ttl, size=(x,y))
-		self.hFrame.Bind(wx.EVT_MOVE,BaseEvents.WindowMove)
+		self.hFrame.Bind(wx.EVT_MOVE,self.events.WindowMove)
 
 	def InstallMenuEvent(self,menu,event):
 		"""メニューを作り、指定されたイベント処理用オブジェクトと結びつける。"""
