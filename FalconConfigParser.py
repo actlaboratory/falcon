@@ -27,9 +27,16 @@ class FalconConfigParser(configparser.ConfigParser):
 		try:
 			return FalconConfigSection(super().__getitem__(key))
 		except KeyError as e:
-			self.__setitem__(key,"")
+			self.__setitem__(section,key,"")
 			return ""
+
 	#Šù‚É‘¶İ‚µ‚Ä‚àƒGƒ‰[‚É‚È‚ç‚È‚¢‚æ‚¤‚É•ÏX
+	def getint(self,section,key):
+		try:
+			return super().getint(section,key)
+		except configparser.NoOptionError as e:
+			self[section][key]="0"
+			return 0
 	def add_section(self,name):
 		if not self.has_section(name):
 			return super().add_section(name)
