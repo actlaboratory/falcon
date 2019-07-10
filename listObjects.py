@@ -26,19 +26,23 @@ SORT_TYPE_DRIVELETTER=7
 SORT_TYPE_TOTALSPACE=8
 SORT_TYPE_FREESPACE=9
 
+SORT_DESCRIPTIONS=None
 
-def _getSortDescription(attrib):
-	SORT_DESCRIPTIONS={
-		SORT_TYPE_BASENAME: _("ファイル名"),
-		SORT_TYPE_FILESIZE: _("ファイルサイズ"),
-		SORT_TYPE_MODDATE:_("更新日時"),
-		SORT_TYPE_ATTRIBUTES:_("属性"),
-		SORT_TYPE_TYPESTRING:_("種類"),
-		SORT_TYPE_VOLUMELABEL:_("ラベル"),
-		SORT_TYPE_DRIVELETTER:_("ラベル"),
-		SORT_TYPE_FREESPACE:_("空き"),
-		SORT_TYPE_TOTALSPACE:_("合計")
-	}
+def GetSortDescription(attrib):
+	global SORT_DESCRIPTIONS
+	if SORT_DESCRIPTIONS is None:
+		SORT_DESCRIPTIONS={
+			SORT_TYPE_BASENAME: _("ファイル名"),
+			SORT_TYPE_FILESIZE: _("ファイルサイズ"),
+			SORT_TYPE_MODDATE:_("更新日時"),
+			SORT_TYPE_ATTRIBUTES:_("属性"),
+			SORT_TYPE_TYPESTRING:_("種類"),
+			SORT_TYPE_VOLUMELABEL:_("ラベル"),
+			SORT_TYPE_DRIVELETTER:_("ラベル"),
+			SORT_TYPE_FREESPACE:_("空き"),
+			SORT_TYPE_TOTALSPACE:_("合計")
+		}
+	#end 辞書作る
 	return SORT_DESCRIPTIONS[attrib]
 
 class FalconListBase(object):
@@ -74,7 +78,7 @@ class FalconListBase(object):
 		self.sortCursor=self.sortCursor+1 if val==-1 else val
 		if self.sortCursor==len(self.supportedSorts): self.sortCursor=0
 		if self.sortCursor<0: self.sortCursor=0
-		globalVars.app.say(_getSortDescription(self.supportedSorts[self.sortCursor]))
+		globalVars.app.say(GetSortDescription(self.supportedSorts[self.sortCursor]))
 
 	def SetSortDescending(self,d):
 		self.sortDescending=d
@@ -86,6 +90,10 @@ class FalconListBase(object):
 		"""ソートを適用。並び順と照準/降順は、setSortCursor / SetSortDescending で設定しておく。"""
 		if len(self.supportedSorts)==0: return
 		self._sort(self.supportedSorts[self.sortCursor],self.sortDescending)
+
+	def GetSupportedSorts(self):
+		"""サポートされているソートのタイプを取得する。"""
+		return self.supportedSorts
 
 	def _getSortFunction(self,attrib):
 		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename
