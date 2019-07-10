@@ -14,7 +14,7 @@ import globalVars
 from simpleDialog import dialog
 
 SORT_ASCENDING=False
-SORT_DESCENDING=True
+SORT_DESCENDING=1
 
 SORT_TYPE_BASENAME=1
 SORT_TYPE_FILESIZE=2
@@ -37,6 +37,7 @@ class FalconListBase(object):
 	def __init__(self):
 		self.supportedSorts=[]
 		self.sortCursor=0
+		self.sortDescending=0
 
 	def Search(self,search):
 		"""文字列からインデックス番号に変換する。"""
@@ -55,28 +56,27 @@ class FalconListBase(object):
 	def GetSortCursor(self):
 		return self.sortCursor
 
-	def SortNext(self):
-		"""次のソートへ。実際にソートを適用するには、ApplySort を実行する。"""
-		sortCursor=self.sortCursor
-		sortCursor+=1
-		if sortCursor==len(self.supportedSorts): sortCursor=0
-		self.SetSortCursor(sortCursor)
-
-	def SetSortCursor(self,cursor):
+	def SetSortCursor(self, val=-1):
+		"""インデックスを指定すると、その位置へソートカーソルを移動。パラメータなしで、次のソートへ移動。実際にソートを適用するには、ApplySort を実行する。"""
 		if len(self.supportedSorts)==0:
 			globalVars.app.say(_("このリストはソートできません。"))
 			return
 		#ソート非対応
-		if cursor>=len(self.supportedSorts):
-			return
-		self.sortCursor=cursor
+		self.sortCursor=self.sortCursor+1 if val==-1 else val
+		if self.sortCursor==len(self.supportedSorts): self.sortCursor=0
+		if self.sortCursor<0: self.sortCursor=0
 		globalVars.app.say(_getSortDescription(self.supportedSorts[self.sortCursor]))
 
+	def SetSortDescending(self,d):
+		self.sortDescending=d
 
-	def ApplySort(self,ad):
-		"""ソートを適用。直接 sort メソッドでソートしてもよい。ad=Ascending or descending。"""
+	def GetSortDescending(self):
+		return self.sortDescending
+
+	def ApplySort(self):
+		"""ソートを適用。並び順と照準/降順は、setSortCursor / SetSortDescending で設定しておく。"""
 		if len(self.supportedSorts)==0: return
-		self.Sort(self.supportedSorts[self.sortCursor],ad)
+		self._sort(self.supportedSorts[self.sortCursor],self.sortDescending)
 
 	def _getSortFunction(self,attrib):
 		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename
@@ -90,8 +90,9 @@ class FileList(FalconListBase):
 	def __init__(self):
 		super().__init__()
 
-	def Initialize(self,dir):
+	def Initialize(self,dir, sorting=0, ad=False):
 		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。取得できたら、Trueが帰る。"""
+		self.sortCursor=sorting
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
 		dir=dir.rstrip("\\")
 		dir_spl=dir.split("\\")
@@ -124,6 +125,10 @@ class FileList(FalconListBase):
 			#end どっちについかするか？
 		#end 追加ループ
 		self.log.debug("File list created in %d milliseconds." % t.elapsed)
+		if self.sortCursor!=0:
+			self.log.debug("Triggering sorting")
+			self.ApplySort()
+		#end ソートが必要ならソート
 		return True
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
@@ -142,13 +147,13 @@ class FileList(FalconListBase):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
 
-	def Sort(self,attrib, ad):
-		"""指定した要素で、リストを並べ替える。ad=asscending or descending。"""
-		self.log.debug("Begin sorting (attrib %s, ad %s)" % (attrib, ad))
+	def _sort(self,attrib, descending):
+		"""指定した要素で、リストを並べ替える。"""
+		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
 		t=misc.Timer()
 		f=self._getSortFunction(attrib)
-		self.files.sort(key=f, reverse=ad)
-		self.folders.sort(key=f, reverse=ad)
+		self.files.sort(key=f, reverse=(descending==1))
+		self.folders.sort(key=f, reverse=(descending==1))
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
 class DriveList(FalconListBase):
