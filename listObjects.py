@@ -21,6 +21,11 @@ SORT_TYPE_FILESIZE=2
 SORT_TYPE_MODDATE=3
 SORT_TYPE_ATTRIBUTES=4
 SORT_TYPE_TYPESTRING=5
+SORT_TYPE_VOLUMELABEL=6
+SORT_TYPE_DRIVELETTER=7
+SORT_TYPE_TOTALSPACE=8
+SORT_TYPE_FREESPACE=9
+
 
 def _getSortDescription(attrib):
 	SORT_DESCRIPTIONS={
@@ -28,7 +33,11 @@ def _getSortDescription(attrib):
 		SORT_TYPE_FILESIZE: _("ファイルサイズ"),
 		SORT_TYPE_MODDATE:_("更新日時"),
 		SORT_TYPE_ATTRIBUTES:_("属性"),
-		SORT_TYPE_TYPESTRING:_("種類")
+		SORT_TYPE_TYPESTRING:_("種類"),
+		SORT_TYPE_VOLUMELABEL:_("ラベル"),
+		SORT_TYPE_DRIVELETTER:_("ラベル"),
+		SORT_TYPE_FREESPACE:_("空き"),
+		SORT_TYPE_TOTALSPACE:_("合計")
 	}
 	return SORT_DESCRIPTIONS[attrib]
 
@@ -84,6 +93,11 @@ class FalconListBase(object):
 		if attrib==SORT_TYPE_MODDATE: return lambda x: x.modDate
 		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributes
 		if attrib==SORT_TYPE_TYPESTRING: return lambda x: x.typeString
+		if attrib==SORT_TYPE_VOLUMELABEL: return lambda x: x.name
+		if attrib==SORT_TYPE_DRIVELETTER: return lambda x: x.letter
+		if attrib==SORT_TYPE_FREESPACE: return lambda x: x.free
+		if attrib==SORT_TYPE_TOTALSPACE: return lambda x: x.total
+
 
 class FileList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
@@ -156,15 +170,18 @@ class FileList(FalconListBase):
 		self.folders.sort(key=f, reverse=(descending==1))
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
+
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
 	def Initialize(self):
 		"""ドライブ情報を取得し、リストを初期化する。入力は絶対パスでなければならない。"""
+		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_DRIVELETTER,SORT_TYPE_FREESPACE,SORT_TYPE_TOTALSIZE, SORT_TYPE_TYPESTRING]
 		globalVars.app.say(_("ドライブ洗濯"))
 		self.log=logging.getLogger("falcon.driveList")
 		self.log.debug("Getting drives list...")
 		t=misc.Timer()
 		self.drives=[]
+		self.unusableDrives=[]
 		drv=win32api.GetLogicalDrives()
 		check=1
 		for i in range(26):
@@ -175,29 +192,45 @@ class DriveList(FalconListBase):
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
-		return [_("名称"),_("空き"),_("合計"),_("種類")]
+		return [_("ラベル"),_("レター"),_("空き"),_("合計"),_("種類")]
 
 	def Append(self,index):
 		"""ドライブ情報を調べて、リストに追加する。Aドライブが0、Zドライブが25。"""
 		letter=chr(index+65)
 		path=letter+":\\"
 		type=win32file.GetDriveType(path)
-		freeSpace=win32api.GetDiskFreeSpaceEx(path)
-		volumeInfo=win32api.GetVolumeInformation(path)
+		f=-1
+		t=-1
+		n=""
+		try:
+			freeSpace=win32api.GetDiskFreeSpaceEx(path)
+			f=freeSpace[0]
+			t=freeSpace[1]
+			volumeInfo=win32api.GetVolumeInformation(path)
+			n=volumeInfo[0]
+		except pywintypes.error as err:
+			pass
+		#エラーは無視
 		d=browsableObjects.Drive()
-		d.Initialize(letter, freeSpace[0], freeSpace[1], type, volumeInfo[0])
-		self.drives.append(d)
+		d.Initialize(letter,f,t,type,n)
+		if t==-1:
+			self.unusableDrives.append(d)
+		else:
+			self.drives.append(d)
+		#end どっちに追加するか？
 
 	def GetItems(self):
 		"""リストの中身を取得する。"""
 		lst=[]
 		for elem in self.drives:
 			lst.append(elem.GetListTuple())
+		for elem in self.unusableDrives:
+			lst.append(elem.GetListTuple())
 		return lst
 
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		return self.drives[index]
+		return self.drives[index] if index<len(self.drives) else self.unusableDrives[index-len(self.drives)]
 
 class StreamList(FalconListBase):
 	"""NTFS 副ストリームを扱うリスト。"""

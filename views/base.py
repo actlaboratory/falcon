@@ -45,6 +45,6 @@ class BaseEvents(object):
 
 	# wx.MoveEvent
 	def WindowMove(self,event):
-		dialog(self.event.GetPosition()[x],"x座標")
+		dialog(event.GetPosition()[x],"x座標")
 
 
