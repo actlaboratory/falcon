@@ -65,6 +65,7 @@ class FalconTabBase(object):
 
 	def SetListColumns(self,col):
 		"""リストコントロールにカラムを設定する。"""
+		self.hListCtrl.DeleteAllColumns()
 		i=0
 		for elem in col:
 			self.hListCtrl.InsertColumn(i,elem,format=wx.LIST_FORMAT_LEFT,width=wx.LIST_AUTOSIZE)
@@ -214,7 +215,11 @@ class MainListTab(FalconTabBase):
 		self.parent.SetShortcutEnabled(True)
 		e=self.hListCtrl.GetEditControl()
 		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
-		inst={"operation": "rename", "files": [f.fullpath], "to": [f.directory+"\\"+e.GetLineText(0)]}
+		if isinstance(f,browsableObjects.File):
+			inst={"operation": "rename", "files": [f.fullpath], "to": [f.directory+"\\"+e.GetLineText(0)]}
+		else:
+			inst={"operation": "rename", "files": [f.fullpath], "to": [e.GetLineText(0)]}
+		#end ファイルかドライブか
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
