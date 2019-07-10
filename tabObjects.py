@@ -188,11 +188,11 @@ class MainListTab(FalconTabBase):
 		no=event.GetColumn()
 		if self.listObject.GetSortCursor==no:
 			self.listObject.SetSortCursor(no)
-			self.listObject.SetSortDescending(0)
+			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
 			self._updateEnv()
 			self.listObject.ApplySort(0)
 		else:
-			self.listObject.SetSortDescending(1)
+			self.SetSortCursor(no)
 			self._updateEnv()
 			self.listObject.ApplySort()
 

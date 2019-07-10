@@ -71,6 +71,7 @@ class FalconListBase(object):
 
 	def SetSortCursor(self, val=-1):
 		"""インデックスを指定すると、その位置へソートカーソルを移動。パラメータなしで、次のソートへ移動。実際にソートを適用するには、ApplySort を実行する。"""
+		if val==self.sortCursor: return
 		if len(self.supportedSorts)==0:
 			globalVars.app.say(_("このリストはソートできません。"))
 			return
@@ -81,6 +82,7 @@ class FalconListBase(object):
 		globalVars.app.say(GetSortDescription(self.supportedSorts[self.sortCursor]))
 
 	def SetSortDescending(self,d):
+		if d==self.sortDescending: return
 		self.sortDescending=d
 		s=_("昇順") if d==0 else _("降順")
 		globalVars.app.say(s)
