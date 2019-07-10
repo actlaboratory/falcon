@@ -173,9 +173,11 @@ class FileList(FalconListBase):
 
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
-	def Initialize(self):
+	def Initialize(self,sorting=0,descending=0):
 		"""ドライブ情報を取得し、リストを初期化する。入力は絶対パスでなければならない。"""
-		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_DRIVELETTER,SORT_TYPE_FREESPACE,SORT_TYPE_TOTALSIZE, SORT_TYPE_TYPESTRING]
+		self.sortCursor=sorting
+		self.sortDescending=descending
+		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_DRIVELETTER,SORT_TYPE_FREESPACE,SORT_TYPE_TOTALSPACE, SORT_TYPE_TYPESTRING]
 		globalVars.app.say(_("ドライブ洗濯"))
 		self.log=logging.getLogger("falcon.driveList")
 		self.log.debug("Getting drives list...")
@@ -189,6 +191,7 @@ class DriveList(FalconListBase):
 			check<<=1
 		#end ドライブ25個分調べる
 		self.log.debug("Drives list created in %d seconds." % t.elapsed)
+		if self.supportedSorts[self.sortCursor]!=SORT_TYPE_DRIVELETTER: self.ApplySort()
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
@@ -231,6 +234,14 @@ class DriveList(FalconListBase):
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.drives[index] if index<len(self.drives) else self.unusableDrives[index-len(self.drives)]
+
+	def _sort(self,attrib, descending):
+		"""指定した要素で、リストを並べ替える。"""
+		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
+		t=misc.Timer()
+		f=self._getSortFunction(attrib)
+		self.drives.sort(key=f, reverse=(descending==1))
+		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
 class StreamList(FalconListBase):
 	"""NTFS 副ストリームを扱うリスト。"""

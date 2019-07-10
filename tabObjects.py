@@ -96,6 +96,8 @@ class MainListTab(FalconTabBase):
 		self.InstallListCtrl(parent.hListPanel)
 		self.environment["FileList_sorting"]=int(globalVars.app.config["fileList"]["sorting"])
 		self.environment["FileList_descending"]=int(globalVars.app.config["fileList"]["sorting"])
+		self.environment["DriveList_sorting"]=int(globalVars.app.config["driveList"]["sorting"])
+		self.environment["DriveList_descending"]=int(globalVars.app.config["driveList"]["descending"])
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
@@ -150,7 +152,7 @@ class MainListTab(FalconTabBase):
 			dir=self.listObject.rootDirectory
 			if len(dir)<=3:#ドライブリスト
 				lst=listObjects.DriveList()
-				lst.Initialize()
+				lst.Initialize(self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
 				self.Update(lst)
 				return
 			#end ドライブ一覧表示
