@@ -36,6 +36,7 @@ class FalconTabBase(object):
 		self.type=None
 		self.isRenaming=False
 		globalVars.app.config.add_section(self.__class__.__name__)
+		self.environment={}#このタブ特有の環境変数
 
 	def InstallListCtrl(self,parent):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
@@ -93,6 +94,8 @@ class MainListTab(FalconTabBase):
 		self.log.debug("Created.")
 		self.parent=parent
 		self.InstallListCtrl(parent.hListPanel)
+		self.environment["FileList_sorting"]=int(globalVars.app.config["fileList"]["sorting"])
+		self.environment["FileList_descending"]=int(globalVars.app.config["fileList"]["sorting"])
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
@@ -100,7 +103,6 @@ class MainListTab(FalconTabBase):
 			self.columns=lst.GetColumns()
 			self.SetListColumns(self.columns)
 			for i in range(0,len(self.columns)):
-				print(type(globalVars.app.config[self.__class__.__name__]))
 				w=globalVars.app.config[self.__class__.__name__]["column_width_"+str(i)]
 				w=100 if w=="" else int(w)
 				self.hListCtrl.SetColumnWidth(i,w)
@@ -110,8 +112,9 @@ class MainListTab(FalconTabBase):
 
 	def TriggerAction(self, action):
 		if action==ACTION_SORTNEXT:
-			self.listObject.SortNext()
-			self.listObject.ApplySort(False)
+			self.listObject.SetSortCursor()
+			self._updateEnv()
+			self.listObject.ApplySort()
 			self.UpdateListContent(self.listObject.GetItems())
 			return
 		#end sortNext
@@ -121,7 +124,7 @@ class MainListTab(FalconTabBase):
 			self.lastBasename=elem.basename#あとでバックスペースで戻ったときに使う
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
 				lst=listObjects.FileList()
-				ok=lst.Initialize(elem.fullpath)
+				ok=lst.Initialize(elem.fullpath,self.environment["FileList_sorting"],self.environment["FileList_descending"])
 				if not ok: return#アクセス負荷
 				self.Update(lst)
 				return errorCodes.OK
@@ -135,7 +138,7 @@ class MainListTab(FalconTabBase):
 			#end ストリームを開く
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				lst=listObjects.FileList()
-				lst.Initialize(elem.letter+":")
+				lst.Initialize(elem.letter+":",self.environment["FileList_sorting"],self.environment["FileList_descending"])
 				self.Update(lst)
 				return errorCodes.OK
 			#end フォルダ開く
@@ -153,7 +156,7 @@ class MainListTab(FalconTabBase):
 			#end ドライブ一覧表示
 			predir=os.path.split(self.listObject.rootDirectory)[0]
 			lst=listObjects.FileList()
-			ok=lst.Initialize(predir)
+			ok=lst.Initialize(predir,self.environment["FileList_sorting"],self.environment["FileList_descending"])
 			if not ok: return#アクセス負荷
 			self.Update(lst)
 			self.hListCtrl.Focus(self.hListCtrl.FindItem(-1,self.lastBasename))
@@ -181,14 +184,23 @@ class MainListTab(FalconTabBase):
 		no=event.GetColumn()
 		if self.listObject.GetSortCursor==no:
 			self.listObject.SetSortCursor(no)
-			self.listObject.ApplySort(False)
+			self.listObject.SetSortDescending(0)
+			self._updateEnv()
+			self.listObject.ApplySort(0)
 		else:
-			self.listObject.ApplySort(True)
+			self.SetSortDescending(1)
+			self._updateEnv()
+			self.listObject.ApplySort()
+
+	def _updateEnv(self):
+		"""ソートの環境変数を更新する。"""
+		s=self.listObject.__class__.__name__
+		self.environment[s+"_sorting"]=self.listObject.GetSortCursor()
+		self.environment[s+"_descending"]=self.listObject.GetSortDescending()
 
 	def col_resize(self,event):
 		no=event.GetColumn()
 		width=self.hListCtrl.GetColumnWidth(no)
-		print("Column:"+str(no)+" resize to "+str(width))
 		globalVars.app.config[__class__.__name__]["column_width_"+str(no)]=str(width)
 
 	def OnLabelEditStart(self,evt):
