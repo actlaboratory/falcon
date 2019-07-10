@@ -8,6 +8,9 @@ import constants
 import keymap
 from simpleDialog import dialog
 
+import globalVars
+
+
 class BaseView(object):
 	"""falconのビューの基本クラス。"""
 	def __init__(self):
@@ -39,19 +42,23 @@ class BaseView(object):
 
 class BaseEvents(object):
 	"""イベント処理のデフォルトの動作をいくつか定義してあります。"""
-	def __init__(self,parent):
+	def __init__(self,parent,identifier):
 		self.parent=parent
+		self.identifier=identifier
 
 	def Exit(self,event):
 		self.parent.hFrame.Destroy()
 
 	# wx.EVT_MOVE→wx.MoveEvent
 	def WindowMove(self,event):
-		dialog("x座標",str(event.GetPosition().x))
+		#dialog("x座標",str(event.GetPosition().x))
+		pass
 
 	# wx.EVT_SIZE→wx.SizeEvent
 	def WindowResize(self,event):
-		#dialog("x座標",str(event.GetRect().x))
-		pass
-
+		dialog("x座標",str(event.GetSize().x))
+		globalVars.app.config["a"]["sizeX"]=5	#event.GetSize().x
+		#globalVars.app.config[self.identifier]["sizeX"]=5	#event.GetSize().x
+		#sizerを正しく機能させるため、Skipの呼出が必須
+		event.Skip()
 
