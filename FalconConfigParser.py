@@ -31,12 +31,12 @@ class FalconConfigParser(configparser.ConfigParser):
 			return ""
 
 	#Šù‚É‘¶İ‚µ‚Ä‚àƒGƒ‰[‚É‚È‚ç‚È‚¢‚æ‚¤‚É•ÏX
-	def getint(self,section,key):
+	def getint(self,section,key,default=0):
 		try:
 			return super().getint(section,key)
 		except configparser.NoOptionError as e:
-			self[section][key]="0"
-			return 0
+			self[section][key]=str(default)
+			return int(default)
 	def add_section(self,name):
 		if not self.has_section(name):
 			return super().add_section(name)
