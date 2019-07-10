@@ -65,6 +65,7 @@ class FalconTabBase(object):
 
 	def SetListColumns(self,col):
 		"""リストコントロールにカラムを設定する。"""
+		self.hListCtrl.DeleteAllColumns()
 		i=0
 		for elem in col:
 			self.hListCtrl.InsertColumn(i,elem,format=wx.LIST_FORMAT_LEFT,width=wx.LIST_AUTOSIZE)
