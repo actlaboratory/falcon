@@ -101,7 +101,7 @@ class MainListTab(FalconTabBase):
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
-		if type(self.listObject)!=lst:
+		if type(self.listObject)!=type(lst):
 			self.columns=lst.GetColumns()
 			self.SetListColumns(self.columns)
 			for i in range(0,len(self.columns)):
@@ -236,7 +236,6 @@ class MainListTab(FalconTabBase):
 		"""並び順を指定する。"""
 		m=wx.Menu()
 		s=self.listObject.GetSupportedSorts()
-		print(s)
 		i=0
 		for elem in s:
 			m.Append(i,listObjects.GetSortDescription(elem))

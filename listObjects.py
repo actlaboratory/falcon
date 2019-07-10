@@ -133,7 +133,13 @@ class FileList(FalconListBase):
 		#end except
 		self.files=[]
 		self.folders=[]
-		del lst[0:1]
+		if len(lst)==2:
+			lst=[]
+			self.log.debug("Blank folder.")
+			return True
+		#end 空のフォルダだったらさっさと帰る
+			del lst[0:1]
+		#end 殻フォルダかそうじゃないかでの処理
 		for elem in lst:
 			fullpath=dir+"\\"+elem[8]
 			if os.path.isfile(fullpath):
