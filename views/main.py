@@ -32,8 +32,8 @@ class View(BaseView):
 		self.events=Events(self,self.identifier)
 		super().Initialize(
 			constants.APP_NAME,
-			self.app.config.getint(self.identifier,"sizeX"),
-			self.app.config.getint(self.identifier,"sizeY"),
+			self.app.config.getint(self.identifier,"sizeX",800),
+			self.app.config.getint(self.identifier,"sizeY",600),
 			self.app.config.getint(self.identifier,"positionX"),
 			self.app.config.getint(self.identifier,"positionY")
 		)
