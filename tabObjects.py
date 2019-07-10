@@ -253,3 +253,10 @@ class MainListTab(FalconTabBase):
 		self._updateEnv()
 		self.listObject.ApplySort()
 		self.UpdateListContent(self.listObject.GetItems())
+
+	def SortCycleAd(self):
+		"""昇順と降順を交互に切り替える。"""
+		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.UpdateListContent(self.listObject.GetItems())

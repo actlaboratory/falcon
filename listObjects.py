@@ -82,6 +82,8 @@ class FalconListBase(object):
 
 	def SetSortDescending(self,d):
 		self.sortDescending=d
+		s=_("昇順") if d==0 else _("降順")
+		globalVars.app.say(s)
 
 	def GetSortDescending(self):
 		return self.sortDescending
