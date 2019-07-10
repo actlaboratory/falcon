@@ -97,6 +97,7 @@ class Menu():
 		#ファイルメニューの中身
 		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue(),_("次の並び順\tShift+F1"))
 		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTSELECT"].GetValue(),_("並び順を選択\tCtrl+S"))
+		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTCYCLEAD"].GetValue(),_("昇順/降順切り替え\tShift+F11"))
 		#移動メニューの中身
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く\tEnter"))
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue(),_("開く(ストリーム)"))
@@ -137,6 +138,9 @@ class Events(BaseEvents):
 			return
 		if selected==constants.MENU_ITEMS["EDIT_SORTSELECT"].GetValue():
 			self.SortSelect()
+			return
+		if selected==constants.MENU_ITEMS["EDIT_SORTCYCLEAD"].GetValue():
+			self.SortCycleAd()
 			return
 		if selected==constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue():
 			self.testdialog=views.test.View()
@@ -198,3 +202,7 @@ class Events(BaseEvents):
 		"""並び順を指定する。"""
 		t=self.parent.activeTab
 		t.SortSelect()
+
+	def SortCycleAd(self):
+		t=self.parent.activeTab
+		t.SortCycleAd()
