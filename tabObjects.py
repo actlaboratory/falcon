@@ -186,13 +186,12 @@ class MainListTab(FalconTabBase):
 
 	def col_click(self,event):
 		no=event.GetColumn()
-		if self.listObject.GetSortCursor==no:
-			self.listObject.SetSortCursor(no)
+		if self.listObject.GetSortCursor()==no:
 			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
 			self._updateEnv()
-			self.listObject.ApplySort(0)
+			self.listObject.ApplySort()
 		else:
-			self.SetSortCursor(no)
+			self.listObject.SetSortCursor(no)
 			self._updateEnv()
 			self.listObject.ApplySort()
 
