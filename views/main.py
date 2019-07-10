@@ -88,7 +88,8 @@ class Menu():
 		#ファイルメニューの中身
 		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_EXIT"].GetValue(),_("終了"))
 		#ファイルメニューの中身
-		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue(),_("次の並び順\tCtrl+S"))
+		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue(),_("次の並び順\tShift+F1"))
+		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTSELECT"].GetValue(),_("並び順を選択\tCtrl+S"))
 		#移動メニューの中身
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く\tEnter"))
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue(),_("開く(ストリーム)"))
@@ -126,6 +127,9 @@ class Events(BaseEvents):
 			return
 		if selected==constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue():
 			self.SortNext()
+			return
+		if selected==constants.MENU_ITEMS["EDIT_SORTSELECT"].GetValue():
+			self.SortSelect()
 			return
 		if selected==constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue():
 			self.testdialog=views.test.View()
@@ -176,9 +180,14 @@ class Events(BaseEvents):
 			dialog("test","mada")
 
 	def SortNext(self):
-		"""sortNext アクションを実行。st=True で、ファイルを開く代わりにストリームを開く。"""
+		"""sortNext アクションを実行。"""
 		p=self.parent
 		act=tabObjects.ACTION_SORTNEXT
 		ret=p.activeTab.TriggerAction(act)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
+
+	def SortSelect(self):
+		"""並び順を指定する。"""
+		t=self.parent.activeTab
+		t.SortSelect()

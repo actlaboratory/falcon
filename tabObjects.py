@@ -96,10 +96,12 @@ class MainListTab(FalconTabBase):
 		self.InstallListCtrl(parent.hListPanel)
 		self.environment["FileList_sorting"]=int(globalVars.app.config["fileList"]["sorting"])
 		self.environment["FileList_descending"]=int(globalVars.app.config["fileList"]["sorting"])
+		self.environment["DriveList_sorting"]=int(globalVars.app.config["driveList"]["sorting"])
+		self.environment["DriveList_descending"]=int(globalVars.app.config["driveList"]["descending"])
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
-		if type(self.listObject)!=lst:
+		if type(self.listObject)!=type(lst):
 			self.columns=lst.GetColumns()
 			self.SetListColumns(self.columns)
 			for i in range(0,len(self.columns)):
@@ -150,7 +152,7 @@ class MainListTab(FalconTabBase):
 			dir=self.listObject.rootDirectory
 			if len(dir)<=3:#ドライブリスト
 				lst=listObjects.DriveList()
-				lst.Initialize()
+				lst.Initialize(self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
 				self.Update(lst)
 				return
 			#end ドライブ一覧表示
@@ -229,3 +231,19 @@ class MainListTab(FalconTabBase):
 		"""リネームを開始する。"""
 		index=self.GetFocusedItem()
 		self.hListCtrl.EditLabel(index)
+
+	def SortSelect(self):
+		"""並び順を指定する。"""
+		m=wx.Menu()
+		s=self.listObject.GetSupportedSorts()
+		i=0
+		for elem in s:
+			m.Append(i,listObjects.GetSortDescription(elem))
+			i+=1
+		#end 追加
+		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
+		m.Destroy()
+		self.listObject.SetSortCursor(item)
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.UpdateListContent(self.listObject.GetItems())

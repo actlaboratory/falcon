@@ -17,6 +17,10 @@ class DefaultSettings:
 			"sorting": 0,
 			"descending": 0
 		}
+		config["driveList"]={
+			"sorting": 1,
+			"descending": 0
+		}
 		config["view"]={
 			"font": "bold 'ＭＳ ゴシック' 22 windows-932"
 		}
