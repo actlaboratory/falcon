@@ -23,6 +23,7 @@ MENU_ITEMS={
 	"FILE_EXIT": wx.NewIdRef(),
 	"EDIT_SORTNEXT": wx.NewIdRef(),
 	"EDIT_SORTSELECT": wx.NewIdRef(),
+	"EDIT_SORTCYCLEAD": wx.NewIdRef(),
 	"MOVE_BACKWARD": wx.NewIdRef(),
 	"MOVE_FORWARD": wx.NewIdRef(),
 	"MOVE_FORWARD_STREAM": wx.NewIdRef(),

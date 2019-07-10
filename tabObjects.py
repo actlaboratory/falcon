@@ -65,6 +65,7 @@ class FalconTabBase(object):
 
 	def SetListColumns(self,col):
 		"""リストコントロールにカラムを設定する。"""
+		print("column delete")
 		self.hListCtrl.DeleteAllColumns()
 		i=0
 		for elem in col:
@@ -73,7 +74,6 @@ class FalconTabBase(object):
 
 	def UpdateListContent(self,content):
 		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
-		self.hListCtrl.DeleteAllItems()
 		for elem in content:
 			self.hListCtrl.Append(elem)
 		#end 追加
@@ -102,6 +102,7 @@ class MainListTab(FalconTabBase):
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
+		self.hListCtrl.DeleteAllItems()
 		if type(self.listObject)!=type(lst):
 			self.columns=lst.GetColumns()
 			self.SetListColumns(self.columns)
@@ -191,7 +192,7 @@ class MainListTab(FalconTabBase):
 			self._updateEnv()
 			self.listObject.ApplySort(0)
 		else:
-			self.SetSortDescending(1)
+			self.listObject.SetSortDescending(1)
 			self._updateEnv()
 			self.listObject.ApplySort()
 
@@ -249,6 +250,13 @@ class MainListTab(FalconTabBase):
 		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
 		m.Destroy()
 		self.listObject.SetSortCursor(item)
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.UpdateListContent(self.listObject.GetItems())
+
+	def SortCycleAd(self):
+		"""昇順と降順を交互に切り替える。"""
+		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
 		self._updateEnv()
 		self.listObject.ApplySort()
 		self.UpdateListContent(self.listObject.GetItems())
