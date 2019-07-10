@@ -14,6 +14,7 @@ class BaseView(object):
 	def Initialize(self, ttl, x, y):
 		"""タイトルとウィンドウサイズを指定して、ウィンドウを初期化する。"""
 		self.hFrame=wx.Frame(None,-1, ttl, size=(x,y))
+		self.hFrame.Bind(wx.EVT_MOVE,BaseEvents.WindowMove)
 
 	def InstallMenuEvent(self,menu,event):
 		"""メニューを作り、指定されたイベント処理用オブジェクトと結びつける。"""
@@ -39,3 +40,9 @@ class BaseEvents(object):
 
 	def Exit(self,event):
 		self.parent.hFrame.Destroy()
+
+	# wx.MoveEvent
+	def WindowMove(self,event):
+		dialog(self.event.GetPosition()[x],"x座標")
+
+
