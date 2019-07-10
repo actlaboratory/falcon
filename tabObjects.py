@@ -119,6 +119,7 @@ class MainListTab(FalconTabBase):
 			self.listObject.SetSortCursor()
 			self._updateEnv()
 			self.listObject.ApplySort()
+			self.hListCtrl.DeleteAllItems()
 			self.UpdateListContent(self.listObject.GetItems())
 			return
 		#end sortNext
@@ -186,12 +187,13 @@ class MainListTab(FalconTabBase):
 
 	def col_click(self,event):
 		no=event.GetColumn()
-		if self.listObject.GetSortCursor()==no:
+		if self.listObject.GetSortCursor==no:
+			self.listObject.SetSortCursor(no)
 			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
 			self._updateEnv()
-			self.listObject.ApplySort()
+			self.listObject.ApplySort(0)
 		else:
-			self.listObject.SetSortCursor(no)
+			self.SetSortCursor(no)
 			self._updateEnv()
 			self.listObject.ApplySort()
 
@@ -251,6 +253,7 @@ class MainListTab(FalconTabBase):
 		self.listObject.SetSortCursor(item)
 		self._updateEnv()
 		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
 	def SortCycleAd(self):
@@ -258,4 +261,5 @@ class MainListTab(FalconTabBase):
 		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
 		self._updateEnv()
 		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
