@@ -193,7 +193,7 @@ class MainListTab(FalconTabBase):
 			self._updateEnv()
 			self.listObject.ApplySort(0)
 		else:
-			self.SetSortCursor(no)
+			self.listObject.SetSortCursor(no)
 			self._updateEnv()
 			self.listObject.ApplySort()
 
