@@ -45,10 +45,10 @@ class FalconConfigSection(configparser.SectionProxy):
 			self._parser[self._name][key]=""
 			return ""
 
-	def __setitem__(self,_value):
-		if (isinstance(_value),int):
+	def __setitem__(self,key,_value):
+		if (isinstance(_value,int)):
 			value=str(_value)
 		else:
 			value=_value
 
-		return super().__setitem__(value)
+		return super().__setitem__(key,value)

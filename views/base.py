@@ -16,10 +16,10 @@ class BaseView(object):
 	def __init__(self):
 		pass
 
-	def Initialize(self, ttl, x, y):
-		"""タイトルとウィンドウサイズを指定して、ウィンドウを初期化する。"""
-		self.hFrame=wx.Frame(None,-1, ttl, size=(x,y))
-		self.hFrame.Bind(wx.EVT_MOVE,self.events.WindowMove)
+	def Initialize(self, ttl, x, y,px,py):
+		"""タイトルとウィンドウサイズとポジションを指定して、ウィンドウを初期化する。"""
+		self.hFrame=wx.Frame(None,-1, ttl, size=(x,y),pos=(px,py))
+		self.hFrame.Bind(wx.EVT_MOVE_END,self.events.WindowMove)
 		self.hFrame.Bind(wx.EVT_SIZE,self.events.WindowResize)
 
 
@@ -49,16 +49,17 @@ class BaseEvents(object):
 	def Exit(self,event):
 		self.parent.hFrame.Destroy()
 
-	# wx.EVT_MOVE→wx.MoveEvent
+	# wx.EVT_MOVE_END→wx.MoveEvent
 	def WindowMove(self,event):
-		#dialog("x座標",str(event.GetPosition().x))
-		pass
+		#設定ファイルに位置を保存
+		globalVars.app.config[self.identifier]["positionX"]=self.parent.hFrame.GetPosition().x
+		globalVars.app.config[self.identifier]["positionY"]=self.parent.hFrame.GetPosition().x
 
 	# wx.EVT_SIZE→wx.SizeEvent
 	def WindowResize(self,event):
-		dialog("x座標",str(event.GetSize().x))
-		globalVars.app.config["a"]["sizeX"]=5	#event.GetSize().x
-		#globalVars.app.config[self.identifier]["sizeX"]=5	#event.GetSize().x
+		#設定ファイルにサイズを保存
+		globalVars.app.config[self.identifier]["sizeX"]=event.GetSize().x
+		globalVars.app.config[self.identifier]["sizeY"]=event.GetSize().y
+
 		#sizerを正しく機能させるため、Skipの呼出が必須
 		event.Skip()
-

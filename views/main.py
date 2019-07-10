@@ -9,6 +9,7 @@ import os
 import sys
 import wx
 from logging import getLogger, FileHandler, Formatter
+from simpleDialog import dialog
 
 from .base import *
 import misc
@@ -29,7 +30,13 @@ class View(BaseView):
 		self.log.debug("created")
 		self.app=globalVars.app
 		self.events=Events(self,self.identifier)
-		super().Initialize(constants.APP_NAME,self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"))
+		super().Initialize(
+			constants.APP_NAME,
+			self.app.config.getint(self.identifier,"sizeX"),
+			self.app.config.getint(self.identifier,"sizeY"),
+			self.app.config.getint(self.identifier,"positionX"),
+			self.app.config.getint(self.identifier,"positionY")
+		)
 		self.menu=Menu()
 		self.InstallMenuEvent(self.menu,self.events)
 		self.InstallShortcutEvent(self.identifier,self.events)
