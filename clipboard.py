@@ -18,8 +18,14 @@ class ClipboardFile(object):
 		for elem in lst:
 			a=bytearray(elem.encode('UTF-16'))
 			a.append(0)
+			a.append(0)
 			del(a[0:2])
 			self.byte+=a
+		#end for
+		self.byte.append(0)
+		self.byte.append(0)
+
+
 
 	def SetOperation(self,op):
 		self.operation=op
@@ -31,7 +37,11 @@ class ClipboardFile(object):
 		pass
 
 	def SendToClipboard(self):
+		f=open("bin","wb")
+		f.write(self.byte)
+		f.close()
 		with clipboardHelper.Clipboard() as c:
+			c.empty()
 			c.set_data(clipboardHelper.ClipboardFormats.drop_handle,bytes(self.byte))
 			fmt=c.register_format("Preferred DropEffect")
 			c.set_data(fmt,struct.pack('i', self.operation))
@@ -39,5 +49,8 @@ class ClipboardFile(object):
 	#end def
 
 	def ReceiveFromClipboard(self):
-		pass
+		with clipboardHelper.Clipboard() as c:
+			f=open("out","wb")
+			f.write(c.get_data(clipboardHelper.ClipboardFormats.drop_handle))
+
 
