@@ -39,3 +39,7 @@ break;
 }
 	return TRUE;
 }
+
+__declspec(dllexport) void copyMemory(void *dest, void *src, size_t sz){
+RtlCopyMemory(dest,src,sz);
+}
