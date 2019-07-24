@@ -50,7 +50,6 @@ class ClipboardFile(object):
 
 	def ReceiveFromClipboard(self):
 		with clipboardHelper.Clipboard() as c:
-			f=open("out","wb")
-			f.write(c.get_data(clipboardHelper.ClipboardFormats.drop_handle))
-
-
+			s=c.get_dropped_files()
+		#end with
+		print(s)

@@ -3,6 +3,7 @@ from ctypes import *
 from enum import IntEnum
 from array import array
 import win32clipboard
+import win32api
 
 helper=cdll.LoadLibrary("whelper.dll")
 
@@ -76,6 +77,32 @@ class Clipboard(object):
 	def get_unicode_text(self):
 		data = self.get_data(ClipboardFormats.unicode_text.value)
 		return data[0:len(data) - 2].decode("UTF-16")
+
+	def get_dropped_files(self):
+		kernel32 = windll.kernel32
+		handle = self.get_data_handle(ClipboardFormats.drop_handle)
+		GlobalSize = kernel32.GlobalSize
+		GlobalSize.restype = c_uint32
+		size = GlobalSize(handle)
+		if handle == c_void_p(0) and get_last_error() != 0:
+			raise WindowsError()
+		data = create_string_buffer(size)  # '\0'•ª‚ðˆø‚¢‚Ä‚¨‚­
+		GlobalLock = kernel32.GlobalLock
+		GlobalLock.restype = c_void_p
+		GlobalUnlock = kernel32.GlobalUnlock
+		pointer = GlobalLock(handle)
+		if pointer == c_void_p(0) and get_last_error() != 0:
+			GlobalUnlock(pointer)
+			raise WindowsError()
+		#end if error
+		num=win32api.DragQueryFile(pointer)
+		lst=[]
+		for i in range(num):
+			lst.append(win32api.DragQueryFile(pointer,i))
+		#end for
+		GlobalUnlock(pointer)
+		return lst
+	#end get_dropped_file
 
 	def set_data(self, format, data):
 		user32 = windll.user32
