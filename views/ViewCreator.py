@@ -24,6 +24,18 @@ class ViewCreator():
 		self.SetFace(hButton)
 		return hButton
 
+	def okbutton(self,text,event):
+		hButton=wx.Button(self.hPanel, wx.ID_OK,text)
+		hButton.Bind(wx.EVT_BUTTON,event)
+		self.SetFace(hButton)
+		return hButton
+
+	def cancelbutton(self,text,event):
+		hButton=wx.Button(self.hPanel, wx.ID_CANCEL,text)
+		hButton.Bind(wx.EVT_BUTTON,event)
+		self.SetFace(hButton)
+		return hButton
+
 	def checkbox(self,text,event):
 		hCheckBox=wx.CheckBox(self.hPanel,wx.ID_ANY,text)
 		hCheckBox.Bind(wx.EVT_CHECKBOX,event)
@@ -54,13 +66,12 @@ class ViewCreator():
 	def SetFace(self,target):
 		if self.mode==1:
 			target.SetBackgroundColour("#000000")		#背景色＝黒
-			target.SetForegroundColour("#ffffff")		#文字色＝白
+#			target.SetForegroundColour("#ffffff")		#文字色＝白
 		else:
 			target.SetBackgroundColour("#ffffff")		#背景色＝白
-			target.SetForegroundColour("#000000")		#文字色＝黒
+			#target.SetForegroundColour("#000000")		#文字色＝黒
 		target.SetThemeEnabled(False)
 		target.SetFont(self.font.GetFont())
-
 
 # parentで指定されたフレームにパネルを設置する
 # modeはViewCreator.__init__と同様

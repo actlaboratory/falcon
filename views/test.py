@@ -14,33 +14,31 @@ import _winxptheme
 from logging import getLogger, FileHandler, Formatter
 
 dll=ctypes.cdll.LoadLibrary("whelper.dll")
-from .base import *
+from .baseDialog import *
 import constants
 import DefaultSettings
 import errorCodes
 import globalVars
 import keymap
 import misc
-from simpleDialog import *
 import views.ViewCreator
 
-class View(BaseView):
+class View(BaseDialog):
 	def Initialize(self):
 		t=misc.Timer()
 		self.identifier="wxTestView"#このビューを表す文字列
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
 		self.app=globalVars.app
-		super().Initialize("wxテスト",self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"))
+		super().Initialize("wxテスト",self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"), self.app.config.getint(self.identifier,"positionX"), self.app.config.getint(self.identifier,"positionY"))
 		self.InstallControls()
-		self.hFrame.Show()
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
-		self.creator=views.ViewCreator.ViewCreator(1,self.hFrame)
-#		self.hPanel=wx.Panel(self.hFrame, wx.ID_ANY)
+		self.creator=views.ViewCreator.ViewCreator(1,self.wnd)
+#		self.hPanel=wx.Panel(self.wnd, wx.ID_ANY)
 #		self.hPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
 #		self.hPanel.SetAutoLayout(True)
 		#その1　ボタン
@@ -85,6 +83,9 @@ class View(BaseView):
 		self.sizer.Add(self.hStaticText)
 		self.sizer.Add(self.hTextCtrl)
 		self.creator.getPanel().SetSizer(self.sizer)
+
+	def Show(self):
+		self.wnd.ShowModal()
 
 	def OnButton(self,evt):
 		dialog("Button pressed","Input box content: %s" % self.hTextCtrl.GetValue())
