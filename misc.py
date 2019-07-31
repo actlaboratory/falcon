@@ -4,6 +4,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import time
+import win32file
 
 class Timer:
 	"""シンプルなタイマー。経過時間や処理時間を計測するのに使う。単位は秒で、float。"""
@@ -59,3 +60,12 @@ def DetermineSizeUnit(b):
 def PTime2string(ptime):
 	"""ptime 形式のオブジェクトを受け取って、人間が読めるタイムスタンプ文字列に変換して返す。"""
 	return "%04d/%02d/%02d %02d:%02d:%02d" % (ptime.year, ptime.month, ptime.day, ptime.hour, ptime.minute, ptime.second)
+
+def attrib2dward(readonly=False, hidden=False, system=False, archive=False):
+	ret=0
+	if readonly is True: ret=ret|win32file.FILE_ATTRIBUTE_READONLY
+	if hidden is True: ret=ret|win32file.FILE_ATTRIBUTE_HIDDEN
+	if system is True: ret=ret|win32file.FILE_ATTRIBUTE_SYSTEM
+	if archive is True: ret=ret|win32file.FILE_ATTRIBUTE_ARCHIVE
+	if ret==0: ret=win32file.FILE_ATTRIBUTE_NORMAL
+	return ret

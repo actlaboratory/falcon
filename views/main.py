@@ -15,6 +15,7 @@ from .base import *
 import misc
 import views.test
 import views.fonttest
+import views.changeAttribute
 import constants
 import errorCodes
 import globalVars
@@ -93,6 +94,8 @@ class Menu():
 		self.hEnvMenu=wx.Menu()
 		self.hHelpMenu=wx.Menu()
 		#ファイルメニューの中身
+		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_RENAME"].GetValue(),_("名前を変更"))
+		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_CHANGEATTRIBUTE"].GetValue(),_("属性を変更"))
 		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_EXIT"].GetValue(),_("終了"))
 		#ファイルメニューの中身
 		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue(),_("次の並び順\tShift+F1"))
@@ -142,9 +145,18 @@ class Events(BaseEvents):
 		if selected==constants.MENU_ITEMS["EDIT_SORTCYCLEAD"].GetValue():
 			self.SortCycleAd()
 			return
+		if selected==constants.MENU_ITEMS["FILE_CHANGEATTRIBUTE"].GetValue():
+			d=views.changeAttribute.Dialog()
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+			dialog("test","%d" % d.GetValue())
+			d.Destroy()
+			return
 		if selected==constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue():
 			self.testdialog=views.test.View()
 			self.testdialog.Initialize()
+			self.testdialog.Show()
 			return
 		if selected==constants.MENU_ITEMS["ENV_FONTTEST"].GetValue():
 			self.fonttest=views.fonttest.View()

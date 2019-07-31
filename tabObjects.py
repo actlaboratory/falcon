@@ -230,6 +230,14 @@ class MainListTab(FalconTabBase):
 		#end fail
 	#end onLabelEditEnd
 
+	def changeAttribute(self,attrib):
+		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
+		inst={"operation": "changeAttribute", "files": [f.fullpath], "to": [attrib]}
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		if op.CheckSucceeded()==0:
+			dialog(_("エラー"),_("名前が変更できません。"))
+
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
 		self.TriggerAction(ACTION_FORWARD)

@@ -20,6 +20,7 @@ FONT_MAX_SIZE=35
 
 MENU_ITEMS={
 	"FILE_RENAME": wx.NewIdRef(),
+	"FILE_CHANGEATTRIBUTE": wx.NewIdRef(),
 	"FILE_EXIT": wx.NewIdRef(),
 	"EDIT_SORTNEXT": wx.NewIdRef(),
 	"EDIT_SORTSELECT": wx.NewIdRef(),

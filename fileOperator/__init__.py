@@ -15,7 +15,7 @@ from simpleDialog import dialog
 
 import misc
 
-from . import rename, failedElement
+from . import rename, changeAttribute, failedElement
 
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
 
@@ -85,6 +85,9 @@ class FileOperator(object):
 		if op=="rename":#リネーム
 			retry=rename.Execute(self)
 		#end rename
+		if op=="changeAttribute":#属性変更
+			retry=changeAttribute.Execute(self)
+		#end changeAttribute
 		self.log.debug("success %s, retry %s, failure %s." % (self.output["succeeded"], retry, len(self.output["failed"])))
 		if not self.elevated and retry>0: self._elevate()#昇格してリトライ
 		if self.elevated: self._postElevation()#昇格した後の後処理
