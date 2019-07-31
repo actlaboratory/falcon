@@ -30,14 +30,15 @@ class Dialog(BaseDialog):
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
 		self.app=globalVars.app
-		super().Initialize(_("属性変更"),self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"), self.app.config.getint(self.identifier,"positionX"), self.app.config.getint(self.identifier,"positionY"))
+		print(str(self.app.config.getint(self.identifier,"sizeX")))
+		super().Initialize(self.app.hMainView.hFrame,_("属性変更"),self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"), self.app.config.getint(self.identifier,"positionX"), self.app.config.getint(self.identifier,"positionY"))
 		self.InstallControls()
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
-		self.creator=views.ViewCreator.ViewCreator(1,self.wnd)
+		self.creator=views.ViewCreator.ViewCreator(0,self.wnd)
 		self.cReadonly=self.creator.checkbox(_("読み取り専用"),None)
 		self.cHidden=self.creator.checkbox(_("隠し"),None)
 		self.cSystem=self.creator.checkbox(_("システム"),None)
@@ -54,12 +55,15 @@ class Dialog(BaseDialog):
 		self.creator.getPanel().SetSizer(self.sizer)
 
 	def Show(self):
-		return self.wnd.ShowModal()
+		result=self.wnd.ShowModal()
+		self.Destroy()
+		self.value=misc.attrib2dward(self.cReadonly.IsChecked(), self.cHidden.IsChecked(), self.cSystem.IsChecked(), self.cArchive.IsChecked())
+		return result
 
 	def Destroy(self):
+		self.log.debug("destroy")
 		self.wnd.Destroy()
 
 	def GetValue(self):
-		return misc.attrib2dward(self.cReadonly.IsChecked(), self.cHidden.IsChecked(), self.cSystem.IsChecked(), self.cArchive.IsChecked())
-
+		return self.value
 

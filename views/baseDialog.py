@@ -12,9 +12,15 @@ class BaseDialog(object):
 	def __init__(self):
 		pass
 
-	def Initialize(self, ttl, x, y,px,py):
+	def Initialize(self, parent,ttl, x, y,px,py):
 		"""タイトルとウィンドウサイズとポジションを指定して、ウィンドウを初期化する。"""
-		self.wnd=wx.Dialog(None,-1, ttl, size=(x,y),pos=(px,py))
+		if (x==-1):
+			#x=parent.GetPosition().
+			x=100
+		if (y==-1):
+			#y=parent.GetPosition().
+			y=100
+		self.wnd=wx.Dialog(parent,-1, ttl, size=(x,y),pos=(px,py))
 
 
 

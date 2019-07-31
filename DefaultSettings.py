@@ -42,5 +42,13 @@ class DefaultSettings:
 			"column_width_3" : "70",
 			"column_width_4" : "240"
 		}
+
+		config["changeAttributeDialog"]={
+			"sizex" : 640,
+			"sizey" : 360,
+			"positionx" : -1,
+			"positiony" : -1
+		}
+
 		return config
 
