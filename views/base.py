@@ -18,7 +18,7 @@ class BaseView(object):
 
 	def Initialize(self, ttl, x, y,px,py):
 		"""タイトルとウィンドウサイズとポジションを指定して、ウィンドウを初期化する。"""
-		self.hFrame=wx.Frame(None,-1, ttl, size=(x,y),pos=(px,py))
+		self.hFrame=wx.Frame(None,-1, name=ttl, size=(x,y),pos=(px,py))
 		self.hFrame.Bind(wx.EVT_MOVE_END,self.events.WindowMove)
 		self.hFrame.Bind(wx.EVT_SIZE,self.events.WindowResize)
 

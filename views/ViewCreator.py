@@ -19,31 +19,31 @@ class ViewCreator():
 
 
 	def button(self,text,event):
-		hButton=wx.Button(self.hPanel, wx.ID_ANY,text)
+		hButton=wx.Button(self.hPanel, wx.ID_ANY,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton)
 		return hButton
 
 	def okbutton(self,text,event):
-		hButton=wx.Button(self.hPanel, wx.ID_OK,text)
+		hButton=wx.Button(self.hPanel, wx.ID_OK,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton)
 		return hButton
 
 	def cancelbutton(self,text,event):
-		hButton=wx.Button(self.hPanel, wx.ID_CANCEL,text)
+		hButton=wx.Button(self.hPanel, wx.ID_CANCEL,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton)
 		return hButton
 
 	def checkbox(self,text,event):
-		hCheckBox=wx.CheckBox(self.hPanel,wx.ID_ANY,text)
+		hCheckBox=wx.CheckBox(self.hPanel,wx.ID_ANY, label=text, name=text)
 		hCheckBox.Bind(wx.EVT_CHECKBOX,event)
 		self.SetFace(hCheckBox)
 		return hCheckBox
 
 	def radiobox(self,text,items,event):
-		hRadioBox=wx.RadioBox(self.hPanel,label=text,choices=items)
+		hRadioBox=wx.RadioBox(self.hPanel,label=text, name=text, choices=items)
 		hRadioBox.Bind(wx.EVT_RADIOBOX,event)
 		self.SetFace(hRadioBox)
 		return hRadioBox
@@ -55,7 +55,7 @@ class ViewCreator():
 		return hListCtrl
 
 	def inputbox(self,text):
-		hStaticText=wx.StaticText(self.hPanel, -1, "入力")
+		hStaticText=wx.StaticText(self.hPanel, -1, label="入力", name="入力")
 		hTextCtrl=wx.TextCtrl(self.hPanel, -1)
 		self.SetFace(hTextCtrl)
 		return hStaticText,hTextCtrl
