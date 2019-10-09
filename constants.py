@@ -17,19 +17,3 @@ KEYMAP_FILE_NAME="keymap.ini"
 FONT_MIN_SIZE=5
 FONT_MAX_SIZE=35
 
-
-MENU_ITEMS={
-	"FILE_RENAME": wx.NewIdRef(),
-	"FILE_CHANGEATTRIBUTE": wx.NewIdRef(),
-	"FILE_EXIT": wx.NewIdRef(),
-	"EDIT_SORTNEXT": wx.NewIdRef(),
-	"EDIT_SORTSELECT": wx.NewIdRef(),
-	"EDIT_SORTCYCLEAD": wx.NewIdRef(),
-	"MOVE_BACKWARD": wx.NewIdRef(),
-	"MOVE_FORWARD": wx.NewIdRef(),
-	"MOVE_FORWARD_ADMIN": wx.NewIdRef(),
-	"MOVE_FORWARD_STREAM": wx.NewIdRef(),
-	"ENV_TESTDIALOG": wx.NewIdRef(),
-	"ENV_FONTTEST": wx.NewIdRef(),
-	"HELP_VERINFO": wx.NewIdRef()
-}
