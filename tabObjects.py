@@ -65,7 +65,6 @@ class FalconTabBase(object):
 
 	def SetListColumns(self,col):
 		"""リストコントロールにカラムを設定する。"""
-		print("column delete")
 		self.hListCtrl.DeleteAllColumns()
 		i=0
 		for elem in col:
