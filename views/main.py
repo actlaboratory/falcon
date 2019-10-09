@@ -23,6 +23,7 @@ import listObjects
 import tabObjects
 import menuItemsStore
 from simpleDialog import *
+import ctypes
 
 class View(BaseView):
 	def Initialize(self):
@@ -32,8 +33,12 @@ class View(BaseView):
 		self.log.debug("created")
 		self.app=globalVars.app
 		self.events=Events(self,self.identifier)
+		title=""
+		if(ctypes.windll.shell32.IsUserAnAdmin()):
+			title+="["+_("管理者")+"]"
+		title+=constants.APP_NAME
 		super().Initialize(
-			constants.APP_NAME,
+			title,
 			self.app.config.getint(self.identifier,"sizeX",800),
 			self.app.config.getint(self.identifier,"sizeY",600),
 			self.app.config.getint(self.identifier,"positionX"),
@@ -64,7 +69,6 @@ class View(BaseView):
 		tab=tabObjects.MainListTab()
 		tab.Initialize(self)
 		lst=listObjects.FileList()
-		print(os.path.expandvars(sys.argv[1]))
 		if(len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			lst=listObjects.FileList()
 			lst.Initialize(os.path.expandvars(sys.argv[1]))
