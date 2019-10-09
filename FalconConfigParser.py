@@ -37,7 +37,7 @@ class FalconConfigParser(configparser.ConfigParser):
 		except KeyError as e:
 			self.log.debug("create new section:"+key)
 			self.add_section(key)
-			self.__getitem__(key)
+			return self.__getitem__(key)
 
 	#Šù‚É‘¶İ‚µ‚Ä‚àƒGƒ‰[‚É‚È‚ç‚È‚¢‚æ‚¤‚É•ÏX
 	def getint(self,section,key,default=0):
