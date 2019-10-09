@@ -21,6 +21,7 @@ import constants
 import fileOperator
 
 from simpleDialog import *
+from win32com.shell import shell, shellcon
 
 #アクションの識別子
 ACTION_FORWARD=0#ファイル/フォルダのオープン
@@ -78,8 +79,8 @@ class FalconTabBase(object):
 		#end 追加
 		self.log.debug("List control updated.")
 
-	def TriggerAction(self, action):
-		"""タブの指定要素に対してアクションを実行する。成功した場合は、errorCodes.OK を返し、失敗した場合は、その他のエラーコードを返す。"""
+	def TriggerAction(self, action,admin=False):
+		"""タブの指定要素に対してアクションを実行する。成功した場合は、errorCodes.OK を返し、失敗した場合は、その他のエラーコードを返す。admin=True で、管理者として実行する。"""
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
 	def EnterItem(self):
@@ -113,7 +114,7 @@ class MainListTab(FalconTabBase):
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def TriggerAction(self, action):
+	def TriggerAction(self, action,admin=False):
 		if action==ACTION_SORTNEXT:
 			self.listObject.SetSortCursor()
 			self._updateEnv()
@@ -127,6 +128,7 @@ class MainListTab(FalconTabBase):
 			elem=self.listObject.GetElement(index)
 			self.lastBasename=elem.basename#あとでバックスペースで戻ったときに使う
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
+				#TODO: 管理者モードだったら、別のfalconが昇格して開くように
 				lst=listObjects.FileList()
 				ok=lst.Initialize(elem.fullpath,self.environment["FileList_sorting"],self.environment["FileList_descending"])
 				if not ok: return#アクセス負荷
@@ -134,13 +136,15 @@ class MainListTab(FalconTabBase):
 				return errorCodes.OK
 			#end フォルダ開く
 			elif isinstance(elem,browsableObjects.File):#このファイルを開く
-				if action==ACTION_FORWARD: self.RunFile(elem)
+				if action==ACTION_FORWARD: self.RunFile(elem,admin)
+				#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
 				if action==ACTION_FORWARD_STREAM: self.OpenStream(elem)
 			#ファイルを開く
 			elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
-				self.RunFile(elem)
+				self.RunFile(elem,admin)
 			#end ストリームを開く
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
+				#TODO: これも昇格したほうがいい
 				lst=listObjects.FileList()
 				lst.Initialize(elem.letter+":",self.environment["FileList_sorting"],self.environment["FileList_descending"])
 				self.Update(lst)
@@ -165,14 +169,28 @@ class MainListTab(FalconTabBase):
 			self.Update(lst)
 			self.hListCtrl.Focus(self.hListCtrl.FindItem(-1,self.lastBasename))
 
-	def RunFile(self,elem):
-		"""ファイルを起動する。"""
-		self.log.debug("running %s" % elem.fullpath)
-		try:
-			globalVars.app.say(_("起動"))
-			win32api.ShellExecute(0,"open",elem.fullpath,"","",1)
-		except win32api.error as er:
-			dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": str(er)})
+	def RunFile(self,elem, admin=False):
+		"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
+		msg="running %s as admin" % (elem.fullpath) if admin else "running %s" % (elem.fullpath)
+		self.log.debug(msg)
+		msg=_("管理者で起動") if admin else _("起動")
+		globalVars.app.say(msg)
+		error=""
+		if admin:
+			try:
+				ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",elem.fullpath,"")
+			except pywintypes.error as e:
+				error=str(e)
+			#end shellExecuteEx failure
+		else:
+			try:
+				win32api.ShellExecute(0,"open",elem.fullpath,"","",1)
+			except win32api.error as er:
+				error=str(er)
+			#end shellExecute failure
+		#end admin or not
+		if error!="":
+			dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": error})
 		#end ファイル開けなかった
 	#end RunFile
 

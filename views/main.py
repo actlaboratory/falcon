@@ -103,6 +103,7 @@ class Menu():
 		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTCYCLEAD"].GetValue(),_("昇順/降順切り替え\tShift+F11"))
 		#移動メニューの中身
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く\tEnter"))
+		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD_ADMIN"].GetValue(),_("管理者として開く"))
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue(),_("開く(ストリーム)"))
 		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue(),_("上の階層へ\tBackSpace"))
 		#環境メニューの中身
@@ -132,6 +133,9 @@ class Events(BaseEvents):
 			return
 		if selected==constants.MENU_ITEMS["MOVE_FORWARD"].GetValue():
 			self.GoForward(False)
+			return
+		if selected==constants.MENU_ITEMS["MOVE_FORWARD_ADMIN"].GetValue():
+			self.GoForward(False,admin=True)
 			return
 		if selected==constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue():
 			self.GoForward(True)
@@ -192,11 +196,11 @@ class Events(BaseEvents):
 		elif ret==errorCodes.BOUNDARY:
 			dialog("test","mada")
 
-	def GoForward(self,st):
-		"""forward アクションを実行。st=True で、ファイルを開く代わりにストリームを開く。"""
+	def GoForward(self,stream,admin=False):
+		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
 		p=self.parent
-		act=tabObjects.ACTION_FORWARD if st is False else tabObjects.ACTION_FORWARD_STREAM
-		ret=p.activeTab.TriggerAction(act)
+		act=tabObjects.ACTION_FORWARD if stream is False else tabObjects.ACTION_FORWARD_STREAM
+		ret=p.activeTab.TriggerAction(act,admin)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:

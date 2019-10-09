@@ -27,6 +27,7 @@ MENU_ITEMS={
 	"EDIT_SORTCYCLEAD": wx.NewIdRef(),
 	"MOVE_BACKWARD": wx.NewIdRef(),
 	"MOVE_FORWARD": wx.NewIdRef(),
+	"MOVE_FORWARD_ADMIN": wx.NewIdRef(),
 	"MOVE_FORWARD_STREAM": wx.NewIdRef(),
 	"ENV_TESTDIALOG": wx.NewIdRef(),
 	"ENV_FONTTEST": wx.NewIdRef(),
