@@ -67,8 +67,7 @@ class falconAppMain(wx.App):
 	def LoadSettings(self):
 		"""設定ファイルを読み込む。なければデフォルト設定を適用し、設定ファイルを書く。"""
 		self.config = DefaultSettings.DefaultSettings.get()
-		if os.path.exists(constants.SETTING_FILE_NAME):
-			self.config.read(constants.SETTING_FILE_NAME)
+		self.config.read(constants.SETTING_FILE_NAME)
 
 		self.config.write()
 

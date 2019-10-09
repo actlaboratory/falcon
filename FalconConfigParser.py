@@ -5,7 +5,7 @@
 
 
 
-
+import os
 import configparser
 import logging
 from logging import getLogger, FileHandler, Formatter
@@ -22,9 +22,12 @@ class FalconConfigParser(configparser.ConfigParser):
 
 	def read(self,fileName):
 		self.fileName=fileName
-		self.log.info("read configFile:"+fileName)
-		return super().read(fileName)
-
+		if os.path.exists(fileName):
+			self.log.info("read configFile:"+fileName)
+			return super().read(fileName)
+		else:
+			self.log.warning("configFile not found.")
+			return self
 
 	def write(self):
 		self.log.info("write configFile:"+self.fileName)
