@@ -290,3 +290,11 @@ class MainListTab(FalconTabBase):
 		self.listObject.ApplySort()
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
+
+	def UpdateFilelist(self):
+		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
+		globalVars.app.say(_("更新"))
+		lst=listObjects.FileList()
+		ok=lst.Initialize(self.listObject.rootDirectory)
+		if not ok: return#アクセス負荷
+		self.Update(lst)
