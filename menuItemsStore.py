@@ -19,7 +19,7 @@ class _MenuItemsStore(object):
 			ref=wx.NewIdRef()
 			self.refs[identifier]=ref
 		#end なかったから作った
-		return ref.getId()
+		return ref.GetValue()
 
 _store=_MenuItemsStore()
 

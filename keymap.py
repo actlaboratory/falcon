@@ -6,9 +6,9 @@ import configparser
 import logging
 import os
 import wx
-import constants
 import defaultKeymap
 import errorCodes
+import menuItemsStore
 
 from simpleDialog import *
 
@@ -216,7 +216,7 @@ class KeymapHandler():
 				if ctrl: flags=wx.ACCEL_CTRL
 				if alt: flags=flags|wx.ACCEL_ALT
 				if shift: flags=flags|wx.ACCEL_SHIFT
-				entry=wx.AcceleratorEntry(flags,str2key[codestr[len(codestr)-1]],constants.MENU_ITEMS[elem[0].upper()])
+				entry=wx.AcceleratorEntry(flags,str2key[codestr[len(codestr)-1]],menuItemsStore.getRef(elem[0].upper()))
 				tbl.append(entry)
 			#end スラッシュで並んでいるコマンドの数だけ
 		#end 設定値1行ごと
