@@ -120,6 +120,7 @@ class Menu():
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTNEXT"),_("次の並び順\tShift+F1"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTSELECT"),_("並び順を選択\tCtrl+S"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTCYCLEAD"),_("昇順/降順切り替え\tShift+F11"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_UPDATEFILELIST"),_("最新の情報に更新\tF5"))
 		#移動メニューの中身
 		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD"),_("開く\tEnter"))
 		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD_ADMIN"),_("管理者として開く"))
@@ -167,6 +168,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("EDIT_SORTCYCLEAD"):
 			self.SortCycleAd()
+			return
+		if selected==menuItemsStore.getRef("EDIT_UPDATEFILELIST"):
+			self.UpdateFilelist()
 			return
 		if selected==menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
 			d=views.changeAttribute.Dialog()
@@ -242,3 +246,7 @@ class Events(BaseEvents):
 	def SortCycleAd(self):
 		t=self.parent.activeTab
 		t.SortCycleAd()
+
+	def UpdateFilelist(self):
+		ret=self.parent.activeTab.UpdateFilelist()
+
