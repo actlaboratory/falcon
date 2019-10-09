@@ -1,0 +1,3 @@
+[submodule "pybass"]
+	path = pybass
+	url = https://github.com/yncat/pybass.git
