@@ -24,7 +24,28 @@ class falconAppMain(wx.App):
 		self.InitLogger()
 		self.LoadSettings()
 		self.InitTranslation()
-		self.speech=accessible_output2.outputs.auto.Auto()
+
+		reader=self.config["speech"]["reader"]
+		if(reader=="PCTK"):
+			self.log.info("use reader 'PCTalker'")
+			self.speech=accessible_output2.outputs.pc_talker.PCTalker()
+		elif(reader=="NVDA"):
+			self.log.info("use reader 'NVDA'")
+			self.speech=accessible_output2.outputs.nvda.NVDA()
+#		elif(reader=="SAPI4"):
+#			self.log.info("use reader 'SAPI4'")
+#			self.speech=accessible_output2.outputs.sapi4.Sapi4()
+		elif(reader=="SAPI5"):
+			self.log.info("use reader 'SAPI5'")
+			self.speech=accessible_output2.outputs.sapi5.SAPI5()
+		elif(reader=="AUTO"):
+			self.log.info("use reader 'AUTO'")
+			self.speech=accessible_output2.outputs.auto.Auto()
+		else:
+			self.config.set("speech","reader","AUTO")
+			self.log.warning("Setting missed! speech.reader reset to 'AUTO'")
+			self.speech=accessible_output2.outputs.auto.Auto()
+
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 		#メインビューを表示
 		self.hMainView=main.View()
