@@ -21,6 +21,7 @@ import errorCodes
 import globalVars
 import listObjects
 import tabObjects
+import menuItemsStore
 from simpleDialog import *
 
 class View(BaseView):
@@ -94,23 +95,23 @@ class Menu():
 		self.hEnvMenu=wx.Menu()
 		self.hHelpMenu=wx.Menu()
 		#ファイルメニューの中身
-		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_RENAME"].GetValue(),_("名前を変更"))
-		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_CHANGEATTRIBUTE"].GetValue(),_("属性を変更"))
-		self.hFileMenu.Append(constants.MENU_ITEMS["FILE_EXIT"].GetValue(),_("終了"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_RENAME"),_("名前を変更"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"),_("属性を変更"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
 		#ファイルメニューの中身
-		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue(),_("次の並び順\tShift+F1"))
-		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTSELECT"].GetValue(),_("並び順を選択\tCtrl+S"))
-		self.hEditMenu.Append(constants.MENU_ITEMS["EDIT_SORTCYCLEAD"].GetValue(),_("昇順/降順切り替え\tShift+F11"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTNEXT"),_("次の並び順\tShift+F1"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTSELECT"),_("並び順を選択\tCtrl+S"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTCYCLEAD"),_("昇順/降順切り替え\tShift+F11"))
 		#移動メニューの中身
-		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD"].GetValue(),_("開く\tEnter"))
-		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD_ADMIN"].GetValue(),_("管理者として開く"))
-		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue(),_("開く(ストリーム)"))
-		self.hMoveMenu.Append(constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue(),_("上の階層へ\tBackSpace"))
+		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD"),_("開く\tEnter"))
+		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD_ADMIN"),_("管理者として開く"))
+		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD_STREAM"),_("開く(ストリーム)"))
+		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_BACKWARD"),_("上の階層へ\tBackSpace"))
 		#環境メニューの中身
-		self.hEnvMenu.Append(constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue(),_("テストダイアログを表示"))
-		self.hEnvMenu.Append(constants.MENU_ITEMS["ENV_FONTTEST"].GetValue(),_("フォントテストダイアログを表示"))
+		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_TESTDIALOG"),_("テストダイアログを表示"))
+		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_FONTTEST"),_("フォントテストダイアログを表示"))
 		#ヘルプメニューの中身
-		self.hHelpMenu.Append(constants.MENU_ITEMS["HELP_VERINFO"].GetValue(),_("バージョン情報"))
+		self.hHelpMenu.Append(menuItemsStore.getRef("HELP_VERINFO"),_("バージョン情報"))
 		#メニューバー
 		self.hMenuBar=wx.MenuBar()
 		self.hMenuBar.Append(self.hFileMenu,_("ファイル"))
@@ -128,28 +129,28 @@ class Events(BaseEvents):
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
 		selected=event.GetId()#メニュー識別しの数値が出る
-		if selected==constants.MENU_ITEMS["MOVE_BACKWARD"].GetValue():
+		if selected==menuItemsStore.getRef("MOVE_BACKWARD"):
 			self.GoBackward()
 			return
-		if selected==constants.MENU_ITEMS["MOVE_FORWARD"].GetValue():
+		if selected==menuItemsStore.getRef("MOVE_FORWARD"):
 			self.GoForward(False)
 			return
-		if selected==constants.MENU_ITEMS["MOVE_FORWARD_ADMIN"].GetValue():
+		if selected==menuItemsStore.getRef("MOVE_FORWARD_ADMIN"):
 			self.GoForward(False,admin=True)
 			return
-		if selected==constants.MENU_ITEMS["MOVE_FORWARD_STREAM"].GetValue():
+		if selected==menuItemsStore.getRef("MOVE_FORWARD_STREAM"):
 			self.GoForward(True)
 			return
-		if selected==constants.MENU_ITEMS["EDIT_SORTNEXT"].GetValue():
+		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
 			self.SortNext()
 			return
-		if selected==constants.MENU_ITEMS["EDIT_SORTSELECT"].GetValue():
+		if selected==menuItemsStore.getRef("EDIT_SORTSELECT"):
 			self.SortSelect()
 			return
-		if selected==constants.MENU_ITEMS["EDIT_SORTCYCLEAD"].GetValue():
+		if selected==menuItemsStore.getRef("EDIT_SORTCYCLEAD"):
 			self.SortCycleAd()
 			return
-		if selected==constants.MENU_ITEMS["FILE_CHANGEATTRIBUTE"].GetValue():
+		if selected==menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
 			d=views.changeAttribute.Dialog()
 			d.Initialize()
 			ret=d.Show()
@@ -157,22 +158,22 @@ class Events(BaseEvents):
 			dialog("test","%d" % d.GetValue())
 			d.Destroy()
 			return
-		if selected==constants.MENU_ITEMS["ENV_TESTDIALOG"].GetValue():
+		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):
 			self.testdialog=views.test.View()
 			self.testdialog.Initialize()
 			self.testdialog.Show()
 			return
-		if selected==constants.MENU_ITEMS["ENV_FONTTEST"].GetValue():
+		if selected==menuItemsStore.getRef("ENV_FONTTEST"):
 			self.fonttest=views.fonttest.View()
 			self.fonttest.Initialize()
 			return
-		if selected==constants.MENU_ITEMS["FILE_RENAME"].GetValue():
+		if selected==menuItemsStore.getRef("FILE_RENAME"):
 			self.StartRename()
 			return
-		if selected==constants.MENU_ITEMS["FILE_EXIT"].GetValue():
+		if selected==menuItemsStore.getRef("FILE_EXIT"):
 			self.Exit(event)
 			return
-		if selected==constants.MENU_ITEMS["HELP_VERINFO"].GetValue():
+		if selected==menuItemsStore.getRef("HELP_VERINFO"):
 			self.ShowVersionInfo()
 			return
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
