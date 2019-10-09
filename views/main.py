@@ -63,7 +63,21 @@ class View(BaseView):
 		tab=tabObjects.MainListTab()
 		tab.Initialize(self)
 		lst=listObjects.FileList()
-		lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]))
+		print(os.path.expandvars(sys.argv[1]))
+		if(len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1]))):
+			lst=listObjects.FileList()
+			lst.Initialize(os.path.expandvars(sys.argv[1]))
+		elif(self.app.config["browse"]["startPath"]==""):
+			lst=listObjects.DriveList()
+			lst.Initialize()
+		elif(os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"]))):
+			lst=listObjects.FileList()
+			lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]))
+		else:
+			lst=listObjects.DriveList()
+			lst.Initialize()
+		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
+			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
 		tab.Update(lst)
 		self.AppendTab(tab,active=True)
 
