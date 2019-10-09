@@ -151,6 +151,8 @@ class MainListTab(FalconTabBase):
 			#end フォルダ以外のタイプ
 		#end ACTION_FORWARD
 		if action==ACTION_BACKWARD:
+			if (self.listObject.__class__.__name__=="DriveList"):
+				return errorCodes.BOUNDARY
 			dir=self.listObject.rootDirectory
 			if len(dir)<=3:#ドライブリスト
 				lst=listObjects.DriveList()

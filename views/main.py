@@ -190,7 +190,8 @@ class Events(BaseEvents):
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
-			dialog("test","mada")
+			pass
+			# play sound here.
 
 	def GoForward(self,st):
 		"""forward アクションを実行。st=True で、ファイルを開く代わりにストリームを開く。"""
