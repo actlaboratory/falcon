@@ -10,7 +10,6 @@ import sys
 import wx
 import win32con
 import win32gui
-import _winxptheme
 from logging import getLogger, FileHandler, Formatter
 
 from .baseDialog import *
@@ -39,33 +38,15 @@ class Dialog(BaseDialog):
 
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
-		self.creator=views.ViewCreator.ViewCreator(1,self.wnd)
-		self.checksPanel=wx.Panel(self.wnd, wx.ID_ANY, size=(600,300))
-		dll.ScCheckbox(self.checksPanel.GetHandle())
-		self.checksPanelSizer=wx.BoxSizer(wx.HORIZONTAL)
-		self.cReadonly=self.creator.checkbox(_("読み取り専用"),None,parent_overwrite=self.checksPanel)
-		_winxptheme.SetWindowTheme(self.cReadonly.GetHandle(),"","")
-		self.checksPanelSizer.Add(self.cReadonly)
-		self.cHidden=self.creator.checkbox(_("隠し"),None,parent_overwrite=self.checksPanel)
-		_winxptheme.SetWindowTheme(self.cHidden.GetHandle(),"","")
-		self.checksPanelSizer.Add(self.cHidden)
-		self.cSystem=self.creator.checkbox(_("システム"),None,parent_overwrite=self.checksPanel)
-		_winxptheme.SetWindowTheme(self.cSystem.GetHandle(),"","")
-		self.checksPanelSizer.Add(self.cSystem)
-		self.cArchive=self.creator.checkbox(_("アーカイブ"),None,parent_overwrite=self.checksPanel)
-		_winxptheme.SetWindowTheme(self.cArchive.GetHandle(),"","")
-		self.checksPanelSizer.Add(self.cArchive)
-		self.checksPanel.SetSizer(self.checksPanelSizer)
+		self.creator=views.ViewCreator.ViewCreator(1,self.wnd,wx.VERTICAL,20,_("属性の変更"))
+		if 1>0:		# TODO:モード設定実装後はここでモード１＝白黒反転の場合のみを指定する
+			dll.ScCheckbox(self.creator.getPanel().GetHandle())
+		self.cReadonly=self.creator.checkbox(_("読み取り専用"),None)
+		self.cHidden=self.creator.checkbox(_("隠し"),None)
+		self.cSystem=self.creator.checkbox(_("システム"),None)
+		self.cArchive=self.creator.checkbox(_("アーカイブ"),None)
 		self.bOk=self.creator.okbutton(_("OK"),None)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
-		self.sizer=wx.BoxSizer(wx.HORIZONTAL)
-		self.sizer.Add(self.cReadonly)
-		self.sizer.Add(self.cHidden)
-		self.sizer.Add(self.cSystem)
-		self.sizer.Add(self.cArchive)
-		self.sizer.Add(self.bOk)
-		self.sizer.Add(self.bCancel)
-		self.creator.getPanel().SetSizer(self.sizer)
 
 	def Show(self):
 		result=self.wnd.ShowModal()

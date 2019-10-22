@@ -60,8 +60,7 @@ class View(BaseView):
 		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0,0),size=(800,300))
 		self.hListPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
 		self.hListPanel.SetAutoLayout(True)
-		self.sizer=wx.BoxSizer(wx.HORIZONTAL)
-		self.hListPanel.SetSizer(self.sizer)
+		#self.hListPanel.SetSizer(self.sizer)
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
@@ -89,7 +88,6 @@ class View(BaseView):
 	def AppendTab(self,tab,active=False):
 		"""タブを追加する。active=True で、追加したタブをその場でアクティブにする。"""
 		self.tabs.append(tab)
-		self.sizer.Add(tab.GetListCtrl(),1,wx.EXPAND)
 		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
 		if active is True: self.ActivateTab(tab)
 
