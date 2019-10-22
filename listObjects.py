@@ -123,7 +123,6 @@ class FileList(FalconListBase):
 		dir=dir.rstrip("\\")
 		dir_spl=dir.split("\\")
 		level=len(dir_spl)
-		print("list")
 		globalVars.app.say("%s%d %s" % (dir[0],level,dir_spl[level-1]))
 		self.log=logging.getLogger("falcon.fileList")
 		self.rootDirectory=dir
