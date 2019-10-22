@@ -16,6 +16,7 @@ import misc
 import views.test
 import views.fonttest
 import views.changeAttribute
+import views.mkdir
 import constants
 import errorCodes
 import globalVars
@@ -179,6 +180,14 @@ class Events(BaseEvents):
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
 			dialog("test","%d" % d.GetValue())
+			d.Destroy()
+			return
+		if selected==menuItemsStore.getRef("FILE_MKDIR"):
+			d=views.mkdir.Dialog()
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+			self.parent.activeTab.MakeDirectory(d.GetValue())
 			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):

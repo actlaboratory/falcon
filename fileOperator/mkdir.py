@@ -4,6 +4,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 import logging
 import os
+import win32file
 from . import helper
 
 VERB="mkdir"
@@ -23,7 +24,7 @@ def Execute(op):
 	retry=0
 	for elem in target:
 		try:
-			win32file.CreateDirectory(elem)
+			win32file.CreateDirectory(elem,None)
 		except win32file.error as err:
 			if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem)
 			continue
