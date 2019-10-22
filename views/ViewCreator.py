@@ -36,8 +36,9 @@ class ViewCreator():
 		self.SetFace(hButton)
 		return hButton
 
-	def checkbox(self,text,event):
-		hCheckBox=wx.CheckBox(self.hPanel,wx.ID_ANY, label=text, name=text)
+	def checkbox(self,text,event, parent_overwrite=None):
+		p=self.hPanel if parent_overwrite is None else parent_overwrite
+		hCheckBox=wx.CheckBox(p,wx.ID_ANY, label=text, name=text)
 		hCheckBox.Bind(wx.EVT_CHECKBOX,event)
 		self.SetFace(hCheckBox)
 		return hCheckBox

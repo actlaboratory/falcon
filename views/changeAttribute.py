@@ -23,6 +23,8 @@ import misc
 from simpleDialog import *
 import views.ViewCreator
 
+dll=ctypes.cdll.LoadLibrary("whelper.dll")
+
 class Dialog(BaseDialog):
 	def Initialize(self):
 		t=misc.Timer()
@@ -38,10 +40,22 @@ class Dialog(BaseDialog):
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
 		self.creator=views.ViewCreator.ViewCreator(1,self.wnd)
-		self.cReadonly=self.creator.checkbox(_("読み取り専用"),None)
-		self.cHidden=self.creator.checkbox(_("隠し"),None)
-		self.cSystem=self.creator.checkbox(_("システム"),None)
-		self.cArchive=self.creator.checkbox(_("アーカイブ"),None)
+		self.checksPanel=wx.Panel(self.wnd, wx.ID_ANY, size=(600,300))
+		dll.ScCheckbox(self.checksPanel.GetHandle())
+		self.checksPanelSizer=wx.BoxSizer(wx.HORIZONTAL)
+		self.cReadonly=self.creator.checkbox(_("読み取り専用"),None,parent_overwrite=self.checksPanel)
+		_winxptheme.SetWindowTheme(self.cReadonly.GetHandle(),"","")
+		self.checksPanelSizer.Add(self.cReadonly)
+		self.cHidden=self.creator.checkbox(_("隠し"),None,parent_overwrite=self.checksPanel)
+		_winxptheme.SetWindowTheme(self.cHidden.GetHandle(),"","")
+		self.checksPanelSizer.Add(self.cHidden)
+		self.cSystem=self.creator.checkbox(_("システム"),None,parent_overwrite=self.checksPanel)
+		_winxptheme.SetWindowTheme(self.cSystem.GetHandle(),"","")
+		self.checksPanelSizer.Add(self.cSystem)
+		self.cArchive=self.creator.checkbox(_("アーカイブ"),None,parent_overwrite=self.checksPanel)
+		_winxptheme.SetWindowTheme(self.cArchive.GetHandle(),"","")
+		self.checksPanelSizer.Add(self.cArchive)
+		self.checksPanel.SetSizer(self.checksPanelSizer)
 		self.bOk=self.creator.okbutton(_("OK"),None)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 		self.sizer=wx.BoxSizer(wx.HORIZONTAL)
