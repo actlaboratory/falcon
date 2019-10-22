@@ -16,6 +16,7 @@ import misc
 import views.test
 import views.fonttest
 import views.changeAttribute
+import views.mkdir
 import constants
 import errorCodes
 import globalVars
@@ -113,6 +114,7 @@ class Menu():
 		#ファイルメニューの中身
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_RENAME"),_("名前を変更"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"),_("属性を変更"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKDIR"),_("フォルダ作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
 		#ファイルメニューの中身
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTNEXT"),_("次の並び順\tShift+F1"))
@@ -176,6 +178,14 @@ class Events(BaseEvents):
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
 			dialog("test","%d" % d.GetValue())
+			d.Destroy()
+			return
+		if selected==menuItemsStore.getRef("FILE_MKDIR"):
+			d=views.mkdir.Dialog()
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+			self.parent.activeTab.MakeDirectory(d.GetValue())
 			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):

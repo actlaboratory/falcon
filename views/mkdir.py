@@ -1,0 +1,62 @@
+﻿# -*- coding: utf-8 -*-
+#Falcon change file attribute view
+#Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Note: All comments except these top lines will be written in Japanese. 
+import ctypes
+import gettext
+import logging
+import os
+import sys
+import wx
+import win32con
+import win32gui
+import _winxptheme
+from logging import getLogger, FileHandler, Formatter
+
+from .baseDialog import *
+import constants
+import DefaultSettings
+import errorCodes
+import globalVars
+import keymap
+import misc
+from simpleDialog import *
+import views.ViewCreator
+
+class Dialog(BaseDialog):
+	def Initialize(self):
+		t=misc.Timer()
+		self.identifier="mkdirDialog"#このビューを表す文字列
+		self.log=getLogger("falcon.%s" % self.identifier)
+		self.log.debug("created")
+		self.app=globalVars.app
+		super().Initialize(self.app.hMainView.hFrame,_("属性変更"),self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"), self.app.config.getint(self.identifier,"positionX"), self.app.config.getint(self.identifier,"positionY"))
+		self.InstallControls()
+		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
+		return True
+
+	def InstallControls(self):
+		"""いろんなwidgetを設置する。"""
+		self.creator=views.ViewCreator.ViewCreator(1,self.wnd)
+		self.sName, self.iName=self.creator.inputbox("フォルダ名")
+		self.bOk=self.creator.okbutton(_("OK"),None)
+		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
+		self.sizer=wx.BoxSizer(wx.HORIZONTAL)
+		self.sizer.Add(self.iName)
+		self.sizer.Add(self.bOk)
+		self.sizer.Add(self.bCancel)
+		self.creator.getPanel().SetSizer(self.sizer)
+
+	def Show(self):
+		result=self.wnd.ShowModal()
+		self.Destroy()
+		self.value=self.iName.GetLineText(0)
+		return result
+
+	def Destroy(self):
+		self.log.debug("destroy")
+		self.wnd.Destroy()
+
+	def GetValue(self):
+		return self.value
+

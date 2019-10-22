@@ -291,10 +291,22 @@ class MainListTab(FalconTabBase):
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def UpdateFilelist(self):
+	def UpdateFilelist(self,silence=False):
 		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
 		globalVars.app.say(_("更新"))
 		lst=listObjects.FileList()
 		ok=lst.Initialize(self.listObject.rootDirectory)
 		if not ok: return#アクセス負荷
 		self.Update(lst)
+
+	def MakeDirectory(self,newdir):
+		dir=self.listObject.rootDirectory
+		dest=os.path.join(dir,newdir)
+		inst={"operation": "mkdir", "target": [dest]}
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		if op.CheckSucceeded()==0:
+			dialog(_("エラー"),_("フォルダを作成できません。"))
+			return
+		#end error
+		self.UpdateFilelist(silence=True)
