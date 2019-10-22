@@ -217,8 +217,8 @@ class Events(BaseEvents):
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
-			pass
-			# play sound here.
+			globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
+
 
 	def GoForward(self,stream,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""

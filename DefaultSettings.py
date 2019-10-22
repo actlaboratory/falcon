@@ -49,6 +49,10 @@ class DefaultSettings:
 			"positionx" : -1,
 			"positiony" : -1
 		}
+		config["sounds"]={
+			"startup" : "tip.ogg",
+			"boundary" : "tip.ogg"
+		}
 
 		return config
 
