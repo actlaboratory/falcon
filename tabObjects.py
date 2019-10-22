@@ -146,10 +146,11 @@ class MainListTab(FalconTabBase):
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				#TODO: これも昇格したほうがいい
 				lst=listObjects.FileList()
-				lst.Initialize(elem.letter+":",self.environment["FileList_sorting"],self.environment["FileList_descending"])
+				if not lst.Initialize(elem.letter+":",self.environment["FileList_sorting"],self.environment["FileList_descending"]):
+					return errorCodes.FILE_NOT_FOUND
 				self.Update(lst)
 				return errorCodes.OK
-			#end フォルダ開く
+			#end ドライブ開く
 			else:
 				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
 			#end フォルダ以外のタイプ
