@@ -1,19 +1,21 @@
 // cl /EHsc dtest2.cpp Ole32.lib OleAut32.lib
 #define UNICODE
+#include <algorithm>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <windows.h>
 #include <imapi2.h>
 #include <tchar.h>
-
-enum DISCTYPE{
-BD_RW,
+namespace enums{
+enum DISC_TYPE{
+BD_RW=0,
 BD_R,
 BD_ROM,
 HDDVD_RAM,
 HDDVD,
 HDDVD_ROM,
-DVD_PLUS_RW,
+DVD_PLUS_RW_DL,
 DVD_PLUS_R_DL,
 DVD_R_DL,
 DVD_RAM,
@@ -27,12 +29,80 @@ CD_R,
 CD_ROM,
 MO
 };
-
-int _getEjectability(int val){
-return val&IMAPI_PROFILE_TYPE_REMOVABLE_DISK;
 }
 
-//DISCTYPE _getDiscType(int val){
+int _isIn(std::vector<int> *v, int val){
+auto result = std::find((*v).begin(), (*v).end(), val);
+return result != (*v).end();
+}
+
+int _getEjectability(std::vector<int> *val){
+return _isIn(val,IMAPI_PROFILE_TYPE_REMOVABLE_DISK);
+}
+
+int _getDiscType(std::vector<int> *val){
+if(_isIn(val,IMAPI_PROFILE_TYPE_BD_REWRITABLE)){
+return enums::DISC_TYPE::BD_RW;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_BD_R_RANDOM_RECORDING) || _isIn(val,IMAPI_PROFILE_TYPE_BD_R_SEQUENTIAL)){
+return enums::DISC_TYPE::BD_R;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_BD_ROM)){
+return enums::DISC_TYPE::BD_ROM;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_HD_DVD_RAM)){
+return enums::DISC_TYPE::HDDVD_RAM;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_HD_DVD_RECORDABLE)){
+return enums::DISC_TYPE::HDDVD;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_HD_DVD_ROM)){
+return enums::DISC_TYPE::HDDVD_ROM;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_HD_DVD_ROM)){
+return enums::DISC_TYPE::HDDVD_ROM;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_RW_DUAL)){
+return enums::DISC_TYPE::DVD_PLUS_RW_DL;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_R_DUAL)){
+return enums::DISC_TYPE::DVD_PLUS_R_DL;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_R_DUAL_SEQUENTIAL) || _isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_R_DUAL_LAYER_JUMP)){
+return enums::DISC_TYPE::DVD_R_DL;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_RAM)){
+return enums::DISC_TYPE::DVD_RAM;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_RW)){
+return enums::DISC_TYPE::DVD_PLUS_RW;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_R)){
+return enums::DISC_TYPE::DVD_PLUS_R;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_REWRITABLE) || _isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_RW_SEQUENTIAL)){
+return enums::DISC_TYPE::DVD_RW;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_RECORDABLE)){
+return enums::DISC_TYPE::DVD_R;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVDROM)){
+return enums::DISC_TYPE::DVD_ROM;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_CD_REWRITABLE)){
+return enums::DISC_TYPE::CD_RW;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_CD_RECORDABLE)){
+return enums::DISC_TYPE::CD_R;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_CDROM)){
+return enums::DISC_TYPE::CD_ROM;
+}
+if(_isIn(val,IMAPI_PROFILE_TYPE_MO_ERASABLE) || _isIn(val,IMAPI_PROFILE_TYPE_AS_MO) || _isIn(val,IMAPI_PROFILE_TYPE_AS_MO)){
+return enums::DISC_TYPE::MO;
+}
+return -1;
+}
 
 int main(int argc, char **argv)
 {
@@ -45,7 +115,6 @@ int main(int argc, char **argv)
         CoUninitialize();
         return 1;
     }
-    std::cout << "OK!" << std::endl;
     LONG num = 0;
     lpDiscMaster->get_Count(&num);
     std::cout << "devices: " << num << std::endl;
@@ -94,7 +163,8 @@ int main(int argc, char **argv)
         tmp = (VARIANT *)(features->pvData);
         for (int i = 0; i < features->rgsabound[0].cElements; i++)
         {
-            std::cout << "    feature " << tmp[i].lVal << std::endl;
+            //これコメントアウトしたら、対応している機能の番号が出る
+            //std::cout << "    feature " << tmp[i].lVal << std::endl;
         }
         SafeArrayDestroy(features);
 
@@ -106,10 +176,15 @@ int main(int argc, char **argv)
             continue;
         }
         tmp = (VARIANT *)(profiles->pvData);
+        std::vector<int> profile_values;
         for (int i = 0; i < profiles->rgsabound[0].cElements; i++)
         {
-            std::cout << "    profile " << tmp[i].lVal << std::endl;
+            //これコメントアウトしたら、サポートしているプロファイルの一覧が出る
+            //std::cout << "    profile " << tmp[i].lVal << std::endl;
+            profile_values.push_back(tmp[i].lVal);
         }
+        std::cout << "Ejectable: " << _getEjectability(&profile_values) << std::endl;
+        std::cout << "Drive type: " << _getDiscType(&profile_values) << std::endl;
         SafeArrayDestroy(profiles);
 
         lpRecorder->Release();
