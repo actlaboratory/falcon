@@ -54,7 +54,8 @@ class Drive(FalconBrowsableBase):
 	def UpdateTypeString(self):
 		"""タイプの数値を文字列に変換し、self.typeString にセットする。"""
 		if self.type==win32file.DRIVE_CDROM:
-			self.typeString=_("CD-ROMドライブ")
+			discDrives=misc.getDiscDriveTypes()
+			self.typeString=discDrives[self.letter][1]+_(" ドライブ")
 		elif self.type==win32file.DRIVE_FIXED:
 			self.typeString=_("ローカル ディスク")
 		elif self.type==win32file.DRIVE_NO_ROOT_DIR:
