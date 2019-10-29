@@ -5,6 +5,35 @@
 #include <windows.h>
 #include <imapi2.h>
 #include <tchar.h>
+
+enum DISCTYPE{
+BD_RW,
+BD_R,
+BD_ROM,
+HDDVD_RAM,
+HDDVD,
+HDDVD_ROM,
+DVD_PLUS_RW,
+DVD_PLUS_R_DL,
+DVD_R_DL,
+DVD_RAM,
+DVD_PLUS_RW,
+DVD_PLUS_R,
+DVD_RW,
+DVD_R,
+DVD_ROM,
+CD_RW,
+CD_R,
+CD_ROM,
+MO
+};
+
+int _getEjectability(int val){
+return val&IMAPI_PROFILE_TYPE_REMOVABLE_DISK;
+}
+
+//DISCTYPE _getDiscType(int val){
+
 int main(int argc, char **argv)
 {
     CoInitialize(NULL);
