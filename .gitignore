@@ -10,3 +10,4 @@ PyWin32.chw
 *.bat
 *log.txt
 build/
+*.obj
