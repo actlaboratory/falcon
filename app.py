@@ -10,6 +10,7 @@ import logging
 import os
 import wx
 from logging import getLogger, FileHandler, Formatter
+from soundPlayer import pybass
 
 import constants
 import DefaultSettings
@@ -24,7 +25,12 @@ class falconAppMain(wx.App):
 		self.InitLogger()
 		self.LoadSettings()
 		self.InitTranslation()
+		self.InitSound()
 
+		# 起動サウンドの再生
+		self.PlaySound(self.config["sounds"]["startup"])
+
+		# 音声読み上げの準備
 		reader=self.config["speech"]["reader"]
 		if(reader=="PCTK"):
 			self.log.info("use reader 'PCTalker'")
@@ -47,7 +53,8 @@ class falconAppMain(wx.App):
 			self.speech=accessible_output2.outputs.auto.Auto()
 
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
-		#メインビューを表示
+
+		# メインビューを表示
 		self.hMainView=main.View()
 		self.hMainView.Initialize()
 		self.log.debug("Finished mainView setup (%f seconds from start)" % t.elapsed)
@@ -76,6 +83,25 @@ class falconAppMain(wx.App):
 		self.translator=gettext.translation("messages","locale", languages=[self.config["general"]["language"]], fallback=True)
 		self.translator.install()
 
+	def InitSound(self):
+		"""サウンド再生機能を初期化する。"""
+		ret=pybass.BASS_Init(-1, 44100, 0, 0, 0)
+		if ret!=1: self.log.error("BASS sound system could not be initialized.")
+
 	def say(self,s):
 		"""スクリーンリーダーでしゃべらせる。"""
 		self.speech.speak(s)
+
+	def PlaySound(self,path):
+		"""サウンドファイルを再生する。"""
+		path="fx/"+path
+		if not os.path.isfile(path):
+			if path!="":
+				self.log.error("Sound file '"+path+"' not found.")
+			return
+		handle=pybass.BASS_StreamCreateFile(False,path,0,0,pybass.BASS_STREAM_AUTOFREE|pybass.BASS_UNICODE)
+		if handle==0:
+			self.log.error("Cannot load sound file %s. Error code: %d" % (path, pybass.BASS_ErrorGetCode()))
+			return
+		#end error
+		pybass.BASS_ChannelPlay(handle,True)

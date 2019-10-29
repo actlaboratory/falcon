@@ -1,7 +1,7 @@
 #define UNICODE
 #include <windows.h>
 #include <uxtheme.h>
-WNDPROC DefRadioButtonProc;
+WNDPROC DefRadioButtonProc, DefCheckboxProc;
 HBRUSH bkBrush, whBrush;
 
 LRESULT CALLBACK RadioButtonProc(HWND hwnd , UINT msg , WPARAM wp , LPARAM lp) {
@@ -19,9 +19,30 @@ return (LRESULT)bkBrush;	// îwåiêFÇÃêF
 return CallWindowProc(DefRadioButtonProc , hwnd , msg , wp , lp);
 }
 
+LRESULT CALLBACK CheckboxProc(HWND hwnd , UINT msg , WPARAM wp , LPARAM lp) {
+switch(msg){
+case WM_CTLCOLORSTATIC:
+{
+HDC hDC = (HDC)wp;
+HWND hCtrl = (HWND)lp;
+SetBkMode(hDC, TRANSPARENT);	// îwåiÇìßâﬂ
+SetTextColor (hDC, RGB(255,255,255));	// ÉeÉLÉXÉgÇÃêF
+SetBkColor (hDC, RGB(0,0,0));	// îwåiÇÃêF
+return (LRESULT)bkBrush;	// îwåiêFÇÃêF
+}
+}
+return CallWindowProc(DefCheckboxProc , hwnd , msg , wp , lp);
+}
+
 __declspec(dllexport) int ScRadioButton(HWND wnd){
 DefRadioButtonProc = (WNDPROC)GetWindowLongPtr(wnd , GWLP_WNDPROC);
 SetWindowLongPtr(wnd , GWLP_WNDPROC , (LONG)RadioButtonProc);
+return 0;
+}
+
+__declspec(dllexport) int ScCheckbox(HWND wnd){
+DefCheckboxProc = (WNDPROC)GetWindowLongPtr(wnd , GWLP_WNDPROC);
+SetWindowLongPtr(wnd , GWLP_WNDPROC , (LONG)CheckboxProc);
 return 0;
 }
 

@@ -16,6 +16,7 @@ import misc
 import views.test
 import views.fonttest
 import views.changeAttribute
+import views.mkdir
 import constants
 import errorCodes
 import globalVars
@@ -60,8 +61,7 @@ class View(BaseView):
 		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0,0),size=(800,300))
 		self.hListPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
 		self.hListPanel.SetAutoLayout(True)
-		self.sizer=wx.BoxSizer(wx.HORIZONTAL)
-		self.hListPanel.SetSizer(self.sizer)
+		#self.hListPanel.SetSizer(self.sizer)
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
@@ -89,7 +89,6 @@ class View(BaseView):
 	def AppendTab(self,tab,active=False):
 		"""タブを追加する。active=True で、追加したタブをその場でアクティブにする。"""
 		self.tabs.append(tab)
-		self.sizer.Add(tab.GetListCtrl(),1,wx.EXPAND)
 		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
 		if active is True: self.ActivateTab(tab)
 
@@ -115,6 +114,7 @@ class Menu():
 		#ファイルメニューの中身
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_RENAME"),_("名前を変更"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"),_("属性を変更"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKDIR"),_("フォルダ作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
 		#ファイルメニューの中身
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTNEXT"),_("次の並び順\tShift+F1"))
@@ -180,6 +180,14 @@ class Events(BaseEvents):
 			dialog("test","%d" % d.GetValue())
 			d.Destroy()
 			return
+		if selected==menuItemsStore.getRef("FILE_MKDIR"):
+			d=views.mkdir.Dialog()
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+			self.parent.activeTab.MakeDirectory(d.GetValue())
+			d.Destroy()
+			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):
 			self.testdialog=views.test.View()
 			self.testdialog.Initialize()
@@ -217,8 +225,8 @@ class Events(BaseEvents):
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
-			pass
-			# play sound here.
+			globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
+
 
 	def GoForward(self,stream,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""

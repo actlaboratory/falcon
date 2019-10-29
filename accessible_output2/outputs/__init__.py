@@ -4,6 +4,7 @@ if platform.system() == 'Windows':
 	from . import nvda
 	from . import jaws
 	from . import sapi5
+#	from . import sapi4
 	from . import window_eyes
 	from . import system_access
 	from . import dolphin

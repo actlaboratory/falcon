@@ -42,8 +42,7 @@ class FalconTabBase(object):
 	def InstallListCtrl(self,parent):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
 		self.creator=views.ViewCreator.ViewCreator(1,parent)
-		self.hListCtrl=self.creator.ListCtrl(style=wx.LC_REPORT|wx.LC_EDIT_LABELS,size=wx.DefaultSize)
-
+		self.hListCtrl=self.creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT|wx.LC_EDIT_LABELS,size=wx.DefaultSize)
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_CLICK,self.col_click)
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
@@ -146,10 +145,11 @@ class MainListTab(FalconTabBase):
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				#TODO: これも昇格したほうがいい
 				lst=listObjects.FileList()
-				lst.Initialize(elem.letter+":",self.environment["FileList_sorting"],self.environment["FileList_descending"])
+				if not lst.Initialize(elem.letter+":",self.environment["FileList_sorting"],self.environment["FileList_descending"]):
+					return errorCodes.FILE_NOT_FOUND
 				self.Update(lst)
 				return errorCodes.OK
-			#end フォルダ開く
+			#end ドライブ開く
 			else:
 				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
 			#end フォルダ以外のタイプ
@@ -291,10 +291,22 @@ class MainListTab(FalconTabBase):
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def UpdateFilelist(self):
+	def UpdateFilelist(self,silence=False):
 		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
 		globalVars.app.say(_("更新"))
 		lst=listObjects.FileList()
 		ok=lst.Initialize(self.listObject.rootDirectory)
 		if not ok: return#アクセス負荷
 		self.Update(lst)
+
+	def MakeDirectory(self,newdir):
+		dir=self.listObject.rootDirectory
+		dest=os.path.join(dir,newdir)
+		inst={"operation": "mkdir", "target": [dest]}
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		if op.CheckSucceeded()==0:
+			dialog(_("エラー"),_("フォルダを作成できません。"))
+			return
+		#end error
+		self.UpdateFilelist(silence=True)

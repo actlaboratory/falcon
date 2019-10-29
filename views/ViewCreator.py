@@ -5,18 +5,46 @@
 
 import wx
 from . import fontManager
+import _winxptheme
+
 
 class ViewCreator():
 
+	GridSizer = -1
+	FlexGridSizer = -2
+
 	# mode=1で白黒反転。その他は白。
-	def __init__(self,mode,parent):
+	def __init__(self,mode,parent,orient=wx.HORIZONTAL,space=0,label=""):
 		self.mode=mode
 		if isinstance(parent,wx.Panel):
 			self.hPanel=parent
 		else:
 			self.hPanel=makePanel(mode,parent)
 		self.font=fontManager.FontManager()
+		if orient==self.FlexGridSizer:
+			pass
+			#self.sizer=wx.FlexGridSizer()
+		elif orient==self.GridSizer:
+			pass
+			#self.sizer=wx.GridSizer()
+		else:
+			self.sizer=self.boxSizer(orient,label)
+		self.hPanel.SetSizer(self.sizer)
+		self.space=space
+		self.addSpace(self.space)
 
+	def addSpace(self,space=-1):
+		if self.sizer.__class__==wx.BoxSizer or self.sizer.__class__==wx.StaticBoxSizer:
+			if space==-1:
+				space==self.space
+			self.sizer.AddSpacer(space)
+
+	def boxSizer(self,orient,label):
+		if label=="":
+			self.sizer=wx.BoxSizer(orient)
+		else:
+			self.sizer=wx.StaticBoxSizer(orient,self.hPanel,label)
+		return self.sizer
 
 	def button(self,text,event):
 		hButton=wx.Button(self.hPanel, wx.ID_ANY,label=text, name=text)
@@ -39,29 +67,41 @@ class ViewCreator():
 	def checkbox(self,text,event):
 		hCheckBox=wx.CheckBox(self.hPanel,wx.ID_ANY, label=text, name=text)
 		hCheckBox.Bind(wx.EVT_CHECKBOX,event)
+		_winxptheme.SetWindowTheme(hCheckBox.GetHandle(),"","")
 		self.SetFace(hCheckBox)
+		self.sizer.Add(hCheckBox)
+		self.addSpace(self.space)
 		return hCheckBox
 
 	def radiobox(self,text,items,event):
 		hRadioBox=wx.RadioBox(self.hPanel,label=text, name=text, choices=items)
 		hRadioBox.Bind(wx.EVT_RADIOBOX,event)
 		self.SetFace(hRadioBox)
+		self.sizer.Add(hRadioBox)
+		self.addSpace(self.space)
 		return hRadioBox
 
-	def ListCtrl(self,**settings):
+	def ListCtrl(self,proportion,sizerFlag,**settings):
 		hListCtrl=wx.ListCtrl(self.hPanel,wx.ID_ANY,**settings)
 		self.SetFace(hListCtrl)
 		hListCtrl.SetTextColour("#ffffff")				#文字色
+		self.sizer.Add(hListCtrl,proportion,sizerFlag)
+		self.addSpace(self.space)
 		return hListCtrl
 
 	def inputbox(self,text):
 		hStaticText=wx.StaticText(self.hPanel, -1, label="入力", name="入力")
 		hTextCtrl=wx.TextCtrl(self.hPanel, -1)
 		self.SetFace(hTextCtrl)
+		self.sizer.Add(hTextCtrl)
+		self.addSpace(self.space)
 		return hStaticText,hTextCtrl
 
 	def getPanel(self):
 		return self.hPanel
+
+	def getSizer(self):
+		return self.sizer
 
 	def SetFace(self,target):
 		if self.mode==1:
