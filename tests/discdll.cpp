@@ -1,9 +1,10 @@
-// cl /EHsc dtest2.cpp Ole32.lib OleAut32.lib
+// cl /nologo /LD /EHsc /O2 discdll.cpp Ole32.lib OleAut32.lib
 #define UNICODE
 #include <algorithm>
-#include <iostream>
 #include <string>
+#include <sstream>
 #include <vector>
+#include <string.h>
 #include <windows.h>
 #include <imapi2.h>
 #include <tchar.h>
@@ -30,6 +31,73 @@ CD_ROM,
 MO
 };
 }
+
+std::string _enum2str(int val){
+std::string ret="";
+switch(val){
+case enums::DISC_TYPE::BD_RW:
+ret="BD-RW";
+break;
+case enums::DISC_TYPE::BD_R:
+ret="BD-r";
+break;
+case enums::DISC_TYPE::BD_ROM:
+ret="BD-ROM";
+break;
+case enums::DISC_TYPE::HDDVD_RAM:
+ret="HDDVD-RAM";
+break;
+case enums::DISC_TYPE::HDDVD:
+ret="HDDVD";
+break;
+case enums::DISC_TYPE::HDDVD_ROM:
+ret="HDDVD-ROM";
+break;
+case enums::DISC_TYPE::DVD_PLUS_RW_DL:
+ret="DVD+RW DL";
+break;
+case enums::DISC_TYPE::DVD_PLUS_R_DL:
+ret="DVD+R DL";
+break;
+case enums::DISC_TYPE::DVD_R_DL:
+ret="DVD-R DL";
+break;
+case enums::DISC_TYPE::DVD_RAM:
+ret="DVD-RAM";
+break;
+case enums::DISC_TYPE::DVD_PLUS_RW:
+ret="DVD+RW";
+break;
+case enums::DISC_TYPE::DVD_PLUS_R:
+ret="DVD+R";
+break;
+case enums::DISC_TYPE::DVD_RW:
+ret="DVD-RW";
+break;
+case enums::DISC_TYPE::DVD_R:
+ret="DVD-R";
+break;
+case enums::DISC_TYPE::DVD_ROM:
+ret="DVD-ROM";
+break;
+case enums::DISC_TYPE::CD_RW:
+ret="CD-RW";
+break;
+case enums::DISC_TYPE::CD_R:
+ret="CD-R";
+break;
+case enums::DISC_TYPE::CD_ROM:
+ret="CD-ROM";
+break;
+case enums::DISC_TYPE::MO:
+ret="MO";
+break;
+default:
+ret="UNKNOWN";
+}
+return ret;
+}
+
 
 int _isIn(std::vector<int> *v, int val){
 auto result = std::find((*v).begin(), (*v).end(), val);
@@ -104,75 +172,58 @@ return enums::DISC_TYPE::MO;
 return -1;
 }
 
-int main(int argc, char **argv)
+extern "C" __declspec(dllexport) char* getDiscDriveTypes()
 {
-    CoInitialize(NULL);
     IDiscMaster2 *lpDiscMaster = NULL;
     HRESULT rMaster = CoCreateInstance(CLSID_MsftDiscMaster2, NULL, CLSCTX_ALL, IID_PPV_ARGS(&lpDiscMaster));
     if (rMaster != S_OK)
     {
-        std::cout << "not ok";
-        CoUninitialize();
-        return 1;
+        return NULL;
     }
     LONG num = 0;
     lpDiscMaster->get_Count(&num);
-    std::cout << "devices: " << num << std::endl;
+    std::stringstream s;
     for (int i = 0; i < num; i++)
     {
         BSTR tmpUniqueId;
         HRESULT r = lpDiscMaster->get_Item(i, &tmpUniqueId);
         if (r != S_OK)
         {
-            std::cout << "Couldn't get item index " << i << ", skipping..." << std::endl;
             continue;
         }
         IDiscRecorder2 *lpRecorder = NULL;
         r = CoCreateInstance(CLSID_MsftDiscRecorder2, NULL, CLSCTX_ALL, IID_PPV_ARGS(&lpRecorder));
         if (r != S_OK)
         {
-            std::cout << "Couldn't create disc recorder, skipping..." << std::endl;
             continue;
         }
         r = lpRecorder->InitializeDiscRecorder(tmpUniqueId);
         if (r != S_OK)
         {
-            std::cout << "Couldn't initialize disc recorder, skipping..." << std::endl;
+            //std::cout << "Couldn't initialize disc recorder, skipping..." << std::endl;
+            lpRecorder->Release();
             continue;
         }
         SAFEARRAY *drivePaths = NULL;
         r = lpRecorder->get_VolumePathNames(&drivePaths);
         if (r != S_OK)
         {
-            std::cout << "Couldn't get drive paths. Skipping..." << std::endl;
+            //std::cout << "Couldn't get drive paths. Skipping..." << std::endl;
+            lpRecorder->Release();
             continue;
         }
         VARIANT *tmp = (VARIANT *)(drivePaths->pvData);
         char path[32];
         WideCharToMultiByte(CP_ACP, 0, (OLECHAR *)(tmp[0].bstrVal), -1, path, sizeof(path) - 1, NULL, NULL);
-        std::cout << path << std::endl;
+        //std::cout << path << std::endl;
         SafeArrayDestroy(drivePaths);
-
-        SAFEARRAY *features = NULL;
-        r = lpRecorder->get_SupportedFeaturePages(&features);
-        if (r != S_OK)
-        {
-            std::cout << "Couldn't get supported features, skipping..." << std::endl;
-            continue;
-        }
-        tmp = (VARIANT *)(features->pvData);
-        for (int i = 0; i < features->rgsabound[0].cElements; i++)
-        {
-            //これコメントアウトしたら、対応している機能の番号が出る
-            //std::cout << "    feature " << tmp[i].lVal << std::endl;
-        }
-        SafeArrayDestroy(features);
 
         SAFEARRAY *profiles = NULL;
         r = lpRecorder->get_SupportedProfiles(&profiles);
         if (r != S_OK)
         {
-            std::cout << "Couldn't get supported profiles, skipping..." << std::endl;
+            //std::cout << "Couldn't get supported profiles, skipping..." << std::endl;
+            lpRecorder->Release();
             continue;
         }
         tmp = (VARIANT *)(profiles->pvData);
@@ -183,13 +234,35 @@ int main(int argc, char **argv)
             //std::cout << "    profile " << tmp[i].lVal << std::endl;
             profile_values.push_back(tmp[i].lVal);
         }
-        std::cout << "Ejectable: " << _getEjectability(&profile_values) << std::endl;
-        std::cout << "Drive type: " << _getDiscType(&profile_values) << std::endl;
+        int ejectable= _getEjectability(&profile_values);
+        int type= _getDiscType(&profile_values);
         SafeArrayDestroy(profiles);
+
+        s << path << "," << ejectable << "," << _enum2str(type) << std::endl;
 
         lpRecorder->Release();
     }
 
     lpDiscMaster->Release();
-    CoUninitialize();
+
+    std::string ret_s=s.str();
+    char* ret=(char*)malloc(ret_s.size()+10);
+    memcpy(ret,ret_s.c_str(),ret_s.size());
+    return ret;
+}
+
+extern "C" __declspec(dllexport) void free_ptr(char *p){
+free(p);
+}
+
+BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD  fdwReason, LPVOID lpReserved) {
+switch(fdwReason){
+case DLL_PROCESS_ATTACH:
+    CoInitialize(NULL);
+break;
+case DLL_PROCESS_DETACH:
+CoUninitialize();
+break;
+}
+	return TRUE;
 }

@@ -3,8 +3,11 @@
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
+import ctypes
 import time
 import win32file
+
+discdll=ctypes.cdll.LoadLibrary("discdll.dll")
 
 class Timer:
 	"""シンプルなタイマー。経過時間や処理時間を計測するのに使う。単位は秒で、float。"""
@@ -69,3 +72,17 @@ def attrib2dward(readonly=False, hidden=False, system=False, archive=False):
 	if archive is True: ret=ret|win32file.FILE_ATTRIBUTE_ARCHIVE
 	if ret==0: ret=win32file.FILE_ATTRIBUTE_NORMAL
 	return ret
+
+def getDiscDriveTypes():
+	ptr=discdll.getDiscDriveTypes()
+	s=ctypes.c_char_p(ptr).value
+	discdll.free_ptr(ptr)
+	s2=s.decode('utf-8').split("\n")
+	ret={}
+	for elem in s2:
+		if elem=="": continue
+		tmp=elem.split(",")
+		ret[tmp[0].rstrip(":\\")]=(tmp[1],tmp[2])
+	#end for
+	return ret
+#end getDiscDriveTypes
