@@ -77,4 +77,12 @@ def getDiscDriveTypes():
 	ptr=discdll.getDiscDriveTypes()
 	s=ctypes.c_char_p(ptr).value
 	discdll.free_ptr(ptr)
-	print(s)
+	s2=s.decode('utf-8').split("\n")
+	ret={}
+	for elem in s2:
+		if elem=="": continue
+		tmp=elem.split(",")
+		ret[tmp[0].rstrip(":\\")]=(tmp[1],tmp[2])
+	#end for
+	return ret
+#end getDiscDriveTypes
