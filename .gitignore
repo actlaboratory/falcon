@@ -11,3 +11,5 @@ PyWin32.chw
 *log.txt
 build/
 *.obj
+*.exp
+*.lib

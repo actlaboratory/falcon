@@ -1,4 +1,4 @@
-// cl /nologo /LD /EHsc /O2 dtest2.cpp Ole32.lib OleAut32.lib
+// cl /nologo /LD /EHsc /O2 discdll.cpp Ole32.lib OleAut32.lib
 #define UNICODE
 #include <algorithm>
 #include <string>
@@ -172,7 +172,7 @@ return enums::DISC_TYPE::MO;
 return -1;
 }
 
-__declspec(dllexport) char* getDiscDriveTypes()
+extern "C" __declspec(dllexport) char* getDiscDriveTypes()
 {
     IDiscMaster2 *lpDiscMaster = NULL;
     HRESULT rMaster = CoCreateInstance(CLSID_MsftDiscMaster2, NULL, CLSCTX_ALL, IID_PPV_ARGS(&lpDiscMaster));
@@ -251,7 +251,7 @@ __declspec(dllexport) char* getDiscDriveTypes()
     return ret;
 }
 
-__declspec(dllexport) void free_ptr(char *p){
+extern "C" __declspec(dllexport) void free_ptr(char *p){
 free(p);
 }
 
