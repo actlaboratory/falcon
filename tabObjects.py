@@ -342,3 +342,7 @@ class MainListTab(FalconTabBase):
 			return
 		#end error
 		self.UpdateFilelist(silence=True)
+
+	def ShowProperties(self):
+		index=self.GetFocusedItem()
+		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
