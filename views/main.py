@@ -13,7 +13,6 @@ from simpleDialog import dialog
 
 from .base import *
 import misc
-import views.test
 import views.fonttest
 import views.changeAttribute
 import views.mkdir
