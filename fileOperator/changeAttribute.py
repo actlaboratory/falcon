@@ -13,18 +13,30 @@ log=logging.getLogger("falcon.%s" % VERB)
 def Execute(op):
 	"""実行処理。リトライが必要になった項目数を返す。"""
 	try:
-		to=op.instructions["to"]
+		to_attrib=op.instructions["to_attrib"]
+		to_date=op.instructions["to_date"]
 	except KeyError:
-		log.error("To is not specified.")
+		log.error("To_attrib or to_date is not specified.")
 		return False
 	#end 変更先がない
 	op.output["all_OK"]=True
-	op.output["retry"]["to"]=[]
+	op.output["retry"]["to_attrib"]=[]
+	op.output["retry"]["to_date"]=[]
 	i=0
 	retry=0
 	for elem in op.instructions["files"]:
 		try:
-			win32file.SetFileAttributes(d,to[i])
+			win32file.SetFileAttributes(elem,to_attrib[i])
+		except win32file.error as err:
+			if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem,to[i])
+			continue
+		#end except
+		try:
+			hFile=win32file.CreateFile(elem,win32file.GENERIC_READ|win32file.GENERIC_WRITE,0,None,win32file.OPEN_EXISTING,0,None)
+			c=pywintypes.Time(to_date[0]) if to_date[0] is not None else None
+			m=pywintypes.Time(to_date[1]) if to_date[1] is not None else None
+			win32file.SetFileTime(hFile,c,None,m)
+			win32api.CloseHandle(hFile)
 		except win32file.error as err:
 			if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem,to[i])
 			continue
