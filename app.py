@@ -91,7 +91,7 @@ class falconAppMain(wx.App):
 
 	def InitCaches(self):
 		"""起動中に使用するキャッシュデータを初期化する。"""
-		self.filetypes_cach={}
+		self.filetypes_cach={}#これほんとに使うかどうか検討中
 
 	def say(self,s):
 		"""スクリーンリーダーでしゃべらせる。"""
