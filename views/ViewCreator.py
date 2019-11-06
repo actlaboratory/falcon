@@ -3,9 +3,12 @@
 #Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
+import ctypes
 import wx
 from . import fontManager
 import _winxptheme
+
+dll=ctypes.cdll.LoadLibrary("whelper.dll")
 
 class ViewCreator():
 
@@ -71,10 +74,16 @@ class ViewCreator():
 		return hButton
 
 	def checkbox(self,text,event):
-		hCheckBox=wx.CheckBox(self.parent,wx.ID_ANY, label=text, name=text)
+		hPanel=wx.Panel(self.parent,wx.ID_ANY,)
+		hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=text, name=text)
 		hCheckBox.Bind(wx.EVT_CHECKBOX,event)
-		self.SetFace(hCheckBox)
-		self.sizer.Add(hCheckBox)
+		self.SetFace(hCheckBox,skip_colour=True)
+		hSizer=wx.BoxSizer()
+		hSizer.Add(hCheckBox)
+		hPanel.SetSizer(hSizer)
+		self.sizer.Add(hPanel)
+		print("scCheckbox")
+		dll.ScCheckbox(hPanel.GetHandle())
 		self.AddSpace(self.space)
 		return hCheckBox
 
@@ -107,14 +116,18 @@ class ViewCreator():
 	def GetSizer(self):
 		return self.sizer
 
-	def SetFace(self,target):
-		if self.mode==1:
-			target.SetBackgroundColour("#000000")		#背景色＝黒
-			target.SetForegroundColour("#ffffff")		#文字色＝白
-		else:
-			target.SetBackgroundColour("#ffffff")		#背景色＝白
-			target.SetForegroundColour("#000000")		#文字色＝黒
+	def SetFace(self,target,skip_colour=False):
+		if not skip_colour:
+			if self.mode==1:
+				target.SetBackgroundColour("#000000")		#背景色＝黒
+				target.SetForegroundColour("#ffffff")		#文字色＝白
+			else:
+				target.SetBackgroundColour("#ffffff")		#背景色＝白
+				target.SetForegroundColour("#000000")		#文字色＝黒
+			#end else
+		#end skip
 		target.SetThemeEnabled(False)
+		_winxptheme.SetWindowTheme(target.GetHandle(),"","")
 		target.SetFont(self.font.GetFont())
 
 
