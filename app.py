@@ -26,6 +26,7 @@ class falconAppMain(wx.App):
 		self.LoadSettings()
 		self.InitTranslation()
 		self.InitSound()
+		self.InitCaches()
 
 		# 起動サウンドの再生
 		self.PlaySound(self.config["sounds"]["startup"])
@@ -87,6 +88,10 @@ class falconAppMain(wx.App):
 		"""サウンド再生機能を初期化する。"""
 		ret=pybass.BASS_Init(-1, 44100, 0, 0, 0)
 		if ret!=1: self.log.error("BASS sound system could not be initialized.")
+
+	def InitCaches(self):
+		"""起動中に使用するキャッシュデータを初期化する。"""
+		self.filetypes_cach={}
 
 	def say(self,s):
 		"""スクリーンリーダーでしゃべらせる。"""
