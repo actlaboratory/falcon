@@ -111,6 +111,8 @@ class Menu():
 		#ファイルメニューの中身
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_RENAME"),_("名前を変更"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"),_("属性を変更"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_TRASH"),_("ゴミ箱へ移動"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_SHOWPROPERTIES"),_("プロパティを表示"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKDIR"),_("フォルダ作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
 		#ファイルメニューの中身
@@ -184,6 +186,12 @@ class Events(BaseEvents):
 			if ret==wx.ID_CANCEL: return
 			self.parent.activeTab.MakeDirectory(d.GetValue())
 			d.Destroy()
+			return
+		if selected==menuItemsStore.getRef("FILE_TRASH"):
+			self.parent.activeTab.Trash()
+			return
+		if selected==menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
+			self.parent.activeTab.ShowProperties()
 			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):
 			self.testdialog=views.test.View()
