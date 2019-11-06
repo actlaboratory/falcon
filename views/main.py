@@ -57,10 +57,8 @@ class View(BaseView):
 
 	def InstallListPanel(self):
 		"""リストコントロールが表示されるパネルを設定する。"""
-		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0,0),size=(800,300))
-		self.hListPanel.SetBackgroundColour("#0000ff")		#項目のない部分の背景色
+		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0,0))
 		self.hListPanel.SetAutoLayout(True)
-		#self.hListPanel.SetSizer(self.sizer)
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""

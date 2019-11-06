@@ -45,6 +45,8 @@ class ViewCreator():
 			self.SetFace(sizer.GetStaticBox())
 		if (parent!=None):
 			parent.Add(sizer,0,wx.ALL,space)
+		else:
+			self.parent.SetSizer(sizer)
 		return sizer
 
 
