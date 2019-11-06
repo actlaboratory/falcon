@@ -12,6 +12,7 @@ import misc
 import browsableObjects
 import globalVars
 from simpleDialog import dialog
+from win32com.shell import shell, shellcon
 
 SORT_ASCENDING=False
 SORT_DESCENDING=1
@@ -145,13 +146,14 @@ class FileList(FalconListBase):
 		del lst[0:2]
 		for elem in lst:
 			fullpath=dir+"\\"+elem[8]
+			ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON|shellcon.SHGFI_TYPENAME)
 			if os.path.isfile(fullpath):
 				f=browsableObjects.File()
-				f.Initialize(dir,elem[8],fullpath,(elem[4]<<32)+elem[5], elem[3], elem[0], "undefined")
+				f.Initialize(dir,elem[8],fullpath,(elem[4]<<32)+elem[5], elem[3], elem[0], shfileinfo[4])
 				self.files.append(f)
 			else:
 				f=browsableObjects.Folder()
-				f.Initialize(dir,elem[8],fullpath,0,elem[3], elem[0], "undefined")
+				f.Initialize(dir,elem[8],fullpath,0,elem[3], elem[0], shfileinfo[4])
 				self.folders.append(f)
 			#end どっちについかするか？
 		#end 追加ループ
