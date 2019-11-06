@@ -190,8 +190,6 @@ class Events(BaseEvents):
 			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("FILE_TRASH"):
-			dialog=wx.MessageDialog(self.parent.hFrame,_("選択中のファイルをゴミ箱に入れますか？"),_("ゴミ箱にいれる確認"),wx.YES_NO)
-			if dialog.ShowModal()==wx.ID_NO: return
 			self.parent.activeTab.Trash()
 			dialog.Destroy()
 			return

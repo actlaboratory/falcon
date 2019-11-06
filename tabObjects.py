@@ -334,7 +334,7 @@ class MainListTab(FalconTabBase):
 		for i in self.GetSelectedItems():
 			target.append(self.listObject.GetElement(i).fullpath)
 		#end for
-		inst={"operation": "trash", "target": target}
+		inst={"operation": "trash", "from": target}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:

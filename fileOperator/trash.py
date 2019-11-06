@@ -4,7 +4,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 import logging
 import os
-from win32com import shell, shellcon
+from win32com.shell import shell, shellcon
 
 from . import helper
 
@@ -14,7 +14,7 @@ log=logging.getLogger("falcon.%s" % VERB)
 def Execute(op):
 	"""実行処理。リトライが必要になった項目数を返す。"""
 	try:
-		from=op.instructions["from"]
+		f=op.instructions["from"]
 	except KeyError:
 		log.error("from is not specified.")
 		return False
@@ -24,7 +24,7 @@ def Execute(op):
 	sh=(
 		0,
 		shellcon.FO_DELETE,
-		"\0".join(from),
+		"\0".join(f),
 		None,
 		shellcon.FOF_ALLOWUNDO,
 		None,
@@ -34,7 +34,7 @@ def Execute(op):
 		ret=shell.SHFileOperation(sh)
 	except win32con.error as err:
 		#SHFileOperation で一気に処理されてしまうので、commonFailure が通しにくい
-		appendRetry(op.output,from)
+		appendRetry(op.output,f)
 	#end except
 	op.output["succeeded"]+=1
 	if len(op.output["retry"]["target"])>0:
