@@ -15,7 +15,7 @@ from simpleDialog import dialog
 
 import misc
 
-from . import rename, changeAttribute, failedElement, mkdir
+from . import rename, changeAttribute, failedElement, mkdir,trash
 
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
 
@@ -83,9 +83,12 @@ class FileOperator(object):
 		if op=="changeAttribute":#属性変更
 			retry=changeAttribute.Execute(self)
 		#end changeAttribute
-		if op=="mkdir":#属性変更
+		if op=="mkdir":#フォルダ作成
 			retry=mkdir.Execute(self)
-		#end changeAttribute
+		#end mkdir
+		if op=="trash":#ゴミ箱
+			retry=trash.Execute(self)
+		#end trash
 		self.log.debug("success %s, retry %s, failure %s." % (self.output["succeeded"], retry, len(self.output["failed"])))
 		if not self.elevated and retry>0: self._elevate()#昇格してリトライ
 		if self.elevated: self._postElevation()#昇格した後の後処理

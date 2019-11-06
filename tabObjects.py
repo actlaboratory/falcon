@@ -60,6 +60,24 @@ class FalconTabBase(object):
 		"""現在フォーカスが当たっているアイテムのインデックス番号を取得する。"""
 		return self.hListCtrl.GetFocusedItem()
 
+	def GetSelectedItems(self):
+		"""選択中のアイテムのインデックス番号を、リストにして帰す。"""
+		num=self.hListCtrl.GetSelectedItemCount()
+		first=self.hListCtrl.GetFirstSelected()
+		if first==-1: return None
+		ret=[]
+		ret.append(first)
+		now=first
+		while(True):
+			next=self.hListCtrl.GetNextSelected(now)
+			if next==-1: break
+			ret.append(next)
+			now=next
+		#end while
+		self.log.debug("get selected items: %s" % ret)
+		return ret
+		#end GetSelectedItems
+
 	def GetListCtrl(self):
 		return self.hListCtrl
 
@@ -307,6 +325,20 @@ class MainListTab(FalconTabBase):
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
 			dialog(_("エラー"),_("フォルダを作成できません。"))
+			return
+		#end error
+		self.UpdateFilelist(silence=True)
+
+	def Trash(self):
+		target=[]
+		for i in self.GetSelectedItems():
+			target.append(self.listObject.GetElement(i).fullpath)
+		#end for
+		inst={"operation": "trash", "from": target}
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		if op.CheckSucceeded()==0:
+			dialog(_("エラー"),_("ファイルをゴミ箱に移動できませんでした。"))
 			return
 		#end error
 		self.UpdateFilelist(silence=True)
