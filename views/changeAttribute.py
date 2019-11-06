@@ -2,7 +2,6 @@
 #Falcon change file attribute view
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
-import ctypes
 import gettext
 import logging
 import os
@@ -11,7 +10,6 @@ import wx
 import win32con
 import win32gui
 from logging import getLogger, FileHandler, Formatter
-
 from .baseDialog import *
 import constants
 import DefaultSettings
@@ -22,7 +20,6 @@ import misc
 from simpleDialog import *
 import views.ViewCreator
 
-dll=ctypes.cdll.LoadLibrary("whelper.dll")
 
 class Dialog(BaseDialog):
 	def Initialize(self):
@@ -38,15 +35,30 @@ class Dialog(BaseDialog):
 
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
-		self.creator=views.ViewCreator.ViewCreator(1,self.wnd,wx.VERTICAL,20,_("属性の変更"))
-		if 1>0:		# TODO:モード設定実装後はここでモード１＝白黒反転の場合のみを指定する
-			dll.ScCheckbox(self.creator.getPanel().GetHandle())
+		self.mainArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL)
+
+		#属性の変更
+		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("属性の変更"))
 		self.cReadonly=self.creator.checkbox(_("読み取り専用"),None)
 		self.cHidden=self.creator.checkbox(_("隠し"),None)
 		self.cSystem=self.creator.checkbox(_("システム"),None)
 		self.cArchive=self.creator.checkbox(_("アーカイブ"),None)
+
+
+
+		#タイムスタンプの変更
+		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("タイムスタンプの変更"))
+		self.cReadonly=self.creator.checkbox(_("読み取り専用"),None)
+
+
+
+		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT)
+		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)
 		self.bOk=self.creator.okbutton(_("OK"),None)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
+
+		self.sizer.Fit(self.wnd)
+
 
 	def Show(self):
 		result=self.wnd.ShowModal()

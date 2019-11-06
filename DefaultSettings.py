@@ -22,7 +22,8 @@ class DefaultSettings:
 			"descending": 0
 		}
 		config["view"]={
-			"font": "bold 'ＭＳ ゴシック' 22 windows-932"
+			"font": "bold 'ＭＳ ゴシック' 22 windows-932",
+			"colorMode":"normal"
 		}
 		config["mainView"]={
 			"sizeX": "800",

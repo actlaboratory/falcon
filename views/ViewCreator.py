@@ -7,20 +7,18 @@ import wx
 from . import fontManager
 import _winxptheme
 
-
 class ViewCreator():
 
 	GridSizer = -1
 	FlexGridSizer = -2
 
 	# mode=1で白黒反転。その他は白。
-	def __init__(self,mode,parent,orient=wx.HORIZONTAL,space=0,label=""):
+	def __init__(self,mode,parent,parentSizer=None,orient=wx.HORIZONTAL,space=0,label=""):
 		self.mode=mode
-		if isinstance(parent,wx.Panel):
-			self.hPanel=parent
-		else:
-			self.hPanel=makePanel(mode,parent)
+		self.parent=parent
 		self.font=fontManager.FontManager()
+
+		self.SetFace(parent)
 		if orient==self.FlexGridSizer:
 			pass
 			#self.sizer=wx.FlexGridSizer()
@@ -28,100 +26,115 @@ class ViewCreator():
 			pass
 			#self.sizer=wx.GridSizer()
 		else:
-			self.sizer=self.boxSizer(orient,label)
-		self.hPanel.SetSizer(self.sizer)
+			self.sizer=self.BoxSizer(parentSizer,orient,label,space)
 		self.space=space
-		self.addSpace(self.space)
+		self.AddSpace(self.space)
 
-	def addSpace(self,space=-1):
+	def AddSpace(self,space=-1):
 		if self.sizer.__class__==wx.BoxSizer or self.sizer.__class__==wx.StaticBoxSizer:
 			if space==-1:
 				space==self.space
 			self.sizer.AddSpacer(space)
 
-	def boxSizer(self,orient,label):
+	#parentで指定したsizerの下に、新たなsizerを設置
+	def BoxSizer(self,parent,orient=wx.VERTICAL,label="",space=0):
 		if label=="":
-			self.sizer=wx.BoxSizer(orient)
+			sizer=wx.BoxSizer(orient)
 		else:
-			self.sizer=wx.StaticBoxSizer(orient,self.hPanel,label)
-		return self.sizer
+			sizer=wx.StaticBoxSizer(orient,self.parent,label)
+			self.SetFace(sizer.GetStaticBox())
+		if (parent!=None):
+			parent.Add(sizer,0,wx.ALL,space)
+		return sizer
+
 
 	def button(self,text,event):
-		hButton=wx.Button(self.hPanel, wx.ID_ANY,label=text, name=text)
+		hButton=wx.Button(self.parent, wx.ID_ANY,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton)
 		return hButton
 
 	def okbutton(self,text,event):
-		hButton=wx.Button(self.hPanel, wx.ID_OK,label=text, name=text)
+		hButton=wx.Button(self.parent, wx.ID_OK,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton)
+		self.sizer.Add(hButton,0,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
 		return hButton
 
 	def cancelbutton(self,text,event):
-		hButton=wx.Button(self.hPanel, wx.ID_CANCEL,label=text, name=text)
+		hButton=wx.Button(self.parent, wx.ID_CANCEL,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton)
+		self.sizer.Add(hButton,0,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
 		return hButton
 
 	def checkbox(self,text,event):
-		hCheckBox=wx.CheckBox(self.hPanel,wx.ID_ANY, label=text, name=text)
+		hCheckBox=wx.CheckBox(self.parent,wx.ID_ANY, label=text, name=text)
 		hCheckBox.Bind(wx.EVT_CHECKBOX,event)
-		_winxptheme.SetWindowTheme(hCheckBox.GetHandle(),"","")
 		self.SetFace(hCheckBox)
 		self.sizer.Add(hCheckBox)
-		self.addSpace(self.space)
+		self.AddSpace(self.space)
 		return hCheckBox
 
 	def radiobox(self,text,items,event):
-		hRadioBox=wx.RadioBox(self.hPanel,label=text, name=text, choices=items)
+		hRadioBox=wx.RadioBox(self.parent,label=text, name=text, choices=items)
 		hRadioBox.Bind(wx.EVT_RADIOBOX,event)
 		self.SetFace(hRadioBox)
 		self.sizer.Add(hRadioBox)
-		self.addSpace(self.space)
+		self.AddSpace(self.space)
 		return hRadioBox
 
 	def ListCtrl(self,proportion,sizerFlag,**settings):
-		hListCtrl=wx.ListCtrl(self.hPanel,wx.ID_ANY,**settings)
+		hListCtrl=wx.ListCtrl(self.parent,wx.ID_ANY,**settings)
 		self.SetFace(hListCtrl)
-		hListCtrl.SetTextColour("#ffffff")				#文字色
 		self.sizer.Add(hListCtrl,proportion,sizerFlag)
-		self.addSpace(self.space)
+		self.AddSpace(self.space)
 		return hListCtrl
 
 	def inputbox(self,text):
-		hStaticText=wx.StaticText(self.hPanel, -1, label="入力", name="入力")
-		hTextCtrl=wx.TextCtrl(self.hPanel, -1)
+		hStaticText=wx.StaticText(self.parent, -1, label="入力", name="入力")
+		hTextCtrl=wx.TextCtrl(self.parent, -1)
 		self.SetFace(hTextCtrl)
 		self.sizer.Add(hTextCtrl)
-		self.addSpace(self.space)
+		self.AddSpace(self.space)
 		return hStaticText,hTextCtrl
 
-	def getPanel(self):
-		return self.hPanel
+	def GetPanel(self):
+		return self.parent
 
-	def getSizer(self):
+	def GetSizer(self):
 		return self.sizer
 
 	def SetFace(self,target):
 		if self.mode==1:
 			target.SetBackgroundColour("#000000")		#背景色＝黒
-#			target.SetForegroundColour("#ffffff")		#文字色＝白
+			target.SetForegroundColour("#ffffff")		#文字色＝白
 		else:
 			target.SetBackgroundColour("#ffffff")		#背景色＝白
-			#target.SetForegroundColour("#000000")		#文字色＝黒
+			target.SetForegroundColour("#000000")		#文字色＝黒
 		target.SetThemeEnabled(False)
 		target.SetFont(self.font.GetFont())
+
+
+#parentで指定したsizerの下に、新たなBoxSizerを設置
+def BoxSizer(parent,orient=wx.VERTICAL,flg=0,border=0):
+	sizer=wx.BoxSizer(orient)
+	if (parent!=None):
+		parent.Add(sizer,0,flg,border)
+	return sizer
+
 
 # parentで指定されたフレームにパネルを設置する
 # modeはViewCreator.__init__と同様
 def makePanel(mode,parent):
 	hPanel=wx.Panel(parent,wx.ID_ANY)
 	if mode==1:
-		hPanel.SetBackgroundColour("#000000")		#項目のない部分の背景色＝黒
+		#hPanel.SetBackgroundColour("#ffffff")		#項目のない部分の背景色＝黒
+		pass
 	else:
-		hPanel.SetBackgroundColour("#ffffff")		#項目のない部分の背景色＝白
-		hPanel.SetAutoLayout(True)
+		#hPanel.SetBackgroundColour("#ffffff")		#項目のない部分の背景色＝白
+		#hPanel.SetAutoLayout(True)
+		pass
 	return hPanel
 
 

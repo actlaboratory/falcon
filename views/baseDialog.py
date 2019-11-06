@@ -21,6 +21,9 @@ class BaseDialog(object):
 			#y=parent.GetPosition().
 			y=100
 		self.wnd=wx.Dialog(parent,-1, ttl, size=(x,y),pos=(px,py))
+		self.panel = wx.Panel(self.wnd,wx.ID_ANY)
+		self.sizer = wx.BoxSizer(wx.VERTICAL)
+		self.panel.SetSizer(self.sizer)
 
 
 
