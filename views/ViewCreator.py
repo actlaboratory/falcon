@@ -4,9 +4,13 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import ctypes
+import misc
 import wx
+import _winxptheme
+import wx.adv
 from . import fontManager
 import _winxptheme
+import pywintypes
 
 dll=ctypes.cdll.LoadLibrary("whelper.dll")
 
@@ -73,19 +77,74 @@ class ViewCreator():
 		self.sizer.Add(hButton,0,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
 		return hButton
 
-	def checkbox(self,text,event):
+	def checkbox(self,text,event,state=False):
 		hPanel=wx.Panel(self.parent,wx.ID_ANY,)
-		hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=text, name=text)
-		hCheckBox.Bind(wx.EVT_CHECKBOX,event)
-		self.SetFace(hCheckBox,skip_colour=True)
 		hSizer=wx.BoxSizer()
-		hSizer.Add(hCheckBox)
-		hPanel.SetSizer(hSizer)
-		self.sizer.Add(hPanel)
-		print("scCheckbox")
-		dll.ScCheckbox(hPanel.GetHandle())
-		self.AddSpace(self.space)
-		return hCheckBox
+
+		if (isinstance(text,str)):	#単純に一つを作成
+			hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=text, name=text)
+			hCheckBox.SetValue(state)
+			hCheckBox.Bind(wx.EVT_CHECKBOX,event)
+			self.SetFace(hCheckBox,skip_colour=True)
+			hSizer.Add(hCheckBox)
+			hPanel.SetSizer(hSizer)
+			self.sizer.Add(hPanel)
+			dll.ScCheckbox(hPanel.GetHandle())
+			self.AddSpace(self.space)
+			return hCheckBox
+		elif (isinstance(text,list)):	#複数同時作成
+			hCheckBoxes=[]
+			for s in text:
+				hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=s, name=s)
+				hCheckBox.SetValue(state)
+				hCheckBox.Bind(wx.EVT_CHECKBOX,event)
+				self.SetFace(hCheckBox,skip_colour=True)
+				hSizer.Add(hCheckBox)
+				hCheckBoxes.append(hCheckBox)
+			hPanel.SetSizer(hSizer)
+			self.sizer.Add(hPanel)
+			dll.ScCheckbox(hPanel.GetHandle())
+			self.AddSpace(self.space)
+			return hCheckBoxes
+		else:
+			raise ValueError("ViewCreatorはCheckboxの作成に際し正しくない型の値を受け取りました。")
+
+	# 3stateチェックボックスの生成
+	def checkbox3(self,text,event,state=wx.CHK_UNCHECKED):
+		hPanel=wx.Panel(self.parent,wx.ID_ANY,)
+		hSizer=wx.BoxSizer()
+
+		if (isinstance(text,str)):	#単純に一つを作成
+			hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=text, name=text,style=wx.CHK_3STATE)
+			hCheckBox.Set3StateValue(state)
+			if state==wx.CHK_UNDETERMINED:
+				hCheckBox.SetWindowStyleFlag(wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+			hCheckBox.Bind(wx.EVT_CHECKBOX,event)
+			self.SetFace(hCheckBox,skip_colour=True)
+			hSizer.Add(hCheckBox)
+			self.AddSpace(self.space)
+			hPanel.SetSizer(hSizer)
+			self.sizer.Add(hPanel)
+			dll.ScCheckbox(hPanel.GetHandle())
+			return hCheckBox
+		elif (isinstance(text,list)):	#複数同時作成
+			hCheckBoxes=[]
+			for s in text:
+				hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=s, name=s)
+				hCheckBox.Set3StateValue(state)
+				if state==wx.CHK_UNDETERMINED:
+					hCheckBox.SetWindowStyleFlag(wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+				hCheckBox.Bind(wx.EVT_CHECKBOX,event)
+				self.SetFace(hCheckBox,skip_colour=True)
+				hSizer.Add(hCheckBox)
+				hCheckBoxes.append(hCheckBox)
+			hPanel.SetSizer(hSizer)
+			self.sizer.Add(hPanel)
+			dll.ScCheckbox(hPanel.GetHandle())
+			self.AddSpace(self.space)
+			return hCheckBoxes
+		else:
+			raise ValueError("ViewCreatorはCheckboxの作成に際し正しくない型の値を受け取りました。")
 
 	def radiobox(self,text,items,event):
 		hRadioBox=wx.RadioBox(self.parent,label=text, name=text, choices=items)
@@ -109,6 +168,23 @@ class ViewCreator():
 		self.sizer.Add(hTextCtrl)
 		self.AddSpace(self.space)
 		return hStaticText,hTextCtrl
+
+	def timepicker(self,defaultValue=wx.DateTime.Now()):
+		hTimePicker=wx.adv.TimePickerCtrl(self.parent,-1)
+		hTimePicker.SetValue(defaultValue)
+		#self.SetFace(hTimePicker)
+		self.sizer.Add(hTimePicker)
+		self.AddSpace(self.space)
+		return hTimePicker
+
+	def datepicker(self,defaultValue=wx.DateTime.Now()):
+		hDatePicker=wx.adv.DatePickerCtrl(self.parent,-1)
+		hDatePicker.SetValue(defaultValue)
+		self.SetFace(hDatePicker)
+		self.sizer.Add(hDatePicker)
+		self.AddSpace(self.space)
+		return hDatePicker
+
 
 	def GetPanel(self):
 		return self.parent

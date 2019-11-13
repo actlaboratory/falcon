@@ -1,0 +1,12 @@
+
+#uselib "user32"
+#cfunc global GetWindowLongA "GetWindowLongA" sptr,sptr
+
+
+
+handle=0
+
+
+
+
+dialog strf ("%#x", getwindowlongA(handle,-16))
