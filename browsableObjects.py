@@ -19,13 +19,14 @@ class FalconBrowsableBase(object):
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
-	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString=""):
+	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None):
 		"""必要な情報をセットする"""
 		self.directory=directory
 		self.basename=basename
 		self.fullpath=directory+"\\"+basename
 		self.size=size
 		self.modDate=modDate
+		self.creationDate=creationDate
 		self.attributes=attributes
 		self.GetAttributesString()
 		self.typeString=typeString
