@@ -120,13 +120,19 @@ class FileList(FalconListBase):
 
 	def Initialize(self,dir, sorting=0, ad=False):
 		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。取得できたら、Trueが帰る。"""
+		self.log=logging.getLogger("falcon.fileList")
 		self.sortCursor=sorting
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
+		self.files=[]
+		self.folders=[]
+		if isinstance(dir,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
+			self._copyFromList(dir)
+			return
+		#end copy
 		dir=dir.rstrip("\\")
 		dir_spl=dir.split("\\")
 		level=len(dir_spl)
 		globalVars.app.say("%s%d %s" % (dir[0],level,dir_spl[level-1]))
-		self.log=logging.getLogger("falcon.fileList")
 		self.rootDirectory=dir
 		self.log.debug("Getting file list for %s..." % self.rootDirectory)
 		t=misc.Timer()
@@ -137,8 +143,6 @@ class FileList(FalconListBase):
 			dialog(_("エラー"), _("フォルダを開くことができませんでした(%(error)s)") % {"error": str(err)})
 			return False
 		#end except
-		self.files=[]
-		self.folders=[]
 		if len(lst)==2:
 			lst=[]
 			self.log.debug("Blank folder.")
@@ -164,6 +168,18 @@ class FileList(FalconListBase):
 			self.ApplySort()
 		#end ソートが必要ならソート
 		return True
+
+	def _copyFromList(self,lst):
+		self.log.debug("Copying from file list...")
+		for elem in lst:
+			if isinstance(elem,browsableObjects.File):
+				self.files.append(elem)
+			elif isinstance(elem,browsableObjects.Folder):
+				self.folders.append(elem)
+			#end ファイルかフォルダか
+		#end for
+	#end _copyFromList
+
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
 		return [_("ファイル名"),_("サイズ"),_("更新"),_("属性"),_("種類")]
@@ -190,12 +206,12 @@ class FileList(FalconListBase):
 		self.folders.sort(key=f, reverse=(descending==1))
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
-	def GetAttributeCheckState(self,indices):
-		"""indicesのなかの数字を1個ずつとって、対応するファイルの属性値を取得していく。各属性に対して、リスト内の全てのファイルが持っていれば ATTRIB_FULL_CHECKED を帰す。一部のファイルが持っていれば、 ATTRIB_HALF_CHECKED を帰す。どのファイルも持っていなければ、 ATTRIB_NOT_CHECKED を帰す。このデータを、辞書に集めて帰す。"""
+	def GetAttributeCheckState(self):
+		"""このリストに入っているファイルを1個ずつとって、対応するファイルの属性値を取得していく。各属性に対して、リスト内の全てのファイルが持っていれば ATTRIB_FULL_CHECKED を帰す。一部のファイルが持っていれば、 ATTRIB_HALF_CHECKED を帰す。どのファイルも持っていなければ、 ATTRIB_NOT_CHECKED を帰す。このデータを、辞書に集めて帰す。"""
 		found={'readonly': 0, 'hidden': 0, 'system': 0, 'archive': 0}#各属性を見つけた個数
 		ret={'readonly': constants.NOT_CHECKED, 'hidden': constants.NOT_CHECKED, 'system': constants.NOT_CHECKED, 'archive': constants.NOT_CHECKED}#帰す値
-		for i in indices:
-			attrib=self.GetElement(i).attributes
+		for elem in self:
+			attrib=elem.attributes
 			if attrib&win32file.FILE_ATTRIBUTE_READONLY:
 				found['readonly']+=1
 				ret['readonly']=constants.HALF_CHECKED
@@ -213,13 +229,21 @@ class FileList(FalconListBase):
 				ret['archive']=constants.HALF_CHECKED
 			#end system
 		#end for
-		l=len(indices)
+		l=len(self)
 		if found['readonly']==l: ret['readonly']=constants.FULL_CHECKED
 		if found['hidden']==l: ret['hidden']=constants.FULL_CHECKED
 		if found['system']==l: ret['system']=constants.FULL_CHECKED
 		if found['archive']==l: ret['archive']=constants.FULL_CHECKED
 		if found['readonly']==l: ret['readonly']=constants.FULL_CHECKED
 		return ret
+
+	def __iter__(self):
+		lst=self.folders+self.files
+		return lst.__iter__()
+
+	def __len__(self):
+		return len(self.folders)+len(self.files)
+
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
 	def Initialize(self,sorting=0,descending=0):
