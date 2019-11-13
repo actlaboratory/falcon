@@ -5,6 +5,7 @@
 
 import ctypes
 import time
+import win32api
 import win32file
 
 discdll=ctypes.cdll.LoadLibrary("discdll.dll")
@@ -86,3 +87,10 @@ def getDiscDriveTypes():
 	#end for
 	return ret
 #end getDiscDriveTypes
+
+def disableWindowStyleFlag(hwnd,flag):
+	"""指定されたウィンドウハンドルの DWL_STYLE の値を撮って、指定されたフラグを折る。"""
+	value=win32api.GetWindowLong(hwnd,-16)#-16 が DWL_STYLE らしい
+	tmp=0xffffffff-flag
+	value=value&tmp
+	win32api.SetWindowLong(hwnd,-16,value)
