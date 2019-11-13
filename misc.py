@@ -64,6 +64,10 @@ def PTime2string(ptime):
 	"""ptime 形式のオブジェクトを受け取って、人間が読めるタイムスタンプ文字列に変換して返す。"""
 	return "%04d/%02d/%02d %02d:%02d:%02d" % (ptime.year, ptime.month, ptime.day, ptime.hour, ptime.minute, ptime.second)
 
+#ptimeをwx.DateTimeに変換する
+def PTimeToDateTime(pTime):
+	return wx.DateTime(pTime.day,pTime.month,pTime.year,pTime.hour,pTime.minute,pTime.second,pTime.msec)
+
 def attrib2dward(readonly=False, hidden=False, system=False, archive=False):
 	ret=0
 	if readonly is True: ret=ret|win32file.FILE_ATTRIBUTE_READONLY

@@ -39,17 +39,13 @@ class Dialog(BaseDialog):
 
 		#属性の変更
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("属性の変更"))
-		self.cReadonly=self.creator.checkbox(_("読み取り専用"),None)
-		self.cHidden=self.creator.checkbox(_("隠し"),None)
-		self.cSystem=self.creator.checkbox(_("システム"),None)
-		self.cArchive=self.creator.checkbox(_("アーカイブ"),None)
-
-
+		self.checks=self.creator.checkbox3([_("読み取り専用"),_("隠し"),_("システム"),_("アーカイブ")],None)
 
 		#タイムスタンプの変更
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("タイムスタンプの変更"))
-		self.cReadonly=self.creator.checkbox(_("読み取り専用"),None)
-
+		self.date=self.creator.datepicker()
+		self.time=self.creator.timepicker()
+		print(self.time.GetHandle())
 
 
 		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT)
@@ -63,7 +59,7 @@ class Dialog(BaseDialog):
 	def Show(self):
 		result=self.wnd.ShowModal()
 		self.Destroy()
-		self.value=misc.attrib2dward(self.cReadonly.IsChecked(), self.cHidden.IsChecked(), self.cSystem.IsChecked(), self.cArchive.IsChecked())
+		self.value=misc.attrib2dward(self.checks[0].IsChecked(), self.checks[1].IsChecked(), self.checks[2].IsChecked(), self.checks[3].IsChecked())
 		return result
 
 	def Destroy(self):
