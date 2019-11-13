@@ -8,6 +8,7 @@ import logging
 import win32api
 import win32file
 import pywintypes
+import constants
 import misc
 import browsableObjects
 import globalVars
@@ -189,7 +190,36 @@ class FileList(FalconListBase):
 		self.folders.sort(key=f, reverse=(descending==1))
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
-
+	def GetAttributeCheckState(self,indices):
+		"""indicesのなかの数字を1個ずつとって、対応するファイルの属性値を取得していく。各属性に対して、リスト内の全てのファイルが持っていれば ATTRIB_FULL_CHECKED を帰す。一部のファイルが持っていれば、 ATTRIB_HALF_CHECKED を帰す。どのファイルも持っていなければ、 ATTRIB_NOT_CHECKED を帰す。このデータを、辞書に集めて帰す。"""
+		found={'readonly': 0, 'hidden': 0, 'system': 0, 'archive': 0}#各属性を見つけた個数
+		ret={'readonly': constants.NOT_CHECKED, 'hidden': constants.NOT_CHECKED, 'system': constants.NOT_CHECKED, 'archive': constants.NOT_CHECKED}#帰す値
+		for i in indices:
+			attrib=self.GetElement(i).attributes
+			if attrib&win32file.FILE_ATTRIBUTE_READONLY:
+				found['readonly']+=1
+				ret['readonly']=constants.HALF_CHECKED
+			#end readonly
+			if attrib&win32file.FILE_ATTRIBUTE_HIDDEN:
+				found['hidden']+=1
+				ret['hidden']=constants.HALF_CHECKED
+			#end hidden
+			if attrib&win32file.FILE_ATTRIBUTE_SYSTEM:
+				found['system']+=1
+				ret['system']=constants.HALF_CHECKED
+			#end system
+			if attrib&win32file.FILE_ATTRIBUTE_ARCHIVE:
+				found['archive']+=1
+				ret['archive']=constants.HALF_CHECKED
+			#end system
+		#end for
+		l=len(indices)
+		if found['readonly']==l: ret['readonly']=constants.FULL_CHECKED
+		if found['hidden']==l: ret['hidden']=constants.FULL_CHECKED
+		if found['system']==l: ret['system']=constants.FULL_CHECKED
+		if found['archive']==l: ret['archive']=constants.FULL_CHECKED
+		if found['readonly']==l: ret['readonly']=constants.FULL_CHECKED
+		return ret
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
 	def Initialize(self,sorting=0,descending=0):
