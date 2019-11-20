@@ -14,6 +14,10 @@ import pywintypes
 
 dll=ctypes.cdll.LoadLibrary("whelper.dll")
 
+NORMAL=0
+BUTTON_COLOUR=1
+SKIP_COLOUR=2
+
 class ViewCreator():
 
 	GridSizer = -1
@@ -50,10 +54,12 @@ class ViewCreator():
 		else:
 			sizer=wx.StaticBoxSizer(orient,self.parent,label)
 			self.SetFace(sizer.GetStaticBox())
-		if (parent!=None):
-			parent.Add(sizer,0,wx.ALL,space)
-		else:
+		if (parent.__class__==wx.Panel or parent.__class__==wx.Window):
+			parent.SetSizer(sizer)
+		elif (parent==None):
 			self.parent.SetSizer(sizer)
+		else:
+			parent.Add(sizer,0,wx.ALL,space)
 		return sizer
 
 
@@ -64,33 +70,31 @@ class ViewCreator():
 		return hButton
 
 	def okbutton(self,text,event):
-		hButton=wx.Button(self.parent, wx.ID_OK,label=text, name=text)
+		hButton=wx.Button(self.parent, wx.ID_OK,label=text, name=text,style=wx.BORDER_SUNKEN)
 		hButton.Bind(wx.EVT_BUTTON,event)
-		self.SetFace(hButton)
+		self.SetFace(hButton,mode=BUTTON_COLOUR)
 		self.sizer.Add(hButton,0,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
 		return hButton
 
 	def cancelbutton(self,text,event):
 		hButton=wx.Button(self.parent, wx.ID_CANCEL,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
-		self.SetFace(hButton)
+		self.SetFace(hButton,mode=BUTTON_COLOUR)
 		self.sizer.Add(hButton,0,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
 		return hButton
 
 	def checkbox(self,text,event,state=False):
 		hPanel=wx.Panel(self.parent,wx.ID_ANY,)
-		hSizer=wx.BoxSizer()
+		hSizer=self.BoxSizer(hPanel,self.sizer.GetOrientation())
 
 		if (isinstance(text,str)):	#単純に一つを作成
 			hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=text, name=text)
 			hCheckBox.SetValue(state)
 			hCheckBox.Bind(wx.EVT_CHECKBOX,event)
-			self.SetFace(hCheckBox,skip_colour=True)
+			self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 			hSizer.Add(hCheckBox)
-			hPanel.SetSizer(hSizer)
-			self.sizer.Add(hPanel)
+			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
 			dll.ScCheckbox(hPanel.GetHandle())
-			self.AddSpace(self.space)
 			return hCheckBox
 		elif (isinstance(text,list)):	#複数同時作成
 			hCheckBoxes=[]
@@ -98,13 +102,11 @@ class ViewCreator():
 				hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=s, name=s)
 				hCheckBox.SetValue(state)
 				hCheckBox.Bind(wx.EVT_CHECKBOX,event)
-				self.SetFace(hCheckBox,skip_colour=True)
+				self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 				hSizer.Add(hCheckBox)
 				hCheckBoxes.append(hCheckBox)
-			hPanel.SetSizer(hSizer)
-			self.sizer.Add(hPanel)
+			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
 			dll.ScCheckbox(hPanel.GetHandle())
-			self.AddSpace(self.space)
 			return hCheckBoxes
 		else:
 			raise ValueError("ViewCreatorはCheckboxの作成に際し正しくない型の値を受け取りました。")
@@ -112,7 +114,7 @@ class ViewCreator():
 	# 3stateチェックボックスの生成
 	def checkbox3(self,text,event,state=wx.CHK_UNCHECKED):
 		hPanel=wx.Panel(self.parent,wx.ID_ANY,)
-		hSizer=wx.BoxSizer()
+		hSizer=self.BoxSizer(hPanel,self.sizer.GetOrientation())
 
 		if (isinstance(text,str)):	#単純に一つを作成
 			hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=text, name=text,style=wx.CHK_3STATE)
@@ -120,11 +122,10 @@ class ViewCreator():
 			if state==wx.CHK_UNDETERMINED:
 				hCheckBox.SetWindowStyleFlag(wx.CHK_ALLOW_3RD_STATE_FOR_USER)
 			hCheckBox.Bind(wx.EVT_CHECKBOX,event)
-			self.SetFace(hCheckBox,skip_colour=True)
+			self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 			hSizer.Add(hCheckBox)
 			self.AddSpace(self.space)
-			hPanel.SetSizer(hSizer)
-			self.sizer.Add(hPanel)
+			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
 			dll.ScCheckbox(hPanel.GetHandle())
 			return hCheckBox
 		elif (isinstance(text,list)):	#複数同時作成
@@ -135,13 +136,12 @@ class ViewCreator():
 				if state==wx.CHK_UNDETERMINED:
 					hCheckBox.SetWindowStyleFlag(wx.CHK_ALLOW_3RD_STATE_FOR_USER)
 				hCheckBox.Bind(wx.EVT_CHECKBOX,event)
-				self.SetFace(hCheckBox,skip_colour=True)
+				self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 				hSizer.Add(hCheckBox)
 				hCheckBoxes.append(hCheckBox)
-			hPanel.SetSizer(hSizer)
-			self.sizer.Add(hPanel)
+			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
 			dll.ScCheckbox(hPanel.GetHandle())
-			self.AddSpace(self.space)
+			self.AddSpace()
 			return hCheckBoxes
 		else:
 			raise ValueError("ViewCreatorはCheckboxの作成に際し正しくない型の値を受け取りました。")
@@ -177,6 +177,7 @@ class ViewCreator():
 		self.AddSpace(self.space)
 		return hTimePicker
 
+	#PCTKはおかしい。NVDAは読まない。非推奨。
 	def datepicker(self,defaultValue=wx.DateTime.Now()):
 		hDatePicker=wx.adv.DatePickerCtrl(self.parent,-1)
 		hDatePicker.SetValue(defaultValue)
@@ -185,6 +186,15 @@ class ViewCreator():
 		self.AddSpace(self.space)
 		return hDatePicker
 
+	#PCTKは読まない。NVDAは知らない。非推奨
+	def calendar(self,defaultValue=wx.DateTime.Now()):
+		hCalendar=wx.adv.CalendarCtrl(self.parent,-1,defaultValue)
+		self.SetFace(hCalendar)
+		self.sizer.Add(hCalendar)
+		self.AddSpace(self.space)
+		return hCalendar
+
+
 
 	def GetPanel(self):
 		return self.parent
@@ -192,15 +202,18 @@ class ViewCreator():
 	def GetSizer(self):
 		return self.sizer
 
-	def SetFace(self,target,skip_colour=False):
-		if not skip_colour:
+	def SetFace(self,target,mode=NORMAL):
+		if mode==NORMAL:
 			if self.mode==1:
 				target.SetBackgroundColour("#000000")		#背景色＝黒
 				target.SetForegroundColour("#ffffff")		#文字色＝白
 			else:
 				target.SetBackgroundColour("#ffffff")		#背景色＝白
 				target.SetForegroundColour("#000000")		#文字色＝黒
-			#end else
+		elif (mode==BUTTON_COLOUR):
+			if self.mode==1:
+				target.SetBackgroundColour("#222222")		#背景色＝灰色
+				target.SetForegroundColour("#ffffff")		#文字色＝白
 		#end skip
 		target.SetThemeEnabled(False)
 		_winxptheme.SetWindowTheme(target.GetHandle(),"","")

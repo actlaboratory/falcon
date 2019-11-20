@@ -27,7 +27,7 @@ case WM_CTLCOLORSTATIC:
 HDC hDC = (HDC)wp;
 HWND hCtrl = (HWND)lp;
 SetBkMode(hDC, TRANSPARENT);	// 背景を透過
-SetTextColor (hDC, RGB(255,0,0));	// テキストの色
+SetTextColor (hDC, RGB(255,255,255));	// テキストの色
 SetBkColor (hDC, RGB(0,0,0));	// 背景の色
 return (LRESULT)bkBrush;	// 背景色の色
 }
