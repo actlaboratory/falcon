@@ -172,7 +172,6 @@ class FileList(FalconListBase):
 			self.log.debug("Triggering sorting")
 			self.ApplySort()
 		#end ソートが必要ならソート
-		print(self.GetAttributeCheckState())
 		return True
 
 	def _copyFromList(self,lst):
@@ -213,7 +212,7 @@ class FileList(FalconListBase):
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
 	def GetAttributeCheckState(self):
-		"""このリストに入っているファイルを1個ずつとって、対応するファイルの属性値を取得していく。各属性に対して、リスト内の全てのファイルが持っていれば ATTRIB_FULL_CHECKED を帰す。一部のファイルが持っていれば、 ATTRIB_HALF_CHECKED を帰す。どのファイルも持っていなければ、 ATTRIB_NOT_CHECKED を帰す。このデータを、辞書に集めて帰す。"""
+		"""このリストに入っているファイルを1個ずつとって、対応するファイルの属性値を取得していく。各属性に対して、リスト内の全てのファイルが持っていれば ATTRIB_FULL_CHECKED を帰す。一部のファイルが持っていれば、 ATTRIB_HALF_CHECKED を帰す。どのファイルも持っていなければ、 ATTRIB_NOT_CHECKED を帰す。このデータを、リストにして帰す。"""
 		found=[0,0,0,0]#各属性を見つけた個数
 		ret=[constants.NOT_CHECKED, constants.NOT_CHECKED, constants.NOT_CHECKED, constants.NOT_CHECKED]#帰す値
 		for elem in self:
