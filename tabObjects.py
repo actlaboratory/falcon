@@ -335,6 +335,17 @@ class MainListTab(FalconTabBase):
 		#end error
 		self.UpdateFilelist(silence=True)
 
+	def MakeShortcut(self):
+		inst={"operation": "shortcut", "target": [("help.lnk",os.path.abspath("PyWin32.chm"),"")]}
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		if op.CheckSucceeded()==0:
+			dialog(_("エラー"),_("ショートカットを作成できません。"))
+			return
+		#end error
+		self.UpdateFilelist(silence=True)
+		dialog("とりあえずテストでショートカット作った","GUIつくってね")
+
 	def Trash(self):
 		target=[]
 		for elem in self.GetSelectedItems():
