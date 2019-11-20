@@ -14,9 +14,9 @@ log=logging.getLogger("falcon.%s" % VERB)
 def Execute(op):
 	"""実行処理。リトライが必要になった項目数を返す。"""
 	try:
-		f=op.instructions["from"]
+		f=op.instructions["target"]
 	except KeyError:
-		log.error("from is not specified.")
+		log.error("Required key is not specified.")
 		return False
 	#end ゴミ箱に入れるファイルリストがない
 	op.output["all_OK"]=True
