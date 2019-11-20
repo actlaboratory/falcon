@@ -112,11 +112,13 @@ class ViewCreator():
 			raise ValueError("ViewCreatorはCheckboxの作成に際し正しくない型の値を受け取りました。")
 
 	# 3stateチェックボックスの生成
-	def checkbox3(self,text,event,state=wx.CHK_UNCHECKED):
+	def checkbox3(self,text,event,state=None):
 		hPanel=wx.Panel(self.parent,wx.ID_ANY,)
 		hSizer=self.BoxSizer(hPanel,self.sizer.GetOrientation())
 
 		if (isinstance(text,str)):	#単純に一つを作成
+			if (state==None):
+				state=wx.CHK_UNCHECKED
 			hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=text, name=text,style=wx.CHK_3STATE)
 			hCheckBox.Set3StateValue(state)
 			if state==wx.CHK_UNDETERMINED:
@@ -130,11 +132,15 @@ class ViewCreator():
 			return hCheckBox
 		elif (isinstance(text,list)):	#複数同時作成
 			hCheckBoxes=[]
-			for s in text:
-				hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=s, name=s)
-				hCheckBox.Set3StateValue(state)
-				if state==wx.CHK_UNDETERMINED:
-					hCheckBox.SetWindowStyleFlag(wx.CHK_ALLOW_3RD_STATE_FOR_USER)
+			for i,s in enumerate(text):
+				if (state==None):
+					hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=s, name=s)
+				elif (state[i]==wx.CHK_UNDETERMINED):
+					hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=s, name=s,style=wx.CHK_ALLOW_3RD_STATE_FOR_USER | wx.CHK_3STATE)
+					hCheckBox.Set3StateValue(state[i])
+				else:
+					hCheckBox=wx.CheckBox(hPanel,wx.ID_ANY, label=s, name=s)
+					hCheckBox.Set3StateValue(state[i])
 				hCheckBox.Bind(wx.EVT_CHECKBOX,event)
 				self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 				hSizer.Add(hCheckBox)

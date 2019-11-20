@@ -37,9 +37,12 @@ class Dialog(BaseDialog):
 		"""いろんなwidgetを設置する。"""
 		self.mainArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_CENTER)
 
+		#現在の属性を初期値としてセット
+		defaultAttributes=globalVars.app.hMainView.activeTab.GetSelectedItems().GetAttributeCheckState()
+
 		#属性の変更
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("属性の変更"))
-		self.checks=self.creator.checkbox3([_("読み取り専用"),_("隠し"),_("システム"),_("アーカイブ")],None)
+		self.checks=self.creator.checkbox3([_("読み取り専用"),_("隠し"),_("システム"),_("アーカイブ")],None,defaultAttributes)
 
 		#タイムスタンプの変更
 		#self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("タイムスタンプの変更"))
@@ -57,7 +60,7 @@ class Dialog(BaseDialog):
 	def Show(self):
 		result=self.wnd.ShowModal()
 		self.Destroy()
-		self.value=misc.attrib2dward(self.checks[0].IsChecked(), self.checks[1].IsChecked(), self.checks[2].IsChecked(), self.checks[3].IsChecked())
+		print(self.GetValue())
 		return result
 
 	def Destroy(self):
@@ -65,5 +68,11 @@ class Dialog(BaseDialog):
 		self.wnd.Destroy()
 
 	def GetValue(self):
-		return self.value
+		v=[]
+		v.append(self.checks[0].Get3StateValue())
+		v.append(self.checks[1].Get3StateValue())
+		v.append(self.checks[2].Get3StateValue())
+		v.append(self.checks[3].Get3StateValue())
+		return v
+
 
