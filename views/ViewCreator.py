@@ -167,13 +167,13 @@ class ViewCreator():
 		self.AddSpace(self.space)
 		return hListCtrl
 
-	def inputbox(self,text):
-		hStaticText=wx.StaticText(self.parent, -1, label="入力", name="入力")
-		hTextCtrl=wx.TextCtrl(self.parent, -1)
+	def inputbox(self,text,x=0):
+		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
+		hTextCtrl=wx.TextCtrl(self.parent, -1,size=(x,-1))
 		self.SetFace(hTextCtrl)
 		self.sizer.Add(hTextCtrl)
 		self.AddSpace(self.space)
-		return hStaticText,hTextCtrl
+		return hTextCtrl,hStaticText
 
 	def timepicker(self,defaultValue=wx.DateTime.Now()):
 		hTimePicker=wx.adv.TimePickerCtrl(self.parent,-1)
