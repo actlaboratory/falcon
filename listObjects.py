@@ -30,6 +30,11 @@ SORT_TYPE_FREESPACE=9
 
 SORT_DESCRIPTIONS=None
 
+READONLY=0
+HIDDEN=1
+SYSTEM=2
+ARCHIVE=3
+
 def GetSortDescription(attrib):
 	global SORT_DESCRIPTIONS
 	if SORT_DESCRIPTIONS is None:
@@ -167,6 +172,7 @@ class FileList(FalconListBase):
 			self.log.debug("Triggering sorting")
 			self.ApplySort()
 		#end ソートが必要ならソート
+		print(self.GetAttributeCheckState())
 		return True
 
 	def _copyFromList(self,lst):
@@ -208,33 +214,32 @@ class FileList(FalconListBase):
 
 	def GetAttributeCheckState(self):
 		"""このリストに入っているファイルを1個ずつとって、対応するファイルの属性値を取得していく。各属性に対して、リスト内の全てのファイルが持っていれば ATTRIB_FULL_CHECKED を帰す。一部のファイルが持っていれば、 ATTRIB_HALF_CHECKED を帰す。どのファイルも持っていなければ、 ATTRIB_NOT_CHECKED を帰す。このデータを、辞書に集めて帰す。"""
-		found={'readonly': 0, 'hidden': 0, 'system': 0, 'archive': 0}#各属性を見つけた個数
-		ret={'readonly': constants.NOT_CHECKED, 'hidden': constants.NOT_CHECKED, 'system': constants.NOT_CHECKED, 'archive': constants.NOT_CHECKED}#帰す値
+		found=[0,0,0,0]#各属性を見つけた個数
+		ret=[constants.NOT_CHECKED, constants.NOT_CHECKED, constants.NOT_CHECKED, constants.NOT_CHECKED]#帰す値
 		for elem in self:
 			attrib=elem.attributes
 			if attrib&win32file.FILE_ATTRIBUTE_READONLY:
-				found['readonly']+=1
-				ret['readonly']=constants.HALF_CHECKED
+				found[READONLY]+=1
+				ret[READONLY]=constants.HALF_CHECKED
 			#end readonly
 			if attrib&win32file.FILE_ATTRIBUTE_HIDDEN:
-				found['hidden']+=1
-				ret['hidden']=constants.HALF_CHECKED
+				found[HIDDEN]+=1
+				ret[HIDDEN]=constants.HALF_CHECKED
 			#end hidden
 			if attrib&win32file.FILE_ATTRIBUTE_SYSTEM:
-				found['system']+=1
-				ret['system']=constants.HALF_CHECKED
+				found[SYSTEM]+=1
+				ret[SYSTEM]=constants.HALF_CHECKED
 			#end system
 			if attrib&win32file.FILE_ATTRIBUTE_ARCHIVE:
-				found['archive']+=1
-				ret['archive']=constants.HALF_CHECKED
+				found[ARCHIVE]+=1
+				ret[ARCHIVE]=constants.HALF_CHECKED
 			#end system
 		#end for
 		l=len(self)
-		if found['readonly']==l: ret['readonly']=constants.FULL_CHECKED
-		if found['hidden']==l: ret['hidden']=constants.FULL_CHECKED
-		if found['system']==l: ret['system']=constants.FULL_CHECKED
-		if found['archive']==l: ret['archive']=constants.FULL_CHECKED
-		if found['readonly']==l: ret['readonly']=constants.FULL_CHECKED
+		if found[READONLY]==l: ret[READONLY]=constants.FULL_CHECKED
+		if found[HIDDEN]==l: ret[HIDDEN]=constants.FULL_CHECKED
+		if found[SYSTEM]==l: ret[SYSTEM]=constants.FULL_CHECKED
+		if found[ARCHIVE]==l: ret[ARCHIVE]=constants.FULL_CHECKED
 		return ret
 
 	def __iter__(self):
