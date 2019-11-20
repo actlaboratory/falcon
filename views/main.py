@@ -114,6 +114,7 @@ class Menu():
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_TRASH"),_("ゴミ箱へ移動"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_SHOWPROPERTIES"),_("プロパティを表示"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKDIR"),_("フォルダ作成"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKSHORTCUT"),_("ショートカット作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
 		#ファイルメニューの中身
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTNEXT"),_("次の並び順\tShift+F1"))
@@ -187,6 +188,10 @@ class Events(BaseEvents):
 			self.parent.activeTab.MakeDirectory(d.GetValue())
 			d.Destroy()
 			return
+		if selected==menuItemsStore.getRef("FILE_MKSHORTCUT"):
+			self.parent.activeTab.MakeShortcut()
+			return
+
 		if selected==menuItemsStore.getRef("FILE_TRASH"):
 			self.parent.activeTab.Trash()
 			return

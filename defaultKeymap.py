@@ -10,6 +10,7 @@ defaultKeymap["mainView"]={
 	"FILE_RENAME": "F2",
 	"FILE_CHANGEATTRIBUTE": "shift+F2",
 	"FILE_TRASH": "delete",
+	"FILE_MKSHORTCUT": "ctrl+f2",
 	"FILE_SHOWPROPERTIES": "ctrl+shift+return",
 	"EDIT_SORTNEXT": "shift+F1",
 	"EDIT_SORTSELECT": "ctrl+S",
