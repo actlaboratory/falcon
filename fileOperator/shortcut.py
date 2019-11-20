@@ -23,6 +23,7 @@ def Execute(op):
 	#target のパラメータはタプルで、 (out, source, args) の順番。
 	op.output["all_OK"]=True
 	op.output["retry"]["target"]=[]
+	retry=0
 	for elem in target:
 		try:
 			ws=win32com.client.Dispatch("wscript.shell")
@@ -31,13 +32,14 @@ def Execute(op):
 			scut.Arguments=elem[2]
 			scut.Save()
 		except Exception as err:
+			log.error(err)
 			appendRetry(op.output,elem)
 		#end except
 	#end for
 	op.output["succeeded"]+=1
 	if len(op.output["retry"]["target"])>0:
 		op.output["retry"]["operation"]=VERB
-		retry=len(op.output["retry"]["from"])
+		retry=len(op.output["retry"]["target"])
 	#end リトライあるか
 	return retry
 

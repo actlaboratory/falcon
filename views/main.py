@@ -188,6 +188,10 @@ class Events(BaseEvents):
 			self.parent.activeTab.MakeDirectory(d.GetValue())
 			d.Destroy()
 			return
+		if selected==menuItemsStore.getRef("FILE_MKSHORTCUT"):
+			self.parent.activeTab.MakeShortcut()
+			return
+
 		if selected==menuItemsStore.getRef("FILE_TRASH"):
 			self.parent.activeTab.Trash()
 			return

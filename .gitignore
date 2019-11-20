@@ -13,3 +13,4 @@ build/
 *.obj
 *.exp
 *.lib
+help.lnk
