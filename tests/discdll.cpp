@@ -18,7 +18,9 @@ HDDVD,
 HDDVD_ROM,
 DVD_PLUS_RW_DL,
 DVD_PLUS_R_DL,
+DVD_PLUS_R_DL_AND_RW,
 DVD_R_DL,
+DVD_R_DL_AND_RW;
 DVD_RAM,
 DVD_PLUS_RW,
 DVD_PLUS_R,
@@ -59,8 +61,14 @@ break;
 case enums::DISC_TYPE::DVD_PLUS_R_DL:
 ret="DVD+R DL";
 break;
+case enums::DISC_TYPE::DVD_PLUS_R_DL_AND_RW:
+ret="DVD+R DL/RW";
+break;
 case enums::DISC_TYPE::DVD_R_DL:
 ret="DVD-R DL";
+break;
+case enums::DISC_TYPE::DVD_R_DL_AND_RW:
+ret="DVD-R DL/RW";
 break;
 case enums::DISC_TYPE::DVD_RAM:
 ret="DVD-RAM";
@@ -127,14 +135,24 @@ return enums::DISC_TYPE::HDDVD;
 if(_isIn(val,IMAPI_PROFILE_TYPE_HD_DVD_ROM)){
 return enums::DISC_TYPE::HDDVD_ROM;
 }
-if(_isIn(val,IMAPI_PROFILE_TYPE_HD_DVD_ROM)){
-return enums::DISC_TYPE::HDDVD_ROM;
-}
 if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_RW_DUAL)){
 return enums::DISC_TYPE::DVD_PLUS_RW_DL;
 }
+
+if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_R_DUAL) && _isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_RW)){
+return enums::DISC_TYPE::DVD_PLUS_R_DL_AND_RW;
+}
 if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_R_DUAL)){
 return enums::DISC_TYPE::DVD_PLUS_R_DL;
+}
+if(
+	(
+		_isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_R_DUAL_SEQUENTIAL) || _isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_R_DUAL_LAYER_JUMP)
+	) && (
+		_isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_REWRITABLE) || _isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_RW_SEQUENTIAL)
+	)
+){
+return enums::DISC_TYPE::DVD_R_DL_AND_RW;
 }
 if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_R_DUAL_SEQUENTIAL) || _isIn(val,IMAPI_PROFILE_TYPE_DVD_DASH_R_DUAL_LAYER_JUMP)){
 return enums::DISC_TYPE::DVD_R_DL;
@@ -145,6 +163,7 @@ return enums::DISC_TYPE::DVD_RAM;
 if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_RW)){
 return enums::DISC_TYPE::DVD_PLUS_RW;
 }
+
 if(_isIn(val,IMAPI_PROFILE_TYPE_DVD_PLUS_R)){
 return enums::DISC_TYPE::DVD_PLUS_R;
 }
