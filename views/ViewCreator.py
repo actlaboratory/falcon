@@ -73,14 +73,14 @@ class ViewCreator():
 		hButton=wx.Button(self.parent, wx.ID_OK,label=text, name=text,style=wx.BORDER_SUNKEN)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton,mode=BUTTON_COLOUR)
-		self.sizer.Add(hButton,0,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
+		self.sizer.Add(hButton,1,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
 		return hButton
 
 	def cancelbutton(self,text,event):
 		hButton=wx.Button(self.parent, wx.ID_CANCEL,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton,mode=BUTTON_COLOUR)
-		self.sizer.Add(hButton,0,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
+		self.sizer.Add(hButton,1,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
 		return hButton
 
 	def checkbox(self,text,event,state=False):
