@@ -153,11 +153,16 @@ class ViewCreator():
 			raise ValueError("ViewCreatorはCheckboxの作成に際し正しくない型の値を受け取りました。")
 
 	def radiobox(self,text,items,event):
+		self.SetFace(self.parent)
 		hRadioBox=wx.RadioBox(self.parent,label=text, name=text, choices=items)
 		hRadioBox.Bind(wx.EVT_RADIOBOX,event)
 		self.SetFace(hRadioBox)
 		self.sizer.Add(hRadioBox)
 		self.AddSpace(self.space)
+		#dll.ScRadioButton(self.parent.GetHandle())
+
+		for item in hRadioBox.GetChildren():
+			self.SetFace(item)
 		return hRadioBox
 
 	def ListCtrl(self,proportion,sizerFlag,**settings):
