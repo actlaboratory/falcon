@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['fileop.py'],
-             pathex=['C:\\git\\falcon'],
+             pathex=['D:\\git\\falcon'],
              binaries=[],
              datas=[],
              hiddenimports=[],
