@@ -60,6 +60,10 @@ class FalconTabBase(object):
 		"""現在フォーカスが当たっているアイテムのインデックス番号を取得する。"""
 		return self.hListCtrl.GetFocusedItem()
 
+	# 選択されているアイテムが１つ以上存在するか否か
+	def IsItemSelected(self):
+		return self.hListCtrl.GetSelectedItemCount()>0
+
 	def GetSelectedItems(self):
 		"""選択中のアイテムを、 FileList オブジェクトで帰す。"""
 		num=self.hListCtrl.GetSelectedItemCount()

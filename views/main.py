@@ -173,6 +173,8 @@ class Events(BaseEvents):
 			self.UpdateFilelist()
 			return
 		if selected==menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
+			if not self.parent.activeTab.IsItemSelected():
+				return
 			d=views.changeAttribute.Dialog()
 			d.Initialize()
 			ret=d.Show()
@@ -192,12 +194,13 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("FILE_MKSHORTCUT"):
 			self.parent.activeTab.MakeShortcut()
 			return
-
 		if selected==menuItemsStore.getRef("FILE_TRASH"):
-			self.parent.activeTab.Trash()
+			if self.parent.activeTab.IsItemSelected():
+				self.parent.activeTab.Trash()
 			return
 		if selected==menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
-			self.parent.activeTab.ShowProperties()
+			if self.parent.activeTab.IsItemSelected():
+				self.parent.activeTab.ShowProperties()
 			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):
 			self.testdialog=views.test.View()
