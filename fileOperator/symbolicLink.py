@@ -15,8 +15,8 @@ def Execute(op):
 	try:
 		f=op.instructions["from"]
 		t=op.instructions["to"]
-	except KeyError:
-		log.error("Required parameter is not specified.")
+	except KeyError as e:
+		log.error("Required parameter is not specified %s." % e)
 		return False
 	#end 必要な情報がない
 	op.output["all_OK"]=True
@@ -28,9 +28,9 @@ def Execute(op):
 		try:
 			flag=0
 			if os.path.isdir(elem): flag=win32file.SYMBOLIC_LINK_FLAG_DIRECTORY
-			win32file.CreateSymbolicLink(to[i],elem,flag|win32file.SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE)#これで、昇格しなくてもできるのか？
+			win32file.CreateSymbolicLink(t[i],elem,flag|win32file.SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE)#これで、昇格しなくてもできるのか？
 		except win32file.error as err:
-			if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem,to[i])
+			if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem,t[i])
 			continue
 		#end except
 		op.output["succeeded"]+=1
