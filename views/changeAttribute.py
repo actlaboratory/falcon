@@ -49,7 +49,7 @@ class Dialog(BaseDialog):
 		#self.date=self.creator.calendar()
 		#self.time=self.creator.timepicker()
 
-		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT)
+		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL)
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)
 		self.bOk=self.creator.okbutton(_("ＯＫ"),None)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
@@ -60,7 +60,6 @@ class Dialog(BaseDialog):
 	def Show(self):
 		result=self.wnd.ShowModal()
 		self.Destroy()
-		print(self.GetValue())
 		return result
 
 	def Destroy(self):
