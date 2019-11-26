@@ -62,23 +62,15 @@ class FalconTabBase(object):
 
 	def GetSelectedItems(self):
 		"""選択中のアイテムを、 FileList オブジェクトで帰す。"""
-		num=self.hListCtrl.GetSelectedItemCount()
-		first=self.hListCtrl.GetFirstSelected()
-		if first==-1: return None
-		ret=[]
-		ret.append(first)
-		now=first
+		next=self.hListCtrl.GetFirstSelected()
+		if next==-1: return None
+		lst=[]
 		while(True):
-			next=self.hListCtrl.GetNextSelected(now)
+			lst.append(self.listObject.GetElement(next))
+			next=self.hListCtrl.GetNextSelected(next)
 			if next==-1: break
-			ret.append(next)
-			now=next
 		#end while
 		#リストを作る
-		lst=[]
-		for i in ret:
-			lst.append(self.listObject.GetElement(i))
-		#end for
 		r=listObjects.FileList()
 		r.Initialize(lst)
 		return r
