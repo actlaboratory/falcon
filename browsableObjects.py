@@ -4,6 +4,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import os
+import constants
 import misc
 import win32file
 
@@ -34,6 +35,21 @@ class File(FalconBrowsableBase):
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
 		return (self.basename, self.size, misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+
+	def GetNewAttributes(self,checks):
+		"""属性変更の時に使う。チェック状態のリストを受け取って、新しい属性値を帰す。変更の必要がなければ、-1を帰す。"""
+		attrib=self.attributes
+		#繰り返しで回せるように、先にフラグ達をリストに入れておく
+		flags=[win32file.FILE_ATTRIBUTE_READONLY,win32file.FILE_ATTRIBUTE_HIDDEN,win32file.FILE_ATTRIBUTE_SYSTEM,win32file.FILE_ATTRIBUTE_ARCHIVE]
+		for i in range(len(flags)):
+			if checks[i]==constants.NOT_CHECKED:#チェックされてないのでフラグを折る
+				attrib-=flags[i]
+			elif checks[i]==constants.FULL_CHECKED:#チェック状態なのでフラグを立てる
+				attrib+=flags[i]
+			#end フラグを立てるか折るか
+		#end フラグの数だけ
+		return attrib if self.attributes!=attrib else -1
+	#end GetNewAttributes
 
 class Folder(File):
 	def GetListTuple(self):

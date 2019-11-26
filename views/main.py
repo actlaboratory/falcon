@@ -177,8 +177,9 @@ class Events(BaseEvents):
 			d.Initialize()
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
-			dialog("test","%d" % d.GetValue())
+			val=d.GetValue()
 			d.Destroy()
+			self.parent.activeTab.ChangeAttribute(val)
 			return
 		if selected==menuItemsStore.getRef("FILE_MKDIR"):
 			d=views.mkdir.Dialog()

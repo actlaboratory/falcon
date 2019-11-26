@@ -273,9 +273,20 @@ class MainListTab(FalconTabBase):
 		#end fail
 	#end onLabelEditEnd
 
-	def changeAttribute(self,attrib):
-		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
-		inst={"operation": "changeAttribute", "files": [f.fullpath], "to": [attrib]}
+	def ChangeAttribute(self,attrib_checks):
+		lst=self.GetSelectedItems()
+		inst={"operation": "changeAttribute"}
+		f=[]
+		t=[]
+		for elem in lst:
+			attrib=elem.GetNewAttributes(attrib_checks)
+			if attrib!=-1:#変更の必要があるので追加
+				f.append(elem.fullpath)
+				t.append(attrib)
+			#end 追加
+		#end 選択中のファイルの数だけ
+		inst['from']=f
+		inst['to_attrib']=t#to じゃないのは、日時変更に対応していたときのなごり
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
