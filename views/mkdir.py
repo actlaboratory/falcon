@@ -28,7 +28,7 @@ class Dialog(BaseDialog):
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
 		self.app=globalVars.app
-		super().Initialize(self.app.hMainView.hFrame,_("ディレクトリ作成"),self.app.config.getint(self.identifier,"sizeX"),self.app.config.getint(self.identifier,"sizeY"), self.app.config.getint(self.identifier,"positionX"), self.app.config.getint(self.identifier,"positionY"))
+		super().Initialize(self.app.hMainView.hFrame,_("ディレクトリ作成"))
 		self.InstallControls()
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True

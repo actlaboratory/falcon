@@ -12,18 +12,13 @@ class BaseDialog(object):
 	def __init__(self):
 		pass
 
-	def Initialize(self, parent,ttl, x, y,px,py):
-		"""タイトルとウィンドウサイズとポジションを指定して、ウィンドウを初期化する。"""
-		if (x==-1):
-			#x=parent.GetPosition().
-			x=100
-		if (y==-1):
-			#y=parent.GetPosition().
-			y=100
-		self.wnd=wx.Dialog(parent,-1, ttl, size=(x,y),pos=(px,py))
+	def Initialize(self, parent,ttl):
+		"""タイトルを指定して、ウィンドウを初期化し、親の中央に配置するように設定。"""
+
+		self.wnd=wx.Dialog(parent,-1, ttl,style=wx.DEFAULT_DIALOG_STYLE)
 		self.panel = wx.Panel(self.wnd,wx.ID_ANY)
 		self.sizer = wx.BoxSizer(wx.VERTICAL)
 		self.panel.SetSizer(self.sizer)
-
+		self.wnd.Centre()
 
 

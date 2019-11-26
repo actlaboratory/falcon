@@ -12,6 +12,7 @@ class DefaultSettings:
 		config = FalconConfigParser()
 		config["general"]={
 			"language": "ja-JP",
+			"fileVersion": "100",
 		}
 		config["fileList"]={
 			"sorting": 0,
@@ -29,10 +30,6 @@ class DefaultSettings:
 			"sizeX": "800",
 			"sizeY": "600",
 		}
-		config["wxTestView"]={
-			"sizeX": "800",
-			"sizeY": "600",
-		}
 		config["browse"]={
 			"startPath": "%%HOMEDRIVE%%"
 		}
@@ -44,12 +41,7 @@ class DefaultSettings:
 			"column_width_4" : "240"
 		}
 
-		config["changeAttributeDialog"]={
-			"sizex" : 640,
-			"sizey" : 360,
-			"positionx" : -1,
-			"positiony" : -1
-		}
+
 		config["sounds"]={
 			"startup" : "tip.ogg",
 			"boundary" : "tip.ogg"
