@@ -171,6 +171,7 @@ class ViewCreator():
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
 		hTextCtrl=wx.TextCtrl(self.parent, -1,size=(x,-1))
 		self.SetFace(hTextCtrl)
+		self.sizer.Add(hStaticText)
 		self.sizer.Add(hTextCtrl)
 		self.AddSpace(self.space)
 		return hTextCtrl,hStaticText
