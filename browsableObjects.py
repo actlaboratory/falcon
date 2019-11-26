@@ -43,9 +43,9 @@ class File(FalconBrowsableBase):
 		flags=[win32file.FILE_ATTRIBUTE_READONLY,win32file.FILE_ATTRIBUTE_HIDDEN,win32file.FILE_ATTRIBUTE_SYSTEM,win32file.FILE_ATTRIBUTE_ARCHIVE]
 		for i in range(len(flags)):
 			if checks[i]==constants.NOT_CHECKED:#チェックされてないのでフラグを折る
-				attrib-=flags[i]
+				if attrib&flags[i]: attrib-=flags[i]
 			elif checks[i]==constants.FULL_CHECKED:#チェック状態なのでフラグを立てる
-				attrib+=flags[i]
+				if not attrib&flags[i]: attrib+=flags[i]
 			#end フラグを立てるか折るか
 		#end フラグの数だけ
 		return attrib if self.attributes!=attrib else -1

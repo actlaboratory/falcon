@@ -288,9 +288,13 @@ class MainListTab(FalconTabBase):
 		inst['from']=f
 		inst['to_attrib']=t#to じゃないのは、日時変更に対応していたときのなごり
 		op=fileOperator.FileOperator(inst)
+		if len(t)==0:
+			dialog(_("情報"),_("変更が必要な俗世はありませんでした。"))
+			return
+		#end なにも変更しなくてよかった
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
-			dialog(_("エラー"),_("名前が変更できません。"))
+			dialog(_("エラー"),_("属性が変更できません。"))
 
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
