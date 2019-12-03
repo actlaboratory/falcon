@@ -9,16 +9,7 @@ python -m pip install wxpython
 python falcon.py  
 
 ## exeファイルのビルド  
-64-bit バージョンのビルド方法です。32ビットでビルドしたい人は適当に。  
-MinGWのCコンパイラをダウンロード ( https://sourceforge.net/projects/mingw-w64/ )  
-インストール先を C:\MinGW64 と入力してインストール  
-システム環境変数の path に C:\MinGW64\mingw64\bin を追加
-gcc --version でちゃんと入ったか確認  
-nuitka(exeにするツール)をインストール  
-python -m pip install nuitka  
-ビルド  
 python tools\build.py  
-5分ぐらい時間かかるので気長に待って  
 
 ## コーディング規則  
 docs フォルダの中に書いてあります。  
