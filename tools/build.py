@@ -17,6 +17,7 @@ if os.path.isdir("dist\\falcon"):
 print("Building Falcon. This will take several minutes. Please wait...")
 proc=subprocess.Popen("pyinstaller falcon.py".split(), shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 proc.communicate()
-shutil.copytree("locale/","dist\\falcon\\locale", ignore=shutil.ignore_patterns("*.po", "*.pot", "*.po~"))
+shutil.copytree("locale\\","dist\\falcon\\locale", ignore=shutil.ignore_patterns("*.po", "*.pot", "*.po~"))
+shutil.copytree("fx\\","dist\\falcon\\fx")
 os.rename("dist\\falcon\\bass","dist\\falcon\\bass.dll")
 print("Done!")
