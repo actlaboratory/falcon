@@ -13,8 +13,10 @@ if not os.path.exists("locale"):
 if os.path.isdir("dist\\falcon"):
 	print("Clearling previous build...")
 	shutil.rmtree("dist\\")
+
 print("Building Falcon. This will take several minutes. Please wait...")
-subprocess.call("pyinstaller falcon.py".split(), shell=True)
-shutil.copytree("locale/","falcon.dist/locale", ignore=shutil.ignore_patterns("*.po", "*.pot", "*.po~"))
+proc=subprocess.Popen("pyinstaller falcon.py".split(), shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+proc.communicate()
+shutil.copytree("locale/","dist\\falcon\\locale", ignore=shutil.ignore_patterns("*.po", "*.pot", "*.po~"))
 os.rename("dist\\falcon\\bass","dist\\falcon\\bass.dll")
 print("Done!")
