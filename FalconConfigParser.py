@@ -33,7 +33,6 @@ class FalconConfigParser(configparser.ConfigParser):
 		self.log.info("write configFile:"+self.fileName)
 		with open(self.fileName,"w") as f: return super().write(f)
 
-	# 存在しないキーで読み出しを試行した場合、自動的にそのキーが生成される
 	def __getitem__(self,key):
 		try:
 			return FalconConfigSection(super().__getitem__(key))
@@ -42,7 +41,6 @@ class FalconConfigParser(configparser.ConfigParser):
 			self.add_section(key)
 			return self.__getitem__(key)
 
-	#既に存在してもエラーにならないように変更
 	def getint(self,section,key,default=0):
 		try:
 			return super().getint(section,key)
