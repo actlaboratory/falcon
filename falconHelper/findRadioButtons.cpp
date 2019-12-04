@@ -1,3 +1,4 @@
+// cl /nologo /LD /EHsc /O2 findRadioButtons.cpp User32.lib
 #define UNICODE
 #include <windows.h>
 #include <string.h>
@@ -28,7 +29,7 @@ wnds.push_back(to_string(reinterpret_cast<int>(hwnd)));
 return 1;
 }
 
-__declspec(dllexport) char* findRadioButtons(HWND wnd){
+extern "C" __declspec(dllexport) char* findRadioButtons(HWND wnd){
 EnumChildWindows(wnd,EnumChildProc,0);
 string s;
 for(int i=0;i<wnds.size();++i){
@@ -42,7 +43,7 @@ memcpy(ret,s.c_str(),s.size());
 return ret;
 }
 
-__declspec(dllexport) void releaseBuffer(void* ptr){
+extern "C" __declspec(dllexport) void releasePtr(void* ptr){
 free(ptr);
 }
 
