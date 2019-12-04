@@ -181,7 +181,7 @@ class MainListTab(FalconTabBase):
 			dir=self.listObject.rootDirectory
 			if len(dir)<=3:#ドライブリスト
 				lst=listObjects.DriveList()
-				lst.Initialize(self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
+				lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
 				self.Update(lst)
 				return
 			#end ドライブ一覧表示

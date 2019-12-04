@@ -268,7 +268,7 @@ class FileList(FalconListBase):
 
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
-	def Initialize(lst,self,sorting=0,descending=0):
+	def Initialize(self,lst,sorting=0,descending=0):
 		"""ドライブ情報を取得し、リストを初期化する。入力は絶対パスでなければならない。"""
 		self.sortCursor=sorting
 		self.sortDescending=descending

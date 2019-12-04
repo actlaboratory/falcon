@@ -71,13 +71,13 @@ class View(BaseView):
 			lst.Initialize(os.path.expandvars(sys.argv[1]))
 		elif(self.app.config["browse"]["startPath"]==""):
 			lst=listObjects.DriveList()
-			lst.Initialize()
+			lst.Initialize(None)
 		elif(os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"]))):
 			lst=listObjects.FileList()
 			lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]))
 		else:
 			lst=listObjects.DriveList()
-			lst.Initialize()
+			lst.Initialize(None)
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
 		tab.Update(lst)
