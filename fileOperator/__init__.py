@@ -15,7 +15,7 @@ from simpleDialog import dialog
 
 import misc
 
-from . import rename, changeAttribute, failedElement, mkdir,trash,shortcut
+from . import rename, changeAttribute, failedElement, mkdir,trash,shortcut,symbolicLink
 
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
 
@@ -92,6 +92,9 @@ class FileOperator(object):
 		if op=="shortcut":#ショートカット
 			retry=shortcut.Execute(self)
 		#end shortcut
+		if op=="symbolicLink":#ショートカット
+			retry=symbolicLink.Execute(self)
+		#end shortcut
 		self.log.debug("success %s, retry %s, failure %s." % (self.output["succeeded"], retry, len(self.output["failed"])))
 		if not self.elevated and retry>0: self._elevate()#昇格してリトライ
 		if self.elevated: self._postElevation()#昇格した後の後処理
@@ -101,11 +104,14 @@ class FileOperator(object):
 
 	def _elevate(self):
 		"""権限昇格し、アクセス拒否になった項目を再実行する。"""
-		dialog("elevating","elevating")
+		if globalVars.app.GetFrozenStatus() is False:#ビルド済みバイナリじゃないと昇格できないようにしてる
+			dialog(_("エラー"),_("管理者権限の操作を行うためには、Falconをビルドして実行する必要があります。"))
+			return
+		#end ビルドしてないとダメ
 		o=FileOperator(self.output["retry"])
 		fn=o.pickle()
 		try:
-			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas","dist\\fileop.exe",fn)
+			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas","fileop.exe",fn)
 		except pywintypes.error as e:
 			self.log.error("Cannot elevate (%s)" % str(e))
 			self.output["failed"].append(o.FailAll())

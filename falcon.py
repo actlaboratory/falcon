@@ -4,6 +4,8 @@
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #See window.py for application entry point
 
+import win32timezone#ダミー
+
 def _(string): pass#dummy
 
 from app import *
