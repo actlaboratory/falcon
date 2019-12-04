@@ -15,7 +15,7 @@ from simpleDialog import dialog
 
 import misc
 
-from . import rename, changeAttribute, failedElement, mkdir,trash,shortcut,symbolicLink
+from . import rename, changeAttribute, failedElement, mkdir,trash,shortcut,symbolicLink,hardLink
 
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
 
@@ -89,12 +89,15 @@ class FileOperator(object):
 		if op=="trash":#ゴミ箱
 			retry=trash.Execute(self)
 		#end trash
-		if op=="shortcut":#ショートカット
+		if op=="shortcut":
 			retry=shortcut.Execute(self)
 		#end shortcut
-		if op=="symbolicLink":#ショートカット
+		if op=="symbolicLink":
 			retry=symbolicLink.Execute(self)
-		#end shortcut
+		#end symbolicLink
+		if op=="hardLink":
+			retry=hardLink.Execute(self)
+		#end hardLink
 		self.log.debug("success %s, retry %s, failure %s." % (self.output["succeeded"], retry, len(self.output["failed"])))
 		if not self.elevated and retry>0: self._elevate()#昇格してリトライ
 		if self.elevated: self._postElevation()#昇格した後の後処理
