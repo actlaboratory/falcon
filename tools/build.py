@@ -24,7 +24,7 @@ shutil.copytree("locale\\","dist\\falcon\\locale", ignore=shutil.ignore_patterns
 shutil.copytree("fx\\","dist\\falcon\\fx")
 os.rename("dist\\falcon\\bass","dist\\falcon\\bass.dll")
 print("Building file operator...")
-runcmd("pyinstaller --windowed fileop.py")
+runcmd("pyinstaller --windowed --log-level=ERROR fileop.py")
 distutils.dir_util.copy_tree("dist\\fileop","dist\\falcon")
 shutil.rmtree("dist\\fileop")
 print("Done!")
