@@ -167,8 +167,10 @@ class Events(BaseEvents):
 
 		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー\tCtrl+C"))
 		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り\tCtrl+X"))
-		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_NAMECOPY"),_("フルパスをコピー\tCtrl+Shift+C"))
 
+		if selected==menuItemsStore.getRef("EDIT_NAMECOPY"):
+			self.parent.activeTab.NameCopy()
+			return
 		if selected==menuItemsStore.getRef("EDIT_FULLPATHCOPY"):
 			self.parent.activeTab.FullpathCopy()
 			return

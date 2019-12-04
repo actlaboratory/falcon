@@ -207,6 +207,14 @@ class FileList(FalconListBase):
 			lst.append(elem.fullpath)
 		return lst
 
+	def GetItemNames(self):
+		"""リストの中身をファイル名のリストで取得する。フォルダが上にくる。"""
+		lst=[]
+		for elem in self.folders:
+			lst.append(elem.basename)
+		for elem in self.files:
+			lst.append(elem.basename)
+		return lst
 
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""

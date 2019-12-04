@@ -380,3 +380,10 @@ class MainListTab(FalconTabBase):
 		t="\n".join(t)
 		with clipboardHelper.Clipboard() as c:
 			c.set_unicode_text(t)
+
+	def NameCopy(self):
+		if not self.IsItemSelected(): return
+		t=self.GetSelectedItems().GetItemNames()
+		t="\n".join(t)
+		with clipboardHelper.Clipboard() as c:
+			c.set_unicode_text(t)
