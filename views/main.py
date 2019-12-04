@@ -72,13 +72,13 @@ class View(BaseView):
 			lst.Initialize(os.path.expandvars(sys.argv[1]))
 		elif(self.app.config["browse"]["startPath"]==""):
 			lst=listObjects.DriveList()
-			lst.Initialize()
+			lst.Initialize(None)
 		elif(os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"]))):
 			lst=listObjects.FileList()
 			lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]))
 		else:
 			lst=listObjects.DriveList()
-			lst.Initialize()
+			lst.Initialize(None)
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
 		tab.Update(lst)
@@ -119,6 +119,10 @@ class Menu():
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKSHORTCUT"),_("ショートカット作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
 		#ファイルメニューの中身
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_NAMECOPY"),_("ファイル名をコピー"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_FULLPATHCOPY"),_("フルパスをコピー"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTNEXT"),_("次の並び順\tShift+F1"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTSELECT"),_("並び順を選択\tCtrl+S"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTCYCLEAD"),_("昇順/降順切り替え\tShift+F11"))
@@ -161,6 +165,16 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_STREAM"):
 			self.GoForward(True)
+			return
+
+		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー"))
+		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り\tCtrl+X"))
+
+		if selected==menuItemsStore.getRef("EDIT_NAMECOPY"):
+			self.parent.activeTab.NameCopy()
+			return
+		if selected==menuItemsStore.getRef("EDIT_FULLPATHCOPY"):
+			self.parent.activeTab.FullpathCopy()
 			return
 		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
 			self.SortNext()

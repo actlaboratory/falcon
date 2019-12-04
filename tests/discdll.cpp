@@ -265,7 +265,8 @@ extern "C" __declspec(dllexport) char* getDiscDriveTypes()
     lpDiscMaster->Release();
 
     std::string ret_s=s.str();
-    char* ret=(char*)malloc(ret_s.size()+10);
+    char* ret=(char*)malloc(ret_s.size()+1);
+    memset(ret,0,ret_s.size()+1);
     memcpy(ret,ret_s.c_str(),ret_s.size());
     return ret;
 }

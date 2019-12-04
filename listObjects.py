@@ -198,6 +198,24 @@ class FileList(FalconListBase):
 			lst.append(elem.GetListTuple())
 		return lst
 
+	def GetItemPaths(self):
+		"""リストの中身をパスのリストで取得する。フォルダが上にくる。"""
+		lst=[]
+		for elem in self.folders:
+			lst.append(elem.fullpath)
+		for elem in self.files:
+			lst.append(elem.fullpath)
+		return lst
+
+	def GetItemNames(self):
+		"""リストの中身をファイル名のリストで取得する。フォルダが上にくる。"""
+		lst=[]
+		for elem in self.folders:
+			lst.append(elem.basename)
+		for elem in self.files:
+			lst.append(elem.basename)
+		return lst
+
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
@@ -250,17 +268,22 @@ class FileList(FalconListBase):
 
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
-	def Initialize(self,sorting=0,descending=0):
+	def Initialize(self,lst,sorting=0,descending=0):
 		"""ドライブ情報を取得し、リストを初期化する。入力は絶対パスでなければならない。"""
 		self.sortCursor=sorting
 		self.sortDescending=descending
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_DRIVELETTER,SORT_TYPE_FREESPACE,SORT_TYPE_TOTALSPACE, SORT_TYPE_TYPESTRING]
-		globalVars.app.say(_("ドライブ洗濯"))
 		self.log=logging.getLogger("falcon.driveList")
 		self.log.debug("Getting drives list...")
 		t=misc.Timer()
 		self.drives=[]
 		self.unusableDrives=[]
+		if isinstance(lst,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
+			self.drives=lst
+			return
+		#end copy
+
+		globalVars.app.say(_("ドライブ洗濯"))
 		drv=win32api.GetLogicalDrives()
 		check=1
 		for i in range(26):
@@ -308,6 +331,16 @@ class DriveList(FalconListBase):
 			lst.append(elem.GetListTuple())
 		return lst
 
+	def GetItemPaths(self):
+		"""リスト内のドライブのパス一覧を取得する。"""
+		lst=[]
+		for elem in self.drives:
+			lst.append(elem.fullpath)
+			print(elem.fullpath)
+		for elem in self.unusableDrives:
+			lst.append(elem.fullpath)
+		return lst
+
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.drives[index] if index<len(self.drives) else self.unusableDrives[index-len(self.drives)]
@@ -324,20 +357,26 @@ class StreamList(FalconListBase):
 	"""NTFS 副ストリームを扱うリスト。"""
 	def Initialize(self,file):
 		"""ファイル名から副ストリーム情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。取得できたら、Trueが帰る。"""
+		self.log=logging.getLogger("falcon.streamList")
+		t=misc.Timer()
+		self.streams=[]
+
+		if isinstance(file,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
+			self.streams=file
+			return
+		#end copy
+
 		file_spl=file.split("\\")
 		self.rootDirectory=file
 		level=len(file_spl)
 		globalVars.app.say("%s%d %s" % (file[0],level,file_spl[level-1]))
-		self.log=logging.getLogger("falcon.streamList")
 		self.log.debug("Getting stream list for %s..." % file)
-		t=misc.Timer()
 		try:
 			lst=win32file.FindStreams(file)
 		except win32file.error as er:
 			dialog(_("エラー"), _("NTFS 副ストリーム情報を取得できませんでした(%(error)s)") % {"error": str(er)})
 			return False
 		#end 情報取得失敗
-		self.streams=[]
 		for elem in lst:
 			fullpath=file+elem[1]
 			s=browsableObjects.Stream()
@@ -358,6 +397,27 @@ class StreamList(FalconListBase):
 			lst.append(elem.GetListTuple())
 		return lst
 
+	def GetItemPaths(self):
+		"""リストの中身をフルパスのリストで取得する。"""
+		lst=[]
+		for elem in self.streams:
+			lst.append(elem.fullpath)
+		return lst
+
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.streams[index]
+
+	def GetItemPaths(self):
+		"""リストの中身をパスのリストで取得する。フォルダが上にくる。"""
+		lst=[]
+		for elem in self.streams:
+			lst.append(elem.fullpath)
+		return lst
+
+	def GetItemNames(self):
+		"""リストの中身をファイル名のリストで取得する。フォルダが上にくる。"""
+		lst=[]
+		for elem in self.streams:
+			lst.append(elem.basename)
+		return lst
