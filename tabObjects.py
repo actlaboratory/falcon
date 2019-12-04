@@ -13,6 +13,7 @@ import gettext
 import logging
 import wx
 import win32api
+import clipboardHelper
 import errorCodes
 import listObjects
 import browsableObjects
@@ -65,7 +66,7 @@ class FalconTabBase(object):
 		return self.hListCtrl.GetSelectedItemCount()>0
 
 	def GetSelectedItems(self):
-		"""選択中のアイテムを、 FileList オブジェクトで帰す。"""
+		"""選択中のアイテムを、 List オブジェクトで帰す。"""
 		next=self.hListCtrl.GetFirstSelected()
 		if next==-1: return None
 		lst=[]
@@ -75,7 +76,7 @@ class FalconTabBase(object):
 			if next==-1: break
 		#end while
 		#リストを作る
-		r=listObjects.FileList()
+		r=type(self.listObject)()
 		r.Initialize(lst)
 		return r
 		#end GetSelectedItems
@@ -180,7 +181,7 @@ class MainListTab(FalconTabBase):
 			dir=self.listObject.rootDirectory
 			if len(dir)<=3:#ドライブリスト
 				lst=listObjects.DriveList()
-				lst.Initialize(self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
+				lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
 				self.Update(lst)
 				return
 			#end ドライブ一覧表示
@@ -372,3 +373,17 @@ class MainListTab(FalconTabBase):
 	def ShowProperties(self):
 		index=self.GetFocusedItem()
 		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
+
+	def FullpathCopy(self):
+		if not self.IsItemSelected(): return
+		t=self.GetSelectedItems().GetItemPaths()
+		t="\n".join(t)
+		with clipboardHelper.Clipboard() as c:
+			c.set_unicode_text(t)
+
+	def NameCopy(self):
+		if not self.IsItemSelected(): return
+		t=self.GetSelectedItems().GetItemNames()
+		t="\n".join(t)
+		with clipboardHelper.Clipboard() as c:
+			c.set_unicode_text(t)
