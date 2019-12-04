@@ -3,7 +3,7 @@
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
 import accessible_output2.outputs.auto
-
+import sys
 import FalconConfigParser
 import gettext
 import logging
@@ -22,6 +22,7 @@ class falconAppMain(wx.App):
 	def initialize(self):
 		"""アプリを初期化する。"""
 		t=misc.Timer()
+		self.frozen=hasattr(sys,"frozen")
 		self.InitLogger()
 		self.LoadSettings()
 		self.InitTranslation()
@@ -70,7 +71,8 @@ class falconAppMain(wx.App):
 		self.log=getLogger("falcon")
 		self.log.setLevel(logging.DEBUG)
 		self.log.addHandler(self.hLogHandler)
-		self.log.info("Starting Falcon.")
+		r="executable" if self.frozen else "interpreter"
+		self.log.info("Starting Falcon as %s!" % r)
 
 	def LoadSettings(self):
 		"""設定ファイルを読み込む。なければデフォルト設定を適用し、設定ファイルを書く。"""
@@ -92,6 +94,10 @@ class falconAppMain(wx.App):
 	def InitCaches(self):
 		"""起動中に使用するキャッシュデータを初期化する。"""
 		self.filetypes_cach={}#これほんとに使うかどうか検討中
+
+	def GetFrozenStatus(self):
+		"""コンパイル済みのexeで実行されている場合はTrue、インタプリタで実行されている場合はFalseを帰す。"""
+		return self.frozen
 
 	def say(self,s):
 		"""スクリーンリーダーでしゃべらせる。"""
