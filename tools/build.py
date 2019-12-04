@@ -20,7 +20,6 @@ if os.path.isdir("dist\\falcon"):
 
 print("Building Falcon...")
 runcmd("pyinstaller --windowed --log-level=ERROR falcon.py")
-sys.exit()
 shutil.copytree("locale\\","dist\\falcon\\locale", ignore=shutil.ignore_patterns("*.po", "*.pot", "*.po~"))
 shutil.copytree("fx\\","dist\\falcon\\fx")
 os.rename("dist\\falcon\\bass","dist\\falcon\\bass.dll")
