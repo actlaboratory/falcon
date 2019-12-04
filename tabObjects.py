@@ -226,15 +226,13 @@ class MainListTab(FalconTabBase):
 
 	def col_click(self,event):
 		no=event.GetColumn()
-		if self.listObject.GetSortCursor==no:
-			self.listObject.SetSortCursor(no)
+		self.listObject.SetSortCursor(no)
+		if self.listObject.GetSortCursor()==no:
 			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-			self._updateEnv()
-			self.listObject.ApplySort(0)
-		else:
-			self.listObject.SetSortCursor(no)
-			self._updateEnv()
-			self.listObject.ApplySort()
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
 
 	def _updateEnv(self):
 		"""ソートの環境変数を更新する。"""
