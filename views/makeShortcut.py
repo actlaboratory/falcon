@@ -40,6 +40,7 @@ class Dialog(BaseDialog):
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
 		#self.checks=self.creator.checkbox3([_("読み取り専用"),_("隠し"),_("システム"),_("アーカイブ")],None,defaultAttributes)
 		self.radios=self.creator.radiobox(_("作成方式"),[_("ショートカット(lnkファイル)"),_("ハードリンク"),_("シンボリックリンク")],None)
+		print(self.panel.GetHandle())
 
 		#詳細入力
 		#self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("タイムスタンプの変更"))
