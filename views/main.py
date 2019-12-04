@@ -170,12 +170,8 @@ class Events(BaseEvents):
 		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_NAMECOPY"),_("フルパスをコピー\tCtrl+Shift+C"))
 
 		if selected==menuItemsStore.getRef("EDIT_FULLPATHCOPY"):
-			if self.parent.activeTab.IsItemSelected():
-				t=self.parent.activeTab.GetSelectedItems().GetItemPaths()
-				print(self.parent.activeTab.GetSelectedItems())
-				print(t)
+			self.parent.activeTab.FullpathCopy()
 			return
-
 		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
 			self.SortNext()
 			return

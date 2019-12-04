@@ -13,6 +13,7 @@ import gettext
 import logging
 import wx
 import win32api
+import clipboardHelper
 import errorCodes
 import listObjects
 import browsableObjects
@@ -372,3 +373,10 @@ class MainListTab(FalconTabBase):
 	def ShowProperties(self):
 		index=self.GetFocusedItem()
 		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
+
+	def FullpathCopy(self):
+		if not self.IsItemSelected(): return
+		t=self.GetSelectedItems().GetItemPaths()
+		t="\n".join(t)
+		with clipboardHelper.Clipboard() as c:
+			c.set_unicode_text(t)
