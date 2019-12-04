@@ -19,7 +19,6 @@ import keymap
 import misc
 from simpleDialog import *
 import views.ViewCreator
-dll=ctypes.cdll.LoadLibrary("findRadioButtons.dll")
 
 class Dialog(BaseDialog):
 	def Initialize(self):
@@ -41,14 +40,7 @@ class Dialog(BaseDialog):
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
 		#self.checks=self.creator.checkbox3([_("読み取り専用"),_("隠し"),_("システム"),_("アーカイブ")],None,defaultAttributes)
 		self.radios=self.creator.radiobox(_("作成方式"),[_("ショートカット(lnkファイル)"),_("ハードリンク"),_("シンボリックリンク")],None)
-		ptr=dll.findRadioButtons(self.panel.GetHandle())
-		s=ctypes.c_char_p(ptr).value.decode("UTF-8").split(",")
-		lst=[]
-		for elem in s:
-			lst.append(int(elem))
-		#end list作る
-		print(lst)
-		dll.releasePtr(ptr)
+
 		#詳細入力
 		#self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("タイムスタンプの変更"))
 

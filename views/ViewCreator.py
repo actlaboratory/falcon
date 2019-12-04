@@ -13,6 +13,7 @@ import _winxptheme
 import pywintypes
 
 dll=ctypes.cdll.LoadLibrary("whelper.dll")
+dll2=ctypes.cdll.LoadLibrary("findRadioButtons.dll")
 
 NORMAL=0
 BUTTON_COLOUR=1
@@ -157,13 +158,18 @@ class ViewCreator():
 		hRadioBox=wx.RadioBox(self.parent,label=text, name=text, choices=items)
 		hRadioBox.Bind(wx.EVT_RADIOBOX,event)
 		self.SetFace(hRadioBox)
+
+		ptr=dll2.findRadioButtons(self.parent.GetHandle())
+		s=ctypes.c_char_p(ptr).value.decode("UTF-8").split(",")
+		for elem in s:
+			_winxptheme.SetWindowTheme(int(elem),"","")
+			dll.ScRadioButton(int(elem))
+		#end list作る
+		dll2.releasePtr(ptr)
+
 		self.sizer.Add(hRadioBox)
 		self.AddSpace(self.space)
 		#dll.ScRadioButton(self.parent.GetHandle())
-
-		for item in hRadioBox.GetChildren():
-			self.SetFace(item)
-		return hRadioBox
 
 	def ListCtrl(self,proportion,sizerFlag,**settings):
 		hListCtrl=wx.ListCtrl(self.parent,wx.ID_ANY,**settings)
