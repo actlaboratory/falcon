@@ -104,11 +104,14 @@ class FileOperator(object):
 
 	def _elevate(self):
 		"""権限昇格し、アクセス拒否になった項目を再実行する。"""
-		dialog("elevating","elevating")
+		if globalVars.app.GetFrozenStatus() is False:#ビルド済みバイナリじゃないと昇格できないようにしてる
+			dialog(_("エラー"),_("管理者権限の操作を行うためには、Falconをビルドして実行する必要があります。"))
+			return
+		#end ビルドしてないとダメ
 		o=FileOperator(self.output["retry"])
 		fn=o.pickle()
 		try:
-			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas","dist\\fileop.exe",fn)
+			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas","fileop.exe",fn)
 		except pywintypes.error as e:
 			self.log.error("Cannot elevate (%s)" % str(e))
 			self.output["failed"].append(o.FailAll())
