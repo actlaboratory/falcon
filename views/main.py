@@ -117,10 +117,10 @@ class Menu():
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKSHORTCUT"),_("ショートカット作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
 		#ファイルメニューの中身
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー\tCtrl+C"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り\tCtrl+X"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_NAMECOPY"),_("ファイル名をコピー"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_FULLPATHCOPY"),_("フルパスをコピー\tCtrl+Shift+C"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_FULLPATHCOPY"),_("フルパスをコピー"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTNEXT"),_("次の並び順\tShift+F1"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTSELECT"),_("並び順を選択\tCtrl+S"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTCYCLEAD"),_("昇順/降順切り替え\tShift+F11"))
@@ -165,7 +165,7 @@ class Events(BaseEvents):
 			self.GoForward(True)
 			return
 
-		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー\tCtrl+C"))
+		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー"))
 		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り\tCtrl+X"))
 
 		if selected==menuItemsStore.getRef("EDIT_NAMECOPY"):
