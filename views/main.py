@@ -122,6 +122,7 @@ class Menu():
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_NAMECOPY"),_("ファイル名をコピー"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_FULLPATHCOPY"),_("フルパスをコピー"))
+		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SELECTALL"),_("全て選択"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTNEXT"),_("次の並び順\tShift+F1"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTSELECT"),_("並び順を選択\tCtrl+S"))
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTCYCLEAD"),_("昇順/降順切り替え\tShift+F11"))
@@ -165,9 +166,6 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_STREAM"):
 			self.GoForward(True)
 			return
-
-		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り\tCtrl+X"))
-
 		if selected==menuItemsStore.getRef("EDIT_COPY"):
 			self.parent.activeTab.Copy()
 			return
@@ -179,6 +177,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("EDIT_FULLPATHCOPY"):
 			self.parent.activeTab.FullpathCopy()
+			return
+		if selected==menuItemsStore.getRef("EDIT_SELECTALL"):
+			self.parent.activeTab.SelectAll()
 			return
 		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
 			self.SortNext()
