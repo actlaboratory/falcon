@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <string.h>
 #include "defs.h"
+#include "ctlcolor.h"
 
 falcon_helper_funcdef void freePtr(char *p){
 free(p);
@@ -16,13 +17,11 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD  fdwReason, LPVOID lpReserved) {
 switch(fdwReason){
 case DLL_PROCESS_ATTACH:
     CoInitialize(NULL);
-bkBrush=CreateSolidBrush(RGB(0,0,0));
-whBrush=CreateSolidBrush(RGB(255,255,255));
+    initCtlcolor();
 break;
 case DLL_PROCESS_DETACH:
 CoUninitialize();
-DeleteObject((HGDIOBJ)bkBrush);
-DeleteObject((HGDIOBJ)whBrush);
+freeCtlcolor();
 break;
 }
 	return TRUE;

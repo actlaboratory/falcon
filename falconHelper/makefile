@@ -1,7 +1,12 @@
 OBJS= common.obj ctlcolor.obj disctype.obj findradiobuttons.obj
-LIBS= user32.lib Ole32.lib OleAut32.lib
+LIBS= user32.lib Ole32.lib OleAut32.lib gdi32.lib
+.SILENT:
 falconHelper.dll: $(OBJS)
-	cl /nologo /LD /EHsc /O2 /Fe falconHelper.dll $(OBJS) $(LIBS)
+	link /nologo /DLL $(OBJS) $(LIBS) /OUT:falconHelper.dll
 
-.cpp.o:
-	cl /nologo /O2 $<
+%.obj: %.cpp
+	cl /nologo /EHsc /c /O2 $<
+
+.PHONY: clean
+clean:
+	rm -rf *.obj

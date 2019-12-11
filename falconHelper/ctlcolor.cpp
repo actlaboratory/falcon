@@ -48,3 +48,13 @@ DefCheckboxProc = (WNDPROC)GetWindowLongPtr(wnd , GWLP_WNDPROC);
 SetWindowLongPtr(wnd , GWLP_WNDPROC , (LONG)CheckboxProc);
 return 0;
 }
+
+void initCtlcolor(){
+bkBrush=CreateSolidBrush(RGB(0,0,0));
+whBrush=CreateSolidBrush(RGB(255,255,255));
+}
+
+void freeCtlcolor(){
+DeleteObject((HGDIOBJ)bkBrush);
+DeleteObject((HGDIOBJ)whBrush);
+}
