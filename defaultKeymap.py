@@ -12,6 +12,8 @@ defaultKeymap["mainView"]={
 	"FILE_TRASH": "delete",
 	"FILE_MKSHORTCUT": "ctrl+f2",
 	"FILE_SHOWPROPERTIES": "ctrl+shift+return",
+	"EDIT_COPY": "ctrl+c",
+	"EDIT_CUT": "ctrl+x",
 	"EDIT_FULLPATHCOPY": "ctrl+shift+c",
 	"EDIT_SORTNEXT": "shift+F1",
 	"EDIT_SORTSELECT": "ctrl+S",
