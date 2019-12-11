@@ -366,7 +366,11 @@ class MainListTab(FalconTabBase):
 		#ファイルシステムを確認し、対応してない種類のものは作れないようにバリデーションする
 		#作業フォルダの指定に対応する(ファイルオペレータ側の修正も必用)
 
-		inst={"operation":option["type"], "target": [(dest,target,prm)]}
+		if option["type"]=="shortcut":
+			inst={"operation":option["type"], "target": [(dest,target,prm)]}
+		else:
+			inst={"operation":option["type"], "from": [target], "to": [dest]}
+		#end ショートカットかそれ以外
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
