@@ -12,8 +12,7 @@ from . import fontManager
 import _winxptheme
 import pywintypes
 
-dll=ctypes.cdll.LoadLibrary("whelper.dll")
-dll2=ctypes.cdll.LoadLibrary("findRadioButtons.dll")
+falconHelper=ctypes.cdll.LoadLibrary("falconHelper.dll")
 
 NORMAL=0
 BUTTON_COLOUR=1
@@ -95,7 +94,7 @@ class ViewCreator():
 			self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 			hSizer.Add(hCheckBox)
 			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
-			dll.ScCheckbox(hPanel.GetHandle())
+			falconHelper.ScCheckbox(hPanel.GetHandle())
 			return hCheckBox
 		elif (isinstance(text,list)):	#複数同時作成
 			hCheckBoxes=[]
@@ -107,7 +106,7 @@ class ViewCreator():
 				hSizer.Add(hCheckBox)
 				hCheckBoxes.append(hCheckBox)
 			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
-			dll.ScCheckbox(hPanel.GetHandle())
+			falconHelper.ScCheckbox(hPanel.GetHandle())
 			return hCheckBoxes
 		else:
 			raise ValueError("ViewCreatorはCheckboxの作成に際し正しくない型の値を受け取りました。")
@@ -129,7 +128,7 @@ class ViewCreator():
 			hSizer.Add(hCheckBox)
 			self.AddSpace(self.space)
 			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
-			dll.ScCheckbox(hPanel.GetHandle())
+			falconHelper.ScCheckbox(hPanel.GetHandle())
 			return hCheckBox
 		elif (isinstance(text,list)):	#複数同時作成
 			hCheckBoxes=[]
@@ -147,7 +146,7 @@ class ViewCreator():
 				hSizer.Add(hCheckBox)
 				hCheckBoxes.append(hCheckBox)
 			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
-			dll.ScCheckbox(hPanel.GetHandle())
+			falconHelper.ScCheckbox(hPanel.GetHandle())
 			self.AddSpace()
 			return hCheckBoxes
 		else:
@@ -163,11 +162,11 @@ class ViewCreator():
 		self.SetFace(hRadioBox)
 
 		#ラジオボタンのウィンドウハンドルを使ってテーマを無効に変更する
-		ptr=dll2.findRadioButtons(self.parent.GetHandle())
+		ptr=falconHelper.findRadioButtons(self.parent.GetHandle())
 		s=ctypes.c_char_p(ptr).value.decode("UTF-8").split(",")
 		for elem in s:
 			_winxptheme.SetWindowTheme(int(elem),"","")
-		dll2.releasePtr(ptr)
+		falconHelper.releasePtr(ptr)
 
 		self.sizer.Add(hRadioBox)
 		self.AddSpace(self.space)

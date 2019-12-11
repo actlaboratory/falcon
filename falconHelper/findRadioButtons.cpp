@@ -1,4 +1,3 @@
-// cl /nologo /LD /EHsc /O2 findRadioButtons.cpp User32.lib
 #define UNICODE
 #include <windows.h>
 #include <string.h>

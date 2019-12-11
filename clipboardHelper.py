@@ -5,7 +5,7 @@ from array import array
 import win32clipboard
 import win32api
 
-helper=cdll.LoadLibrary("whelper.dll")
+falconHelper=cdll.LoadLibrary("falconHelper.dll")
 
 
 class Clipboard(object):

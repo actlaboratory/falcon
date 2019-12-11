@@ -1,4 +1,3 @@
-// cl /nologo /LD /EHsc /O2 discdll.cpp Ole32.lib OleAut32.lib
 #define UNICODE
 #include <algorithm>
 #include <string>
