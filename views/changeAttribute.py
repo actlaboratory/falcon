@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon change file attribute view
-#Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 import gettext
 import logging
