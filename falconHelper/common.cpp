@@ -4,7 +4,7 @@
 #include "defs.h"
 #include "ctlcolor.h"
 
-falcon_helper_funcdef void freePtr(char *p){
+falcon_helper_funcdef void releasePtr(char *p){
 free(p);
 }
 

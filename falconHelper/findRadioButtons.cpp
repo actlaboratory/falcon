@@ -39,7 +39,7 @@ s+=",";
 }
 }
 char* ret=(char*)malloc(s.size()+1);
-memset(ret,0,s.size()-1);
+memset(ret,0,s.size()+1);
 memcpy(ret,s.c_str(),s.size());
 return ret;
 }
