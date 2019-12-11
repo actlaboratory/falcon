@@ -37,9 +37,6 @@ class ClipboardFile(object):
 		pass
 
 	def SendToClipboard(self):
-		f=open("bin","wb")
-		f.write(self.byte)
-		f.close()
 		with clipboardHelper.Clipboard() as c:
 			c.empty()
 			c.set_data(clipboardHelper.ClipboardFormats.drop_handle,bytes(self.byte))
@@ -52,4 +49,3 @@ class ClipboardFile(object):
 		with clipboardHelper.Clipboard() as c:
 			s=c.get_dropped_files()
 		#end with
-		print(s)

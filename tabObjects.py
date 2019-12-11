@@ -13,6 +13,7 @@ import gettext
 import logging
 import wx
 import win32api
+import clipboard
 import clipboardHelper
 import errorCodes
 import listObjects
@@ -384,6 +385,19 @@ class MainListTab(FalconTabBase):
 	def ShowProperties(self):
 		index=self.GetFocusedItem()
 		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
+
+	def Copy(self):
+		if not self.IsItemSelected(): return
+		c=clipboard.ClipboardFile()
+		c.SetFileList(self.GetSelectedItems().GetItemPaths())
+		c.SendToClipboard()
+
+	def Cut(self):
+		if not self.IsItemSelected(): return
+		c=clipboard.ClipboardFile()
+		c.SetOperation(clipboard.MOVE)
+		c.SetFileList(self.GetSelectedItems().GetItemPaths())
+		c.SendToClipboard()
 
 	def FullpathCopy(self):
 		if not self.IsItemSelected(): return

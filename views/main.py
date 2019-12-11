@@ -166,9 +166,14 @@ class Events(BaseEvents):
 			self.GoForward(True)
 			return
 
-		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー"))
 		#self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り\tCtrl+X"))
 
+		if selected==menuItemsStore.getRef("EDIT_COPY"):
+			self.parent.activeTab.Copy()
+			return
+		if selected==menuItemsStore.getRef("EDIT_CUT"):
+			self.parent.activeTab.Cut()
+			return
 		if selected==menuItemsStore.getRef("EDIT_NAMECOPY"):
 			self.parent.activeTab.NameCopy()
 			return
