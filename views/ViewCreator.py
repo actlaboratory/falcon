@@ -13,6 +13,7 @@ import _winxptheme
 import pywintypes
 
 dll=ctypes.cdll.LoadLibrary("whelper.dll")
+dll2=ctypes.cdll.LoadLibrary("findRadioButtons.dll")
 
 NORMAL=0
 BUTTON_COLOUR=1
@@ -24,7 +25,7 @@ class ViewCreator():
 	FlexGridSizer = -2
 
 	# mode=1で白黒反転。その他は白。
-	def __init__(self,mode,parent,parentSizer=None,orient=wx.HORIZONTAL,space=0,label=""):
+	def __init__(self,mode,parent,parentSizer=None,orient=wx.HORIZONTAL,space=0,label="",style=0):
 		self.mode=mode
 		self.parent=parent
 		self.font=fontManager.FontManager()
@@ -37,7 +38,7 @@ class ViewCreator():
 			pass
 			#self.sizer=wx.GridSizer()
 		else:
-			self.sizer=self.BoxSizer(parentSizer,orient,label,space)
+			self.sizer=self.BoxSizer(parentSizer,orient,label,space,style)
 		self.space=space
 		self.AddSpace(self.space)
 
@@ -48,7 +49,7 @@ class ViewCreator():
 			self.sizer.AddSpacer(space)
 
 	#parentで指定したsizerの下に、新たなsizerを設置
-	def BoxSizer(self,parent,orient=wx.VERTICAL,label="",space=0):
+	def BoxSizer(self,parent,orient=wx.VERTICAL,label="",space=0,style=0):
 		if label=="":
 			sizer=wx.BoxSizer(orient)
 		else:
@@ -59,7 +60,7 @@ class ViewCreator():
 		elif (parent==None):
 			self.parent.SetSizer(sizer)
 		else:
-			parent.Add(sizer,0,wx.ALL,space)
+			parent.Add(sizer,0,wx.ALL | style,space)
 		return sizer
 
 
@@ -152,10 +153,22 @@ class ViewCreator():
 		else:
 			raise ValueError("ViewCreatorはCheckboxの作成に際し正しくない型の値を受け取りました。")
 
-	def radiobox(self,text,items,event):
-		hRadioBox=wx.RadioBox(self.parent,label=text, name=text, choices=items)
+	def radiobox(self,text,items,event,dimension=0,orient=wx.VERTICAL):
+		if orient==wx.VERTICAL:
+			style=wx.RA_SPECIFY_COLS
+		else:
+			style=wx.RA_SPECIFY_ROWS
+		hRadioBox=wx.RadioBox(self.parent,label=text, name=text, choices=items,majorDimension=dimension,style=style)
 		hRadioBox.Bind(wx.EVT_RADIOBOX,event)
 		self.SetFace(hRadioBox)
+
+		#ラジオボタンのウィンドウハンドルを使ってテーマを無効に変更する
+		ptr=dll2.findRadioButtons(self.parent.GetHandle())
+		s=ctypes.c_char_p(ptr).value.decode("UTF-8").split(",")
+		for elem in s:
+			_winxptheme.SetWindowTheme(int(elem),"","")
+		dll2.releasePtr(ptr)
+
 		self.sizer.Add(hRadioBox)
 		self.AddSpace(self.space)
 		return hRadioBox
@@ -167,12 +180,15 @@ class ViewCreator():
 		self.AddSpace(self.space)
 		return hListCtrl
 
-	def inputbox(self,text,x=0):
+	def inputbox(self,text,x=0,defaultValue=""):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
-		hTextCtrl=wx.TextCtrl(self.parent, -1,size=(x,-1))
+		hTextCtrl=wx.TextCtrl(self.parent, -1,size=(x,-1),value=defaultValue)
 		self.SetFace(hTextCtrl)
-		self.sizer.Add(hStaticText)
-		self.sizer.Add(hTextCtrl)
+		self.sizer.Add(hStaticText,0)
+		if x==-1:	#幅を拡張
+			self.sizer.Add(hTextCtrl,1)
+		else:
+			self.sizer.Add(hTextCtrl)
 		self.AddSpace(self.space)
 		return hTextCtrl,hStaticText
 

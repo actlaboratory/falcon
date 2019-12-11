@@ -16,6 +16,7 @@ import misc
 import views.fonttest
 import views.changeAttribute
 import views.mkdir
+import views.makeShortcut
 import constants
 import errorCodes
 import globalVars
@@ -111,6 +112,7 @@ class Menu():
 		#ファイルメニューの中身
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_RENAME"),_("名前を変更"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"),_("属性を変更"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MAKE_SHORTCUT"),_("ショートカットを作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_TRASH"),_("ゴミ箱へ移動"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_SHOWPROPERTIES"),_("プロパティを表示"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKDIR"),_("フォルダ作成"))
@@ -192,6 +194,19 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("EDIT_UPDATEFILELIST"):
 			self.UpdateFilelist()
+			return
+		if selected==menuItemsStore.getRef("FILE_MAKE_SHORTCUT"):
+			if not self.parent.activeTab.GetSelectedItemCount()==1:
+				return
+			target=self.parent.activeTab.GetSelectedItems().GetElement(0)		#browsableObjects
+
+			d=views.makeShortcut.Dialog(target.basename)
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+			val=d.GetValue()
+			d.Destroy()
+			#self.parent.activeTab.MakeShortcut(val)
 			return
 		if selected==menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
 			if not self.parent.activeTab.IsItemSelected():

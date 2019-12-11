@@ -66,6 +66,9 @@ class FalconTabBase(object):
 	def IsItemSelected(self):
 		return self.hListCtrl.GetSelectedItemCount()>0
 
+	def GetSelectedItemCount(self):
+		return self.hListCtrl.GetSelectedItemCount()
+
 	def GetSelectedItems(self):
 		"""選択中のアイテムを、 List オブジェクトで帰す。"""
 		next=self.hListCtrl.GetFirstSelected()
