@@ -2,9 +2,10 @@
 #define UNICODE
 #include <windows.h>
 #include <string.h>
-#include <iostream>
 #include <vector>
 #include <string>
+#include "defs.h"
+
 using namespace std;
 
 vector<string> wnds;
@@ -29,7 +30,7 @@ wnds.push_back(to_string(reinterpret_cast<int>(hwnd)));
 return 1;
 }
 
-extern "C" __declspec(dllexport) char* findRadioButtons(HWND wnd){
+falcon_helper_funcdef char* findRadioButtons(HWND wnd){
 EnumChildWindows(wnd,EnumChildProc,0);
 string s;
 for(int i=0;i<wnds.size();++i){
@@ -44,10 +45,3 @@ memcpy(ret,s.c_str(),s.size());
 return ret;
 }
 
-extern "C" __declspec(dllexport) void releasePtr(void* ptr){
-free(ptr);
-}
-
-BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD  fdwReason, LPVOID lpReserved) {
-	return TRUE;
-}

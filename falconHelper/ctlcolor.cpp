@@ -1,6 +1,8 @@
 #define UNICODE
 #include <windows.h>
 #include <uxtheme.h>
+#include "defs.h"
+
 WNDPROC DefRadioButtonProc, DefCheckboxProc;
 HBRUSH bkBrush, whBrush;
 
@@ -35,33 +37,14 @@ return (LRESULT)bkBrush;	// îwåiêFÇÃêF
 return CallWindowProc(DefCheckboxProc , hwnd , msg , wp , lp);
 }
 
-__declspec(dllexport) int ScRadioButton(HWND wnd){
+falcon_helper_funcdef int ScRadioButton(HWND wnd){
 DefRadioButtonProc = (WNDPROC)GetWindowLongPtr(wnd , GWLP_WNDPROC);
 SetWindowLongPtr(wnd , GWLP_WNDPROC , (LONG)RadioButtonProc);
 return 0;
 }
 
-__declspec(dllexport) int ScCheckbox(HWND wnd){
+falcon_helper_funcdef int ScCheckbox(HWND wnd){
 DefCheckboxProc = (WNDPROC)GetWindowLongPtr(wnd , GWLP_WNDPROC);
 SetWindowLongPtr(wnd , GWLP_WNDPROC , (LONG)CheckboxProc);
 return 0;
-}
-
-BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD  fdwReason, LPVOID lpReserved) {
-switch(fdwReason){
-case DLL_PROCESS_ATTACH:
-bkBrush=CreateSolidBrush(RGB(0,0,0));
-whBrush=CreateSolidBrush(RGB(255,255,255));
-break;
-case DLL_PROCESS_DETACH:
-DeleteObject((HGDIOBJ)bkBrush);
-DeleteObject((HGDIOBJ)whBrush);
-break;
-
-}
-	return TRUE;
-}
-
-__declspec(dllexport) void copyMemory(void *dest, void *src, size_t sz){
-RtlCopyMemory(dest,src,sz);
 }
