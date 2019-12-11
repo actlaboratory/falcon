@@ -1,7 +1,8 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon make Shortcut view
-#Copyright (C) 2019
+#Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
+
 import ctypes
 import gettext
 import logging
@@ -21,6 +22,19 @@ from simpleDialog import *
 import views.ViewCreator
 
 class Dialog(BaseDialog):
+
+	TYPE_LNK=0
+	TYPE_HARDLINK=1
+	TYPE_SYNLINK=2
+
+	LINK_ABSOLUTE=0
+	LINK_RELATIVE=1
+
+	#作成先初期値を決めるためのターゲットの名前とタイプ
+	def __init__(self,targetName):
+		#対象オブジェクトの拡張子を除く名前
+		self.targetName=targetName
+
 	def Initialize(self):
 		t=misc.Timer()
 		self.identifier="MakeShortcutDialog"#このビューを表す文字列
@@ -33,27 +47,32 @@ class Dialog(BaseDialog):
 		return True
 
 	def InstallControls(self):
+		#ここを並び替えるとこのクラス内の色んな所に影響するので注意！
+		_typeChoices=[_("ショートカット(lnk)"),_("ハードリンク"),_("シンボリックリンク")]
+
 		"""いろんなwidgetを設置する。"""
 		self.mainArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_CENTER)
 
 		#種類の設定
-		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
-		#self.checks=self.creator.checkbox3([_("読み取り専用"),_("隠し"),_("システム"),_("アーカイブ")],None,defaultAttributes)
-		self.radios=self.creator.radiobox(_("作成方式"),[_("ショートカット(lnkファイル)"),_("ハードリンク"),_("シンボリックリンク")],None)
+		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20)
+		self.type=self.creator.radiobox(_("作成方式"),_typeChoices,self.typeChangeEvent,1,wx.VERTICAL)
 
-		#詳細入力
-		#self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("タイムスタンプの変更"))
+		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,0,"",wx.EXPAND)
+		self.destination,tmp=self.creator.inputbox(_("作成先")+"：",-1,self.targetName+".lnk")
 
-		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL)
-		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)
+		#詳細設定
+		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20)
+		self.parameter,tmp=self.creator.inputbox(_("パラメータ"),400)
+		self.directory,tmp=self.creator.inputbox(_("作業ディレクトリ"),400)
+		self.linkType=self.creator.radiobox(_("リンクの種類"),[_("絶対"),_("相対")],None,1,wx.HORIZONTAL)
+
+		#ボタンエリア
+		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,"",wx.ALIGN_RIGHT)
 		self.bOk=self.creator.okbutton(_("ＯＫ"),None)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
-		self.sizer.Fit(self.wnd)
-
-
 	def Show(self):
-		result=self.wnd.ShowModal()
+		result=self.ShowModal()
 		self.Destroy()
 		return result
 
@@ -62,11 +81,20 @@ class Dialog(BaseDialog):
 		self.wnd.Destroy()
 
 	def GetValue(self):
-		v=[]
-		v.append(self.checks[0].Get3StateValue())
-		v.append(self.checks[1].Get3StateValue())
-		v.append(self.checks[2].Get3StateValue())
-		v.append(self.checks[3].Get3StateValue())
+		v={}
+		v["type"]=self.type.GetSelection()
+		v["destination"]=self.destination.GetLineText(0)
+		v["parameter"]=self.parameter.GetLineText(0)
+		v["directory"]=self.directory.GetLineText(0)
+		if not v["type"]==self.TYPE_HARDLINK:
+			v["linkType"]=self.linkType.GetSelection()
 		return v
 
-
+	#作成するショートカットタイプの変更
+	def typeChangeEvent(self,event):
+		if (event.GetInt()==self.TYPE_HARDLINK):
+			#ハードリンクに絶対・相対の選択はない
+			self.linkType.Disable()
+		else:
+			#ハードリンク以外であれば絶対・相対の選択がある
+			self.linkType.Enable()

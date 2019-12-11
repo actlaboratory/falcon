@@ -189,9 +189,11 @@ class Events(BaseEvents):
 			self.UpdateFilelist()
 			return
 		if selected==menuItemsStore.getRef("FILE_MAKE_SHORTCUT"):
-			if not self.parent.activeTab.IsItemSelected():
+			if not self.parent.activeTab.GetSelectedItemCount()==1:
 				return
-			d=views.makeShortcut.Dialog()
+			target=self.parent.activeTab.GetSelectedItems().GetElement(0)		#browsableObjects
+
+			d=views.makeShortcut.Dialog(target.basename)
 			d.Initialize()
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
