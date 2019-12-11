@@ -112,11 +112,10 @@ class Menu():
 		#ファイルメニューの中身
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_RENAME"),_("名前を変更"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"),_("属性を変更"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MAKE_SHORTCUT"),_("ショートカットを作成"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MAKESHORTCUT"),_("ショートカットを作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_TRASH"),_("ゴミ箱へ移動"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_SHOWPROPERTIES"),_("プロパティを表示"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKDIR"),_("フォルダ作成"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKSHORTCUT"),_("ショートカット作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_FILEOPTEST"),_("テスト中のファイルオペレーションを実行"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
 		#ファイルメニューの中身
@@ -195,7 +194,7 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("EDIT_UPDATEFILELIST"):
 			self.UpdateFilelist()
 			return
-		if selected==menuItemsStore.getRef("FILE_MAKE_SHORTCUT"):
+		if selected==menuItemsStore.getRef("FILE_MAKESHORTCUT"):
 			if not self.parent.activeTab.GetSelectedItemCount()==1:
 				return
 			target=self.parent.activeTab.GetSelectedItems().GetElement(0)		#browsableObjects
@@ -204,9 +203,8 @@ class Events(BaseEvents):
 			d.Initialize()
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
-			val=d.GetValue()
+			self.parent.activeTab.MakeShortcut(d.GetValue())
 			d.Destroy()
-			#self.parent.activeTab.MakeShortcut(val)
 			return
 		if selected==menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
 			if not self.parent.activeTab.IsItemSelected():
@@ -226,9 +224,6 @@ class Events(BaseEvents):
 			if ret==wx.ID_CANCEL: return
 			self.parent.activeTab.MakeDirectory(d.GetValue())
 			d.Destroy()
-			return
-		if selected==menuItemsStore.getRef("FILE_MKSHORTCUT"):
-			self.parent.activeTab.MakeShortcut()
 			return
 		if selected==menuItemsStore.getRef("FILE_FILEOPTEST"):
 			self.parent.activeTab.FileOperationTest()

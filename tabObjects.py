@@ -349,16 +349,31 @@ class MainListTab(FalconTabBase):
 		#end error
 		self.UpdateFilelist(silence=True)
 
-	def MakeShortcut(self):
-		inst={"operation": "shortcut", "target": [("help.lnk",os.path.abspath("PyWin32.chm"),"")]}
+	def MakeShortcut(self,option):
+		prm=""
+		dir=""
+		if option["type"]=="shortcut":
+			prm=option["parameter"]
+			dir=option["directory"]
+		target=self.parent.activeTab.GetSelectedItems().GetElement(0).fullpath
+		dest=option["destination"]
+		if not os.path.isabs(dest):	#早退の場合は絶対に直す
+			dest=os.path.normpath(os.path.join(os.path.dirname(target),dest))
+
+		#TODO:
+		#相対パスでの作成に後日対応する必要がある
+		#ハードリンクはドライブをまたげないのでバリデーションする
+		#ファイルシステムを確認し、対応してない種類のものは作れないようにバリデーションする
+		#作業フォルダの指定に対応する(ファイルオペレータ側の修正も必用)
+
+		inst={"operation":option["type"], "target": [(dest,target,prm)]}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
-			dialog(_("エラー"),_("ショートカットを作成できません。"))
+			dialog(_("エラー"),_("ショートカットの作成に失敗しました。"))
 			return
 		#end error
 		self.UpdateFilelist(silence=True)
-		dialog("とりあえずテストでショートカット作った","GUIつくってね")
 
 	def FileOperationTest(self):
 		inst={"operation": "hardLink", "to": [os.path.abspath("help_hard.chm")], "from": [os.path.abspath("PyWin32.chm")]}

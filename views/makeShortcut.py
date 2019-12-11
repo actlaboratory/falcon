@@ -27,6 +27,11 @@ class Dialog(BaseDialog):
 	TYPE_HARDLINK=1
 	TYPE_SYNLINK=2
 
+	typeStrings={}
+	typeStrings[TYPE_LNK]="shortcut"
+	typeStrings[TYPE_HARDLINK]="hardLink"
+	typeStrings[TYPE_SYNLINK]="symbolicLink"
+
 	LINK_ABSOLUTE=0
 	LINK_RELATIVE=1
 
@@ -82,7 +87,7 @@ class Dialog(BaseDialog):
 
 	def GetValue(self):
 		v={}
-		v["type"]=self.type.GetSelection()
+		v["type"]=self.typeStrings[self.type.GetSelection()]
 		v["destination"]=self.destination.GetLineText(0)
 		v["parameter"]=self.parameter.GetLineText(0)
 		v["directory"]=self.directory.GetLineText(0)
