@@ -388,12 +388,14 @@ class MainListTab(FalconTabBase):
 
 	def Copy(self):
 		if not self.IsItemSelected(): return
+		globalVars.app.say(_("コピー"))
 		c=clipboard.ClipboardFile()
 		c.SetFileList(self.GetSelectedItems().GetItemPaths())
 		c.SendToClipboard()
 
 	def Cut(self):
 		if not self.IsItemSelected(): return
+		globalVars.app.say(_("切り取り"))
 		c=clipboard.ClipboardFile()
 		c.SetOperation(clipboard.MOVE)
 		c.SetFileList(self.GetSelectedItems().GetItemPaths())
@@ -402,12 +404,14 @@ class MainListTab(FalconTabBase):
 	def FullpathCopy(self):
 		if not self.IsItemSelected(): return
 		t=self.GetSelectedItems().GetItemPaths()
+		globalVars.app.say(_("フルパスをコピー"))
 		t="\n".join(t)
 		with clipboardHelper.Clipboard() as c:
 			c.set_unicode_text(t)
 
 	def NameCopy(self):
 		if not self.IsItemSelected(): return
+		globalVars.app.say(_("ファイル名をコピー"))
 		t=self.GetSelectedItems().GetItemNames()
 		t="\n".join(t)
 		with clipboardHelper.Clipboard() as c:
