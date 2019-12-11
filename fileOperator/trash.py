@@ -13,6 +13,7 @@ log=logging.getLogger("falcon.%s" % VERB)
 
 def Execute(op):
 	"""実行処理。リトライが必要になった項目数を返す。"""
+	retry=0
 	try:
 		f=op.instructions["target"]
 	except KeyError:
@@ -20,7 +21,7 @@ def Execute(op):
 		return False
 	#end ゴミ箱に入れるファイルリストがない
 	op.output["all_OK"]=True
-	op.output["retry"]["from"]=[]
+	op.output["retry"]["target"]=[]
 	sh=(
 		0,
 		shellcon.FO_DELETE,
@@ -39,7 +40,7 @@ def Execute(op):
 	op.output["succeeded"]+=1
 	if len(op.output["retry"]["target"])>0:
 		op.output["retry"]["operation"]=VERB
-		retry=len(op.output["retry"]["from"])
+		retry=len(op.output["retry"]["target"])
 	#end リトライあるか
 	return retry
 
