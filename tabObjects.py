@@ -416,3 +416,8 @@ class MainListTab(FalconTabBase):
 		t="\n".join(t)
 		with clipboardHelper.Clipboard() as c:
 			c.set_unicode_text(t)
+
+	def SelectAll(self):
+		globalVars.app.say(_("全て選択"))
+		for i in range(self.hListCtrl.GetItemCount()):
+			self.hListCtrl.Select(i)
