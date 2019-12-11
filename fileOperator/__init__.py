@@ -13,6 +13,7 @@ import win32event
 from win32com.shell import shell, shellcon
 from simpleDialog import dialog
 
+import globalVars
 import misc
 
 from . import rename, changeAttribute, failedElement, mkdir,trash,shortcut,symbolicLink,hardLink
