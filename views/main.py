@@ -115,6 +115,7 @@ class Menu():
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_SHOWPROPERTIES"),_("プロパティを表示"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKDIR"),_("フォルダ作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKSHORTCUT"),_("ショートカット作成"))
+		self.hFileMenu.Append(menuItemsStore.getRef("FILE_FILEOPTEST"),_("テスト中のファイルオペレーションを実行"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
 		#ファイルメニューの中身
 		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー"))
@@ -207,6 +208,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("FILE_MKSHORTCUT"):
 			self.parent.activeTab.MakeShortcut()
+			return
+		if selected==menuItemsStore.getRef("FILE_FILEOPTEST"):
+			self.parent.activeTab.FileOperationTest()
 			return
 		if selected==menuItemsStore.getRef("FILE_TRASH"):
 			if self.parent.activeTab.IsItemSelected():

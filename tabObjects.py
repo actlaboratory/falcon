@@ -356,6 +356,17 @@ class MainListTab(FalconTabBase):
 		self.UpdateFilelist(silence=True)
 		dialog("とりあえずテストでショートカット作った","GUIつくってね")
 
+	def FileOperationTest(self):
+		inst={"operation": "hardLink", "to": [os.path.abspath("help_hard.chm")], "from": [os.path.abspath("PyWin32.chm")]}
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		if op.CheckSucceeded()==0:
+			dialog(_("エラー"),_("ショートカットを作成できません。"))
+			return
+		#end error
+		self.UpdateFilelist(silence=True)
+		dialog("とりあえずテストでハードリンク作った","GUIつくってね")
+
 	def Trash(self):
 		target=[]
 		for elem in self.GetSelectedItems():
