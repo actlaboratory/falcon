@@ -30,6 +30,7 @@ return 1;
 }
 
 falcon_helper_funcdef char* findRadioButtons(HWND wnd){
+wnds.clear();
 EnumChildWindows(wnd,EnumChildProc,0);
 string s;
 for(int i=0;i<wnds.size();++i){
