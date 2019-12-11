@@ -1,4 +1,3 @@
-// cl /nologo /LD /EHsc /O2 discdll.cpp Ole32.lib OleAut32.lib
 #define UNICODE
 #include <algorithm>
 #include <string>
@@ -8,6 +7,8 @@
 #include <windows.h>
 #include <imapi2.h>
 #include <tchar.h>
+#include "defs.h"
+
 namespace enums{
 enum DISC_TYPE{
 BD_RW=0,
@@ -191,7 +192,7 @@ return enums::DISC_TYPE::MO;
 return -1;
 }
 
-extern "C" __declspec(dllexport) char* getDiscDriveTypes()
+falcon_helper_funcdef char* getDiscDriveTypes()
 {
     IDiscMaster2 *lpDiscMaster = NULL;
     HRESULT rMaster = CoCreateInstance(CLSID_MsftDiscMaster2, NULL, CLSCTX_ALL, IID_PPV_ARGS(&lpDiscMaster));
@@ -271,18 +272,3 @@ extern "C" __declspec(dllexport) char* getDiscDriveTypes()
     return ret;
 }
 
-extern "C" __declspec(dllexport) void free_ptr(char *p){
-free(p);
-}
-
-BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD  fdwReason, LPVOID lpReserved) {
-switch(fdwReason){
-case DLL_PROCESS_ATTACH:
-    CoInitialize(NULL);
-break;
-case DLL_PROCESS_DETACH:
-CoUninitialize();
-break;
-}
-	return TRUE;
-}

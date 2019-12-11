@@ -8,6 +8,11 @@ python -m pip install wxpython
 ## 実行  
 python falcon.py  
 
+## falconHelperのビルド  
+ネイティブコードで動かしたいものは、C++でギャンギャン書いてあって、 falconHelper.dll になっています。これをビルドするには、 MSVC を入れて、 X86 開発者コマンド・プロンプト上で、以下のコマンドを打ってください。  
+cd falconHelper  
+make  
+
 ## exeファイルのビルド  
 python tools\build.py  
 

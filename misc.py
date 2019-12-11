@@ -8,7 +8,7 @@ import time
 import win32api
 import win32file
 
-discdll=ctypes.cdll.LoadLibrary("discdll.dll")
+falconHelper=ctypes.cdll.LoadLibrary("falconHelper.dll")
 
 class Timer:
 	"""シンプルなタイマー。経過時間や処理時間を計測するのに使う。単位は秒で、float。"""
@@ -79,9 +79,9 @@ def attrib2dward(readonly=False, hidden=False, system=False, archive=False):
 	return ret
 
 def getDiscDriveTypes():
-	ptr=discdll.getDiscDriveTypes()
+	ptr=falconHelper.getDiscDriveTypes()
 	s=ctypes.c_char_p(ptr).value
-	discdll.free_ptr(ptr)
+	falconHelper.freePtr(ptr)
 	s2=s.decode('utf-8').split("\n")
 	ret={}
 	for elem in s2:
