@@ -133,6 +133,7 @@ class Menu():
 		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD_ADMIN"),_("管理者として開く"))
 		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD_STREAM"),_("開く(ストリーム)"))
 		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_BACKWARD"),_("上の階層へ\tBackSpace"))
+		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_TOPFILE"),_("先頭ファイルへ"))
 		#環境メニューの中身
 		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_TESTDIALOG"),_("テストダイアログを表示"))
 		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_FONTTEST"),_("フォントテストダイアログを表示"))
@@ -181,6 +182,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("EDIT_SELECTALL"):
 			self.parent.activeTab.SelectAll()
+			return
+		if selected==menuItemsStore.getRef("MOVE_TOPFILE"):
+			self.parent.activeTab.GoToTopFile()
 			return
 		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
 			self.SortNext()

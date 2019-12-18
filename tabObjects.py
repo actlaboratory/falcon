@@ -443,3 +443,11 @@ class MainListTab(FalconTabBase):
 		globalVars.app.say(_("全て選択"))
 		for i in range(self.hListCtrl.GetItemCount()):
 			self.hListCtrl.Select(i)
+
+	def GoToTopFile(self):
+		if not isinstance(self.listObject,listObjects.FileList):
+			dialog(_("エラー"),_("ここではこの機能を利用できません。"))
+			return
+		#end ファイルリストのときしか通さない
+		self.hListCtrl.Focus(self.listObject.GetTopFileIndex())
+		globalVars.app.say(_("先頭ファイル"))
