@@ -129,11 +129,11 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
 		#移動メニューの中身
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD"),_("開く\tEnter"))
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD_ADMIN"),_("管理者として開く"))
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD_STREAM"),_("開く(ストリーム)"))
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_BACKWARD"),_("上の階層へ\tBackSpace"))
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_TOPFILE"),_("先頭ファイルへ"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD",_("開く"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_ADMIN",_("管理者として開く"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_STREAM",_("開く(ストリーム)"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
 		#環境メニューの中身
 		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_TESTDIALOG"),_("テストダイアログを表示"))
 		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_FONTTEST"),_("フォントテストダイアログを表示"))
