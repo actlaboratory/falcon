@@ -1,9 +1,11 @@
-﻿# -*- coding: utf-8 -*-
+﻿
+# -*- coding: utf-8 -*-
 #Falcon generic list management
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
 import gettext
 import os
+import wx
 import logging
 import win32api
 import win32file
@@ -187,7 +189,13 @@ class FileList(FalconListBase):
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
-		return [_("ファイル名"),_("サイズ"),_("更新"),_("属性"),_("種類")]
+		return {
+			_("ファイル名"):wx.LIST_FORMAT_LEFT,
+			_("サイズ"):wx.LIST_FORMAT_RIGHT,
+			_("更新"):wx.LIST_FORMAT_LEFT,
+			_("属性"):wx.LIST_FORMAT_LEFT,
+			_("種類"):wx.LIST_FORMAT_LEFT
+		}
 
 	def GetItems(self):
 		"""リストの中身を文字列タプルで取得する。フォルダが上にくる。"""
@@ -299,7 +307,13 @@ class DriveList(FalconListBase):
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
-		return [_("ラベル"),_("レター"),_("空き"),_("合計"),_("種類")]
+		return {
+			_("ラベル"):wx.LIST_FORMAT_LEFT,
+			_("レター"):wx.LIST_FORMAT_LEFT,
+			_("空き"):wx.LIST_FORMAT_RIGHT,
+			_("合計"):wx.LIST_FORMAT_RIGHT,
+			_("種類"):wx.LIST_FORMAT_LEFT
+		}
 
 	def Append(self,index):
 		"""ドライブ情報を調べて、リストに追加する。Aドライブが0、Zドライブが25。"""
@@ -392,7 +406,7 @@ class StreamList(FalconListBase):
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
-		return [_("ストリーム名"),_("サイズ")]
+		return {_("ストリーム名"):wx.LIST_FORMAT_LEFT,_("サイズ"):wx.LIST_FORMAT_RIGHT}
 
 	def GetItems(self):
 		"""リストの中身を文字列タプルで取得する。"""
