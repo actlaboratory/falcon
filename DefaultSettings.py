@@ -14,13 +14,23 @@ class DefaultSettings:
 			"language": "ja-JP",
 			"fileVersion": "100",
 		}
-		config["fileList"]={
+		config["FileList"]={
 			"sorting": 0,
-			"descending": 0
+			"descending": 0,
+			"column_width_0" : "650",
+			"column_width_1" : "150",
+			"column_width_2" : "320",
+			"column_width_3" : "70",
+			"column_width_4" : "240"
 		}
-		config["driveList"]={
+		config["DriveList"]={
 			"sorting": 1,
-			"descending": 0
+			"descending": 0,
+			"column_width_0": 250,
+			"column_width_1": 120,
+			"column_width_2": 150,
+			"column_width_3": 150,
+			"column_width_4": 480
 		}
 		config["view"]={
 			"font": "bold 'ＭＳ ゴシック' 22 windows-932",
@@ -33,15 +43,6 @@ class DefaultSettings:
 		config["browse"]={
 			"startPath": "%%HOMEDRIVE%%"
 		}
-		config["MainListTab"]={
-			"column_width_0" : "750",
-			"column_width_1" : "150",
-			"column_width_2" : "320",
-			"column_width_3" : "70",
-			"column_width_4" : "240"
-		}
-
-
 		config["sounds"]={
 			"startup" : "tip.ogg",
 			"boundary" : "tip.ogg"

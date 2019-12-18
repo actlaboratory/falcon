@@ -119,10 +119,10 @@ class MainListTab(FalconTabBase):
 		self.log.debug("Created.")
 		self.parent=parent
 		self.InstallListCtrl(parent.hListPanel)
-		self.environment["FileList_sorting"]=int(globalVars.app.config["fileList"]["sorting"])
-		self.environment["FileList_descending"]=int(globalVars.app.config["fileList"]["sorting"])
-		self.environment["DriveList_sorting"]=int(globalVars.app.config["driveList"]["sorting"])
-		self.environment["DriveList_descending"]=int(globalVars.app.config["driveList"]["descending"])
+		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
+		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["sorting"])
+		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
+		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
@@ -131,7 +131,7 @@ class MainListTab(FalconTabBase):
 			self.columns=lst.GetColumns()
 			self.SetListColumns(self.columns)
 			for i in range(0,len(self.columns)):
-				w=globalVars.app.config[self.__class__.__name__]["column_width_"+str(i)]
+				w=globalVars.app.config[lst.__class__.__name__]["column_width_"+str(i)]
 				w=100 if w=="" else int(w)
 				self.hListCtrl.SetColumnWidth(i,w)
 		#end 違う種類のリストかどうか
@@ -248,7 +248,7 @@ class MainListTab(FalconTabBase):
 	def col_resize(self,event):
 		no=event.GetColumn()
 		width=self.hListCtrl.GetColumnWidth(no)
-		globalVars.app.config[__class__.__name__]["column_width_"+str(no)]=str(width)
+		globalVars.app.config[self.listObject.__class__.__name__]["column_width_"+str(no)]=str(width)
 
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True
