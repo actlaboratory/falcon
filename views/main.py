@@ -46,8 +46,8 @@ class View(BaseView):
 			self.app.config.getint(self.identifier,"positionY")
 		)
 		self.menu=Menu()
+		self.menu.InitShortcut(self.identifier)
 		self.InstallMenuEvent(self.menu,self.events)
-		self.InstallShortcutEvent(self.identifier,self.events)
 		self.InstallListPanel()
 		self.tabs=[]
 		self.MakeFirstTab()
@@ -97,7 +97,7 @@ class View(BaseView):
 		l=self.activeTab.GetListCtrl()
 		l.Show(True)
 
-class Menu():
+class Menu(BaseMenu):
 	def Apply(self,target,event):
 		"""指定されたウィンドウに、メニューを適用する。"""
 		#メニューの大項目を作る
@@ -110,10 +110,10 @@ class Menu():
 		self.hEnvMenu=wx.Menu()
 		self.hHelpMenu=wx.Menu()
 		#ファイルメニューの中身
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_RENAME"),_("名前を変更"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"),_("属性を変更"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MAKESHORTCUT"),_("ショートカットを作成"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_TRASH"),_("ゴミ箱へ移動"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_RENAME",_("名前を変更"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_CHANGEATTRIBUTE",_("属性を変更"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_MAKESHORTCUT",_("ショートカットを作成"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_TRASH",_("ゴミ箱へ移動"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_SHOWPROPERTIES"),_("プロパティを表示"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKDIR"),_("フォルダ作成"))
 		self.hFileMenu.Append(menuItemsStore.getRef("FILE_FILEOPTEST"),_("テスト中のファイルオペレーションを実行"))
@@ -151,6 +151,7 @@ class Menu():
 		self.hMenuBar.Append(self.hHelpMenu,_("ヘルプ"))
 		target.SetMenuBar(self.hMenuBar)
 		target.Bind(wx.EVT_MENU,event.OnMenuSelect)
+		self.ApplyShortcut(target)
 
 class Events(BaseEvents):
 	def OnMenuSelect(self,event):

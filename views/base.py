@@ -6,6 +6,7 @@
 import wx
 import constants
 import keymap
+import menuItemsStore
 from simpleDialog import dialog
 
 import globalVars
@@ -22,23 +23,29 @@ class BaseView(object):
 		self.hFrame.Bind(wx.EVT_MOVE_END,self.events.WindowMove)
 		self.hFrame.Bind(wx.EVT_SIZE,self.events.WindowResize)
 
-
 	def InstallMenuEvent(self,menu,event):
 		"""メニューを作り、指定されたイベント処理用オブジェクトと結びつける。"""
 		menu.Apply(self.hFrame,event)
-
-	def InstallShortcutEvent(self,identifier,event):
-		"""指定されたビューのショートカットキーを読み込んで、イベント処理用クラスと結びつける。"""
-		self.keymap=keymap.KeymapHandler()
-		self.keymap.Initialize(constants.KEYMAP_FILE_NAME)
-		self.acceleratorTable=self.keymap.GenerateTable(identifier)
-		self.hFrame.SetAcceleratorTable(self.acceleratorTable)
+		self.menu=menu
 
 	def SetShortcutEnabled(self,en):
 		"""ショートカットキーの有効/無効を切り替える。"""
-		t=self.acceleratorTable if en else wx.AcceleratorTable()
+		t=self.menu.acceleratorTable if en else wx.AcceleratorTable()
 		self.hFrame.SetAcceleratorTable(t)
 	#end SetShortcutEnabled
+
+class BaseMenu(object):
+	def InitShortcut(self,identifier):
+		self.keymap=keymap.KeymapHandler()
+		self.keymap.Initialize(constants.KEYMAP_FILE_NAME)
+		self.keymap_identifier=identifier
+
+	def RegisterMenuCommand(self,menu_handle,ref_id,title):
+		menu_handle.Append(menuItemsStore.getRef(ref_id),"%s\t%s" % (title,self.keymap.GetKeyString(self.keymap_identifier,ref_id)))
+
+	def ApplyShortcut(self,hFrame):
+		self.acceleratorTable=self.keymap.GenerateTable(self.keymap_identifier)
+		hFrame.SetAcceleratorTable(self.acceleratorTable)
 
 class BaseEvents(object):
 	"""イベント処理のデフォルトの動作をいくつか定義してあります。"""

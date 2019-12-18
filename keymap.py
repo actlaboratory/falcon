@@ -185,9 +185,6 @@ class KeymapHandler():
 	def __init__(self):
 		self.log=logging.getLogger("falcon.keymapHandler")
 
-	def __del__(self):
-		pass
-
 	def Initialize(self, filename):
 		"""キーマップ情報を初期かします。デフォルトキーマップを適用してから、指定されたファイルを読もうと試みます。ファイルが見つからなかった場合は、FILE_NOT_FOUND を返します。ファイルがパースできなかった場合は、PARSING_FAILED を返します。いずれの場合も、デフォルトキーマップは適用されています。"""
 		self.map=configparser.ConfigParser()
@@ -200,6 +197,10 @@ class KeymapHandler():
 		if ret==errorCodes.PARSING_FAILED:
 			self.log.warning("Cannot parse %s" % filename)
 		return ret
+
+	def GetKeyString(self,identifier,key):
+		"""指定されたコマンドのショートカットキー文字列を取得します。"""
+		return self.map[identifier][key]
 
 	def GenerateTable(self, identifier):
 		"""アクセラレーターテーブルを生成します。identifier で、どのビューでのテーブルを生成するかを指定します。"""
