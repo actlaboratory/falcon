@@ -135,10 +135,10 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
 		#環境メニューの中身
-		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_TESTDIALOG"),_("テストダイアログを表示"))
-		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_FONTTEST"),_("フォントテストダイアログを表示"))
+		self.RegisterMenuCommand(self.hEnvMenu,"ENV_TESTDIALOG",_("テストダイアログを表示"))
+		self.RegisterMenuCommand(self.hEnvMenu,"ENV_FONTTEST",_("フォントテストダイアログを表示"))
 		#ヘルプメニューの中身
-		self.hHelpMenu.Append(menuItemsStore.getRef("HELP_VERINFO"),_("バージョン情報"))
+		self.RegisterMenuCommand(self.hHelpMenu,"HELP_VERINFO",_("バージョン情報"))
 		#メニューバー
 		self.hMenuBar=wx.MenuBar()
 		self.hMenuBar.Append(self.hFileMenu,_("ファイル"))

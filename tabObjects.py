@@ -122,7 +122,6 @@ class MainListTab(FalconTabBase):
 		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
 		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["sorting"])
 		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
-		print(self.environment["DriveList_sorting"])
 		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
 
 	def Update(self,lst):
