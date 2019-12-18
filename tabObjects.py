@@ -122,6 +122,7 @@ class MainListTab(FalconTabBase):
 		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
 		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["sorting"])
 		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
+		print(self.environment["DriveList_sorting"])
 		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
 
 	def Update(self,lst):
@@ -242,6 +243,8 @@ class MainListTab(FalconTabBase):
 	def _updateEnv(self):
 		"""ソートの環境変数を更新する。"""
 		s=self.listObject.__class__.__name__
+		globalVars.app.config[s]["sorting"]=self.listObject.GetSortCursor()
+		globalVars.app.config[s]["descending"]=int(self.listObject.GetSortDescending())
 		self.environment[s+"_sorting"]=self.listObject.GetSortCursor()
 		self.environment[s+"_descending"]=self.listObject.GetSortDescending()
 

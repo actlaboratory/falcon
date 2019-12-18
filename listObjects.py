@@ -303,7 +303,7 @@ class DriveList(FalconListBase):
 			check<<=1
 		#end ドライブ25個分調べる
 		self.log.debug("Drives list created in %d seconds." % t.elapsed)
-		if self.supportedSorts[self.sortCursor]!=SORT_TYPE_DRIVELETTER: self.ApplySort()
+		self.ApplySort()
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
