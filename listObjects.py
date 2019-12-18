@@ -220,6 +220,10 @@ class FileList(FalconListBase):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
 
+	def GetTopFileIndex(self):
+		"""先頭ファイルのインデックス番号を返す。"""
+		return len(self.folders)
+
 	def _sort(self,attrib, descending):
 		"""指定した要素で、リストを並べ替える。"""
 		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
