@@ -41,7 +41,9 @@ class BaseMenu(object):
 		self.keymap_identifier=identifier
 
 	def RegisterMenuCommand(self,menu_handle,ref_id,title):
-		menu_handle.Append(menuItemsStore.getRef(ref_id),"%s\t%s" % (title,self.keymap.GetKeyString(self.keymap_identifier,ref_id)))
+		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
+		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
+		menu_handle.Append(menuItemsStore.getRef(ref_id),s)
 
 	def ApplyShortcut(self,hFrame):
 		self.acceleratorTable=self.keymap.GenerateTable(self.keymap_identifier)

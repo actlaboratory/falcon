@@ -200,7 +200,12 @@ class KeymapHandler():
 
 	def GetKeyString(self,identifier,key):
 		"""指定されたコマンドのショートカットキー文字列を取得します。"""
-		return self.map[identifier][key]
+		try:
+			r=self.map[identifier][key]
+		except KeyError:
+			r=None
+		#end except
+		return r
 
 	def GenerateTable(self, identifier):
 		"""アクセラレーターテーブルを生成します。identifier で、どのビューでのテーブルを生成するかを指定します。"""
