@@ -46,8 +46,8 @@ class View(BaseView):
 			self.app.config.getint(self.identifier,"positionY")
 		)
 		self.menu=Menu()
+		self.menu.InitShortcut(self.identifier)
 		self.InstallMenuEvent(self.menu,self.events)
-		self.InstallShortcutEvent(self.identifier,self.events)
 		self.InstallListPanel()
 		self.tabs=[]
 		self.MakeFirstTab()
@@ -97,7 +97,7 @@ class View(BaseView):
 		l=self.activeTab.GetListCtrl()
 		l.Show(True)
 
-class Menu():
+class Menu(BaseMenu):
 	def Apply(self,target,event):
 		"""指定されたウィンドウに、メニューを適用する。"""
 		#メニューの大項目を作る
@@ -110,35 +110,35 @@ class Menu():
 		self.hEnvMenu=wx.Menu()
 		self.hHelpMenu=wx.Menu()
 		#ファイルメニューの中身
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_RENAME"),_("名前を変更"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"),_("属性を変更"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MAKESHORTCUT"),_("ショートカットを作成"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_TRASH"),_("ゴミ箱へ移動"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_SHOWPROPERTIES"),_("プロパティを表示"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_MKDIR"),_("フォルダ作成"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_FILEOPTEST"),_("テスト中のファイルオペレーションを実行"))
-		self.hFileMenu.Append(menuItemsStore.getRef("FILE_EXIT"),_("終了"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_RENAME",_("名前を変更"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_CHANGEATTRIBUTE",_("属性を変更"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_MAKESHORTCUT",_("ショートカットを作成"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_TRASH",_("ゴミ箱へ移動"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_SHOWPROPERTIES",_("プロパティを表示"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_MKDIR",_("フォルダを作成"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_FILEOPTEST",_("テスト中のファイルオペレーションを実行"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_EXIT",_("終了"))
 		#ファイルメニューの中身
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_COPY"),_("コピー"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_CUT"),_("切り取り"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_NAMECOPY"),_("ファイル名をコピー"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_FULLPATHCOPY"),_("フルパスをコピー"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SELECTALL"),_("全て選択"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTNEXT"),_("次の並び順\tShift+F1"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTSELECT"),_("並び順を選択\tCtrl+S"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_SORTCYCLEAD"),_("昇順/降順切り替え\tShift+F11"))
-		self.hEditMenu.Append(menuItemsStore.getRef("EDIT_UPDATEFILELIST"),_("最新の情報に更新\tF5"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_COPY",_("コピー"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_CUT",_("切り取り"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_NAMECOPY",_("ファイル名をコピー"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SELECTALL",_("全て選択"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTNEXT",_("次の並び順"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTSELECT",_("並び順を選択"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
 		#移動メニューの中身
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD"),_("開く\tEnter"))
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD_ADMIN"),_("管理者として開く"))
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_FORWARD_STREAM"),_("開く(ストリーム)"))
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_BACKWARD"),_("上の階層へ\tBackSpace"))
-		self.hMoveMenu.Append(menuItemsStore.getRef("MOVE_TOPFILE"),_("先頭ファイルへ"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD",_("開く"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_ADMIN",_("管理者として開く"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_STREAM",_("開く(ストリーム)"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
 		#環境メニューの中身
-		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_TESTDIALOG"),_("テストダイアログを表示"))
-		self.hEnvMenu.Append(menuItemsStore.getRef("ENV_FONTTEST"),_("フォントテストダイアログを表示"))
+		self.RegisterMenuCommand(self.hEnvMenu,"ENV_TESTDIALOG",_("テストダイアログを表示"))
+		self.RegisterMenuCommand(self.hEnvMenu,"ENV_FONTTEST",_("フォントテストダイアログを表示"))
 		#ヘルプメニューの中身
-		self.hHelpMenu.Append(menuItemsStore.getRef("HELP_VERINFO"),_("バージョン情報"))
+		self.RegisterMenuCommand(self.hHelpMenu,"HELP_VERINFO",_("バージョン情報"))
 		#メニューバー
 		self.hMenuBar=wx.MenuBar()
 		self.hMenuBar.Append(self.hFileMenu,_("ファイル"))
@@ -151,6 +151,7 @@ class Menu():
 		self.hMenuBar.Append(self.hHelpMenu,_("ヘルプ"))
 		target.SetMenuBar(self.hMenuBar)
 		target.Bind(wx.EVT_MENU,event.OnMenuSelect)
+		self.ApplyShortcut(target)
 
 class Events(BaseEvents):
 	def OnMenuSelect(self,event):
