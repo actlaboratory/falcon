@@ -24,7 +24,10 @@ class FalconConfigParser(configparser.ConfigParser):
 		self.fileName=fileName
 		if os.path.exists(fileName):
 			self.log.info("read configFile:"+fileName)
-			return super().read(fileName)
+			try:
+				return super().read(fileName)
+			except configparser.ParsingError:
+				return {}
 		else:
 			self.log.warning("configFile not found.")
 			return self
