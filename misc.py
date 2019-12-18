@@ -81,7 +81,7 @@ def attrib2dward(readonly=False, hidden=False, system=False, archive=False):
 def getDiscDriveTypes():
 	ptr=falconHelper.getDiscDriveTypes()
 	s=ctypes.c_char_p(ptr).value
-	falconHelper.freePtr(ptr)
+	falconHelper.releasePtr(ptr)
 	s2=s.decode('utf-8').split("\n")
 	ret={}
 	for elem in s2:
