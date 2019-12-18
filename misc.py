@@ -4,7 +4,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import ctypes
-import pathlib
+import os
 import time
 import win32api
 import win32file
@@ -104,7 +104,11 @@ def disableWindowStyleFlag(hwnd,flag):
 	value=value&tmp
 	win32api.SetWindowLong(hwnd,-16,value)
 
-def IteratePaths(path, pattern="**/*"):
-	"""ファイル検索をイテレートできるオブジェクトを返す。"""
-	return pathlib.Path(path).glob(pattern)
-
+def IteratePaths(path):
+	"""FindFirstFile 系を使う"""
+	for elem in win32file.FindFilesIterator(path+"\\*"):
+		if elem[8]=="." or elem[8]=="..": continue
+		if elem[0]&win32file.FILE_ATTRIBUTE_DIRECTORY: 
+			yield from IteratePaths2(os.path.join(path,elem[8]))
+		#end ディレクトリ
+		yield os.path.join(path,elem[8])
