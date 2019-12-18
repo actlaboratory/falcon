@@ -34,7 +34,7 @@ class File(FalconBrowsableBase):
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
-		return (self.basename, self.size, misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
 	def GetNewAttributes(self,checks):
 		"""属性変更の時に使う。チェック状態のリストを受け取って、新しい属性値を帰す。変更の必要がなければ、-1を帰す。"""
@@ -99,4 +99,4 @@ class Stream(FalconBrowsableBase):
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
-		return (self.basename, self.size)
+		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True))

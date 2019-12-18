@@ -27,10 +27,11 @@ UNIT_KB=1
 UNIT_MB=2
 UNIT_GB=3
 UNIT_TB=4
-UNIT_STR=("B", "KB", "MB", "GB", "TB")
+UNIT_STR=("Bytes", "KB", "MB", "GB", "TB")
 
 def ConvertBytesTo(b, unit, appendUnit=False):
 	"""バイト数を受け取って、指定された単位を使ったサイズを返す。appendUnit=True にすると、単位の文字列を最後に付けてくれる。"""
+	if b<0:return ""
 	num=0
 	if unit==UNIT_AUTO: unit=DetermineSizeUnit(b)
 	if unit==UNIT_B:
@@ -44,7 +45,10 @@ def ConvertBytesTo(b, unit, appendUnit=False):
 	if unit==UNIT_TB:
 		num=b/1024/1024/1024/1024
 	#end 単位
-	ret="%.2f" % num
+	if not unit==UNIT_B:
+		ret="%.2f" % num
+	else:
+		ret=""+str(num)
 	if appendUnit: ret+=UNIT_STR[unit]
 	return ret
 
