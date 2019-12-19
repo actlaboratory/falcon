@@ -169,7 +169,7 @@ class FileList(FalconListBase):
 				self.folders.append(f)
 			#end どっちについかするか？
 		#end 追加ループ
-		self.log.debug("File list created in %d milliseconds." % t.elapsed)
+		self.log.debug("File list created in %f seconds." % t.elapsed)
 		if self.sortCursor!=0:
 			self.log.debug("Triggering sorting")
 			self.ApplySort()
