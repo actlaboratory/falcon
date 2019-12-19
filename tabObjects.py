@@ -21,6 +21,7 @@ import browsableObjects
 import globalVars
 import constants
 import fileOperator
+import misc
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -98,10 +99,12 @@ class FalconTabBase(object):
 
 	def UpdateListContent(self,content):
 		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
+		self.log.debug("Updating list control...")
+		t=misc.Timer()
 		for elem in content:
 			self.hListCtrl.Append(elem)
 		#end 追加
-		self.log.debug("List control updated.")
+		self.log.debug("List control updated in %f seconds." % t.elapsed)
 
 	def TriggerAction(self, action,admin=False):
 		"""タブの指定要素に対してアクションを実行する。成功した場合は、errorCodes.OK を返し、失敗した場合は、その他のエラーコードを返す。admin=True で、管理者として実行する。"""
