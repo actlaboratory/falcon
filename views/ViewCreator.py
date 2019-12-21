@@ -3,14 +3,11 @@
 #Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-import ctypes
-import misc
 import wx
 import _winxptheme
 import wx.adv
+import ctypes
 from . import fontManager
-import _winxptheme
-import pywintypes
 
 falconHelper=ctypes.cdll.LoadLibrary("falconHelper.dll")
 
