@@ -40,7 +40,8 @@ class FalconTabBase(object):
 		self.type=None
 		self.isRenaming=False
 		globalVars.app.config.add_section(self.__class__.__name__)
-		self.environment={}#このタブ特有の環境変数
+		self.environment={}		#このタブ特有の環境変数
+		self.markedPlace=None	#マークフォルダ
 
 	def InstallListCtrl(self,parent):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
@@ -112,6 +113,10 @@ class FalconTabBase(object):
 
 	def EnterItem(self):
 		"""アイテムの上でエンターを押したときに実行される。本当はビューのショートカットキーにしたかったんだけど、エンターの入力だけはこっちでとらないとできなかった。"""
+		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
+
+	def MarkSet():
+		"""現在開いている場所をマークする"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
 class MainListTab(FalconTabBase):
@@ -456,3 +461,28 @@ class MainListTab(FalconTabBase):
 		#end ファイルリストのときしか通さない
 		self.hListCtrl.Focus(self.listObject.GetTopFileIndex())
 		globalVars.app.say(_("先頭ファイル"))
+
+	def MarkSet(self):
+		"""現在開いている場所をマークする"""
+		globalVars.app.say(_("マーク設定"))
+		self.markedPlace=self.listObject.rootDirectory
+		self.log.debug("markset at \""+self.markedPlace + "\"")
+
+	def GoToMark(self):
+		if self.markedPlace=="":				#ドライブリストへ移動
+			lst=listObjects.DriveList()
+			lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
+		elif not os.path.exists(self.markedPlace):
+			dialog(_("エラー"),_("マーク位置への移動に失敗しました。移動先が存在しません。"))
+			return FILE_NOT_FOUND
+		elif os.path.isfile(self.markedPlace):	#副ストリームへ移動
+			lst=listObjects.StreamList()
+			lst.Initialize(self.markedPlace)
+		else:									#ファイルリストへ移動
+			lst=listObjects.FileList()
+			ok=lst.Initialize(self.markedPlace,self.environment["FileList_sorting"],self.environment["FileList_descending"])
+			if not ok: return#アクセス負荷
+		self.Update(lst)
+		globalVars.app.say(_("マーク位置へ移動"))
+		return errorCodes.OK
+

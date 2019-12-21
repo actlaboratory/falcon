@@ -23,5 +23,7 @@ defaultKeymap["mainView"]={
 	"EDIT_UPDATEFILELIST": "F5",
 	"MOVE_BACKWARD": "BACK/LEFT",
 	"MOVE_FORWARD_STREAM": "RIGHT",
-	"MOVE_TOPFILE": "alt+down"
+	"MOVE_TOPFILE": "alt+down",
+	"MOVE_MARKSET": "INSERT",
+	"MOVE_MARK": "shift+BACK"
 }

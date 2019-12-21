@@ -287,6 +287,7 @@ class DriveList(FalconListBase):
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_DRIVELETTER,SORT_TYPE_FREESPACE,SORT_TYPE_TOTALSPACE, SORT_TYPE_TYPESTRING]
 		self.log=logging.getLogger("falcon.driveList")
 		self.log.debug("Getting drives list...")
+		self.rootDirectory=""
 		t=misc.Timer()
 		self.drives=[]
 		self.unusableDrives=[]

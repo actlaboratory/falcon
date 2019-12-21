@@ -134,6 +134,9 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_STREAM",_("開く(ストリーム)"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARKSET",_("表示中の場所をマーク"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("表示中の場所をマーク"))
+
 		#環境メニューの中身
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_TESTDIALOG",_("テストダイアログを表示"))
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_FONTTEST",_("フォントテストダイアログを表示"))
@@ -187,6 +190,15 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("MOVE_TOPFILE"):
 			self.parent.activeTab.GoToTopFile()
 			return
+		if selected==menuItemsStore.getRef("MOVE_MARKSET"):
+			self.parent.activeTab.MarkSet()
+			return
+		if selected==menuItemsStore.getRef("MOVE_MARK"):
+			self.parent.activeTab.GoToMark()
+			return
+
+
+
 		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
 			self.SortNext()
 			return
