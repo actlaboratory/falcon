@@ -83,6 +83,10 @@ class Drive(FalconBrowsableBase):
 			self.typeString=_("リムーバブル ディスク")
 		elif self.type==win32file.DRIVE_UNKNOWN:
 			self.typeString=_("不明")
+		else:
+			self.log.warning("Unknown driveType found("+self.type+")")
+			self.typeString=_("不明")
+
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
