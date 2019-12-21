@@ -7,9 +7,12 @@ import os
 import constants
 import misc
 import win32file
+import logging
 
 class FalconBrowsableBase(object):
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
+	def __init__(self):
+		self.log=logging.getLogger("falcon.browsableObjects")
 	def GetAttributesString(self):
 		"""属性の文字列を設定する。"""
 		attrib=self.attributes
@@ -81,10 +84,12 @@ class Drive(FalconBrowsableBase):
 			self.typeString=_("RAM ディスク")
 		elif self.type==win32file.DRIVE_REMOVABLE:
 			self.typeString=_("リムーバブル ディスク")
+		elif self.type==win32file.DRIVE_REMOTE:
+			self.typeString=_("ネットワーク")
 		elif self.type==win32file.DRIVE_UNKNOWN:
 			self.typeString=_("不明")
 		else:
-			self.log.warning("Unknown driveType found("+self.type+")")
+			self.log.warning("Unknown drivetype found("+self.type+")")
 			self.typeString=_("不明")
 
 
