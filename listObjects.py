@@ -170,6 +170,7 @@ class FileList(FalconListBase):
 			#end どっちについかするか？
 		#end 追加ループ
 		self.log.debug("File list created in %f seconds." % t.elapsed)
+		self.log.debug(str(len(self.folders))+" directories and "+str(len(self.files))+" files found.")
 		if self.sortCursor!=0:
 			self.log.debug("Triggering sorting")
 			self.ApplySort()
@@ -304,6 +305,7 @@ class DriveList(FalconListBase):
 			check<<=1
 		#end ドライブ25個分調べる
 		self.log.debug("Drives list created in %d seconds." % t.elapsed)
+		self.log.debug(str(len(self.drives))+" drives found.")
 		self.ApplySort()
 
 	def GetColumns(self):
@@ -403,6 +405,7 @@ class StreamList(FalconListBase):
 			self.streams.append(s)
 		#end 追加ループ
 		self.log.debug("stream list created in %d milliseconds." % t.elapsed)
+		self.log.debug(str(len(self.streams))+" objects found.")
 		return True
 
 	def GetColumns(self):
