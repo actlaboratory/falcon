@@ -121,7 +121,7 @@ class FalconTabBase(object):
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
 	def KeyDown(self,event):
-	"""キーが押されたらここにくる。SpaceがEnterと同一視されるので対策する。"""
+		"""キーが押されたらここにくる。SpaceがEnterと同一視されるので対策する。"""
 		if not event.GetKeyCode()==32:
 			event.Skip()
 		else:
@@ -279,6 +279,8 @@ class MainListTab(FalconTabBase):
 	def OnLabelEditEnd(self,evt):
 		self.isRenaming=False
 		self.parent.SetShortcutEnabled(True)
+		if evt.IsEditCancelled():		#ユーザによる編集キャンセル
+			return
 		e=self.hListCtrl.GetEditControl()
 		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
 		if isinstance(f,browsableObjects.File):
