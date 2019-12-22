@@ -52,6 +52,7 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
 		self.hListCtrl.Bind(wx.EVT_LIST_END_LABEL_EDIT,self.OnLabelEditEnd)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
+		self.hListCtrl.Bind(wx.EVT_KEY_DOWN,self.KeyDown)
 
 	def GetListColumns(self):
 		return self.columns
@@ -111,12 +112,23 @@ class FalconTabBase(object):
 		"""タブの指定要素に対してアクションを実行する。成功した場合は、errorCodes.OK を返し、失敗した場合は、その他のエラーコードを返す。admin=True で、管理者として実行する。"""
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
-	def EnterItem(self):
+	def EnterItem(self,event):
 		"""アイテムの上でエンターを押したときに実行される。本当はビューのショートカットキーにしたかったんだけど、エンターの入力だけはこっちでとらないとできなかった。"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
 	def MarkSet():
 		"""現在開いている場所をマークする"""
+		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
+
+	def KeyDown(self,event):
+	"""キーが押されたらここにくる。SpaceがEnterと同一視されるので対策する。"""
+		if not event.GetKeyCode()==32:
+			event.Skip()
+		else:
+			self.OnSpaceKey()
+
+	def OnSpaceKey(self):
+		"""Spaceキーが押されたらこれが呼ばれる。"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
 class MainListTab(FalconTabBase):
