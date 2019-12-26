@@ -112,3 +112,4 @@ def IteratePaths(path):
 			yield from IteratePaths2(os.path.join(path,elem[8]))
 		#end ディレクトリ
 		yield os.path.join(path,elem[8])
+
