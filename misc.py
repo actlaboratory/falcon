@@ -113,12 +113,3 @@ def IteratePaths(path):
 		#end ディレクトリ
 		yield os.path.join(path,elem[8])
 
-def GetFileSystemName(letter):
-	"""
-	ドライブレターから、そのドライブのファイルシステムを取得する。
-
-	:param letter: ドライブレター1文字。
-	:type letter: str
-	:rtype: str
-	"""
-	return win32api.GetVolumeInformation("%s:\\" % (letter))[4]
