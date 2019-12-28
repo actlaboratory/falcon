@@ -136,7 +136,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARKSET",_("表示中の場所をマーク"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("表示中の場所をマーク"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
 
 		#環境メニューの中身
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_TESTDIALOG",_("テストダイアログを表示"))
