@@ -6,6 +6,8 @@ import logging
 import os
 import win32file
 
+import misc
+
 from . import helper
 
 VERB="delete"
@@ -30,6 +32,7 @@ def Execute(op):
 			for elem2 in misc.IteratePaths(elem):
 				lst.append(elem2)
 			#end フォルダからファイルリスト
+			lst.append(elem)#イテレーションの最後に親フォルダ追加
 		#end フォルダだった
 	#end ファイルリスト作るループ
 	#ファイルリスト作ったので、もともとの target に上書き
