@@ -114,6 +114,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_CHANGEATTRIBUTE",_("属性を変更"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_MAKESHORTCUT",_("ショートカットを作成"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_TRASH",_("ゴミ箱へ移動"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_DELETE",_("完全削除"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_SHOWPROPERTIES",_("プロパティを表示"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_MKDIR",_("フォルダを作成"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_FILEOPTEST",_("テスト中のファイルオペレーションを実行"))
@@ -248,6 +249,10 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("FILE_TRASH"):
 			if self.parent.activeTab.IsItemSelected():
 				self.parent.activeTab.Trash()
+			return
+		if selected==menuItemsStore.getRef("FILE_DELETE"):
+			if self.parent.activeTab.IsItemSelected():
+				self.parent.activeTab.Delete()
 			return
 		if selected==menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
 			if self.parent.activeTab.IsItemSelected():

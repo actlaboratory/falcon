@@ -4,7 +4,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 import logging
 import os
-from win32com.shell import shell, shellcon
+import win32file
 
 from . import helper
 
