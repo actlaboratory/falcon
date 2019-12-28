@@ -428,6 +428,27 @@ class MainListTab(FalconTabBase):
 		#end error
 		self.UpdateFilelist(silence=True)
 
+	def Delete(self):
+		target=[]
+		for elem in self.GetSelectedItems():
+			target.append(elem.fullpath)
+		#end for
+		if len(target)==1:
+			msg=_("%(file)s\nこのファイルを完全削除してもよろしいですか？") % {'file': target[0]}
+		else:
+			msg=_("選択中の項目 %(num)d件を完全削除してもよろしいですか？") % {'num': len(target)}
+		#end メッセージどっちにするか
+		dlg=wx.MessageDialog(None,msg,_("完全削除の確認"),wx.YES_NO|wx.ICON_QUESTION)
+		if dlg.ShowModal()==wx.ID_NO: return
+		inst={"operation": "delete", "target": target}
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		if op.CheckSucceeded()==0:
+			dialog(_("エラー"),_("削除に失敗しました。"))
+			return
+		#end error
+		self.UpdateFilelist(silence=True)
+
 	def ShowProperties(self):
 		index=self.GetFocusedItem()
 		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)

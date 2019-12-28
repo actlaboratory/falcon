@@ -11,6 +11,7 @@ defaultKeymap["mainView"]={
 	"FILE_CHANGEATTRIBUTE": "shift+F2",
 	"FILE_MKDIR": "ctrl+f4/ctrl+shift+n",
 	"FILE_TRASH": "delete",
+	"FILE_DELETE": "shift+delete",
 	"FILE_MAKESHORTCUT": "ctrl+f2",
 	"FILE_SHOWPROPERTIES": "ctrl+shift+return",
 	"EDIT_COPY": "ctrl+c",
