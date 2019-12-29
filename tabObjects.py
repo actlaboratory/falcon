@@ -542,4 +542,4 @@ class MainListTab(FalconTabBase):
 	def _dirCalc_receive(self,results):
 		"""DirCalc の結果を受ける。"""
 		for elem in results:
-			self.hListCtrl.SetItem(index=elem[0],column=1,label=str(elem[1]))
+			self.hListCtrl.SetItem(index=elem[0],column=1,label=elem[1])

@@ -8,6 +8,9 @@ import os
 import time
 import win32api
 import win32file
+from logging import getLogger
+
+log=getLogger("falcon.misc")
 
 falconHelper=ctypes.cdll.LoadLibrary("falconHelper.dll")
 
@@ -116,10 +119,16 @@ def IteratePaths(path):
 def GetDirectorySize(path):
 	"""ディレクトリのサイズをバイト数で返す。"""
 	total = 0
-	with os.scandir(path) as it:
-		for entry in it:
-			if entry.is_file():
-				total += entry.stat().st_size
-			elif entry.is_dir():
-				total+=GetDirectorySize(entry.path)
+	try:
+		with os.scandir(path) as it:
+			for entry in it:
+				if entry.is_file():
+					total += entry.stat().st_size
+				elif entry.is_dir():
+					total+=GetDirectorySize(entry.path)
+
+	except OSError as er:
+		log.error("GetDirectorySize failed (%s" % er)
+		total=-1
+	#end except
 	return total

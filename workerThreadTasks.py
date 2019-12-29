@@ -15,6 +15,11 @@ def DirCalc(param):
 	lst=param['lst']
 	results=[]
 	for elem in lst:
-		results.append((elem[0],misc.GetDirectorySize(elem[1])))
+		s=misc.GetDirectorySize(elem[1])
+		if s==-1:
+			results.append((elem[0],_("<取得失敗>")))
+		else:
+			results.append((elem[0],misc.ConvertBytesTo(s,misc.UNIT_AUTO,True)))
+		#end 成功か失敗か
 	#end for
 	wx.CallAfter(param['callback'],results)
