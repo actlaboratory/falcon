@@ -22,6 +22,7 @@ import globalVars
 import constants
 import fileOperator
 import misc
+import workerThreads
 import workerThreadTasks
 
 from simpleDialog import *
@@ -536,5 +537,4 @@ class MainListTab(FalconTabBase):
 			#end フォルダだったら
 		#end for
 		param={'lst': lst}
-
-
+		workerThreads.RegisterTask(workerThreadTasks.DirCalc,param)

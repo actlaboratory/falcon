@@ -118,3 +118,8 @@ class falconAppMain(wx.App):
 			return
 		#end error
 		pybass.BASS_ChannelPlay(handle,True)
+
+	def OnExit(self):
+		workerThreads.Stop()
+		return wx.App.OnExit(self)
+
