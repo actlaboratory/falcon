@@ -7,12 +7,14 @@
 ワーカースレッドで実行されるタスクは、ここに並べます。ワーカースレッドのタスクは、必ず param という辞書を引数にとり、それを使って処理します。
 """
 
+import wx
+
 import misc
 
 def DirCalc(param):
 	lst=param['lst']
-	total=0
+	results=[]
 	for elem in lst:
-		total+=misc.GetDirectorySize(elem[1])
+		results.append((elem[0],misc.GetDirectorySize(elem[1])))
 	#end for
-	print(total)
+	wx.CallAfter(param['callback'],results)

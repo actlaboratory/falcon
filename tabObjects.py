@@ -536,5 +536,10 @@ class MainListTab(FalconTabBase):
 				lst.append((i,elem.fullpath))
 			#end フォルダだったら
 		#end for
-		param={'lst': lst}
+		param={'lst': lst, 'callback': self._dirCalc_receive}
 		workerThreads.RegisterTask(workerThreadTasks.DirCalc,param)
+
+	def _dirCalc_receive(self,results):
+		"""DirCalc の結果を受ける。"""
+		for elem in results:
+			self.hListCtrl.SetItem(index=elem[0],column=1,label=str(elem[1]))

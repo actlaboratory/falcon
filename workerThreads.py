@@ -33,6 +33,7 @@ class _workerThreadBody(threading.Thread):
 			params=item[1]
 			func(params)
 			tasks.task_done()
+			self.log.debug("task finished.")
 		#end while
 	#end run
 
