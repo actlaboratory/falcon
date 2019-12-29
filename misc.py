@@ -125,10 +125,12 @@ def GetDirectorySize(path):
 				if entry.is_file():
 					total += entry.stat().st_size
 				elif entry.is_dir():
-					total+=GetDirectorySize(entry.path)
+					s=GetDirectorySize(entry.path)
+					if s==-1: return -1
+					total+=s
 
 	except OSError as er:
 		log.error("GetDirectorySize failed (%s" % er)
-		total=-1
+		return -1
 	#end except
 	return total
