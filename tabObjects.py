@@ -521,3 +521,11 @@ class MainListTab(FalconTabBase):
 		globalVars.app.say(_("マーク位置へ移動"))
 		return errorCodes.OK
 
+	def DirCalc(self):
+		lst=[]
+		for elem in self.GetSelectedItems():
+			if elem.__class__.__name__=="Folder":
+				lst.append(elem.fullpath)
+			#end フォルダだったら
+		#end for
+		print(misc.GetDirectorySize(lst[0]))

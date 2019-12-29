@@ -260,6 +260,9 @@ class Events(BaseEvents):
 			if self.parent.activeTab.IsItemSelected():
 				self.parent.activeTab.ShowProperties()
 			return
+		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
+			self.parent.activeTab.DirCalc()
+			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):
 			self.testdialog=views.test.View()
 			self.testdialog.Initialize()

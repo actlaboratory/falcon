@@ -121,5 +121,5 @@ def GetDirectorySize(path):
 			if entry.is_file():
 				total += entry.stat().st_size
 			elif entry.is_dir():
-				total += get_dir_size(entry.path)
+				total+=GetDirectorySize(entry.path)
 	return total
