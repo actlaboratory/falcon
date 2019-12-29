@@ -113,3 +113,13 @@ def IteratePaths(path):
 		#end ディレクトリ
 		yield os.path.join(path,elem[8])
 
+def GetDirectorySize(path):
+	"""ディレクトリのサイズをバイト数で返す。"""
+	total = 0
+	with os.scandir(path) as it:
+		for entry in it:
+			if entry.is_file():
+				total += entry.stat().st_size
+			elif entry.is_dir():
+				total += get_dir_size(entry.path)
+	return total
