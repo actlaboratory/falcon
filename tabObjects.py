@@ -22,6 +22,8 @@ import globalVars
 import constants
 import fileOperator
 import misc
+import workerThreads
+import workerThreadTasks
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -72,17 +74,21 @@ class FalconTabBase(object):
 	def GetSelectedItemCount(self):
 		return self.hListCtrl.GetSelectedItemCount()
 
-	def GetSelectedItems(self):
-		"""選択中のアイテムを、 List オブジェクトで帰す。"""
+	def GetSelectedItems(self,index_mode=False):
+		"""選択中のアイテムを、 ListObject で帰す。index_mode が true の場合、 リスト上での index のリストを返す。"""
 		next=self.hListCtrl.GetFirstSelected()
 		if next==-1: return None
 		lst=[]
 		while(True):
-			lst.append(self.listObject.GetElement(next))
+			if index_mode:
+				lst.append(next)
+			else:
+				lst.append(self.listObject.GetElement(next))
 			next=self.hListCtrl.GetNextSelected(next)
 			if next==-1: break
 		#end while
 		#リストを作る
+		if index_mode: return lst
 		r=type(self.listObject)()
 		r.Initialize(lst)
 		return r
@@ -521,3 +527,19 @@ class MainListTab(FalconTabBase):
 		globalVars.app.say(_("マーク位置へ移動"))
 		return errorCodes.OK
 
+	def DirCalc(self):
+		lst=[]
+		for i in self.GetSelectedItems(index_mode=True):
+			elem=self.listObject.GetElement(i)
+			if elem.__class__.__name__=="Folder":
+				self.hListCtrl.SetItem(index=i,column=1,label=_("<計算中>"))
+				lst.append((i,elem.fullpath))
+			#end フォルダだったら
+		#end for
+		param={'lst': lst, 'callback': self._dirCalc_receive}
+		workerThreads.RegisterTask(workerThreadTasks.DirCalc,param)
+
+	def _dirCalc_receive(self,results):
+		"""DirCalc の結果を受ける。"""
+		for elem in results:
+			self.hListCtrl.SetItem(index=elem[0],column=1,label=elem[1])
