@@ -22,6 +22,7 @@ import globalVars
 import constants
 import fileOperator
 import misc
+import workerThreadTasks
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -72,17 +73,21 @@ class FalconTabBase(object):
 	def GetSelectedItemCount(self):
 		return self.hListCtrl.GetSelectedItemCount()
 
-	def GetSelectedItems(self):
-		"""選択中のアイテムを、 List オブジェクトで帰す。"""
+	def GetSelectedItems(self,index_mode=False):
+		"""選択中のアイテムを、 ListObject で帰す。index_mode が true の場合、 リスト上での index のリストを返す。"""
 		next=self.hListCtrl.GetFirstSelected()
 		if next==-1: return None
 		lst=[]
 		while(True):
-			lst.append(self.listObject.GetElement(next))
+			if index_mode:
+				lst.append(next)
+			else:
+				lst.append(self.listObject.GetElement(next))
 			next=self.hListCtrl.GetNextSelected(next)
 			if next==-1: break
 		#end while
 		#リストを作る
+		if index_mode: return lst
 		r=type(self.listObject)()
 		r.Initialize(lst)
 		return r
@@ -523,9 +528,13 @@ class MainListTab(FalconTabBase):
 
 	def DirCalc(self):
 		lst=[]
-		for elem in self.GetSelectedItems():
+		for i in self.GetSelectedItems(index_mode=True):
+			elem=self.listObject.GetElement(i)
 			if elem.__class__.__name__=="Folder":
-				lst.append(elem.fullpath)
+				self.hListCtrl.SetItem(index=i,column=1,label=_("<計算中>"))
+				lst.append((i,elem.fullpath))
 			#end フォルダだったら
 		#end for
-		print(misc.GetDirectorySize(lst[0]))
+		param={'lst': lst}
+
+

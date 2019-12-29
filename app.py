@@ -16,6 +16,7 @@ import constants
 import DefaultSettings
 import errorCodes
 import misc
+import workerThreads
 from views import main
 
 class falconAppMain(wx.App):
@@ -28,6 +29,7 @@ class falconAppMain(wx.App):
 		self.InitTranslation()
 		self.InitSound()
 		self.InitCaches()
+		workerThreads.Start()
 
 		# 起動サウンドの再生
 		self.PlaySound(self.config["sounds"]["startup"])
