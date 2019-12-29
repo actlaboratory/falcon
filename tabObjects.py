@@ -162,8 +162,9 @@ class MainListTab(FalconTabBase):
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
 				#TODO: 管理者モードだったら、別のfalconが昇格して開くように
 				lst=listObjects.FileList()
-				error=lst.Initialize(elem.fullpath,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-				if error: return#アクセス負荷
+				result=lst.Initialize(elem.fullpath,self.environment["FileList_sorting"],self.environment["FileList_descending"])
+				if result != errorCodes.OK:
+					return result
 				self.Update(lst)
 				return errorCodes.OK
 			#end フォルダ開く
@@ -178,7 +179,8 @@ class MainListTab(FalconTabBase):
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				#TODO: これも昇格したほうがいい
 				lst=listObjects.FileList()
-				if lst.Initialize(elem.letter+":",self.environment["FileList_sorting"],self.environment["FileList_descending"]):
+				result=lst.Initialize(elem.letter+":",self.environment["FileList_sorting"],self.environment["FileList_descending"])
+				if result != errorCodes.OK:
 					return errorCodes.FILE_NOT_FOUND
 				self.Update(lst)
 				return errorCodes.OK
@@ -199,8 +201,9 @@ class MainListTab(FalconTabBase):
 			#end ドライブ一覧表示
 			predir=os.path.split(self.listObject.rootDirectory)[0]
 			lst=listObjects.FileList()
-			error=lst.Initialize(predir,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-			if error: return#アクセス負荷
+			result=lst.Initialize(predir,self.environment["FileList_sorting"],self.environment["FileList_descending"])
+			if result != errorCodes.OK:
+				return#アクセス負荷
 			self.Update(lst)
 			self.hListCtrl.Focus(self.hListCtrl.FindItem(-1,self.lastBasename))
 
@@ -342,8 +345,9 @@ class MainListTab(FalconTabBase):
 	def UpdateFilelist(self,silence=False):
 		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
 		globalVars.app.say(_("更新"))
-		error=self.listObject.Update()
-		if error: return errorCodes.FILE_NOT_FOUND			#アクセス負荷
+		result=self.listObject.Update()
+		if result != errorCodes.OK:
+			return errorCodes.FILE_NOT_FOUND			#アクセス負荷など
 		self.Update(self.listObject)
 
 	def MakeDirectory(self,newdir):
@@ -479,8 +483,9 @@ class MainListTab(FalconTabBase):
 			lst.Initialize(self.markedPlace)
 		else:									#ファイルリストへ移動
 			lst=listObjects.FileList()
-			error=lst.Initialize(self.markedPlace,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-			if error: return#アクセス負荷
+			result=lst.Initialize(self.markedPlace,self.environment["FileList_sorting"],self.environment["FileList_descending"])
+			if result != errorCodes.OK:
+				return result#アクセス負荷
 		self.Update(lst)
 		globalVars.app.say(_("マーク位置へ移動"))
 		return errorCodes.OK
