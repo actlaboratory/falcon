@@ -1,8 +1,8 @@
-﻿
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 #Falcon generic list management
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
+
 import gettext
 import os
 import wx
@@ -14,6 +14,7 @@ import constants
 import misc
 import browsableObjects
 import globalVars
+import errorCodes
 from simpleDialog import dialog
 from win32com.shell import shell, shellcon
 
@@ -124,22 +125,27 @@ class FileList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
 	def __init__(self):
 		super().__init__()
-
-	def Initialize(self,dir, sorting=0, ad=False):
-		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。取得できたら、Trueが帰る。"""
-		self.log=logging.getLogger("falcon.fileList")
-		self.sortCursor=sorting
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
+		self.log=logging.getLogger("falcon.fileList")
+
+	def Update(self):
+		return self.Initialize(self.rootDirectory,self.sortCursor,self.sortDescending,True)
+
+	def Initialize(self,dir, sorting=0,descending=0,silent=False):
+		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、errorCodes.OK以外が返る。silentがTrueなら読み上げは行われない。"""
+		self.sortCursor=sorting
+		self.sortDescending=descending
 		self.files=[]
 		self.folders=[]
 		if isinstance(dir,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			self._copyFromList(dir)
-			return
+			return errorCodes.OK
 		#end copy
 		dir=dir.rstrip("\\")
 		dir_spl=dir.split("\\")
 		level=len(dir_spl)
-		globalVars.app.say("%s%d %s" % (dir[0],level,dir_spl[level-1]))
+		if not silent:
+			globalVars.app.say("%s%d %s" % (dir[0],level,dir_spl[level-1]))
 		self.rootDirectory=dir
 		self.log.debug("Getting file list for %s..." % self.rootDirectory)
 		t=misc.Timer()
@@ -148,12 +154,12 @@ class FileList(FalconListBase):
 		except pywintypes.error as err:
 			self.log.error("Cannot open the directory! {0}".format(err))
 			dialog(_("エラー"), _("フォルダを開くことができませんでした(%(error)s)") % {"error": str(err)})
-			return False
+			return errorCodes.FATAL
 		#end except
 		if len(lst)==2:
 			lst=[]
 			self.log.debug("Blank folder.")
-			return True
+			return errorCodes.OK
 		#end 空のフォルダだったらさっさと帰る
 		del lst[0:2]
 		for elem in lst:
@@ -175,7 +181,7 @@ class FileList(FalconListBase):
 			self.log.debug("Triggering sorting")
 			self.ApplySort()
 		#end ソートが必要ならソート
-		return True
+		return errorCodes.OK
 
 	def _copyFromList(self,lst):
 		self.log.debug("Copying from file list...")
@@ -281,12 +287,17 @@ class FileList(FalconListBase):
 
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
-	def Initialize(self,lst,sorting=0,descending=0):
-		"""ドライブ情報を取得し、リストを初期化する。入力は絶対パスでなければならない。"""
-		self.sortCursor=sorting
-		self.sortDescending=descending
+	def __init__(self):
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_DRIVELETTER,SORT_TYPE_FREESPACE,SORT_TYPE_TOTALSPACE, SORT_TYPE_TYPESTRING]
 		self.log=logging.getLogger("falcon.driveList")
+
+	def Update(self):
+		return self.Initialize(None,self.sortCursor,self.sortDescending,True)
+
+	def Initialize(self,lst,sorting=0,descending=0,silent=False):
+		"""ドライブ情報を取得し、リストを初期化する。"""
+		self.sortCursor=sorting
+		self.sortDescending=descending
 		self.log.debug("Getting drives list...")
 		self.rootDirectory=""
 		t=misc.Timer()
@@ -297,7 +308,8 @@ class DriveList(FalconListBase):
 			return
 		#end copy
 
-		globalVars.app.say(_("ドライブ洗濯"))
+		if not silent:
+			globalVars.app.say(_("ドライブ洗濯"))
 		drv=win32api.GetLogicalDrives()
 		check=1
 		for i in range(26):
@@ -376,9 +388,14 @@ class DriveList(FalconListBase):
 
 class StreamList(FalconListBase):
 	"""NTFS 副ストリームを扱うリスト。"""
-	def Initialize(self,file):
-		"""ファイル名から副ストリーム情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、Falseが帰る。取得できたら、Trueが帰る。"""
+	def __init__(self):
 		self.log=logging.getLogger("falcon.streamList")
+
+	def Update(self):
+		return self.Initialize(self.rootDirectory,True)
+
+	def Initialize(self,file,silent=False):
+		"""ファイル名から副ストリーム情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、errorCodes.OK以外が返る。。"""
 		t=misc.Timer()
 		self.streams=[]
 
@@ -390,7 +407,8 @@ class StreamList(FalconListBase):
 		file_spl=file.split("\\")
 		self.rootDirectory=file
 		level=len(file_spl)
-		globalVars.app.say("%s%d %s" % (file[0],level,file_spl[level-1]))
+		if not silent:
+			globalVars.app.say("%s%d %s" % (file[0],level,file_spl[level-1]))
 		self.log.debug("Getting stream list for %s..." % file)
 		try:
 			lst=win32file.FindStreams(file)
