@@ -66,19 +66,18 @@ class View(BaseView):
 		self.activeTab=None#最初なのでなにもなし
 		tab=tabObjects.MainListTab()
 		tab.Initialize(self)
-		lst=listObjects.FileList()
 		if(len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			lst=listObjects.FileList()
-			lst.Initialize(os.path.expandvars(sys.argv[1]))
+			lst.Initialize(os.path.expandvars(sys.argv[1]),int(globalVars.app.config["FileList"]["sorting"]),int(globalVars.app.config["FileList"]["descending"]))
 		elif(self.app.config["browse"]["startPath"]==""):
 			lst=listObjects.DriveList()
-			lst.Initialize(None)
+			lst.Initialize(None,int(globalVars.app.config["DriveList"]["sorting"]),int(globalVars.app.config["DriveList"]["descending"]))
 		elif(os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"]))):
 			lst=listObjects.FileList()
-			lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]))
+			lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]),int(globalVars.app.config["FileList"]["sorting"]),int(globalVars.app.config["FileList"]["descending"]))
 		else:
 			lst=listObjects.DriveList()
-			lst.Initialize(None)
+			lst.Initialize(None,int(globalVars.app.config["DriveList"]["sorting"]),int(globalVars.app.config["DriveList"]["descending"]))
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
 		tab.Update(lst)
