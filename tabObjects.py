@@ -37,6 +37,7 @@ ACTION_SORTNEXT=3#次の並び順
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
 	def __init__(self):
+		self.task=None
 		self.colums=[]#タブに表示されるカラムの一覧。外からは読み取りのみ。
 		self.listObject=None#リストの中身を保持している listObjects のうちのどれかのオブジェクト・インスタンス
 		self.type=None
@@ -108,6 +109,7 @@ class FalconTabBase(object):
 	def UpdateListContent(self,content):
 		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
 		self.log.debug("Updating list control...")
+		self._cancelBackgroundTasks()
 		t=misc.Timer()
 		for elem in content:
 			self.hListCtrl.Append(elem)
@@ -149,9 +151,11 @@ class MainListTab(FalconTabBase):
 		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["sorting"])
 		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
 		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
+		self.background_tasks=[]
 
 	def Update(self,lst):
 		"""指定された要素をタブに適用する。"""
+		self._cancelBackgroundTasks()
 		self.hListCtrl.DeleteAllItems()
 		if type(self.listObject)!=type(lst):
 			self.columns=lst.GetColumns()
@@ -163,6 +167,13 @@ class MainListTab(FalconTabBase):
 		#end 違う種類のリストかどうか
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
+
+	def _cancelBackgroundTasks(self):
+		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
+		for elem in self.background_tasks:
+			elem.Cancel()
+		#end for
+		self.background_tasks=[]
 
 	def TriggerAction(self, action,admin=False):
 		if action==ACTION_SORTNEXT:
@@ -413,15 +424,10 @@ class MainListTab(FalconTabBase):
 		self.UpdateFilelist(silence=True)
 
 	def FileOperationTest(self):
-		inst={"operation": "hardLink", "to": [os.path.abspath("help_hard.chm")], "from": [os.path.abspath("PyWin32.chm")]}
-		op=fileOperator.FileOperator(inst)
-		ret=op.Execute()
-		if op.CheckSucceeded()==0:
-			dialog(_("エラー"),_("ショートカットを作成できません。"))
-			return
-		#end error
-		self.UpdateFilelist(silence=True)
-		dialog("とりあえずテストでハードリンク作った","GUIつくってね")
+		if self.task:
+			self.task.Cancel()
+		else:
+			self.task=workerThreads.RegisterTask(workerThreadTasks.DebugBeep)
 
 	def Trash(self):
 		target=[]
@@ -541,9 +547,11 @@ class MainListTab(FalconTabBase):
 			#end フォルダだったら
 		#end for
 		param={'lst': lst, 'callback': self._dirCalc_receive}
-		workerThreads.RegisterTask(workerThreadTasks.DirCalc,param)
+		self.background_tasks.append(workerThreads.RegisterTask(workerThreadTasks.DirCalc,param))
 
-	def _dirCalc_receive(self,results):
+	def _dirCalc_receive(self,results,taskState):
 		"""DirCalc の結果を受ける。"""
 		for elem in results:
 			self.hListCtrl.SetItem(index=elem[0],column=1,label=elem[1])
+		#end for
+		self.background_tasks.remove(taskState)

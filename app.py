@@ -122,4 +122,3 @@ class falconAppMain(wx.App):
 	def OnExit(self):
 		workerThreads.Stop()
 		return wx.App.OnExit(self)
-

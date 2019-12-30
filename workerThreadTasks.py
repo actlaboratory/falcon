@@ -28,7 +28,7 @@ def DirCalc(taskState,param):
 		#end 成功か失敗か
 	#end for
 	if taskState.canceled: return False
-	wx.CallAfter(param['callback'],results)
+	wx.CallAfter(param['callback'],results,taskState)
 	return True
 
 def DebugBeep(taskState,param):
