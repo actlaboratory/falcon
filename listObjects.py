@@ -62,17 +62,18 @@ class FalconListBase(object):
 		self.sortCursor=0
 		self.sortDescending=0
 
-	def Search(self,search):
+	#indexで指定した列が文字列searchに一致する行の行インデックスを返す
+	def Search(self,search,index=0):
 		"""文字列からインデックス番号に変換する。"""
 		lst=self.GetItems()
 		found=-1
 		i=0
 		for elem in lst:
-			if elem[0]==search:
+			if elem[index]==search:
 				found=i
-				i+=1
 				break
 			#end 検索
+			i+=1
 		#end for
 		return found
 

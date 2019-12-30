@@ -176,7 +176,6 @@ class MainListTab(FalconTabBase):
 		index=self.GetFocusedItem()
 		if action==ACTION_FORWARD or action==ACTION_FORWARD_STREAM:
 			elem=self.listObject.GetElement(index)
-			self.lastBasename=elem.basename#あとでバックスペースで戻ったときに使う
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
 				#TODO: 管理者モードだったら、別のfalconが昇格して開くように
 				lst=listObjects.FileList()
@@ -212,18 +211,22 @@ class MainListTab(FalconTabBase):
 				return errorCodes.BOUNDARY
 			dir=self.listObject.rootDirectory
 			if len(dir)<=3:#ドライブリスト
+				cursorTarget=self.listObject.rootDirectory[0]
 				lst=listObjects.DriveList()
 				lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
-				self.Update(lst)
-				return
-			#end ドライブ一覧表示
-			predir=os.path.split(self.listObject.rootDirectory)[0]
-			lst=listObjects.FileList()
-			result=lst.Initialize(predir,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-			if result != errorCodes.OK:
-				return#アクセス負荷
+				targetItemIndex=lst.Search(cursorTarget,1)
+			else:
+				predir=os.path.split(self.listObject.rootDirectory)[0]
+				cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
+				lst=listObjects.FileList()
+				result=lst.Initialize(predir,self.environment["FileList_sorting"],self.environment["FileList_descending"])
+				if result != errorCodes.OK:
+					return result#アクセス負荷
+				targetItemIndex=lst.Search(cursorTarget)
 			self.Update(lst)
-			self.hListCtrl.Focus(self.hListCtrl.FindItem(-1,self.lastBasename))
+			self.hListCtrl.Focus(targetItemIndex)
+			self.hListCtrl.Select(targetItemIndex)
+			return errorCodes.OK
 
 	def RunFile(self,elem, admin=False):
 		"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
