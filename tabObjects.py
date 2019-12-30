@@ -148,7 +148,7 @@ class MainListTab(FalconTabBase):
 		self.parent=parent
 		self.InstallListCtrl(parent.hListPanel)
 		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
-		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["sorting"])
+		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
 		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
 		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
 		self.background_tasks=[]
