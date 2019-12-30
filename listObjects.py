@@ -370,7 +370,6 @@ class DriveList(FalconListBase):
 		lst=[]
 		for elem in self.drives:
 			lst.append(elem.fullpath)
-			print(elem.fullpath)
 		for elem in self.unusableDrives:
 			lst.append(elem.fullpath)
 		return lst
