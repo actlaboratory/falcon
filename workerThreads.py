@@ -14,30 +14,56 @@ import threading
 
 tasks=queue.Queue()
 
+active_task_states=[]
+
+class Stop_task(object):
+	pass
+
+class TaskState(object):
+	def __init__(self,func,params,cancelable=True):
+		self.func=func
+		self.params=params
+		self.canceled=False
+		self.cancelable=cancelable
+		self.finished=False
+
+	def Cancel(self):
+		if not self.cancelable: return False
+		self.canceled=True
+		return True
+
 class _workerThreadBody(threading.Thread):
 	def __init__(self,identifier):
 		threading.Thread.__init__(self)
-		self.cancellable=True
 		self.log=getLogger("falcon.workerThread%d" % identifier)
 
 	def run(self):
 		while(True):
 			item=tasks.get()
 			self.log.debug("picked up job")
-			if isinstance(item,str) and item=="stop":#ワーカースレッド終了
+			if isinstance(item,Stop_task):#ワーカースレッド終了
 				self.log.debug("Received stop signal. Exiting thread...")
 				tasks.task_done()
 				break
 			#end 終了
-			func=item[0]
-			params=item[1]
-			func(params)
+			if stopped: continue#終了した後にはタスクをもらっても働かない
+			if item.canceled:#出したけどキャンセル済み
+				tasks.task_done()
+				self.log.debug("Already canceled, skipping this task...")
+				continue
+			#end キャンセル済みタスク
+			func=item.func
+			params=item.params
+			active_task_states.append(item)
+			ret=func(item,params)
 			tasks.task_done()
-			self.log.debug("task finished.")
+			self.log.debug("task finished." if ret else "Task canceled.")
+			active_task_states.remove(item)
 		#end while
 	#end run
 
 initialized=False
+stopped=False
 
 threads=[]
 
@@ -56,15 +82,25 @@ def Start(worker_num=2):
 #end Initialize
 
 def Stop():
+	for elem in active_task_states:
+		if not elem.cancelable: return False
+	#end キャンセルできないタスクが走ってるかどうか
+
+	stopped=True
 	"""全てのワーカースレッドを停止させる。"""
 	log.debug("Stopping worker threads...")
+	for elem in active_task_states:
+		elem.Cancel()
+	#end 実行中タスクキャンセル
 	for i in range(len(threads)):
-		tasks.put("stop")
+		tasks.put(Stop_task())
 	for elem in threads:
 		elem.join()
 	log.debug("Stopped")
 
-def RegisterTask(func,param):
-	"""関数とパラメータを指定して、ワーカースレッドに処理を任せる。"""
+def RegisterTask(func,param={}):
+	"""関数とパラメータを指定して、ワーカースレッドに処理を任せる。タスクの状態を表すオブジェクトを返す。"""
 	log.debug("register")
-	tasks.put((func,param))
+	t=TaskState(func,param)
+	tasks.put(t)
+	return t
