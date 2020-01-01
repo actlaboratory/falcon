@@ -436,6 +436,13 @@ class MainListTab(FalconTabBase):
 		for elem in self.GetSelectedItems():
 			target.append(elem.fullpath)
 		#end for
+		if len(target)==1:
+			msg=_("%(file)s\nこのファイルをごみ箱に移動してもよろしいですか？") % {'file': target[0]}
+		else:
+			msg=_("選択中の項目 %(num)d件をごみ箱に移動してもよろしいですか？") % {'num': len(target)}
+		#end メッセージどっちにするか
+		dlg=wx.MessageDialog(None,msg,_("確認"),wx.YES_NO|wx.ICON_QUESTION)
+		if dlg.ShowModal()==wx.ID_NO: return
 		inst={"operation": "trash", "target": target}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()

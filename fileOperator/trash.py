@@ -27,7 +27,7 @@ def Execute(op):
 		shellcon.FO_DELETE,
 		"\0".join(f),
 		None,
-		shellcon.FOF_ALLOWUNDO,
+		shellcon.FOF_ALLOWUNDO|shellcon.FOF_NOCONFIRMATION,
 		None,
 		_("ゴミ箱に移動しています…")
 	)
