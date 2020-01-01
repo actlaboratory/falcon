@@ -221,6 +221,7 @@ class MainListTab(FalconTabBase):
 	def move(self,target,cursorTarget=""):
 		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
 		targetItemIndex=-1
+		target=os.path.expandvars(target)
 		if target=="":#ドライブリスト
 			lst=listObjects.DriveList()
 			lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
