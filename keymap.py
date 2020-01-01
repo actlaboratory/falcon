@@ -210,6 +210,9 @@ class KeymapHandler():
 			self.log.warning("Cannot parse %s" % filename)
 		return ret
 
+	def add(self,identifer,ref,key):
+		self.map[identifer][ref]=key
+
 	def GetKeyString(self,identifier,key):
 		"""指定されたコマンドのショートカットキー文字列を取得します。"""
 		try:
