@@ -47,6 +47,14 @@ class DefaultSettings:
 			"startup" : "tip.ogg",
 			"boundary" : "tip.ogg"
 		}
+		config["favorite_directories"]={
+			"ドキュメント" : "%%%%userprofile%%%%\documents",
+			"デスクトップ" : "%%%%userprofile%%%%\desktop"
+		}
+		config["favorite_directories_shortcut"]={
+			"ドキュメント" : "alt+1",
+			"デスクトップ" : "alt+2"
+		}
 
 		return config
 

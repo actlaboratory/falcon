@@ -2,6 +2,7 @@
 #Falcon app GUI implementation
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
+
 import accessible_output2.outputs.auto
 import sys
 import FalconConfigParser
@@ -9,8 +10,10 @@ import gettext
 import logging
 import os
 import wx
+import UserCommandManager
 from logging import getLogger, FileHandler, Formatter
 from soundPlayer import pybass
+from simpleDialog import *
 
 import constants
 import DefaultSettings
@@ -27,6 +30,7 @@ class falconAppMain(wx.App):
 		self.InitLogger()
 		self.LoadSettings()
 		self.InitTranslation()
+		self.LoadUserCommandSettings()
 		self.InitSound()
 		self.InitCaches()
 		workerThreads.Start()
@@ -81,6 +85,13 @@ class falconAppMain(wx.App):
 		self.config = DefaultSettings.DefaultSettings.get()
 		self.config.read(constants.SETTING_FILE_NAME)
 
+	def LoadUserCommandSettings(self):
+		self.favoriteDirectory=UserCommandManager.UserCommandManager(self.config.items("favorite_directories"),self.config.items("favorite_directories_shortcut"),"MOVE_FAVORITE_FOLDER_")
+		if self.favoriteDirectory.errors:
+			tmp=_("お気に入りフォルダの設定が不正です。以下の設定を確認してください。\n\n")
+			for v in self.favoriteDirectory.errors:
+				tmp+=v+"\n"
+			dialog(_("エラー"),tmp)
 		self.config.write()
 
 	def InitTranslation(self):

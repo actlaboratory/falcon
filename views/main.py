@@ -47,6 +47,11 @@ class View(BaseView):
 		)
 		self.menu=Menu()
 		self.menu.InitShortcut(self.identifier)
+
+		#お気に入りフォルダをショートカット一覧に登録
+		for v in globalVars.app.favoriteDirectory.keyMap:
+			self.menu.keymap.add(self.identifier,"MOVE_FAVORITE_FOLDER_"+v,globalVars.app.favoriteDirectory.keyMap[v])
+
 		self.InstallMenuEvent(self.menu,self.events)
 		self.InstallListPanel()
 		self.tabs=[]
@@ -280,6 +285,12 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("HELP_VERINFO"):
 			self.ShowVersionInfo()
 			return
+
+		if globalVars.app.favoriteDirectory.isRefHit(selected):
+			self.parent.activeTab.move(globalVars.app.favoriteDirectory.get(selected))
+			#TODO: エラー処理する
+			return
+
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
 
