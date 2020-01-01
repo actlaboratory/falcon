@@ -189,55 +189,61 @@ class MainListTab(FalconTabBase):
 			elem=self.listObject.GetElement(index)
 			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
 				#TODO: 管理者モードだったら、別のfalconが昇格して開くように
-				lst=listObjects.FileList()
-				result=lst.Initialize(elem.fullpath,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-				if result != errorCodes.OK:
-					return result
-				self.Update(lst)
-				return errorCodes.OK
+				return self.move(elem.fullpath)
 			#end フォルダ開く
 			elif isinstance(elem,browsableObjects.File):#このファイルを開く
 				if action==ACTION_FORWARD: self.RunFile(elem,admin)
 				#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
-				if action==ACTION_FORWARD_STREAM: self.OpenStream(elem)
-			#ファイルを開く
+				if action==ACTION_FORWARD_STREAM: self.move(elem.fullpath)
+			#end ファイルを開く
 			elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
 				self.RunFile(elem,admin)
 			#end ストリームを開く
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				#TODO: これも昇格したほうがいい
-				lst=listObjects.FileList()
-				result=lst.Initialize(elem.letter+":",self.environment["FileList_sorting"],self.environment["FileList_descending"])
-				if result != errorCodes.OK:
-					return errorCodes.FILE_NOT_FOUND
-				self.Update(lst)
-				return errorCodes.OK
+				self.move(elem.letter+":")
 			#end ドライブ開く
 			else:
 				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
 			#end フォルダ以外のタイプ
 		#end ACTION_FORWARD
 		if action==ACTION_BACKWARD:
-			if (self.listObject.__class__.__name__=="DriveList"):
+			if isinstance(self.listObject,listObjects.DriveList):
 				return errorCodes.BOUNDARY
-			dir=self.listObject.rootDirectory
-			if len(dir)<=3:#ドライブリスト
+			if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
+				target=""
 				cursorTarget=self.listObject.rootDirectory[0]
-				lst=listObjects.DriveList()
-				lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
-				targetItemIndex=lst.Search(cursorTarget,1)
 			else:
-				predir=os.path.split(self.listObject.rootDirectory)[0]
+				target=os.path.split(self.listObject.rootDirectory)[0]
 				cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
-				lst=listObjects.FileList()
-				result=lst.Initialize(predir,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-				if result != errorCodes.OK:
-					return result#アクセス負荷
+			return self.move(target,cursorTarget)
+
+	def move(self,target,cursorTarget=""):
+		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
+		targetItemIndex=-1
+		if target=="":#ドライブリスト
+			lst=listObjects.DriveList()
+			lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
+			if cursorTarget!="":
+				targetItemIndex=lst.Search(cursorTarget,1)
+		elif not os.path.exists(target):
+			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
+			return FILE_NOT_FOUND
+		elif os.path.isfile(target):	#副ストリームへ移動
+			lst=listObjects.StreamList()
+			lst.Initialize(target)
+		else:
+			lst=listObjects.FileList()
+			result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
+			if result != errorCodes.OK:
+				return result#アクセス負荷
+			if cursorTarget!="":
 				targetItemIndex=lst.Search(cursorTarget)
-			self.Update(lst)
+		self.Update(lst)
+		if targetItemIndex>=0:
 			self.hListCtrl.Focus(targetItemIndex)
 			self.hListCtrl.Select(targetItemIndex)
-			return errorCodes.OK
+		return errorCodes.OK
 
 	def RunFile(self,elem, admin=False):
 		"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
@@ -263,14 +269,6 @@ class MainListTab(FalconTabBase):
 			dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": error})
 		#end ファイル開けなかった
 	#end RunFile
-
-	def OpenStream(self,elem):
-		"""副ストリームリストを開く。"""
-		lst=listObjects.StreamList()
-		lst.Initialize(elem.fullpath)
-		self.Update(lst)
-	#end OpenStream
-
 
 	def col_click(self,event):
 		no=event.GetColumn()
@@ -522,21 +520,9 @@ class MainListTab(FalconTabBase):
 		self.log.debug("markset at \""+self.markedPlace + "\"")
 
 	def GoToMark(self):
-		if self.markedPlace=="":				#ドライブリストへ移動
-			lst=listObjects.DriveList()
-			lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
-		elif not os.path.exists(self.markedPlace):
-			dialog(_("エラー"),_("マーク位置への移動に失敗しました。移動先が存在しません。"))
-			return FILE_NOT_FOUND
-		elif os.path.isfile(self.markedPlace):	#副ストリームへ移動
-			lst=listObjects.StreamList()
-			lst.Initialize(self.markedPlace)
-		else:									#ファイルリストへ移動
-			lst=listObjects.FileList()
-			result=lst.Initialize(self.markedPlace,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-			if result != errorCodes.OK:
-				return result#アクセス負荷
-		self.Update(lst)
+		ret=self.move(self.markedPlace)
+		if ret!=errorCodes.OK:
+			return ret
 		globalVars.app.say(_("マーク位置へ移動"))
 		return errorCodes.OK
 
