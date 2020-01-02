@@ -196,6 +196,7 @@ class KeymapHandler():
 	"""キーマップは、設定ファイルを読んで、wxのアクセラレーターテーブルを生成します。"""
 	def __init__(self):
 		self.log=logging.getLogger("falcon.keymapHandler")
+		self.errors={}
 
 	def Initialize(self, filename):
 		"""キーマップ情報を初期かします。デフォルトキーマップを適用してから、指定されたファイルを読もうと試みます。ファイルが見つからなかった場合は、FILE_NOT_FOUND を返します。ファイルがパースできなかった場合は、PARSING_FAILED を返します。いずれの場合も、デフォルトキーマップは適用されています。"""
@@ -211,7 +212,15 @@ class KeymapHandler():
 		return ret
 
 	def add(self,identifer,ref,key):
-		self.map[identifer][ref]=key
+		"""重複をチェックしながらキーマップにショートカットを追加"""
+		if ref in dict(self.map.items(identifer)).keys() or key in dict(self.map.items(identifer)).values():
+			try:
+				self.errors[identifer][ref]=key
+			except KeyError:
+				self.errors[identifer]={}
+				self.errors[identifer][ref]=key
+		else:
+			self.map[identifer][ref]=key
 
 	def GetKeyString(self,identifier,key):
 		"""指定されたコマンドのショートカットキー文字列を取得します。"""
