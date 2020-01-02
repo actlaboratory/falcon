@@ -192,12 +192,12 @@ class MainListTab(FalconTabBase):
 				return self.move(elem.fullpath)
 			#end フォルダ開く
 			elif isinstance(elem,browsableObjects.File):#このファイルを開く
-				if action==ACTION_FORWARD: self.RunFile(elem,admin)
+				if action==ACTION_FORWARD: self.RunFile(elem.fullpath,admin)
 				#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
 				if action==ACTION_FORWARD_STREAM: self.move(elem.fullpath)
 			#end ファイルを開く
 			elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
-				self.RunFile(elem,admin)
+				self.RunFile(elem.fullpath,admin)
 			#end ストリームを開く
 			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
 				#TODO: これも昇格したほうがいい
@@ -246,22 +246,23 @@ class MainListTab(FalconTabBase):
 			self.hListCtrl.Select(targetItemIndex)
 		return errorCodes.OK
 
-	def RunFile(self,elem, admin=False):
+	def RunFile(self,path, admin=False,prm=""):
 		"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
-		msg="running %s as admin" % (elem.fullpath) if admin else "running %s" % (elem.fullpath)
+		path=os.path.expandvars(path)
+		msg="running %s as admin" % (path) if admin else "running %s" % (path)
 		self.log.debug(msg)
 		msg=_("管理者で起動") if admin else _("起動")
 		globalVars.app.say(msg)
 		error=""
 		if admin:
 			try:
-				ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",elem.fullpath,"")
+				ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",path,prm)
 			except pywintypes.error as e:
 				error=str(e)
 			#end shellExecuteEx failure
 		else:
 			try:
-				win32api.ShellExecute(0,"open",elem.fullpath,"","",1)
+				win32api.ShellExecute(0,"open",path,prm,"",1)
 			except win32api.error as er:
 				error=str(er)
 			#end shellExecute failure
