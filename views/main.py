@@ -149,7 +149,7 @@ class Menu(BaseMenu):
 		self.hFavoriteDirectoryMenu=wx.Menu()
 		for v in globalVars.app.favoriteDirectory.paramMap:
 			self.RegisterMenuCommand(self.hFavoriteDirectoryMenu,"MOVE_FAVORITE_FOLDER_"+v,v)
-		self.hMoveMenu.AppendSubMenu(self.hFavoriteDirectoryMenu,"お気に入りディレクトリ")
+		self.hMoveMenu.AppendSubMenu(self.hFavoriteDirectoryMenu,_("お気に入りディレクトリ"))
 
 		#ツールメニューの中身
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
