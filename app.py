@@ -84,15 +84,28 @@ class falconAppMain(wx.App):
 		"""設定ファイルを読み込む。なければデフォルト設定を適用し、設定ファイルを書く。"""
 		self.config = DefaultSettings.DefaultSettings.get()
 		self.config.read(constants.SETTING_FILE_NAME)
+		self.config.write()
 
 	def LoadUserCommandSettings(self):
+		"""お気に入りフォルダと「ここで開く」の設定を読み込む"""
 		self.favoriteDirectory=UserCommandManager.UserCommandManager(self.config.items("favorite_directories"),self.config.items("favorite_directories_shortcut"),"MOVE_FAVORITE_FOLDER_")
 		if self.favoriteDirectory.errors:
 			tmp=_("お気に入りフォルダの設定が不正です。以下の設定を確認してください。\n\n")
 			for v in self.favoriteDirectory.errors:
 				tmp+=v+"\n"
 			dialog(_("エラー"),tmp)
-		self.config.write()
+
+		self.openHereCommand=UserCommandManager.UserCommandManager(self.config.items("open_here"),self.config.items("open_here_shortcut"),"MOVE_OPEN_HERE_")
+		if self.openHereCommand.errors:
+			tmp=_("「ここで開く」の設定が不正です。以下の設定を確認してください。\n\n")
+			for v in self.openHereCommand.errors:
+				tmp+=v+"\n"
+			dialog(_("エラー"),tmp)
+
+		self.userCommandManagers={
+				self.favoriteDirectory : _("お気に入りディレクトリ"),
+				self.openHereCommand : _("ここで開く")
+			}
 
 	def InitTranslation(self):
 		"""翻訳を初期化する。"""

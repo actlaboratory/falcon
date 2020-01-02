@@ -55,6 +55,18 @@ class DefaultSettings:
 			"ドキュメント" : "alt+1",
 			"デスクトップ" : "alt+2"
 		}
+		config["open_here"]={
+			"Falcon(new window)" : "falcon.exe \"%%%%1\"",
+			"Explorer" : "%%%%windir%%%%\explorer.exe \"%%%%1\"",
+			"コマンド プロンプト" : "%%%%windir%%%%\system32\cmd.exe /K cd /d  \"%%%%1\"",
+			"Windows Power Shell" : "%%%%windir%%%%\System32\WindowsPowerShell\\v1.0\powershell.exe -NoExit -command cd \'%%%%1\'"
+		}
+		config["open_here_shortcut"]={
+			"Falcon(new window)" : "shift+return",
+			"Explorer" : "ctrl+e",
+			"コマンド プロンプト" : "ctrl+shift+o",
+			"Windows Power Shell" : "ctrl+shift+p"
+		}
 
 		return config
 

@@ -8,6 +8,7 @@ import logging
 import os
 import sys
 import wx
+import re
 from logging import getLogger, FileHandler, Formatter
 from simpleDialog import dialog
 
@@ -48,9 +49,15 @@ class View(BaseView):
 		self.menu=Menu()
 		self.menu.InitShortcut(self.identifier)
 
-		#お気に入りフォルダをショートカット一覧に登録
-		for v in globalVars.app.favoriteDirectory.keyMap:
-			self.menu.keymap.add(self.identifier,"MOVE_FAVORITE_FOLDER_"+v,globalVars.app.favoriteDirectory.keyMap[v])
+		#お気に入りフォルダと「ここで開く」のショートカットキーを登録
+		for target in (globalVars.app.userCommandManagers):
+			for v in target.keyMap:
+				self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
+		if self.menu.keymap.errors and self.menu.keymap.errors[self.identifier]:
+			tmp=_("設定されたショートカットキーが重複しています。以下のキーの設定内容をご確認ください。\n\n")
+			for v in self.menu.keymap.errors[self.identifier]:
+				tmp+=v+"\n"
+				dialog(_("エラー"),tmp)
 
 		self.InstallMenuEvent(self.menu,self.events)
 		self.InstallListPanel()
@@ -146,10 +153,11 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARKSET",_("表示中の場所をマーク"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
 
-		self.hFavoriteDirectoryMenu=wx.Menu()
-		for v in globalVars.app.favoriteDirectory.paramMap:
-			self.RegisterMenuCommand(self.hFavoriteDirectoryMenu,"MOVE_FAVORITE_FOLDER_"+v,v)
-		self.hMoveMenu.AppendSubMenu(self.hFavoriteDirectoryMenu,_("お気に入りディレクトリ"))
+		for m in globalVars.app.userCommandManagers:
+			subMenu=wx.Menu()
+			for v in m.paramMap:
+				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
+			self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
 
 		#ツールメニューの中身
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
@@ -299,10 +307,18 @@ class Events(BaseEvents):
 			self.ShowVersionInfo()
 			return
 
-		if globalVars.app.favoriteDirectory.isRefHit(selected):
-			self.parent.activeTab.move(globalVars.app.favoriteDirectory.get(selected))
-			#TODO: エラー処理する
-			return
+		for m in globalVars.app.userCommandManagers:
+			if m.isRefHit(selected):
+				if m == globalVars.app.favoriteDirectory:
+					self.parent.activeTab.move(m.get(selected))
+					#TODO: エラー処理する
+				else:
+					path=m.get(selected)
+					path=path.replace("%1",self.parent.activeTab.listObject.rootDirectory)
+					prm=re.sub(r"^[^ ]* (.*)$",r"\1",path)
+					path=re.sub(r"^([^ ]*).*$",r"\1",path)
+					self.parent.activeTab.RunFile(path,False,prm)
+				return
 
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
