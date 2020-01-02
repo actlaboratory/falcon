@@ -104,6 +104,7 @@ class View(BaseView):
 class Menu(BaseMenu):
 	def Apply(self,target,event):
 		"""指定されたウィンドウに、メニューを適用する。"""
+
 		#メニューの大項目を作る
 		self.hFileMenu=wx.Menu()
 		self.hEditMenu=wx.Menu()
@@ -113,6 +114,7 @@ class Menu(BaseMenu):
 		self.hViewMenu=wx.Menu()
 		self.hEnvMenu=wx.Menu()
 		self.hHelpMenu=wx.Menu()
+
 		#ファイルメニューの中身
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_RENAME",_("名前を変更"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_CHANGEATTRIBUTE",_("属性を変更"))
@@ -123,7 +125,8 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_MKDIR",_("フォルダを作成"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_FILEOPTEST",_("テスト中のファイルオペレーションを実行"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_EXIT",_("終了"))
-		#ファイルメニューの中身
+
+		#編集メニューの中身
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_COPY",_("コピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_CUT",_("切り取り"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_NAMECOPY",_("ファイル名をコピー"))
@@ -133,6 +136,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTSELECT",_("並び順を選択"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
+
 		#移動メニューの中身
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD",_("開く"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_ADMIN",_("管理者として開く"))
@@ -141,6 +145,12 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARKSET",_("表示中の場所をマーク"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
+
+		self.hFavoriteDirectoryMenu=wx.Menu()
+		for v in globalVars.app.favoriteDirectory.paramMap:
+			self.RegisterMenuCommand(self.hFavoriteDirectoryMenu,"MOVE_FAVORITE_FOLDER_"+v,v)
+		self.hMoveMenu.AppendSubMenu(self.hFavoriteDirectoryMenu,"お気に入りディレクトリ")
+
 		#ツールメニューの中身
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
 
@@ -149,6 +159,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_FONTTEST",_("フォントテストダイアログを表示"))
 		#ヘルプメニューの中身
 		self.RegisterMenuCommand(self.hHelpMenu,"HELP_VERINFO",_("バージョン情報"))
+
 		#メニューバー
 		self.hMenuBar=wx.MenuBar()
 		self.hMenuBar.Append(self.hFileMenu,_("ファイル"))
@@ -160,6 +171,8 @@ class Menu(BaseMenu):
 		self.hMenuBar.Append(self.hEnvMenu,_("環境"))
 		self.hMenuBar.Append(self.hHelpMenu,_("ヘルプ"))
 		target.SetMenuBar(self.hMenuBar)
+
+		#イベントとショートカットキーの登録
 		target.Bind(wx.EVT_MENU,event.OnMenuSelect)
 		self.ApplyShortcut(target)
 
