@@ -158,12 +158,12 @@ class FileList(FalconListBase):
 			dialog(_("エラー"), _("フォルダを開くことができませんでした(%(error)s)") % {"error": str(err)})
 			return errorCodes.FATAL
 		#end except
-		if len(lst)==2:
-			lst=[]
+		if "\\" in self.rootDirectory:		#ルート以外では余計な.と..がが一番上に入っている
+			del lst[0:2]
+		if len(lst)==0:
 			self.log.debug("Blank folder.")
 			return errorCodes.OK
 		#end 空のフォルダだったらさっさと帰る
-		del lst[0:2]
 		for elem in lst:
 			fullpath=dir+"\\"+elem[8]
 			ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON|shellcon.SHGFI_TYPENAME)
