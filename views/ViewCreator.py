@@ -93,6 +93,7 @@ class ViewCreator():
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton,mode=BUTTON_COLOUR)
 		self.sizer.Add(hButton,1,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
+		hButton.SetDefault()
 		return hButton
 
 	def cancelbutton(self,text,event):
