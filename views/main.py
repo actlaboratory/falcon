@@ -9,7 +9,6 @@ import os
 import sys
 import wx
 import re
-import win32api
 import ctypes
 import pywintypes
 
@@ -334,7 +333,6 @@ class Events(BaseEvents):
 				dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO, True)+" ("+str(elem.free*100//elem.total)+"%)"
 				dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
 				dic[_("種類")]=elem.typeString
-
 			d=views.objectDetail.Dialog()
 			d.Initialize(dic)
 			d.Show()
