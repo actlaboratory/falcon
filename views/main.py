@@ -21,6 +21,7 @@ import globalVars
 import listObjects
 import tabObjects
 import menuItemsStore
+import fileSystemManager
 
 import views.fonttest
 import views.changeAttribute
@@ -328,6 +329,12 @@ class Events(BaseEvents):
 					dic[_("短い名前")]=elem.shortName
 				else:
 					dic[_("短い名前")]=_("なし")
+			if elem.__class__==browsableObjects.Drive:
+				dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
+				dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO, True)+" ("+str(elem.free*100//elem.total)+"%)"
+				dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
+				dic[_("種類")]=elem.typeString
+
 			d=views.objectDetail.Dialog()
 			d.Initialize(dic)
 			d.Show()

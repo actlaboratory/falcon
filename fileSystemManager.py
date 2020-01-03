@@ -1,6 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon file system objects
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 import win32api
@@ -11,7 +12,7 @@ def GetFileSystemObject(letter):
 
 	:param letter: ドライブレター1文字。
 	:type letter: str
-	:rtype: str
+	:rtype: FileSystemBase
 	"""
 	name=win32api.GetVolumeInformation("%s:\\" % (letter))[4]
 	try:
@@ -27,4 +28,9 @@ class FileSystemBase(object):
 		self.canMakeSymbolicLink=True
 
 class NTFS(FileSystemBase):
-	pass
+	def __str__(self):
+		return "NTMS"
+
+class FAT32(FileSystemBase):
+	def __str__(self):
+		return "FAT32"
