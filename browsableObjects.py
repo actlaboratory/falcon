@@ -1,6 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon browsable objects
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese.
 
 import os
@@ -47,7 +48,7 @@ class FalconBrowsableBase(object):
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
-	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None):
+	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None,shortName=""):
 		"""必要な情報をセットする"""
 		self.directory=directory
 		self.basename=basename
@@ -58,6 +59,7 @@ class File(FalconBrowsableBase):
 		self.attributes=attributes
 		self.GetAttributesString()
 		self.typeString=typeString
+		self.shortName=shortName
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""

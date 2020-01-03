@@ -1,6 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon app main view
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 import logging
@@ -294,22 +295,20 @@ class Events(BaseEvents):
 
 			elem=self.parent.activeTab.listObject.GetElement(self.parent.activeTab.GetFocusedItem())
 			dic={}
+			dic[_("名前")]=elem.basename
+			dic[_("パス")]=elem.fullpath
 			if elem.__class__==browsableObjects.File:
-				dic[_("名前")]=elem.basename
-				dic[_("パス")]=elem.fullpath
 				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
 				dic[_("サイズ(バイト)")]=elem.size
 				dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
 				dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
 				dic[_("属性")]=elem.longAttributesString
 				dic[_("種類")]=elem.typeString
-				try:
-					dic[_("短い名前")]=win32api.GetShortPathName(elem.fullpath)
-				except pywintypes.error:
-					dic[_("短い名前")]="不明"
+				if not elem.shortName=="":
+					dic[_("短い名前")]=elem.shortName
+				else:
+					dic[_("短い名前")]=_("なし")
 			if elem.__class__==browsableObjects.Folder:
-				dic[_("名前")]=elem.basename
-				dic[_("パス")]=elem.fullpath
 				if elem.size>=0:
 					dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
 					dic[_("サイズ(バイト)")]=elem.size
@@ -319,19 +318,16 @@ class Events(BaseEvents):
 						dic[_("サイズ")]=misc.ConvertBytesTo(size,misc.UNIT_AUTO,True)
 						dic[_("サイズ(バイト)")]=size
 					else:
-						dic[_("サイズ")]="不明"
-						dic[_("サイズ(バイト)")]="不明"
+						dic[_("サイズ")]=_("不明")
+						dic[_("サイズ(バイト)")]=_("不明")
 				dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
 				dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
 				dic[_("属性")]=elem.longAttributesString
 				dic[_("種類")]=elem.typeString
-				try:
-					dic[_("短い名前")]=win32api.GetShortPathName(elem.fullpath)
-				except pywintypes.error:
-					dic[_("短い名前")]="不明"
-			else:
-				dic[_("名前")]=elem.basename
-				dic[_("パス")]=elem.fullpath
+				if not elem.shortName=="":
+					dic[_("短い名前")]=elem.shortName
+				else:
+					dic[_("短い名前")]=_("なし")
 			d=views.objectDetail.Dialog()
 			d.Initialize(dic)
 			d.Show()

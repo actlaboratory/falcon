@@ -1,6 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon generic list management
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 import gettext
@@ -168,11 +169,11 @@ class FileList(FalconListBase):
 			ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON|shellcon.SHGFI_TYPENAME)
 			if os.path.isfile(fullpath):
 				f=browsableObjects.File()
-				f.Initialize(dir,elem[8],fullpath,(elem[4]<<32)+elem[5], elem[3], elem[0], shfileinfo[4],elem[1])
+				f.Initialize(dir,elem[8],fullpath,(elem[4]<<32)+elem[5], elem[3], elem[0], shfileinfo[4],elem[1],elem[9])
 				self.files.append(f)
 			else:
 				f=browsableObjects.Folder()
-				f.Initialize(dir,elem[8],fullpath,-1,elem[3], elem[0], shfileinfo[4],elem[1])
+				f.Initialize(dir,elem[8],fullpath,-1,elem[3], elem[0], shfileinfo[4],elem[1],elem[9])
 				self.folders.append(f)
 			#end どっちについかするか？
 		#end 追加ループ
