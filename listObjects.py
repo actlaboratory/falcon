@@ -306,7 +306,7 @@ class DriveList(FalconListBase):
 		self.unusableDrives=[]
 		if isinstance(lst,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			self.drives=lst
-			return
+			return errorCodes.OK
 		#end copy
 
 		if not silent:
@@ -320,6 +320,7 @@ class DriveList(FalconListBase):
 		self.log.debug("Drives list created in %d seconds." % t.elapsed)
 		self.log.debug(str(len(self.drives))+" drives found.")
 		self.ApplySort()
+		return errorCodes.OK
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
