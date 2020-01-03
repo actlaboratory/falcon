@@ -172,7 +172,7 @@ class FileList(FalconListBase):
 				self.files.append(f)
 			else:
 				f=browsableObjects.Folder()
-				f.Initialize(dir,elem[8],fullpath,0,elem[3], elem[0], shfileinfo[4],elem[1])
+				f.Initialize(dir,elem[8],fullpath,-1,elem[3], elem[0], shfileinfo[4],elem[1])
 				self.folders.append(f)
 			#end どっちについかするか？
 		#end 追加ループ

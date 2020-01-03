@@ -56,8 +56,11 @@ class File(FalconBrowsableBase):
 
 class Folder(File):
 	def GetListTuple(self):
-		"""表示に必要なタプルを返す。フォルダなのでサイズは <dir> にする。"""
-		return (self.basename, "<dir>", misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+		"""表示に必要なタプルを返す。フォルダなのでサイズ不明(-1)の場合があり、この場合は <dir> にする。"""
+		if self.size<0:
+			return (self.basename, "<dir>", misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+		else:
+			return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
 class Drive(FalconBrowsableBase):
 	"""ドライブを表す。"""

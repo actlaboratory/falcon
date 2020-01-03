@@ -16,15 +16,16 @@ import time
 import misc
 
 def DirCalc(taskState,param):
+	"""
+		計算結果は(インデックス番号,バイト単位のサイズint値)で返る。
+		取得失敗時に-1となる場合があるので要注意
+	"""
 	lst=param['lst']
 	results=[]
 	for elem in lst:
 		if taskState.canceled: return False
 		s=misc.GetDirectorySize(elem[1])
-		if s==-1:
-			results.append((elem[0],_("<取得失敗>")))
-		else:
-			results.append((elem[0],misc.ConvertBytesTo(s,misc.UNIT_AUTO,True)))
+		results.append((elem[0],s))
 		#end 成功か失敗か
 	#end for
 	if taskState.canceled: return False
