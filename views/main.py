@@ -3,29 +3,35 @@
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-import gettext
 import logging
 import os
 import sys
 import wx
 import re
-from logging import getLogger, FileHandler, Formatter
-from simpleDialog import dialog
+import win32api
+import ctypes
+import pywintypes
 
-from .base import *
+import browsableObjects
 import misc
-import views.fonttest
-import views.changeAttribute
-import views.mkdir
-import views.makeShortcut
 import constants
 import errorCodes
 import globalVars
 import listObjects
 import tabObjects
 import menuItemsStore
+
+import views.fonttest
+import views.changeAttribute
+import views.mkdir
+import views.makeShortcut
+import views.objectDetail
+
+from logging import getLogger, FileHandler, Formatter
+from simpleDialog import dialog
+from .base import *
+
 from simpleDialog import *
-import ctypes
 
 class View(BaseView):
 	def Initialize(self):
@@ -128,8 +134,9 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_MAKESHORTCUT",_("ショートカットを作成"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_TRASH",_("ゴミ箱へ移動"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_DELETE",_("完全削除"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_VIEW_DETAIL",_("詳細情報を表示"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_SHOWPROPERTIES",_("プロパティを表示"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_MKDIR",_("フォルダを作成"))
+		self.RegisterMenuCommand(self.hFileMenu,"FILE_MKDIR",_("新規ディレクトリ作成"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_FILEOPTEST",_("テスト中のファイルオペレーションを実行"))
 		self.RegisterMenuCommand(self.hFileMenu,"FILE_EXIT",_("終了"))
 
@@ -280,6 +287,55 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("FILE_DELETE"):
 			if self.parent.activeTab.IsItemSelected():
 				self.parent.activeTab.Delete()
+			return
+		if selected==menuItemsStore.getRef("FILE_VIEW_DETAIL"):
+			if not self.parent.activeTab.IsItemSelected():
+				return
+
+			elem=self.parent.activeTab.listObject.GetElement(self.parent.activeTab.GetFocusedItem())
+			dic={}
+			if elem.__class__==browsableObjects.File:
+				dic[_("名前")]=elem.basename
+				dic[_("パス")]=elem.fullpath
+				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
+				dic[_("サイズ(バイト)")]=elem.size
+				dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
+				dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
+				dic[_("属性")]=elem.longAttributesString
+				dic[_("種類")]=elem.typeString
+				try:
+					dic[_("短い名前")]=win32api.GetShortPathName(elem.fullpath)
+				except pywintypes.error:
+					dic[_("短い名前")]="不明"
+			if elem.__class__==browsableObjects.Folder:
+				dic[_("名前")]=elem.basename
+				dic[_("パス")]=elem.fullpath
+				if elem.size>=0:
+					dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
+					dic[_("サイズ(バイト)")]=elem.size
+				else:
+					size=misc.GetDirectorySize(elem.fullpath)
+					if size>=0:
+						dic[_("サイズ")]=misc.ConvertBytesTo(size,misc.UNIT_AUTO,True)
+						dic[_("サイズ(バイト)")]=size
+					else:
+						dic[_("サイズ")]="不明"
+						dic[_("サイズ(バイト)")]="不明"
+				dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
+				dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
+				dic[_("属性")]=elem.longAttributesString
+				dic[_("種類")]=elem.typeString
+				try:
+					dic[_("短い名前")]=win32api.GetShortPathName(elem.fullpath)
+				except pywintypes.error:
+					dic[_("短い名前")]="不明"
+			else:
+				dic[_("名前")]=elem.basename
+				dic[_("パス")]=elem.fullpath
+			d=views.objectDetail.Dialog()
+			d.Initialize(dic)
+			d.Show()
+			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
 			if self.parent.activeTab.IsItemSelected():

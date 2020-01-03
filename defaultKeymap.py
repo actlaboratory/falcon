@@ -13,6 +13,7 @@ defaultKeymap["mainView"]={
 	"FILE_TRASH": "delete",
 	"FILE_DELETE": "shift+delete",
 	"FILE_MAKESHORTCUT": "ctrl+f2",
+	"FILE_VIEW_DETAIL": "alt+return",
 	"FILE_SHOWPROPERTIES": "ctrl+shift+return",
 	"EDIT_COPY": "ctrl+c",
 	"EDIT_CUT": "ctrl+x",

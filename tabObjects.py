@@ -229,7 +229,7 @@ class MainListTab(FalconTabBase):
 				targetItemIndex=lst.Search(cursorTarget,1)
 		elif not os.path.exists(target):
 			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
-			return FILE_NOT_FOUND
+			return errorCodes.FILE_NOT_FOUND
 		elif os.path.isfile(target):	#副ストリームへ移動
 			lst=listObjects.StreamList()
 			lst.Initialize(target)

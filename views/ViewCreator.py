@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 #View Creator
-#Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
@@ -15,10 +15,10 @@ NORMAL=0
 BUTTON_COLOUR=1
 SKIP_COLOUR=2
 
-class ViewCreator():
+GridSizer = -1
+FlexGridSizer = -2
 
-	GridSizer = -1
-	FlexGridSizer = -2
+class ViewCreator():
 
 	# mode=1で白黒反転。その他は白。
 	def __init__(self,mode,parent,parentSizer=None,orient=wx.HORIZONTAL,space=0,label="",style=0):
@@ -27,12 +27,14 @@ class ViewCreator():
 		self.font=fontManager.FontManager()
 
 		self.SetFace(parent)
-		if orient==self.FlexGridSizer:
-			pass
-			#self.sizer=wx.FlexGridSizer()
-		elif orient==self.GridSizer:
-			pass
-			#self.sizer=wx.GridSizer()
+		if orient==FlexGridSizer:
+			self.sizer=self.FlexGridSizer(parentSizer,space,style)
+			self.sizer.SetHGap(space)
+			self.sizer.SetVGap(space)
+		elif orient==GridSizer:
+			self.sizer=self.GridSizer(parentSizer,space,style)
+			self.sizer.SetHGap(space)
+			self.sizer.SetVGap(space)
 		else:
 			self.sizer=self.BoxSizer(parentSizer,orient,label,space,style)
 		self.space=space
@@ -59,6 +61,26 @@ class ViewCreator():
 			parent.Add(sizer,0,wx.ALL | style,space)
 		return sizer
 
+	def GridSizer(self,parent,space=0,style=0):
+		sizer=wx.GridSizer(2)
+		if (parent.__class__==wx.Panel or parent.__class__==wx.Window):
+			parent.SetSizer(sizer)
+		elif (parent==None):
+			self.parent.SetSizer(sizer)
+		else:
+			parent.Add(sizer,0,wx.ALL | style,space)
+		return sizer
+
+
+	def FlexGridSizer(self,parent,space=0,style=0):
+		sizer=wx.FlexGridSizer(2)
+		if (parent.__class__==wx.Panel or parent.__class__==wx.Window):
+			parent.SetSizer(sizer)
+		elif (parent==None):
+			self.parent.SetSizer(sizer)
+		else:
+			parent.Add(sizer,0,wx.ALL | style,space)
+		return sizer
 
 	def button(self,text,event):
 		hButton=wx.Button(self.parent, wx.ID_ANY,label=text, name=text)
@@ -178,9 +200,10 @@ class ViewCreator():
 
 	def inputbox(self,text,x=0,defaultValue=""):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
-		hTextCtrl=wx.TextCtrl(self.parent, -1,size=(x,-1),value=defaultValue)
-		self.SetFace(hTextCtrl)
 		self.sizer.Add(hStaticText,0)
+
+		hTextCtrl=wx.TextCtrl(self.parent, -1,size=(x,-1),name=text,value=defaultValue)
+		self.SetFace(hTextCtrl)
 		if x==-1:	#幅を拡張
 			self.sizer.Add(hTextCtrl,1)
 		else:

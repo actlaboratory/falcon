@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon browsable objects
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
-#Note: All comments except these top lines will be written in Japanese. 
+#Note: All comments except these top lines will be written in Japanese.
 
 import os
 import constants
@@ -17,9 +17,33 @@ class FalconBrowsableBase(object):
 		"""属性の文字列を設定する。"""
 		attrib=self.attributes
 		self.attributesString=""
-		self.attributesString+= "R" if attrib&win32file.FILE_ATTRIBUTE_READONLY else "-"
-		self.attributesString+="H" if attrib&win32file.FILE_ATTRIBUTE_HIDDEN else "-"
-		self.attributesString+="S" if attrib&win32file.FILE_ATTRIBUTE_SYSTEM else "-"
+		self.longAttributesString=""
+
+		if attrib&win32file.FILE_ATTRIBUTE_READONLY:
+			self.attributesString+= "R"
+			self.longAttributesString+= _("読取専用")
+		else:
+			self.attributesString+="-"
+
+		if attrib&win32file.FILE_ATTRIBUTE_HIDDEN:
+			self.attributesString+="H"
+			if not self.longAttributesString=="":
+				self.longAttributesString+="・"
+			self.longAttributesString+= _("隠し")
+		else:
+			self.attributesString+="-"
+
+		if attrib&win32file.FILE_ATTRIBUTE_SYSTEM:
+			self.attributesString+="S"
+			if not self.longAttributesString=="":
+				self.longAttributesString+="・"
+			self.longAttributesString+= _("システム")
+		else:
+			self.attributesString+="-"
+
+		if self.longAttributesString=="":
+			self.longAttributesString="なし"
+		return
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
