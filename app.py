@@ -10,6 +10,7 @@ import gettext
 import logging
 import os
 import wx
+import locale
 import UserCommandManager
 from logging import getLogger, FileHandler, Formatter
 from soundPlayer import pybass
@@ -29,6 +30,7 @@ class falconAppMain(wx.App):
 		self.frozen=hasattr(sys,"frozen")
 		self.InitLogger()
 		self.LoadSettings()
+		locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
 		self.InitTranslation()
 		self.LoadUserCommandSettings()
 		self.InitSound()
