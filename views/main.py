@@ -344,6 +344,8 @@ class Events(BaseEvents):
 
 	def GoForward(self,stream,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
+		if not self.parent.activeTab.GetSelectedItemCount()==1:
+			return
 		p=self.parent
 		act=tabObjects.ACTION_FORWARD if stream is False else tabObjects.ACTION_FORWARD_STREAM
 		ret=p.activeTab.TriggerAction(act,admin)
