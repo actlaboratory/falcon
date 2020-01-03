@@ -1,25 +1,14 @@
 ﻿# -*- coding: utf-8 -*-
-#Falcon change file attribute view
-#Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Falcon make directory view
+#Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
-import gettext
-import logging
-import os
-import sys
-import wx
-import win32con
-import win32gui
-from logging import getLogger, FileHandler, Formatter
-from .baseDialog import *
-import constants
-import DefaultSettings
-import errorCodes
-import globalVars
-import keymap
-import misc
-from simpleDialog import *
-import views.ViewCreator
 
+import wx
+import globalVars
+import misc
+import views.ViewCreator
+from logging import getLogger
+from views.baseDialog import *
 
 class Dialog(BaseDialog):
 	def Initialize(self):
