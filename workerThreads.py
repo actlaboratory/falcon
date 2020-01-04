@@ -11,6 +11,7 @@ import logging
 from logging import getLogger
 import queue
 import threading
+import misc
 
 tasks=queue.Queue()
 
@@ -55,9 +56,10 @@ class _workerThreadBody(threading.Thread):
 			func=item.func
 			params=item.params
 			active_task_states.append(item)
+			t=misc.Timer()
 			ret=func(item,params)
 			tasks.task_done()
-			self.log.debug("task finished." if ret else "Task canceled.")
+			self.log.debug("task finished in %f seconds." % (t.elapsed) if ret else "Task canceled.")
 			active_task_states.remove(item)
 		#end while
 	#end run
