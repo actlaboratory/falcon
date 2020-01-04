@@ -11,6 +11,8 @@ import logging
 import os
 import wx
 import locale
+import win32api
+import datetime
 import UserCommandManager
 from logging import getLogger, FileHandler, Formatter
 from soundPlayer import pybass
@@ -31,6 +33,7 @@ class falconAppMain(wx.App):
 		self.InitLogger()
 		self.LoadSettings()
 		locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
+		self.SetTimeZone()
 		self.InitTranslation()
 		self.LoadUserCommandSettings()
 		self.InitSound()
@@ -148,3 +151,10 @@ class falconAppMain(wx.App):
 	def OnExit(self):
 		workerThreads.Stop()
 		return wx.App.OnExit(self)
+
+	def SetTimeZone(self):
+		bias=win32api.GetTimeZoneInformation(True)[1][0]*-1
+		hours=bias//60
+		minutes=bias%60
+		self.timezone=datetime.timezone(datetime.timedelta(hours=hours,minutes=minutes))
+

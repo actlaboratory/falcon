@@ -5,10 +5,11 @@
 #Note: All comments except these top lines will be written in Japanese.
 
 import os
-import constants
-import misc
 import win32file
 import logging
+import constants
+import misc
+import globalVars
 
 class FalconBrowsableBase(object):
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
@@ -54,8 +55,8 @@ class File(FalconBrowsableBase):
 		self.basename=basename
 		self.fullpath=directory+"\\"+basename
 		self.size=size
-		self.modDate=modDate
-		self.creationDate=creationDate
+		self.modDate=modDate.astimezone(globalVars.app.timezone)
+		self.creationDate=creationDate.astimezone(globalVars.app.timezone)
 		self.attributes=attributes
 		self.GetAttributesString()
 		self.typeString=typeString
