@@ -1,7 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon key map management
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
+
 import configparser
 import logging
 import os
@@ -193,61 +195,129 @@ str2key={
 }
 
 class KeymapHandler():
-	"""キーマップは、設定ファイルを読んで、wxのアクセラレーターテーブルを生成します。"""
-	def __init__(self):
+	"""wxのアクセラレーターテーブルを生成します。"""
+
+	def __init__(self,dict=None):
+		#wx.AcceleratorEntry.__eq__=AcceleratorEntry_eq
 		self.log=logging.getLogger("falcon.keymapHandler")
 		self.errors={}
+		self.entries={}
+		self.map={}
+		if dict:
+			read=configparser.ConfigParser()
+			read.read_dict(defaultKeymap.defaultKeymap)
+			for identifier in read.sections():
+				for elem in read.items(identifier):
+					self.add(identifier,elem[0],elem[1])
 
-	def Initialize(self, filename):
-		"""キーマップ情報を初期かします。デフォルトキーマップを適用してから、指定されたファイルを読もうと試みます。ファイルが見つからなかった場合は、FILE_NOT_FOUND を返します。ファイルがパースできなかった場合は、PARSING_FAILED を返します。いずれの場合も、デフォルトキーマップは適用されています。"""
-		self.map=configparser.ConfigParser()
-		self.map.read_dict(defaultKeymap.defaultKeymap)
+	def addFile(self, filename):
+		"""
+			指定されたファイルを読もうと試みます。ファイルが見つからなかった場合は、FILE_NOT_FOUND を返します。ファイルがパースできなかった場合は、PARSING_FAILED を返します。
+			errorCodes.OKが返された場合であっても、キーの重複などで追加できなかったものがあった可能性があります。これについては、その情報がself.errorsに格納されるので呼出元で検証する必要があります。
+		"""
 		if not os.path.exists(filename):
 			self.log.warning("Cannot find %s" % filename)
 			return errorCodes.FILE_NOT_FOUND
-		ret=self.map.read(filename, encoding="UTF-8")
+		newKeys=configparser.ConfigParser()
+		ret=newKeys.read(filename, encoding="UTF-8")
 		ret= errorCodes.OK if len(ret)>0 else errorCodes.PARSING_FAILED
 		if ret==errorCodes.PARSING_FAILED:
 			self.log.warning("Cannot parse %s" % filename)
+			return ret
+
+		#newKeysの情報を、検証しながらaddしていく
+		for identifier in newKeys.sections():
+			for elem in newKeys.items(identifier):
+				self.add(identifier,elem[0],elem[1])
+		return errorCodes.OK
+
+	def GetError(self,identifier):
+		"""指定されたビューのエラー内容を返し、内容をクリアする"""
+		identifier=identifier.upper()
+		try:
+			ret=self.errors[identifier]
+		except KeyError:
+			return {}
+		self.errors[identifier]={}
 		return ret
 
-	def add(self,identifer,ref,key):
-		"""重複をチェックしながらキーマップにショートカットを追加"""
-		if ref in dict(self.map.items(identifer)).keys() or key in dict(self.map.items(identifer)).values():
-			try:
-				self.errors[identifer][ref]=key
-			except KeyError:
-				self.errors[identifer]={}
-				self.errors[identifer][ref]=key
-		else:
-			self.map[identifer][ref]=key
+	def add(self,identifier,ref,key):
+		"""重複をチェックしながらキーマップにショートカットを追加します。"""
 
-	def GetKeyString(self,identifier,key):
-		"""指定されたコマンドのショートカットキー文字列を取得します。"""
+		#refとidentifierは大文字・小文字の区別をしないので大文字に統一
+		ref=ref.upper()
+		identifier=identifier.upper()
+
+		#identifierが新規だった場合、self.mapとself.entriesにセクション作成
+		if not identifier in self.map.keys():
+			self.entries[identifier]=[]
+			self.map[identifier]={}
+
+		#エントリーの作成・追加
+		for e in key.split("/"):
+			entry=self.makeEntry(ref,e)
+
+			#キーの重複確認
+			if entry in self.entries[identifier]:
+				self.addError(identifier,ref,key)
+				continue
+
+			#GetKeyStringに備えてself.mapに追加
+			if ref in self.map[identifier]:
+				#refが重複の場合、既存のself.map上のエントリの末尾に追加
+				self.map[identifier][ref]=self.map[identifier][ref]+"/"+e
+			else:
+				#self.mapに新規エントリとして追加
+				self.map[identifier][ref]=e
+			#self.entriesに追加
+			self.entries[identifier].append(entry)
+		return
+
+	def addError(self,identifier,ref,key):
+		"""エラー発生時、情報を記録します。"""
 		try:
-			r=self.map[identifier][key]
+			self.errors[identifier][ref]=key
+		except KeyError:
+			self.errors[identifier]={}
+			self.errors[identifier][ref]=key
+
+	def GetKeyString(self,identifier,ref):
+		"""指定されたコマンドのショートカットキー文字列を取得します。"""
+		ref=ref.upper()
+		identifier=identifier.upper()
+
+		try:
+			r=self.map[identifier][ref]
 		except KeyError:
 			r=None
 		#end except
 		return r
 
-	def GenerateTable(self, identifier):
-		"""アクセラレーターテーブルを生成します。identifier で、どのビューでのテーブルを生成するかを指定します。"""
-		tbl=[]
-		commands=self.map.items(identifier)
-		for elem in commands:
-			keyList=elem[1].upper().split("/")
-			flags=0
-			for key in keyList:
-				ctrl="CTRL+" in key
-				alt="ALT+" in key
-				shift="SHIFT+" in key
-				codestr=key.split("+")
-				if ctrl: flags=wx.ACCEL_CTRL
-				if alt: flags=flags|wx.ACCEL_ALT
-				if shift: flags=flags|wx.ACCEL_SHIFT
-				entry=wx.AcceleratorEntry(flags,str2key[codestr[len(codestr)-1]],menuItemsStore.getRef(elem[0].upper()))
-				tbl.append(entry)
-			#end スラッシュで並んでいるコマンドの数だけ
-		#end 設定値1行ごと
-		return wx.AcceleratorTable(tbl)
+	def makeEntry(self,ref,key):
+		"""ref(String)と、/区切りでない単一のkey(String)からwx.AcceleratorEntryを生成"""
+		key=key.upper()
+		ctrl="CTRL+" in key
+		alt="ALT+" in key
+		shift="SHIFT+" in key
+		codestr=key.split("+")
+		flags=0
+		if ctrl: flags=wx.ACCEL_CTRL
+		if alt: flags=flags|wx.ACCEL_ALT
+		if shift: flags=flags|wx.ACCEL_SHIFT
+		return AcceleratorEntry(flags,str2key[codestr[len(codestr)-1]],menuItemsStore.getRef(ref.upper()))
+
+	def GetTable(self, identifier):
+		"""アクセラレーターテーブルを取得します。identifier で、どのビューでのテーブルを取得するかを指定します。"""
+		identifier=identifier.upper()
+
+		return wx.AcceleratorTable(self.entries[identifier])
+
+
+class AcceleratorEntry(wx.AcceleratorEntry):
+	#ショートカットキーの一致によって判定され、登録されたメニューコマンドの一致は無視される
+	def __eq__(self,other):
+		# isinstance(other, Person)を除去
+		if other is None or type(self) != type(other): return False
+		if self.GetFlags()==other.GetFlags() and self.GetKeyCode()==other.GetKeyCode():
+			return True
+		return False

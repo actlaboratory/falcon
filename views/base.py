@@ -6,6 +6,7 @@
 import wx
 import constants
 import keymap
+import defaultKeymap
 import menuItemsStore
 from simpleDialog import dialog
 
@@ -36,8 +37,8 @@ class BaseView(object):
 
 class BaseMenu(object):
 	def InitShortcut(self,identifier):
-		self.keymap=keymap.KeymapHandler()
-		self.keymap.Initialize(constants.KEYMAP_FILE_NAME)
+		self.keymap=keymap.KeymapHandler(defaultKeymap.defaultKeymap)
+		self.keymap.addFile(constants.KEYMAP_FILE_NAME)
 		self.keymap_identifier=identifier
 
 	def RegisterMenuCommand(self,menu_handle,ref_id,title):
@@ -46,7 +47,7 @@ class BaseMenu(object):
 		menu_handle.Append(menuItemsStore.getRef(ref_id),s)
 
 	def ApplyShortcut(self,hFrame):
-		self.acceleratorTable=self.keymap.GenerateTable(self.keymap_identifier)
+		self.acceleratorTable=self.keymap.GetTable(self.keymap_identifier)
 		hFrame.SetAcceleratorTable(self.acceleratorTable)
 
 class BaseEvents(object):

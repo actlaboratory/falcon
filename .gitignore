@@ -3,6 +3,7 @@
 data/options.dat
 __pycache__
 settings.ini
+keymap.ini
 falcon.build/
 falcon.dist/
 PyWin32.chm

@@ -60,11 +60,12 @@ class View(BaseView):
 		for target in (globalVars.app.userCommandManagers):
 			for v in target.keyMap:
 				self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
-		if self.menu.keymap.errors and self.menu.keymap.errors[self.identifier]:
+		errors=self.menu.keymap.GetError(self.identifier)
+		if errors:
 			tmp=_("設定されたショートカットキーが重複しています。以下のキーの設定内容をご確認ください。\n\n")
-			for v in self.menu.keymap.errors[self.identifier]:
+			for v in errors:
 				tmp+=v+"\n"
-				dialog(_("エラー"),tmp)
+			dialog(_("エラー"),tmp)
 
 		self.InstallMenuEvent(self.menu,self.events)
 		self.InstallListPanel()
