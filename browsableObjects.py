@@ -11,8 +11,10 @@ import constants
 import misc
 import globalVars
 
-class FalconBrowsableBase(object):
+class FalconBrowsableBase():
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
+	__slots__=["attributes","attributesString","log","longAttributesString"]
+
 	def __init__(self):
 		self.log=logging.getLogger("falcon.browsableObjects")
 	def GetAttributesString(self):
@@ -49,6 +51,8 @@ class FalconBrowsableBase(object):
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
+	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString"]
+
 	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None,shortName=""):
 		"""必要な情報をセットする"""
 		self.directory=directory
@@ -82,6 +86,8 @@ class File(FalconBrowsableBase):
 	#end GetNewAttributes
 
 class Folder(File):
+	__slots__=[]
+
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。フォルダなのでサイズ不明(-1)の場合があり、この場合は <dir> にする。"""
 		if self.size<0:
