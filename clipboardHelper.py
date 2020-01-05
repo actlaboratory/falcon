@@ -65,7 +65,7 @@ class Clipboard(object):
 		if pointer == c_void_p(0) and get_last_error() != 0:
 			raise WindowsError()
 		try:
-			helper.copyMemory(data, handle, size)
+			falconHelper.copyMemory(data, handle, size)
 		finally:
 			GlobalUnlock(pointer)
 		return data.raw
@@ -123,9 +123,10 @@ class Clipboard(object):
 			if pointer == c_void_p(0):
 				raise WindowsError()
 			try:
-				helper.copyMemory(pointer, data, len(data))
+				falconHelper.copyMemory(pointer, data, len(data))
 			finally:
 				GlobalUnlock(handle)
+			self.empty()
 			SetClipboardData = user32.SetClipboardData
 			SetClipboardData.restype = c_void_p
 			if SetClipboardData(format, handle) == c_void_p(0):
@@ -145,7 +146,7 @@ class Clipboard(object):
 	def set_unicode_text(self, data):
 		if not isinstance(data, str):
 			raise ArgumentError()
-		buf = (data + "\0").encode("UTF-16")
+		buf=(data + "\0").encode("UTF-16")[2:]
 		self.set_data(ClipboardFormats.unicode_text.value, buf)
 		return
 
