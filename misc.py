@@ -134,3 +134,7 @@ def GetDirectorySize(path):
 		return -1
 	#end except
 	return total
+
+def GetExecutableState(path):
+	"""指定されたファイルパスが、実行可能ファイルであろうかどうかを調べて boolean で返す。"""
+	return os.path.splitext(path)[1].upper() in os.environ["pathext"].split(";")
