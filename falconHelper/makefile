@@ -1,4 +1,4 @@
-OBJS= common.obj ctlcolor.obj disctype.obj findradiobuttons.obj
+OBJS= common.obj ctlcolor.obj disctype.obj findradiobuttons.obj ejectDevice.obj
 LIBS= user32.lib Ole32.lib OleAut32.lib gdi32.lib
 .SILENT:
 falconHelper.dll: $(OBJS)
