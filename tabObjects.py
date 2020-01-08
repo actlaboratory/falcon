@@ -154,7 +154,7 @@ class MainListTab(FalconTabBase):
 		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
 		self.background_tasks=[]
 
-	def Update(self,lst):
+	def Update(self,lst,cursor=-1):
 		"""指定された要素をタブに適用する。"""
 		self._cancelBackgroundTasks()
 		self.hListCtrl.DeleteAllItems()
@@ -168,6 +168,8 @@ class MainListTab(FalconTabBase):
 		#end 違う種類のリストかどうか
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
+		self.hListCtrl.Focus(cursor)
+		self.hListCtrl.Select(cursor)
 
 	def _cancelBackgroundTasks(self):
 		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
@@ -385,11 +387,14 @@ class MainListTab(FalconTabBase):
 
 	def UpdateFilelist(self,silence=False):
 		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
-		globalVars.app.say(_("更新"))
+		if silence==True:
+			globalVars.app.say(_("更新"))
+		item=self.listObject.GetElement(self.GetFocusedItem())
 		result=self.listObject.Update()
+		cursor=self.listObject.Search(item.basename)
 		if result != errorCodes.OK:
 			return errorCodes.FILE_NOT_FOUND			#アクセス負荷など
-		self.Update(self.listObject)
+		self.Update(self.listObject,cursor)
 
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
