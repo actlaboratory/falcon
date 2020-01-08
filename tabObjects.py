@@ -257,7 +257,10 @@ class MainListTab(FalconTabBase):
 		error=""
 		if admin:
 			try:
-				ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",path,prm)
+				executable=misc.GetExecutableState(path)
+				p=path if executable else "cmd"
+				a=prm if executable else "/c "+path+" "+prm
+				ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",p,a)
 			except pywintypes.error as e:
 				error=str(e)
 			#end shellExecuteEx failure
