@@ -8,6 +8,7 @@
 #include <imapi2.h>
 #include <tchar.h>
 #include "defs.h"
+#include "defs.h"
 
 namespace enums
 {
@@ -274,7 +275,7 @@ falcon_helper_funcdef char *getDiscDriveTypes()
         std::vector<int> profile_values;
         for (int i = 0; i < profiles->rgsabound[0].cElements; i++)
         {
-            //����R�����g�A�E�g������A�T�|�[�g���Ă���v���t�@�C���̈ꗗ���o��
+            //????R?????g?A?E?g??????A?T?|?[?g???????v???t?@?C????????o??
             //std::cout << "    profile " << tmp[i].lVal << std::endl;
             profile_values.push_back(tmp[i].lVal);
         }

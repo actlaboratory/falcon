@@ -14,10 +14,10 @@ LRESULT CALLBACK RadioButtonProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     {
         HDC hDC = (HDC)wp;
         HWND hCtrl = (HWND)lp;
-        SetBkMode(hDC, TRANSPARENT);           // �w�i�𓧉�
-        SetTextColor(hDC, RGB(255, 255, 255)); // �e�L�X�g�̐F
-        SetBkColor(hDC, RGB(0, 0, 0));         // �w�i�̐F
-        return (LRESULT)bkBrush;               // �w�i�F�̐F
+        SetBkMode(hDC, TRANSPARENT);           // ?w?i???
+        SetTextColor(hDC, RGB(255, 255, 255)); // ?e?L?X?g??F
+        SetBkColor(hDC, RGB(0, 0, 0));         // ?w?i??F
+        return (LRESULT)bkBrush;               // ?w?i?F??F
     }
     }
     return CallWindowProc(DefRadioButtonProc, hwnd, msg, wp, lp);
@@ -32,10 +32,10 @@ LRESULT CALLBACK CheckboxProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     {
         HDC hDC = (HDC)wp;
         HWND hCtrl = (HWND)lp;
-        SetBkMode(hDC, TRANSPARENT);           // �w�i�𓧉�
-        SetTextColor(hDC, RGB(255, 255, 255)); // �e�L�X�g�̐F
-        SetBkColor(hDC, RGB(0, 0, 0));         // �w�i�̐F
-        return (LRESULT)bkBrush;               // �w�i�F�̐F
+        SetBkMode(hDC, TRANSPARENT);           // ?w?i???
+        SetTextColor(hDC, RGB(255, 255, 255)); // ?e?L?X?g??F
+        SetBkColor(hDC, RGB(0, 0, 0));         // ?w?i??F
+        return (LRESULT)bkBrush;               // ?w?i?F??F
     }
     }
     return CallWindowProc(DefCheckboxProc, hwnd, msg, wp, lp);

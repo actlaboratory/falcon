@@ -5,16 +5,17 @@
 #include <winioctl.h>
 #include <winioctl.h>
 #include <cfgmgr32.h>
+#include "defs.h"
 
 //-------------------------------------------------
 DEVINST GetDrivesDevInstByDeviceNumber(long DeviceNumber, UINT DriveType, char* szDosDeviceName);
 //-------------------------------------------------
 
 //-------------------------------------------------
-falcon_helper_funcdef int ejectDevice(char *letter)
+falcon_helper_funcdef int ejectDevice(const char *letter)
 {
     char DriveLetter;
-    strncpy(DriveLetter,letter,1);
+    strncpy(&DriveLetter,letter,1);
     DriveLetter &= ~0x20; // uppercase
 
     if (DriveLetter < 'A' || DriveLetter > 'Z') {
