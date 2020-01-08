@@ -71,12 +71,12 @@ class FalconListBase(object):
 		i=0
 		for elem in lst:
 			if elem[index]==search:
-				found=i
-				break
+				return i
 			#end 検索
 			i+=1
 		#end for
-		return found
+		#見つからない場合
+		return -1
 
 	def GetSortCursor(self):
 		return self.sortCursor
