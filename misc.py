@@ -112,3 +112,7 @@ def IteratePaths(path):
 			yield from IteratePaths2(os.path.join(path,elem[8]))
 		#end ディレクトリ
 		yield os.path.join(path,elem[8])
+
+def GetExecutableState(path):
+	"""指定されたファイルパスが、実行可能ファイルであろうかどうかを調べて boolean で返す。"""
+	return os.path.splitext(path)[1]==".exe"

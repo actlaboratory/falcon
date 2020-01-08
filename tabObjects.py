@@ -21,6 +21,7 @@ import browsableObjects
 import globalVars
 import constants
 import fileOperator
+import misc
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -206,8 +207,12 @@ class MainListTab(FalconTabBase):
 		error=""
 		if admin:
 			try:
-				ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",elem.fullpath,"")
-			except pywintypes.error as e:
+				executable=misc.GetExecutableState(elem.fullpath)
+				f= elem.fullpath if executable else "cmd"
+				a="" if executable else "/c %s" % elem.fullpath
+				self.log.debug("Running %s %s as admin..." % (f,a))
+				ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",f,a)
+			except win32api.error as e:
 				error=str(e)
 			#end shellExecuteEx failure
 		else:
