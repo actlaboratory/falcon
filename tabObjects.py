@@ -25,6 +25,7 @@ import fileOperator
 import misc
 import workerThreads
 import workerThreadTasks
+import fileSystemManager
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -316,6 +317,11 @@ class MainListTab(FalconTabBase):
 		if evt.IsEditCancelled():		#ユーザによる編集キャンセル
 			return
 		e=self.hListCtrl.GetEditControl()
+		print(fileSystemManager.ValidationObjectName(e.GetLineText(0)))
+		if fileSystemManager.ValidationObjectName(e.GetLineText(0)):
+			dialog(_("エラー"),fileSystemManager.ValidationObjectName(e.GetLineText(0)))
+			evt.Veto()
+			return
 		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
 		if isinstance(f,browsableObjects.File):
 			inst={"operation": "rename", "files": [f.fullpath], "to": [f.directory+"\\"+e.GetLineText(0)]}
@@ -403,6 +409,9 @@ class MainListTab(FalconTabBase):
 
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
+		if fileSystemManager.ValidationObjectName(newdir):
+			dialog(_("エラー"),fileSystemManager.ValidationObjectName(newdir))
+			return
 		dest=os.path.join(dir,newdir)
 		inst={"operation": "mkdir", "target": [dest]}
 		op=fileOperator.FileOperator(inst)
