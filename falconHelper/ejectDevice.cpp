@@ -8,6 +8,7 @@
 #include "defs.h"
 
 //-------------------------------------------------
+// ドライブレターを受け取って、そのデバイスを取り外そうと試みます。成功すれば0、何らかの原因で失敗した場合には1以上のエラーコード、原因不明の場合には -1 が返ります。
 DEVINST GetDrivesDevInstByDeviceNumber(long DeviceNumber, UINT DriveType, char* szDosDeviceName);
 //-------------------------------------------------
 
