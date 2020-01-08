@@ -57,6 +57,7 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_LIST_END_LABEL_EDIT,self.OnLabelEditEnd)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
 		self.hListCtrl.Bind(wx.EVT_KEY_DOWN,self.KeyDown)
+		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_DRAG,self.BeginDrag)
 
 	def GetListColumns(self):
 		return self.columns
@@ -138,6 +139,10 @@ class FalconTabBase(object):
 
 	def OnSpaceKey(self):
 		"""Spaceキーが押されたらこれが呼ばれる。"""
+		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
+
+	def BeginDrag(self,event):
+		"""ドラッグ操作が開始された"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
 class MainListTab(FalconTabBase):
@@ -569,3 +574,12 @@ class MainListTab(FalconTabBase):
 				self.hListCtrl.SetItem(index=elem[0],column=1,label="<取得失敗>")
 		#end for
 		self.background_tasks.remove(taskState)
+
+	def BeginDrag(self,event):
+		data=wx.FileDataObject()
+		for f in self.GetSelectedItems():
+			data.AddFile(f.fullpath)
+
+		obj=wx.DropSource(data,globalVars.app.hMainView.hFrame)
+		obj.DoDragDrop()
+
