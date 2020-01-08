@@ -320,7 +320,10 @@ class MainListTab(FalconTabBase):
 		if op.CheckSucceeded()==0:
 			dialog(_("エラー"),_("名前が変更できません。"))
 			evt.Veto()
+			return
 		#end fail
+		f.basename=e.GetLineText(0)
+		f.fullpath=f.directory+"\\"+f.basename
 	#end onLabelEditEnd
 
 	def ChangeAttribute(self,attrib_checks):
