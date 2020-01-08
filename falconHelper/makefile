@@ -1,5 +1,5 @@
-OBJS= common.obj ctlcolor.obj disctype.obj findradiobuttons.obj
-LIBS= user32.lib Ole32.lib OleAut32.lib gdi32.lib
+OBJS= common.obj ctlcolor.obj disctype.obj findradiobuttons.obj ejectDevice.obj
+LIBS= user32.lib Ole32.lib OleAut32.lib gdi32.lib Cfgmgr32.lib Setupapi.lib
 .SILENT:
 falconHelper.dll: $(OBJS)
 	link /nologo /DLL $(OBJS) $(LIBS) /OUT:falconHelper.dll
