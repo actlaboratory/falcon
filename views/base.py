@@ -16,7 +16,7 @@ import globalVars
 class BaseView(object):
 	"""falconのビューの基本クラス。"""
 	def __init__(self):
-		pass
+		self.SetShortcutEnable=True
 
 	def Initialize(self, ttl, x, y,px,py):
 		"""タイトルとウィンドウサイズとポジションを指定して、ウィンドウを初期化する。"""
@@ -30,9 +30,15 @@ class BaseView(object):
 		self.menu=menu
 
 	def SetShortcutEnabled(self,en):
-		"""ショートカットキーの有効/無効を切り替える。"""
+		"""
+			ショートカットキーの有効/無効を切り替える。
+			AcceleratorTableを空にしないと、名前の変更中にエディットボックスに矢印キーやBSキーの操作がいかない。
+			逆に、AcceleratorTableだけを空にしてもメニューバーにあるコマンドが実行されてしまう。
+			ということで、両方の対策が必要。
+		"""
 		t=self.menu.acceleratorTable if en else wx.AcceleratorTable()
 		self.hFrame.SetAcceleratorTable(t)
+		self.SetShortcutEnable=en
 	#end SetShortcutEnabled
 
 class BaseMenu(object):

@@ -196,6 +196,11 @@ class Menu(BaseMenu):
 class Events(BaseEvents):
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
+		#ショートカットキーが無効状態のときは何もしない
+		if not self.parent.SetShortcutEnable:
+			event.Skip()
+			return
+
 		selected=event.GetId()#メニュー識別しの数値が出る
 		if selected==menuItemsStore.getRef("MOVE_BACKWARD"):
 			self.GoBackward()
