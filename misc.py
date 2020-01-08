@@ -141,11 +141,11 @@ def GetExecutableState(path):
 	return os.path.splitext(path)[1].upper() in os.environ["pathext"].split(";")
 
 def EjectDevice(letter):
-	self.log.debug("Trying to eject drive %s..." % letter)
+	log.debug("Trying to eject drive %s..." % letter)
 	ret=falconHelper.ejectDevice(letter.encode('utf-8'))
 	if ret==0:
-		self.log.debug("Successfully ejected.")
+		log.debug("Successfully ejected.")
 		return True
 	else:
-		self.log.debug("Failed to eject device (Error code: %d)" % ret)
+		log.debug("Failed to eject device (Error code: %d)" % ret)
 		return False
