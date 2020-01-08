@@ -116,6 +116,17 @@ class View(BaseView):
 		l=self.activeTab.GetListCtrl()
 		l.Show(True)
 
+	def SetShortcutEnabled(self,en):
+		super().SetShortcutEnabled(en)
+		if en:
+			#ツウジョウノメニューバーに戻す
+			self.hFrame.SetMenuBar(self.menu.hMenuBar)
+		else:
+			#名前の変更中にはダミーのメニューバーを出しておく
+			#これがないとメニューバーの高さ分リストオブジェクトの大きさが変わってしまうために必要
+			self.hFrame.SetMenuBar(self.menu.hDisableMenuBar)
+
+
 class Menu(BaseMenu):
 	def Apply(self,target,event):
 		"""指定されたウィンドウに、メニューを適用する。"""
@@ -192,6 +203,13 @@ class Menu(BaseMenu):
 		#イベントとショートカットキーの登録
 		target.Bind(wx.EVT_MENU,event.OnMenuSelect)
 		self.ApplyShortcut(target)
+
+		#名前の変更中に出しておくダミーのメニューバー
+		#これがないとメニューバーの高さ分リストオブジェクトの大きさが変わってしまうために必要
+		self.hDisableMenuBar=wx.MenuBar()
+		self.hDisableSubMenu=wx.Menu()
+		self.hDisableMenuBar.Append(self.hDisableSubMenu,_("現在メニューは操作できません"))
+
 
 class Events(BaseEvents):
 	def OnMenuSelect(self,event):
