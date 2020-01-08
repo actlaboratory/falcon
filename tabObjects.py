@@ -200,8 +200,6 @@ class MainListTab(FalconTabBase):
 
 	def RunFile(self,elem, admin=False):
 		"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
-		msg="running %s as admin" % (elem.fullpath) if admin else "running %s" % (elem.fullpath)
-		self.log.debug(msg)
 		msg=_("管理者で起動") if admin else _("起動")
 		globalVars.app.say(msg)
 		error=""
