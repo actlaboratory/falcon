@@ -13,6 +13,7 @@ from logging import getLogger
 log=getLogger("falcon.misc")
 
 falconHelper=ctypes.cdll.LoadLibrary("falconHelper.dll")
+falconHelper.ejectDevice.argtypes=[ctypes.c_char_p]
 
 class Timer:
 	"""シンプルなタイマー。経過時間や処理時間を計測するのに使う。単位は秒で、float。"""
@@ -138,3 +139,7 @@ def GetDirectorySize(path):
 def GetExecutableState(path):
 	"""指定されたファイルパスが、実行可能ファイルであろうかどうかを調べて boolean で返す。"""
 	return os.path.splitext(path)[1].upper() in os.environ["pathext"].split(";")
+
+def EjectDevice(letter):
+	ret=falconHelper.ejectDevice(letter.encode('utf-8'))
+	print("ejectDevice: %d" % ret)
