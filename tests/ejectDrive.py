@@ -1,15 +1,15 @@
 import win32file
 import re
 
-deviceName=win32file.QueryDosDevice("E:")
+deviceName=win32file.QueryDosDevice("I:")
 deviceName=re.sub(r"\\Device\\([^\x00]+).*",r"\1",deviceName)
 
 handle=win32file.CreateFile(
 	"\\\\.\\"+deviceName,
 	win32file.GENERIC_WRITE | win32file.GENERIC_READ,
-	0,	#ƒNƒ[ƒY‚·‚é‚Ü‚Å‘¼‚©‚ç‚ÍOPEN‚Å‚«‚È‚¢
-	None, #ƒZƒLƒ…ƒŠƒeƒBŠÖ˜A‚Ì\‘¢‘Ì
-	win32file.OPEN_EXISTING,	#ƒfƒoƒCƒX‚ÌOPEN‚Í‚±‚ê‚¶‚á‚È‚¢‚Æƒ_ƒ
+	0,	#ã‚¯ãƒ­ãƒ¼ã‚ºã™ã‚‹ã¾ã§ä»–ã‹ã‚‰ã¯OPENã§ããªã„
+	None, #ã‚»ã‚­ãƒ¥ãƒªãƒ†ã‚£é–¢é€£ã®æ§‹é€ ä½“
+	win32file.OPEN_EXISTING,	#ãƒ‡ãƒã‚¤ã‚¹ã®OPENã¯ã“ã‚Œã˜ã‚ƒãªã„ã¨ãƒ€ãƒ¡
 	0, 
 	None)
 print(handle)
