@@ -6,6 +6,7 @@
 
 import win32api
 import re
+from enum import Enum
 
 def GetFileSystemObject(letter):
 	"""
@@ -56,15 +57,60 @@ def ValidationObjectName(s):
 	return ""
 
 
+class limitTypes(Enum):
+	CHAR=0
+	BYTE=1
+
+
 class FileSystemBase(object):
 	def __init__(self):
 		self.canMakeHardLink=True
 		self.canMakeSymbolicLink=True
 
+	MAX_FULLPATH_LENGTH=256
+
+
 class NTFS(FileSystemBase):
 	def __str__(self):
 		return "NTMS"
 
+	MAX_VOLUME_LABEL_TYPE=limitTypes.CHAR
+	MAX_VOLUME_LABEL_LENGTH=32
+	MAX_PATH_LENGTH=255
+
+class FAT(FileSystemBase):
+	def __str__(self):
+		return "FAT"
+
+	MAX_VOLUME_LABEL_TYPE=limitTypes.BYTE
+	MAX_VOLUME_LABEL_LENGTH=11
+	MAX_PATH_LENGTH=12
+
 class FAT32(FileSystemBase):
 	def __str__(self):
 		return "FAT32"
+
+	MAX_VOLUME_LABEL_TYPE=limitTypes.BYTE
+	MAX_VOLUME_LABEL_LENGTH=11
+	MAX_PATH_LENGTH=255
+
+class exFAT(FileSystemBase):
+	def __str__(self):
+		return "exFAT"
+
+	MAX_VOLUME_LABEL_TYPE=limitTypes.BYTE
+	MAX_VOLUME_LABEL_LENGTH=11
+	MAX_PATH_LENGTH=255
+
+class UDF(FileSystemBase):
+	def __str__(self):
+		return "UDF"
+
+	MAX_VOLUME_LABEL_TYPE=limitTypes.CHAR
+	MAX_VOLUME_LABEL_LENGTH=32
+	MAX_PATH_LENGTH=255
+
+class CDFS(FileSystemBase):
+	def __str__(self):
+		return "CDFS"
+
