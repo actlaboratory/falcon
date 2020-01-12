@@ -353,9 +353,15 @@ class Events(BaseEvents):
 				else:
 					dic[_("短い名前")]=_("なし")
 			if elem.__class__==browsableObjects.Drive:
-				dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
-				dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO, True)+" ("+str(elem.free*100//elem.total)+"%)"
-				dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
+				if elem.free>=0:
+					dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
+					dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO,True)
+				else:
+					dic[_("フォーマット")]=_("未挿入")
+				if elem.total>0:
+					dic[_("空き容量")]+=" ("+str(elem.free*100//elem.total)+"%)"
+				if elem.free>=0:
+					dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
 				dic[_("種類")]=elem.typeString
 			d=views.objectDetail.Dialog()
 			d.Initialize(dic)
