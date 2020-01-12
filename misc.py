@@ -13,7 +13,6 @@ from logging import getLogger
 log=getLogger("falcon.misc")
 
 falconHelper=ctypes.cdll.LoadLibrary("falconHelper.dll")
-falconHelper.ejectDevice.argtypes=[ctypes.c_char_p]
 
 class Timer:
 	"""シンプルなタイマー。経過時間や処理時間を計測するのに使う。単位は秒で、float。"""
@@ -140,12 +139,3 @@ def GetExecutableState(path):
 	"""指定されたファイルパスが、実行可能ファイルであろうかどうかを調べて boolean で返す。"""
 	return os.path.splitext(path)[1].upper() in os.environ["pathext"].split(";")
 
-def EjectDevice(letter):
-	log.debug("Trying to eject drive %s..." % letter)
-	ret=falconHelper.ejectDevice(letter.encode('utf-8'))
-	if ret==0:
-		log.debug("Successfully ejected.")
-		return True
-	else:
-		log.debug("Failed to eject device (Error code: %d)" % ret)
-		return False

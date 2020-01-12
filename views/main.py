@@ -21,6 +21,7 @@ import listObjects
 import tabObjects
 import menuItemsStore
 import fileSystemManager
+import deviceCtrl
 
 import views.fonttest
 import views.changeAttribute
@@ -181,6 +182,9 @@ class Menu(BaseMenu):
 
 		#ツールメニューの中身
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
+		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DRIVE",_("ドライブの取り外し"))
+		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DEVICE",_("デバイスの取り外し"))
+
 
 		#環境メニューの中身
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_TESTDIALOG",_("テストダイアログを表示"))
@@ -375,6 +379,35 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
 			self.parent.activeTab.DirCalc()
 			return
+		if selected==menuItemsStore.getRef("TOOL_EJECT_DRIVE"):
+			if self.parent.activeTab.listObject.__class__!=listObjects.DriveList:
+				return
+			if self.parent.activeTab.GetFocusedItem()<0:
+				return
+			ret=deviceCtrl.ejectDrive(self.parent.activeTab.GetFocusedElement().letter)
+			if ret==errorCodes.OK:
+				dialog(_("成功"),_("ドライブは安全に切断されました。"))
+				self.UpdateFilelist(False)
+			elif ret==errorCodes.FILE_NOT_FOUND:
+				dialog(_("エラー"),_("指定されたドライブが見つかりません。既に取り外しされた可能性があります。"))
+			elif ret==errorCodes.UNKNOWN:
+				#エラー表示はむこうでやってる
+				pass
+			elif errorCodes.ACCESS_DENIED:
+				dialog(_("エラー"),_("取り外しに失敗しました。")+_("このドライブは使用中の可能性があります。"))
+			return
+		if selected==menuItemsStore.getRef("TOOL_EJECT_DEVICE"):
+			if self.parent.activeTab.listObject.__class__!=listObjects.DriveList:
+				return
+			if self.parent.activeTab.GetFocusedItem()<0:
+				return
+			ret=deviceCtrl.EjectDevice(self.parent.activeTab.GetFocusedElement().letter)
+			if ret==errorCodes.OK:
+				dialog(_("成功"),_("デバイスは安全に取り外せる状態になりました。"))
+				self.UpdateFilelist(False)
+			elif ret==errorCodes.UNKNOWN:
+				dialog(_("エラー"),_("デバイスの取り外しに失敗しました。"))
+			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):
 			self.testdialog=views.test.View()
 			self.testdialog.Initialize()
@@ -458,6 +491,6 @@ class Events(BaseEvents):
 		t=self.parent.activeTab
 		t.SortCycleAd()
 
-	def UpdateFilelist(self):
-		ret=self.parent.activeTab.UpdateFilelist()
+	def UpdateFilelist(self,silence=True):
+		ret=self.parent.activeTab.UpdateFilelist(silence=silence)
 

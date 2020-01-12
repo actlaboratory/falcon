@@ -71,6 +71,12 @@ class FalconTabBase(object):
 		"""現在フォーカスが当たっているアイテムのインデックス番号を取得する。"""
 		return self.hListCtrl.GetFocusedItem()
 
+	def GetFocusedElement(self):
+		"""現在フォーカスが当たっているアイテムをbrowsableObjectsで返す"""
+		if self.GetFocusedItem()<0:
+			return None
+		return self.listObject.GetElement(self.GetFocusedItem())
+
 	# 選択されているアイテムが１つ以上存在するか否か
 	def IsItemSelected(self):
 		return self.hListCtrl.GetSelectedItemCount()>0
