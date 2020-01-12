@@ -175,7 +175,8 @@ class MainListTab(FalconTabBase):
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
 		self.hListCtrl.Focus(cursor)
-		self.hListCtrl.Select(cursor)
+		if cursor>0:
+			self.hListCtrl.Select(cursor)
 
 	def _cancelBackgroundTasks(self):
 		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
