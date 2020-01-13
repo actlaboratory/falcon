@@ -77,7 +77,7 @@ class FileSystemBase(object):
 
 class NTFS(FileSystemBase):
 	def __str__(self):
-		return "NTMS"
+		return "NTFS"
 
 	MAX_VOLUME_LABEL_TYPE=limitTypes.CHAR
 	MAX_VOLUME_LABEL_LENGTH=32
