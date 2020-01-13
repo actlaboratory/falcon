@@ -155,6 +155,8 @@ class FileList(FalconListBase):
 			lst=win32api.FindFiles(dir+"\\*")
 		except pywintypes.error as err:
 			self.log.error("Cannot open the directory! {0}".format(err))
+			if err.winerror==5:
+				return errorCodes.ACCESS_DENIED
 			dialog(_("エラー"), _("フォルダを開くことができませんでした(%(error)s)") % {"error": str(err)})
 			return errorCodes.FATAL
 		#end except

@@ -1,9 +1,10 @@
 # Falcon
 Falcon Pythonで再スタートできればいいな。  
 ## 準備
-シェル:コマンドプロンプト  
+シェル:コマンドプロンプト
 python:python 3.7 (3.8にすると動かないので、3.7固定で)  
 python -m pip install -r requirements.txt  
+.exeではなく.pyから実行する場合、一部機能を正しく実行するには.pyを *可変個引数を受け入れる形で* python.exeに関連付けしている必要がある。通常の関連付けではうまく動作しないので注意。
 
 ## 実行  
 python falcon.py  

@@ -8,6 +8,7 @@
 タブは、必ずリストビューです。カラムの数と名前と、それに対応するリストの要素がタブを構成します。たとえば、ファイル一覧では「ファイル名」や「サイズ」などがカラムになり、その情報がリストに格納されています。ファイル操作の状況を示すタブの場合は、「進行率」や「状態」などがカラムの名前として想定されています。リスト上でエンターを押すことで、アクションを実行できます。ファイルビューではファイルやフォルダを開き、ファイル操作では問い合わせに応答することができます。
 """
 
+import sys
 import os
 import views.ViewCreator
 import gettext
@@ -253,6 +254,10 @@ class MainListTab(FalconTabBase):
 			lst=listObjects.FileList()
 			result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
 			if result != errorCodes.OK:
+				if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
+					dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
+					if dlg.ShowModal()==wx.ID_YES:
+						self.RunFile(sys.argv[0],True,target)
 				return result#アクセス負荷
 			if cursorTarget!="":
 				targetItemIndex=lst.Search(cursorTarget)
