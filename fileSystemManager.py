@@ -6,6 +6,7 @@
 
 import win32api
 import re
+import os
 from enum import Enum
 
 def GetFileSystemObject(letter):
@@ -24,8 +25,12 @@ def GetFileSystemObject(letter):
 	#end keyError
 	return cls()
 
-def ValidationObjectName(s):
-	"""ファイルやディレクトリの名前sに何らかの問題があればその内容を返す"""
+def ValidationObjectName(path):
+	"""
+		ファイルやディレクトリの名前pathに何らかの問題があればその内容を返す
+		sはフルパス
+	"""
+	s=os.path.split(path)[1]
 
 	#使用できない文字の確認
 	ngString=[]

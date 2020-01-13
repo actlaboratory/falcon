@@ -303,7 +303,7 @@ class Events(BaseEvents):
 			d.Initialize()
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
-			self.parent.activeTab.MakeDirectory(self.parent.activeTab.listObject.rootDirectory+"\\"+d.GetValue())
+			self.parent.activeTab.MakeDirectory(d.GetValue())
 			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("FILE_FILEOPTEST"):

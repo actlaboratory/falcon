@@ -324,17 +324,17 @@ class MainListTab(FalconTabBase):
 		if evt.IsEditCancelled():		#ユーザによる編集キャンセル
 			return
 		e=self.hListCtrl.GetEditControl()
-		print(fileSystemManager.ValidationObjectName(e.GetLineText(0)))
-		if fileSystemManager.ValidationObjectName(e.GetLineText(0)):
+		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
+		if isinstance(f,browsableObjects.File):
+			newName=f.directory+"\\"+e.GetLineText(0)
+		else:
+			newName=e.GetLineText(0)
+		#end ファイルかドライブか
+		if fileSystemManager.ValidationObjectName(newName):
 			dialog(_("エラー"),fileSystemManager.ValidationObjectName(e.GetLineText(0)))
 			evt.Veto()
 			return
-		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
-		if isinstance(f,browsableObjects.File):
-			inst={"operation": "rename", "files": [f.fullpath], "to": [f.directory+"\\"+e.GetLineText(0)]}
-		else:
-			inst={"operation": "rename", "files": [f.fullpath], "to": [e.GetLineText(0)]}
-		#end ファイルかドライブか
+		inst={"operation": "rename", "files": [f.fullpath], "to": [newName]}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
@@ -403,20 +403,24 @@ class MainListTab(FalconTabBase):
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def UpdateFilelist(self,silence=False):
+	def UpdateFilelist(self,silence=False,cursorTargetName=""):
 		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
 		if silence==True:
 			globalVars.app.say(_("更新"))
-		item=self.listObject.GetElement(self.GetFocusedItem())
+		if cursorTargetName=="":
+			item=self.listObject.GetElement(self.GetFocusedItem())
 		result=self.listObject.Update()
-		cursor=self.listObject.Search(item.basename)
 		if result != errorCodes.OK:
 			return errorCodes.FILE_NOT_FOUND			#アクセス負荷など
+		if cursorTargetName=="":
+			cursor=self.listObject.Search(item.basename,0)
+		else:
+			cursor=self.listObject.Search(cursorTargetName,0)
 		self.Update(self.listObject,cursor)
 
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
-		if fileSystemManager.ValidationObjectName(newdir):
+		if fileSystemManager.ValidationObjectName(dir+"\\"+newdir):
 			dialog(_("エラー"),fileSystemManager.ValidationObjectName(newdir))
 			return
 		dest=os.path.join(dir,newdir)
@@ -427,7 +431,7 @@ class MainListTab(FalconTabBase):
 			dialog(_("エラー"),_("フォルダを作成できません。"))
 			return
 		#end error
-		self.UpdateFilelist(silence=True)
+		self.UpdateFilelist(silence=True,cursorTargetName=newdir)
 
 	def MakeShortcut(self,option):
 		prm=""
