@@ -126,7 +126,6 @@ class Clipboard(object):
 				falconHelper.copyMemory(pointer, data, len(data))
 			finally:
 				GlobalUnlock(handle)
-			self.empty()
 			SetClipboardData = user32.SetClipboardData
 			SetClipboardData.restype = c_void_p
 			if SetClipboardData(format, handle) == c_void_p(0):
@@ -140,6 +139,7 @@ class Clipboard(object):
 		if not isinstance(data, str):
 			raise ArgumentError()
 		buf = (data + "\0").encode(encoding)
+		self.empty()
 		self.set_data(ClipboardFormats.text.value, buf)
 		return
 
@@ -147,6 +147,7 @@ class Clipboard(object):
 		if not isinstance(data, str):
 			raise ArgumentError()
 		buf=(data + "\0").encode("UTF-16")[2:]
+		self.empty()
 		self.set_data(ClipboardFormats.unicode_text.value, buf)
 		return
 
