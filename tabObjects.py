@@ -595,6 +595,26 @@ class MainListTab(FalconTabBase):
 		#end for
 		self.background_tasks.remove(taskState)
 
+	def OnSpaceKey(self):
+		"""spaceキー押下時、アイテムをチェック/チェック解除する"""
+		#item=self.hListCtrl.GetItem(self.GetFocusedItem())
+		#item.SetBackgroundColour(wx.Colour("#ff00ff"))
+		#self.hListCtrl.RefreshItem(self.GetFocusedItem())
+		if self.hListCtrl.GetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED)==wx.LIST_STATE_DROPHILITED:
+			#チェック解除
+			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_DROPHILITED)
+			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_SELECTED)
+
+			globalVars.app.say(_("チェック解除"))
+			self.hListCtrl.Update()
+		else:
+			#チェック
+			self.hListCtrl.SetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
+			globalVars.app.say(_("チェック"))
+		#カーソルを１つ下へ移動
+		self.hListCtrl.Focus(self.GetFocusedItem()+1)
+		self.hListCtrl.Select(self.GetFocusedItem())
+
 	def BeginDrag(self,event):
 		data=wx.FileDataObject()
 		for f in self.GetSelectedItems():
