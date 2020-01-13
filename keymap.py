@@ -256,6 +256,9 @@ class KeymapHandler():
 		#エントリーの作成・追加
 		for e in key.split("/"):
 			entry=self.makeEntry(ref,e)
+			if entry==False:
+				self.addError(identifier,ref,key)
+				continue
 
 			#キーの重複確認
 			if entry in self.entries[identifier]:
@@ -301,10 +304,22 @@ class KeymapHandler():
 		shift="SHIFT+" in key
 		codestr=key.split("+")
 		flags=0
-		if ctrl: flags=wx.ACCEL_CTRL
-		if alt: flags=flags|wx.ACCEL_ALT
-		if shift: flags=flags|wx.ACCEL_SHIFT
-		return AcceleratorEntry(flags,str2key[codestr[len(codestr)-1]],menuItemsStore.getRef(ref.upper()))
+		flagCount=0
+		if ctrl:
+			flags=wx.ACCEL_CTRL
+			flagCount+=1
+		if alt:
+			flags=flags|wx.ACCEL_ALT
+			flagCount+=1
+		if shift:
+			flags=flags|wx.ACCEL_SHIFT
+			flagCount+=1
+		if not len(codestr)-flagCount==1:
+			return False
+		codestr=codestr[len(codestr)-1]
+		if not codestr in str2key:
+			return False
+		return AcceleratorEntry(flags,str2key[codestr],menuItemsStore.getRef(ref.upper()))
 
 	def GetTable(self, identifier):
 		"""アクセラレーターテーブルを取得します。identifier で、どのビューでのテーブルを取得するかを指定します。"""

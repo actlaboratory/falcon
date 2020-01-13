@@ -63,7 +63,7 @@ class View(BaseView):
 				self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
 		errors=self.menu.keymap.GetError(self.identifier)
 		if errors:
-			tmp=_("設定されたショートカットキーが重複しています。以下のキーの設定内容をご確認ください。\n\n")
+			tmp=_("お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
 			for v in errors:
 				tmp+=v+"\n"
 			dialog(_("エラー"),tmp)

@@ -44,8 +44,15 @@ class BaseView(object):
 class BaseMenu(object):
 	def InitShortcut(self,identifier):
 		self.keymap=keymap.KeymapHandler(defaultKeymap.defaultKeymap)
-		self.keymap.addFile(constants.KEYMAP_FILE_NAME)
 		self.keymap_identifier=identifier
+		self.keymap.addFile(constants.KEYMAP_FILE_NAME)
+		errors=self.keymap.GetError(identifier)
+		if errors:
+			tmp=_(constants.KEYMAP_FILE_NAME+"で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
+			for v in errors:
+				tmp+=v+"\n"
+			dialog(_("エラー"),tmp)
+
 
 	def RegisterMenuCommand(self,menu_handle,ref_id,title):
 		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
