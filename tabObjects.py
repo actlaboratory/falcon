@@ -325,13 +325,18 @@ class MainListTab(FalconTabBase):
 			return
 		e=self.hListCtrl.GetEditControl()
 		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
-		if isinstance(f,browsableObjects.File):
+		if isinstance(f,browsableObjects.Folder):
 			newName=f.directory+"\\"+e.GetLineText(0)
+			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.DIRECTORY)
+		elif isinstance(f,browsableObjects.File):
+			newName=f.directory+"\\"+e.GetLineText(0)
+			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.FILE)
 		else:
 			newName=e.GetLineText(0)
-		#end ファイルかドライブか
-		if fileSystemManager.ValidationObjectName(newName):
-			dialog(_("エラー"),fileSystemManager.ValidationObjectName(e.GetLineText(0)))
+			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.VOLUME_LABEL)
+		#end フォルダかファイルかドライブか
+		if error:
+			dialog(_("エラー"),error)
 			evt.Veto()
 			return
 		inst={"operation": "rename", "files": [f.fullpath], "to": [newName]}
@@ -343,7 +348,10 @@ class MainListTab(FalconTabBase):
 			return
 		#end fail
 		f.basename=e.GetLineText(0)
-		f.fullpath=f.directory+"\\"+f.basename
+		if isinstance(f,browsableObjects.File):
+			f.fullpath=f.directory+"\\"+f.basename
+		if isinstance(f,browsableObjects.Stream):
+			f.fullpath=f.file+f.basename
 	#end onLabelEditEnd
 
 	def ChangeAttribute(self,attrib_checks):

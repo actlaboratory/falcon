@@ -17,7 +17,7 @@ def GetFileSystemObject(letter):
 	:type letter: str
 	:rtype: FileSystemBase
 	"""
-	name=win32api.GetVolumeInformation("%s:\\" % (letter))[4]
+	name=win32api.GetVolumeInformation("%s:\\" % (letter[0]))[4]
 	try:
 		cls=globals()[name]
 	except KeyError:
@@ -25,10 +25,12 @@ def GetFileSystemObject(letter):
 	#end keyError
 	return cls()
 
-def ValidationObjectName(path):
+def ValidationObjectName(path,pathType,path2=""):
 	"""
 		ファイルやディレクトリの名前pathに何らかの問題があればその内容を返す
-		sはフルパス
+		pathは原則フルパス
+		typeはpathTypeから１つを指定
+		ボリュームラベル変更などでpathがドライブ名を含まない場合、path2でドライブ名を指定
 	"""
 	s=os.path.split(path)[1]
 
@@ -56,10 +58,31 @@ def ValidationObjectName(path):
 
 	#末尾が.と半角スペースでないことの確認
 	if re.sub("(.*\\.$)|(.* $)",r"",s.upper())=="":
-		return _("名前の最後を半角の.またはスペースとすることはできません。")
+		return _("名前の最後を半角の.(ピリオド)または半角スペースとすることはできません。")
+
+	#パス長の確認
+	if pathType==pathTypes.VOLUME_LABEL:
+		drive=GetFileSystemObject(os.path.splitdrive(path2)[0])
+		#TODO
+	else:
+		drive=GetFileSystemObject(os.path.splitdrive(path)[0])
+		if len(s)>drive.MAX_PATH_LENGTH:
+			return _("このドライブでは、以下の文字数を超えない名前を付ける必要があります。\n\n制限文字数:"+str(drive.MAX_PATH_LENGTH))
+		if pathType==pathTypes.DIRECTORY:
+			if len(path)>drive.MAX_DIRECTORY_PATH_LENGTH:
+				return _("このドライブでは、ディレクトリ名のフルパスが以下の文字数を超えないように名前を付ける必要があります。\n\n制限文字数:"+str(drive.MAX_DIRECTORY_PATH_LENGTH))
+		elif pathType==pathTypes.FILE:
+			if len(path)>drive.MAX_FULLPATH_LENGTH:
+				return _("このドライブでは、ファイル名のフルパスが以下の文字数を超えないように名前を付ける必要があります。\n\n制限文字数:"+str(drive.MAX_FULLPATH_LENGTH))
 
 	#問題なし
 	return ""
+
+
+class pathTypes(Enum):
+	DIRECTORY=0
+	FILE=1
+	VOLUME_LABEL=2
 
 
 class limitTypes(Enum):
@@ -72,7 +95,9 @@ class FileSystemBase(object):
 		self.canMakeHardLink=True
 		self.canMakeSymbolicLink=True
 
-	MAX_FULLPATH_LENGTH=256
+	MAX_PATH_LENGTH=255
+	MAX_DIRECTORY_PATH_LENGTH=247
+	MAX_FULLPATH_LENGTH=259
 
 
 class NTFS(FileSystemBase):
@@ -81,7 +106,6 @@ class NTFS(FileSystemBase):
 
 	MAX_VOLUME_LABEL_TYPE=limitTypes.CHAR
 	MAX_VOLUME_LABEL_LENGTH=32
-	MAX_PATH_LENGTH=255
 
 class FAT(FileSystemBase):
 	def __str__(self):
@@ -89,7 +113,6 @@ class FAT(FileSystemBase):
 
 	MAX_VOLUME_LABEL_TYPE=limitTypes.BYTE
 	MAX_VOLUME_LABEL_LENGTH=11
-	MAX_PATH_LENGTH=12
 
 class FAT32(FileSystemBase):
 	def __str__(self):
@@ -97,7 +120,6 @@ class FAT32(FileSystemBase):
 
 	MAX_VOLUME_LABEL_TYPE=limitTypes.BYTE
 	MAX_VOLUME_LABEL_LENGTH=11
-	MAX_PATH_LENGTH=255
 
 class exFAT(FileSystemBase):
 	def __str__(self):
@@ -105,7 +127,6 @@ class exFAT(FileSystemBase):
 
 	MAX_VOLUME_LABEL_TYPE=limitTypes.BYTE
 	MAX_VOLUME_LABEL_LENGTH=11
-	MAX_PATH_LENGTH=255
 
 class UDF(FileSystemBase):
 	def __str__(self):
@@ -113,7 +134,6 @@ class UDF(FileSystemBase):
 
 	MAX_VOLUME_LABEL_TYPE=limitTypes.CHAR
 	MAX_VOLUME_LABEL_LENGTH=32
-	MAX_PATH_LENGTH=255
 
 class CDFS(FileSystemBase):
 	def __str__(self):
