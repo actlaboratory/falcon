@@ -28,7 +28,7 @@ def Execute(op):
 			shellcon.FO_DELETE,
 			elem,
 			None,
-			shellcon.FOF_ALLOWUNDO|shellcon.FOF_NOCONFIRMATION,
+			shellcon.FOF_ALLOWUNDO|shellcon.FOF_NOCONFIRMATION|shellcon.FOF_NO_UI,
 			None,
 			""
 		)
