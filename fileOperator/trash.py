@@ -22,22 +22,23 @@ def Execute(op):
 	#end ゴミ箱に入れるファイルリストがない
 	op.output["all_OK"]=True
 	op.output["retry"]["target"]=[]
-	sh=(
-		0,
-		shellcon.FO_DELETE,
-		"\0".join(f),
-		None,
-		shellcon.FOF_ALLOWUNDO|shellcon.FOF_NOCONFIRMATION,
-		None,
-		_("ゴミ箱に移動しています…")
-	)
-	try:
-		ret=shell.SHFileOperation(sh)
-	except win32con.error as err:
-		#SHFileOperation で一気に処理されてしまうので、commonFailure が通しにくい
-		appendRetry(op.output,f)
-	#end except
-	op.output["succeeded"]+=1
+	for elem in f:
+		sh=(
+			0,
+			shellcon.FO_DELETE,
+			elem,
+			None,
+			shellcon.FOF_ALLOWUNDO|shellcon.FOF_NOCONFIRMATION|shellcon.FOF_NO_UI,
+			None,
+			""
+		)
+		try:
+			ret=shell.SHFileOperation(sh)
+		except win32con.error as err:
+			if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem)
+		#end except
+		op.output["succeeded"]+=1
+	#end ゴミ箱ループ
 	if len(op.output["retry"]["target"])>0:
 		op.output["retry"]["operation"]=VERB
 		retry=len(op.output["retry"]["target"])
@@ -46,4 +47,4 @@ def Execute(op):
 
 def appendRetry(output,target):
 	"""リトライするリストに追加する。"""
-	output["retry"]["from"].append(target)
+	output["retry"]["target"].append(target)
