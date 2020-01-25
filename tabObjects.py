@@ -501,6 +501,8 @@ class MainListTab(FalconTabBase):
 			dialog(_("エラー"),_("ファイルをゴミ箱に移動できませんでした。"))
 			return
 		#end error
+		failed=op.CheckFailed()
+		print("fail %d" % len(failed))
 		self.UpdateFilelist(silence=True)
 
 	def Delete(self):
