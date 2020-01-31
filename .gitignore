@@ -6,7 +6,6 @@ settings.ini
 keymap.ini
 falcon.build/
 falcon.dist/
-PyWin32.chm
 PyWin32.chw
 *.bat
 *log.txt
