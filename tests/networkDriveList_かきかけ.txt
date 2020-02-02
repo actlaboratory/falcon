@@ -1,0 +1,94 @@
+"""
+class NetworkDeviceList(FalconListBase):
+	"""ネットワーク上のデバイスの一覧を扱うリスト。"""
+	def __init__(self):
+		super().__init__()
+		self.log=logging.getLogger("falcon.networkDeviceList")
+
+	def Update(self):
+		return self.Initialize(self.rootDirectory,self.sortCursor,self.sortDescending,True)
+
+	def Initialize(self,lst,silent=False):
+		"""情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、errorCodes.OK以外が返る。silentがTrueなら読み上げは行われない。"""
+		self.devices=[]
+		if isinstance(lst,list):#パラメータが渡されたなら、browsableObjects のリストとして処理刷る(リストを取得しないでコピーする)
+			self._copyFromList(lst)
+			return errorCodes.OK
+		#end copy
+		if not silent:
+			globalVars.app.say(_("ネットワーク"))
+		self.rootDirectory=""
+		self.log.debug("Getting device list...")
+		t=misc.Timer()
+		try:
+			h=win32wnet.WNetOpenEnum(2,1,0,None)
+				#2=RESOURCE_GLOBALNET
+				#1=RESOURCETYPE_DISK
+			win32wnet.WNetEnumResource(h,64)	#65以上の指定不可
+
+		except pywintypes.error as err:
+			self.log.error("Cannot open the directory! {0}".format(err))
+			if err.winerror==5:
+				return errorCodes.ACCESS_DENIED
+			dialog(_("エラー"), _("フォルダを開くことができませんでした(%(error)s)") % {"error": str(err)})
+			return errorCodes.FATAL
+		#end except
+		if "\\" in self.rootDirectory:		#ルート以外では余計な.と..がが一番上に入っている
+			del lst[0:2]
+		if len(lst)==0:
+			self.log.debug("Blank folder.")
+			return errorCodes.OK
+		#end 空のフォルダだったらさっさと帰る
+		for elem in lst:
+			fullpath=dir+"\\"+elem[8]
+			ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON|shellcon.SHGFI_TYPENAME)
+			if os.path.isfile(fullpath):
+				f=browsableObjects.File()
+				f.Initialize(dir,elem[8],fullpath,(elem[4]<<32)+elem[5], elem[3], elem[0], shfileinfo[4],elem[1],elem[9])
+				self.files.append(f)
+			else:
+				f=browsableObjects.Folder()
+				f.Initialize(dir,elem[8],fullpath,-1,elem[3], elem[0], shfileinfo[4],elem[1],elem[9])
+				self.folders.append(f)
+			#end どっちについかするか？
+		#end 追加ループ
+		self.log.debug("File list created in %f seconds." % t.elapsed)
+		self.log.debug(str(len(self.folders))+" directories and "+str(len(self.files))+" files found.")
+		if self.sortCursor!=0:
+			self.log.debug("Triggering sorting")
+			self.ApplySort()
+		#end ソートが必要ならソート
+		return errorCodes.OK
+
+
+#const RESOURCE_CONNECTED	$00000001
+#const RESOURCE_GLOBALNET	$00000002
+#const RESOURCE_REMEMBERED	$00000003
+#const RESOURCE_RECENT	$00000004
+#const RESOURCE_CONTEXT	$00000005
+#const RESOURCETYPE_ANY	$00000000
+#const RESOURCETYPE_DISK	$00000001
+#const RESOURCETYPE_PRINT	$00000002
+#const RESOURCETYPE_RESERVED	$00000008
+#const RESOURCETYPE_UNKNOWN	$FFFFFFFF
+#const RESOURCEUSAGE_CONNECTABLE	$00000001
+#const RESOURCEUSAGE_CONTAINER	$00000002
+#const RESOURCEUSAGE_NOLOCALDEVICE	$00000004
+#const RESOURCEUSAGE_SIBLING	$00000008
+#const RESOURCEUSAGE_ATTACHED	$00000010
+#const RESOURCEUSAGE_ALL	$00000013
+#const RESOURCEUSAGE_RESERVED	$80000000
+
+#const RESOURCEDISPLAYTYPE_GENERIC	$00000000
+#const RESOURCEDISPLAYTYPE_DOMAIN	$00000001
+#const RESOURCEDISPLAYTYPE_SERVER	$00000002
+#const RESOURCEDISPLAYTYPE_SHARE	$00000003
+#const RESOURCEDISPLAYTYPE_FILE	$00000004
+#const RESOURCEDISPLAYTYPE_GROUP	$00000005
+#const RESOURCEDISPLAYTYPE_NETWORK	$00000006
+#const RESOURCEDISPLAYTYPE_ROOT	$00000007
+#const RESOURCEDISPLAYTYPE_DIRECTORY	$00000009
+#const RESOURCEDISPLAYTYPE_TREE	$0000000A
+#const RESOURCEDISPLAYTYPE_NDSCONTAINER	$0000000B
+
+"""

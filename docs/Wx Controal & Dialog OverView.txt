@@ -1,0 +1,100 @@
+Wx Controal & Dialog OverView
+
+#animation,media
+wx.adv.AnimationCtrl
+wx.media.MediaCtrl
+
+#book (別のコントロールの操作によって表示するページを切り替える)
+wx.aui.AuiNotebook	
+wx.Choicebook		#combobox+book
+wx.Listbook			#listbox+book
+wx.Notebook			#tabControal+book
+wx.Simplebook		#only page,user cannot change page.
+wx.Toolbook			#toolbar+book
+wx.Treebook			#treecontroal+book
+
+#date & time
+wx.adv.CalendarCtrl
+wx.adv.DatePickerCtrl
+wx.adv.TimePickerCtrl
+
+#Choice 選択肢の提示
+wx.CheckBox
+wx.ComboBox
+wx.ComboCtrl
+wx.RadioBox
+wx.RadioButton
+wx.TreeCtrl
+
+#listView,DataView
+wx.dataview.DataViewCtrl
+wx.dataview.DataViewListCtrl
+wx.dataview.DataViewTreeCtrl
+wx.ListBox
+wx.ListCtrl
+wx.HeaderCtrl
+
+#閉じたり開いたりできる領域を作る
+wx.CollapsibleHeaderCtrl
+wx.CollapsiblePane
+
+#File,Directory
+wx.FileCtrl
+wx.DirPickerCtrl
+wx.FilePickerCtrl
+wx.FileDialog¶
+wx.GenericDirCtrl
+
+#Spin,Slide,Scroll
+wx.ScrollBar
+wx.Scrolled
+wx.Slider
+wx.SpinButton
+wx.SpinCtrl
+wx.SpinCtrlDouble
+
+#webView
+wx.webkit.WebKitCtrl
+wx.html2.WebView
+
+#text
+wx.adv.HyperlinkCtrl
+wx.richtext.RichTextCtrl
+wx.richtext.RichTextStyleListCtrl
+wx.stc.StyledTextCtrl
+wx.TextCtrl
+
+#ViewItem(OnlyView,no UserOperation)
+wx.StaticBitmap
+wx.StaticBox
+wx.StaticLine
+wx.StaticText
+wx.Gauge	#Progressbar
+wx.InfoBar
+wx.ActivityIndicator
+wx.StatusBar
+
+#font
+wx.FontPickerCtrl
+wx.FontDialog
+
+#color
+wx.ColourPickerCtrl¶
+wx.ColourDialog¶
+
+#Button
+wx.Button
+wx.ToggleButton
+
+#object parts(non-windowObject)
+wx.BookCtrlBase
+wx.Choice
+wx.PickerBase
+wx.AnyButton
+wx.ControlWithItems
+
+#Others,unknown
+wx.aui.AuiToolBar
+wx.ribbon.RibbonControl
+wx.ToolBar
+
