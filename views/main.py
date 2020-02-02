@@ -69,24 +69,29 @@ class View(BaseView):
 			dialog(_("エラー"),tmp)
 
 		self.InstallMenuEvent(self.menu,self.events)
-		self.InstallListPanel()
+
 		self.tabs=[]
+		self.activeTab=None#最初なので空
+		self.hTabCtrl=self.creator.tabCtrl(_("タブ選択"),self.ChangeTab,0,1,wx.EXPAND)
 		self.MakeFirstTab()
+
 		self.hFrame.Show()
 		self.app.SetTopWindow(self.hFrame)
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
-	def InstallListPanel(self):
-		"""リストコントロールが表示されるパネルを設定する。"""
-		self.hListPanel=wx.Panel(self.hFrame, wx.ID_ANY, pos=(0,0))
-		self.hListPanel.SetAutoLayout(True)
+	def AddNewTab(self,lst,active=False):
+		tab=tabObjects.MainListTab()
+		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
+		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
+		tab.Initialize(self,self.pageCreator)
+		tab.Update(lst)
+		tab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
+		self.AppendTab(tab,hPanel,active=True)
+		return tab
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
-		self.activeTab=None#最初なのでなにもなし
-		tab=tabObjects.MainListTab()
-		tab.Initialize(self)
 		if(len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			lst=listObjects.FileList()
 			lst.Initialize(os.path.expandvars(sys.argv[1]),int(globalVars.app.config["FileList"]["sorting"]),int(globalVars.app.config["FileList"]["descending"]))
@@ -101,31 +106,37 @@ class View(BaseView):
 			lst.Initialize(None,int(globalVars.app.config["DriveList"]["sorting"]),int(globalVars.app.config["DriveList"]["descending"]))
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
-		tab.Update(lst)
-		self.AppendTab(tab,active=True)
+		self.AddNewTab(lst,True)
 
-	def AppendTab(self,tab,active=False):
+	def AppendTab(self,tab,hPanel,active=False):
 		"""タブを追加する。active=True で、追加したタブをその場でアクティブにする。"""
 		self.tabs.append(tab)
 		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
-		if active is True: self.ActivateTab(tab)
+		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab"+str(len(self.tabs)),False)
+		if active is True: self.ActivateTab(len(self.tabs)-1)
 
-	def ActivateTab(self,tab):
-		"""指定されたタブをアクティブにする。内部で管理しているタブリストに入っていない他部でも表示できる。"""
-		if self.activeTab: self.activeTab.getListCtrl().Hide()
-		self.activeTab=tab
-		l=self.activeTab.GetListCtrl()
-		l.Show(True)
+	def ActivateTab(self,pageNo):
+		"""指定されたインデックスのタブをアクティブにする。"""
+		self.activeTab=self.tabs[pageNo]
+		self.hTabCtrl.SetSelection(pageNo)
+		self.activeTab.hListCtrl.SetFocus()
+
+	def ChangeTab(self,event):
+		"""タブ変更イベント"""
+		pageNo=event.GetSelection()
+		self.ActivateTab(pageNo)
 
 	def SetShortcutEnabled(self,en):
 		super().SetShortcutEnabled(en)
 		if en:
-			#ツウジョウノメニューバーに戻す
+			#通常のメニューバーに戻す
 			self.hFrame.SetMenuBar(self.menu.hMenuBar)
 		else:
 			#名前の変更中にはダミーのメニューバーを出しておく
 			#これがないとメニューバーの高さ分リストオブジェクトの大きさが変わってしまうために必要
 			self.hFrame.SetMenuBar(self.menu.hDisableMenuBar)
+		#SetMenuBarの後に呼び出しが必要
+		self.creator.GetSizer().Layout()
 
 
 class Menu(BaseMenu):
@@ -168,6 +179,7 @@ class Menu(BaseMenu):
 		#移動メニューの中身
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD",_("開く"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_ADMIN",_("管理者として開く"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_TAB",_("別のタブで開く"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_STREAM",_("開く(ストリーム)"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
@@ -235,6 +247,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_STREAM"):
 			self.GoForward(True)
+			return
+		if selected==menuItemsStore.getRef("MOVE_FORWARD_TAB"):
+			self.OpenNewTab()
 			return
 		if selected==menuItemsStore.getRef("EDIT_COPY"):
 			self.parent.activeTab.Copy()
@@ -461,6 +476,21 @@ class Events(BaseEvents):
 		elif ret==errorCodes.BOUNDARY:
 			globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
 
+
+	def OpenNewTab(self):
+		"""選択中のディレクトリを新しいタブで開く"""
+		if not self.parent.activeTab.GetSelectedItemCount()==1:
+			return
+		e=self.parent.activeTab.GetFocusedElement()
+		if not e.__class__==browsableObjects.Folder:
+			return
+
+		lst=listObjects.FileList()
+		ret=lst.Initialize(e.fullpath)
+		if ret!=errorCodes.OK:
+			dialog(_("エラー"),_("開けませんでした。"))
+			return
+		self.parent.AddNewTab(lst,True)
 
 	def GoForward(self,stream,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""

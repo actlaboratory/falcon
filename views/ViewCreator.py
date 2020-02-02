@@ -199,6 +199,14 @@ class ViewCreator():
 		self.AddSpace(self.space)
 		return hListCtrl
 
+	def tabCtrl(self,title,event=None,style=wx.NB_NOPAGETHEME | wx.NB_MULTILINE,proportion=0,sizerFlag=0):
+		htab=wx.Notebook(self.parent, wx.ID_ANY,name=title,style=style)
+		htab.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED,event)
+		self.SetFace(htab)
+		self.sizer.Add(htab,proportion,sizerFlag)
+		self.sizer.Layout()
+		return htab
+
 	def inputbox(self,text,x=0,defaultValue=""):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
 		self.sizer.Add(hStaticText,0)
@@ -273,15 +281,8 @@ def BoxSizer(parent,orient=wx.VERTICAL,flg=0,border=0):
 
 # parentで指定されたフレームにパネルを設置する
 # modeはViewCreator.__init__と同様
-def makePanel(mode,parent):
+def makePanel(parent):
 	hPanel=wx.Panel(parent,wx.ID_ANY)
-	if mode==1:
-		#hPanel.SetBackgroundColour("#ffffff")		#項目のない部分の背景色＝黒
-		pass
-	else:
-		#hPanel.SetBackgroundColour("#ffffff")		#項目のない部分の背景色＝白
-		#hPanel.SetAutoLayout(True)
-		pass
 	return hPanel
 
 

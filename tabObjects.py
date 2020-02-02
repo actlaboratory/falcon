@@ -49,10 +49,11 @@ class FalconTabBase(object):
 		self.environment={}		#このタブ特有の環境変数
 		self.markedPlace=None	#マークフォルダ
 
-	def InstallListCtrl(self,parent):
+	def InstallListCtrl(self,creator):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
-		self.creator=views.ViewCreator.ViewCreator(1,parent)
-		self.hListCtrl=self.creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT|wx.LC_EDIT_LABELS)
+		self.hListCtrl=creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT|wx.LC_EDIT_LABELS)
+		creator.GetPanel().Layout()
+
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_CLICK,self.col_click)
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
@@ -155,12 +156,12 @@ class FalconTabBase(object):
 
 class MainListTab(FalconTabBase):
 	"""ファイル/フォルダ/ドライブリストが表示されているタブ。"""
-	def Initialize(self,parent):
+	def Initialize(self,parent,creator):
 		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。"""
 		self.log=logging.getLogger("falcon.mainListTab")
 		self.log.debug("Created.")
 		self.parent=parent
-		self.InstallListCtrl(parent.hListPanel)
+		self.InstallListCtrl(creator)
 		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
 		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
 		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])

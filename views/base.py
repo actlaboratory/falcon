@@ -1,6 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon app views base class
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
@@ -8,6 +9,7 @@ import constants
 import keymap
 import defaultKeymap
 import menuItemsStore
+import views.ViewCreator
 from simpleDialog import dialog
 
 import globalVars
@@ -23,6 +25,9 @@ class BaseView(object):
 		self.hFrame=wx.Frame(None,-1,ttl, size=(x,y),pos=(px,py))
 		self.hFrame.Bind(wx.EVT_MOVE_END,self.events.WindowMove)
 		self.hFrame.Bind(wx.EVT_SIZE,self.events.WindowResize)
+
+		self.hPanel=views.ViewCreator.makePanel(self.hFrame)
+		self.creator=views.ViewCreator.ViewCreator(1,self.hPanel,None)
 
 	def InstallMenuEvent(self,menu,event):
 		"""メニューを作り、指定されたイベント処理用オブジェクトと結びつける。"""
@@ -53,7 +58,6 @@ class BaseMenu(object):
 				tmp+=v+"\n"
 			dialog(_("エラー"),tmp)
 
-
 	def RegisterMenuCommand(self,menu_handle,ref_id,title):
 		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
 		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
@@ -61,7 +65,6 @@ class BaseMenu(object):
 
 	def ApplyShortcut(self,hFrame):
 		self.acceleratorTable=self.keymap.GetTable(self.keymap_identifier)
-		hFrame.SetAcceleratorTable(self.acceleratorTable)
 
 class BaseEvents(object):
 	"""イベント処理のデフォルトの動作をいくつか定義してあります。"""
