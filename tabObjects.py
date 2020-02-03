@@ -434,7 +434,7 @@ class MainListTab(FalconTabBase):
 
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
-		if fileSystemManager.ValidationObjectName(dir+"\\"+newdir):
+		if fileSystemManager.ValidationObjectName(dir+"\\"+newdir,fileSystemManager.pathTypes.DIRECTORY):
 			dialog(_("エラー"),fileSystemManager.ValidationObjectName(newdir))
 			return
 		dest=os.path.join(dir,newdir)
