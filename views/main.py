@@ -123,6 +123,18 @@ class View(BaseView):
 
 	def CloseTab(self,pageNo):
 		"""指定されたインデックスのタブを閉じる。閉じたタブがアクティブだった場合は、別のタブをアクティブ状態にする。全てのタブが閉じられた場合は、終了イベントを投げる。"""
+		if not isinstance(pageNo,int):#数字じゃなくてタブオブジェクトが渡ってた
+			found=-1
+			for i in range(len(self.tabs)):
+				if self.tabs[i] is pageNo:
+					found=i
+					break
+				#end if
+			#end for
+			if found==-1: return
+			pageNo=found
+		#end ページ番号じゃなかったときの検索
+
 		popped_tab=self.tabs.pop(pageNo)
 		if len(self.tabs)==0:#タブがなくなった
 			self.Exit()
