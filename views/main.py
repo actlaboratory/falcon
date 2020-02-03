@@ -137,7 +137,7 @@ class View(BaseView):
 
 		popped_tab=self.tabs.pop(pageNo)
 		if len(self.tabs)==0:#タブがなくなった
-			self.Exit()
+			self.events.Exit()
 			return
 		#タブがなくなったらソフト終了
 		self.hTabCtrl.DeletePage(pageNo)#この時点で、 noteBook がリストコントロールをデリートするらしいので、他の場所で明示的に消してはいけないとリファレンスに書いてある
@@ -280,6 +280,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_TAB"):
 			self.OpenNewTab()
+			return
+		if selected==menuItemsStore.getRef("MOVE_CLOSECURRENTTAB"):
+			self.CloseTab()
 			return
 		if selected==menuItemsStore.getRef("EDIT_COPY"):
 			self.parent.activeTab.Copy()
@@ -521,6 +524,9 @@ class Events(BaseEvents):
 			dialog(_("エラー"),_("開けませんでした。"))
 			return
 		self.parent.AddNewTab(lst,True)
+
+	def CloseTab(self):
+		self.parent.CloseTab(self.parent.activeTab)
 
 	def GoForward(self,stream,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
