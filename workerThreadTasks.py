@@ -11,9 +11,8 @@
 
 import wx
 import globalVars
-import time
-
 import misc
+import time
 
 def DirCalc(taskState,param):
 	"""
@@ -30,6 +29,19 @@ def DirCalc(taskState,param):
 	#end for
 	if taskState.canceled: return False
 	wx.CallAfter(param['callback'],results,taskState)
+	return True
+
+def GetRecursiveFileList(taskState,param):
+	"""
+		path から全てのフォルダを再帰的にたどって、ファイル名を out のリストに入れていく。
+	"""
+	out_lst=param['out_lst']
+	for elem in misc.IteratePaths(param['path']):
+		if taskState.canceled: return False
+		out_lst.append(elem)
+	#end ファイルリストをガンガン入れる
+	if taskState.canceled: return False
+	globalVars.app.PlaySound("tip.ogg")
 	return True
 
 def DebugBeep(taskState,param):

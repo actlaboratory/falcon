@@ -112,7 +112,7 @@ def IteratePaths(path):
 	for elem in win32file.FindFilesIterator(path+"\\*"):
 		if elem[8]=="." or elem[8]=="..": continue
 		if elem[0]&win32file.FILE_ATTRIBUTE_DIRECTORY: 
-			yield from IteratePaths2(os.path.join(path,elem[8]))
+			yield from IteratePaths(os.path.join(path,elem[8]))
 		#end ディレクトリ
 		yield os.path.join(path,elem[8])
 
