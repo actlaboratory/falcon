@@ -42,7 +42,7 @@ class BaseView(object):
 			ということで、両方の対策が必要。
 		"""
 		t=self.menu.acceleratorTable if en else wx.AcceleratorTable()
-		self.hFrame.SetAcceleratorTable(t)
+		self.activeTab.hListCtrl.SetAcceleratorTable(t)
 		self.SetShortcutEnable=en
 	#end SetShortcutEnabled
 
