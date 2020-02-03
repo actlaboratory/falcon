@@ -121,6 +121,23 @@ class View(BaseView):
 		self.hTabCtrl.SetSelection(pageNo)
 		self.activeTab.hListCtrl.SetFocus()
 
+	def CloseTab(self,pageNo):
+		"""指定されたインデックスのタブを閉じる。閉じたタブがアクティブだった場合は、別のタブをアクティブ状態にする。全てのタブが閉じられた場合は、終了イベントを投げる。"""
+		popped_tab=self.tabs.pop(pageNo)
+		if len(self.tabs)==0:#タブがなくなった
+			self.Exit()
+			return
+		#タブがなくなったらソフト終了
+		self.hTabCtrl.DeletePage(pageNo)#この時点で、 noteBook がリストコントロールをデリートするらしいので、他の場所で明示的に消してはいけないとリファレンスに書いてある
+		self.hTabCtrl.SendSizeEvent()
+		if self.activeTab is popped_tab:#アクティブなタブを閉じた
+			new_pageNo=pageNo
+			if new_pageNo>=len(self.tabs): new_pageNo=len(self.tabs)-1
+			self.ActivateTab(new_pageNo)
+		#end アクティブタブを閉じた場合に後ろのタブを持って来る
+
+	#end closeTab
+
 	def ChangeTab(self,event):
 		"""タブ変更イベント"""
 		pageNo=event.GetSelection()
@@ -182,6 +199,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_TAB",_("別のタブで開く"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_STREAM",_("開く(ストリーム)"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_CLOSECURRENTTAB",_("現在のタブを閉じる"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARKSET",_("表示中の場所をマーク"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
