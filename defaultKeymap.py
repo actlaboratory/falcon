@@ -19,6 +19,7 @@ defaultKeymap["mainView"]={
 	"EDIT_CUT": "ctrl+x",
 	"EDIT_FULLPATHCOPY": "ctrl+shift+c",
 	"EDIT_SELECTALL": "ctrl+a",
+	"EDIT_SEARCH": "ctrl+f/F3",
 	"EDIT_SORTNEXT": "shift+F1",
 	"EDIT_SORTSELECT": "ctrl+S",
 	"EDIT_SORTCYCLEAD": "shift+F11",

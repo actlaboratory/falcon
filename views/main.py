@@ -28,6 +28,7 @@ import views.changeAttribute
 import views.mkdir
 import views.makeShortcut
 import views.objectDetail
+import views.search
 
 from logging import getLogger, FileHandler, Formatter
 from simpleDialog import dialog
@@ -201,9 +202,10 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SELECTALL",_("全て選択"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTNEXT",_("次の並び順"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SEARCH",_("検索"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTSELECT",_("並び順を選択"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
 
 		#移動メニューの中身
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD",_("開く"))
@@ -319,6 +321,17 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("EDIT_SORTCYCLEAD"):
 			self.SortCycleAd()
+			return
+		if selected==menuItemsStore.getRef("EDIT_SEARCH"):
+			if self.parent.activeTab.listObject.__class__!=listObjects.FileList:
+				return
+			basePath=self.parent.activeTab.listObject.rootDirectory
+			d=views.search.Dialog(basePath)
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+			print(d.GetValue())
+			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("EDIT_UPDATEFILELIST"):
 			self.UpdateFilelist()
