@@ -4,6 +4,9 @@
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
+import globalVars
+
+from .constants import *
 class FalconListBase(object):
 	"""全てのリストに共通する基本クラス。"""
 	def __init__(self):

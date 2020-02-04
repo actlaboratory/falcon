@@ -15,7 +15,8 @@ import browsableObjects
 import globalVars
 import errorCodes
 
-from . import base,constants
+from lists.base import *
+from lists.constants import *
 
 class StreamList(FalconListBase):
 	"""NTFS 副ストリームを扱うリスト。"""

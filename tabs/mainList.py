@@ -18,7 +18,7 @@ import win32api
 import clipboard
 import clipboardHelper
 import errorCodes
-import listObjects
+import lists
 import browsableObjects
 import globalVars
 import constants
@@ -110,7 +110,7 @@ class MainListTab(base.FalconTabBase):
 			#end フォルダ以外のタイプ
 		#end ACTION_FORWARD
 		if action==ACTION_BACKWARD:
-			if isinstance(self.listObject,listObjects.DriveList):
+			if isinstance(self.listObject,lists.DriveList):
 				return errorCodes.BOUNDARY
 			if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
 				target=""
@@ -125,7 +125,7 @@ class MainListTab(base.FalconTabBase):
 		targetItemIndex=-1
 		target=os.path.expandvars(target)
 		if target=="":#ドライブリスト
-			lst=listObjects.DriveList()
+			lst=lists.DriveList()
 			lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
 			if cursorTarget!="":
 				targetItemIndex=lst.Search(cursorTarget,1)
@@ -133,10 +133,10 @@ class MainListTab(base.FalconTabBase):
 			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
 			return errorCodes.FILE_NOT_FOUND
 		elif os.path.isfile(target):	#副ストリームへ移動
-			lst=listObjects.StreamList()
+			lst=lists.StreamList()
 			lst.Initialize(target)
 		else:
-			lst=listObjects.FileList()
+			lst=lists.FileList()
 			result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
 			if result != errorCodes.OK:
 				if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
@@ -282,7 +282,7 @@ class MainListTab(base.FalconTabBase):
 		s=self.listObject.GetSupportedSorts()
 		i=0
 		for elem in s:
-			m.Append(i,listObjects.GetSortDescription(elem))
+			m.Append(i,lists.GetSortDescription(elem))
 			i+=1
 		#end 追加
 		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
@@ -483,7 +483,7 @@ class MainListTab(base.FalconTabBase):
 			self.hListCtrl.Select(i)
 
 	def GoToTopFile(self):
-		if not isinstance(self.listObject,listObjects.FileList):
+		if not isinstance(self.listObject,list.FileList):
 			dialog(_("エラー"),_("ここではこの機能を利用できません。"))
 			return
 		#end ファイルリストのときしか通さない
