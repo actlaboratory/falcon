@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #Falcon miscellaneous helper objects
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 
@@ -107,14 +107,16 @@ def disableWindowStyleFlag(hwnd,flag):
 	value=value&tmp
 	win32api.SetWindowLong(hwnd,-16,value)
 
-def IteratePaths(path):
-	"""FindFirstFile 系を使う"""
+def IteratePaths(path,append_eol=False):
+	"""FindFirstFile 系を使って、パス名をイテレートする。append_eol=True にすると、最後に "eol" という1行をリストに入れるので、検索の終了判定などに使える。"""
 	for elem in win32file.FindFilesIterator(path+"\\*"):
 		if elem[8]=="." or elem[8]=="..": continue
 		if elem[0]&win32file.FILE_ATTRIBUTE_DIRECTORY: 
 			yield from IteratePaths2(os.path.join(path,elem[8]))
 		#end ディレクトリ
 		yield os.path.join(path,elem[8])
+	#EOL挿入
+	if append_eol: yield "eol"
 
 def GetDirectorySize(path):
 	"""ディレクトリのサイズをバイト数で返す。"""
