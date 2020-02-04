@@ -17,8 +17,8 @@ import globalVars
 import errorCodes
 from win32com.shell import shell, shellcon
 
-from lists.base import *
-from lists.constants import *
+from .base import *
+from .constants import *
 
 class FileList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""

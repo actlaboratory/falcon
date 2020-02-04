@@ -15,8 +15,8 @@ import browsableObjects
 import globalVars
 import errorCodes
 from simpleDialog import dialog
-from lists.base import *
-from lists.constants import *
+from .base import *
+from .constants import *
 
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
