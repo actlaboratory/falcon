@@ -1,11 +1,11 @@
 ﻿# -*- coding: utf-8 -*-
-#Falcon main list tab
+#Falcon search result tab
 #Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 """
-ファイルリストやドライブ一覧リストなどです。一通りのファイル操作を行うことができます。
+
 """
 
 import sys
