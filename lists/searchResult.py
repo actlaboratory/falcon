@@ -40,14 +40,14 @@ class SearchResultList(FalconListBase):
 		if not silent: globalVars.app.say("%sの検索結果 %s から" % (keyword,rootPath,))
 		self.log.debug("Getting search results for %s..." % keyword)
 		self._initSearch()
-		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self})
 
 	def _initSearch(self):
 		"""検索する前に準備する。"""
 		self.searched_index=0#インデックスいくつまで検索したか
 
 	def _performSearchStep(self):
-		"""検索を1ステップ実行する。100県のファイルがヒットするまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。"""
+		"""検索を1ステップ実行する。100県のファイルがヒットするか、リストが終わるまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。"""
+		ret_list=[]
 		i=self.searched_index
 		eol=False
 		hit=0
@@ -64,10 +64,12 @@ class SearchResultList(FalconListBase):
 					f=browsableObjects.File()
 					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,0,None,0,shfileinfo[4],None,"")
 					self.files.append(f)
+					ret_list.append(f)
 				else:
 					f=browsableObjects.Folder()
 					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,-1,None,0,shfileinfo[4],None,"")
 					self.folders.append(f)
+					ret_list.append(f)
 				#end ファイルかフォルダか
 				hit+=1
 				if hit==100:
@@ -96,9 +98,7 @@ class SearchResultList(FalconListBase):
 	def GetItems(self):
 		"""リストの中身を文字列タプルで取得する。フォルダが上にくる。"""
 		lst=[]
-		for elem in self.folders:
-			lst.append(elem.GetListTuple())
-		for elem in self.files:
+		for elem in self.results:
 			lst.append(elem.GetListTuple())
 		return lst
 

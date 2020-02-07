@@ -18,7 +18,7 @@ import win32api
 import clipboard
 import clipboardHelper
 import errorCodes
-import listObjects
+import lists
 import browsableObjects
 import globalVars
 import constants
@@ -26,9 +26,7 @@ import fileOperator
 import misc
 import workerThreads
 import workerThreadTasks
-import fileSystemManager
 
-from simpleDialog import *
 from win32com.shell import shell, shellcon
 from . import mainList
 
@@ -40,9 +38,10 @@ class SearchResultTab(mainList.MainListTab):
 		self.log.debug("Created.")
 		self.parent=parent
 		self.InstallListCtrl(creator)
-		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
-		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
-		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
-		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
+		self.environment["sorting"]=int(globalVars.app.config["SearchResultList"]["sorting"])
+		self.environment["descending"]=int(globalVars.app.config["SearchResultList"]["descending"])
 		self.background_tasks=[]
 
+	def StartSearch(self,rootPath,searches,keyword):
+		self.listObject=lists.SearchResult(rootPath,searches,keyword,self.environment["sorting"],self.environment["descending"])
+		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})

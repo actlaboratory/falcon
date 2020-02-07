@@ -44,6 +44,24 @@ def GetRecursiveFileList(taskState,param):
 	globalVars.app.PlaySound("tip.ogg")
 	return True
 
+def PerformSearch(taskState,param):
+	"""
+		検索のバックグラウンド処理。listObject の検索メソッドを実行して、見つかった者を tabObject のほうに通知しながら、リアルタイムな検索結果表示を実現している。
+	"""
+	l=param['listObject']
+	t=param['tabObject']
+	while(True):
+		if taskState.canceled: return False
+		finished,hits=l._performSearchStep()
+		if len(hits)>0: wx.CallAfter(tab._onSearchHitCallback,hits)
+		if finished: break#全て検索した
+		time.sleep(0.5)
+	#end 検索ループ
+	return True
+
+	for elem in misc.IteratePaths(param['path']):
+		if taskState.canceled: return False
+
 def DebugBeep(taskState,param):
 	for i in range(10):
 		if taskState.canceled: return False
