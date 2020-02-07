@@ -45,3 +45,9 @@ class SearchResultTab(mainList.MainListTab):
 	def StartSearch(self,rootPath,searches,keyword):
 		self.listObject=lists.SearchResult(rootPath,searches,keyword,self.environment["sorting"],self.environment["descending"])
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
+
+	def _onSearchHitCallback(self,hits):
+		"""コールバックで、ヒットした browsableObject のリストが降ってくるので、それをリストビューに追加していく。"""
+		for elem in hits:
+			t=elem.GetListTuple()
+			self.hListCtrl.Append((t[0],t[1],elem.fullpath,t[2],t[3],t[4]))
