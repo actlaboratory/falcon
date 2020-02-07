@@ -550,6 +550,7 @@ class Events(BaseEvents):
 		#end 途中でやめた
 		val=d.GetValue()
 		d.Destroy()
+		print(out_lst)
 		tab=tabs.searchResult.SearchResultTab()
 		hPanel=views.ViewCreator.makePanel(self.parent.hTabCtrl)
 		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)

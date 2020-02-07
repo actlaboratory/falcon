@@ -9,6 +9,7 @@
 定期的に taskState.canceled プロパティをチェックして、 True になっていれば、処理を中断しなければなりません。その際には、 False を返します。処理を最後まで実行したら、 True を返す必要があります。
 """
 
+import pathlib
 import wx
 import globalVars
 import misc
@@ -33,12 +34,13 @@ def DirCalc(taskState,param):
 
 def GetRecursiveFileList(taskState,param):
 	"""
-		path から全てのフォルダを再帰的にたどって、ファイル名を out のリストに入れていく。
+		path から全てのフォルダを再帰的にたどって、ファイル名を out のリストに入れていく。なお、入る値は、 path からの相対パス。
 	"""
 	out_lst=param['out_lst']
-	for elem in misc.IteratePaths(param['path']):
+	path=param['path']
+	for elem in misc.IteratePaths(path):
 		if taskState.canceled: return False
-		out_lst.append(elem)
+		out_lst.append(str(pathlib.Path(elem).relative_to(path)))
 	#end ファイルリストをガンガン入れる
 	if taskState.canceled: return False
 	globalVars.app.PlaySound("tip.ogg")
