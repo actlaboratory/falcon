@@ -7,4 +7,5 @@
 from lists.file import *
 from lists.drive import *
 from lists.stream import *
+from lists.searchResult import *
 from lists.constants import *

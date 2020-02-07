@@ -4,6 +4,7 @@
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
+import datetime
 import os
 import wx
 import logging
@@ -24,7 +25,7 @@ class SearchResultList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
 	def __init__(self):
 		super().__init__()
-		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING,SORT_TYPE_SEARCHPATH]
+		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE,SORT_TYPE_SEARCHPATH,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
 		self.log=logging.getLogger("falcon.searchResultList")
 
 	def Update(self):
@@ -32,8 +33,9 @@ class SearchResultList(FalconListBase):
 
 	def Initialize(self,rootPath,searches,keyword,sorting=0,descending=0,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
-		self.keyword=keyword
 		self.rootPath=rootPath
+		self.searches=searches
+		self.keyword=keyword
 		self.sortCursor=sorting
 		self.sortDescending=descending
 		self.results=[]
@@ -59,16 +61,19 @@ class SearchResultList(FalconListBase):
 			#end EOL
 			if self.keyword in path:
 				fullpath=os.path.join(self.rootPath,path)
+				stat=os.stat(fullpath)
+				mod=datetime.datetime.fromtimestamp(stat.st_mtime)
+				creation=datetime.datetime.fromtimestamp(stat.st_ctime)
 				ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON|shellcon.SHGFI_TYPENAME)
 				if os.path.isfile(fullpath):
 					f=browsableObjects.File()
-					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,0,None,0,shfileinfo[4],None,"")
-					self.files.append(f)
+					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,stat.st_size,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
+					self.results.append(f)
 					ret_list.append(f)
 				else:
 					f=browsableObjects.Folder()
-					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,-1,None,0,shfileinfo[4],None,"")
-					self.folders.append(f)
+					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,-1,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
+					self.results.append(f)
 					ret_list.append(f)
 				#end ファイルかフォルダか
 				hit+=1
@@ -79,11 +84,11 @@ class SearchResultList(FalconListBase):
 			#end 検索ヒットか
 			i+=1
 			if i>=len(self.searches):#検索は終わってないが、ファイルリスト取得が追いついてない
-			self.searched_index=len(self.searches)
-			break
+				self.searched_index=len(self.searches)
+				break
 			#end リストが追いついてない
 		#end 検索ループ
-		return eol
+		return eol,ret_list
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""

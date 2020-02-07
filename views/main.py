@@ -550,13 +550,13 @@ class Events(BaseEvents):
 		#end 途中でやめた
 		val=d.GetValue()
 		d.Destroy()
-		print(out_lst)
 		tab=tabs.searchResult.SearchResultTab()
 		hPanel=views.ViewCreator.makePanel(self.parent.hTabCtrl)
 		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
 		tab.Initialize(self,self.pageCreator)
 		tab.hListCtrl.SetAcceleratorTable(self.parent.menu.acceleratorTable)
 		self.parent.AppendTab(tab,hPanel,active=True)
+		tab.StartSearch(basePath,out_lst,val['keyword'])
 
 	def GoForward(self,stream,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
