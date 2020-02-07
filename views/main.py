@@ -19,6 +19,7 @@ import errorCodes
 import globalVars
 import lists
 import tabs.mainList
+import tabs.searchResult
 import menuItemsStore
 import fileSystemManager
 import deviceCtrl
@@ -536,7 +537,7 @@ class Events(BaseEvents):
 		self.parent.CloseTab(self.parent.activeTab)
 
 	def Search(self):
-		if self.parent.activeTab.listObject.__class__!=listObjects.FileList: return
+		if self.parent.activeTab.listObject.__class__!=lists.FileList: return
 		basePath=self.parent.activeTab.listObject.rootDirectory
 		out_lst=[]#入力画面が出てるときに、もうファイルリスト取得を開始してしまう
 		task=workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList,{'path': basePath, 'out_lst': out_lst})
@@ -547,8 +548,14 @@ class Events(BaseEvents):
 			task.Cancel()
 			return
 		#end 途中でやめた
-		print(d.GetValue())
+		val=d.GetValue()
 		d.Destroy()
+		tab=tabs.searchResult.SearchResultTab()
+		hPanel=views.ViewCreator.makePanel(self.parent.hTabCtrl)
+		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
+		tab.Initialize(self,self.pageCreator)
+		tab.hListCtrl.SetAcceleratorTable(self.parent.menu.acceleratorTable)
+		self.parent.AppendTab(tab,hPanel,active=True)
 
 	def GoForward(self,stream,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
