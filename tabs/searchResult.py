@@ -44,6 +44,13 @@ class SearchResultTab(mainList.MainListTab):
 
 	def StartSearch(self,rootPath,searches,keyword):
 		self.listObject=lists.SearchResult(rootPath,searches,keyword,self.environment["sorting"],self.environment["descending"])
+		self.columns=self.listObject.GetColumns()
+		self.SetListColumns(self.columns)
+		for i in range(0,len(self.columns)):
+			w=globalVars.app.config[lst.__class__.__name__]["column_width_"+str(i)]
+			w=100 if w=="" else int(w)
+			self.hListCtrl.SetColumnWidth(i,w)
+		#end カラム幅設定
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
 
 	def _onSearchHitCallback(self,hits):
