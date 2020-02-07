@@ -19,6 +19,7 @@ import errorCodes
 import globalVars
 import lists
 import tabs.mainList
+import tabs.searchResult
 import menuItemsStore
 import fileSystemManager
 import deviceCtrl
@@ -29,6 +30,9 @@ import views.mkdir
 import views.makeShortcut
 import views.objectDetail
 import views.search
+
+import workerThreads
+import workerThreadTasks
 
 from logging import getLogger, FileHandler, Formatter
 from simpleDialog import dialog
@@ -323,15 +327,7 @@ class Events(BaseEvents):
 			self.SortCycleAd()
 			return
 		if selected==menuItemsStore.getRef("EDIT_SEARCH"):
-			if self.parent.activeTab.listObject.__class__!=lists.FileList:
-				return
-			basePath=self.parent.activeTab.listObject.rootDirectory
-			d=views.search.Dialog(basePath)
-			d.Initialize()
-			ret=d.Show()
-			if ret==wx.ID_CANCEL: return
-			print(d.GetValue())
-			d.Destroy()
+			self.Search()
 			return
 		if selected==menuItemsStore.getRef("EDIT_UPDATEFILELIST"):
 			self.UpdateFilelist()
@@ -522,7 +518,6 @@ class Events(BaseEvents):
 		elif ret==errorCodes.BOUNDARY:
 			globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
 
-
 	def OpenNewTab(self):
 		"""選択中のディレクトリを新しいタブで開く"""
 		if not self.parent.activeTab.GetSelectedItemCount()==1:
@@ -540,6 +535,28 @@ class Events(BaseEvents):
 
 	def CloseTab(self):
 		self.parent.CloseTab(self.parent.activeTab)
+
+	def Search(self):
+		if self.parent.activeTab.listObject.__class__!=lists.FileList: return
+		basePath=self.parent.activeTab.listObject.rootDirectory
+		out_lst=[]#入力画面が出てるときに、もうファイルリスト取得を開始してしまう
+		task=workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList,{'path': basePath, 'out_lst': out_lst})
+		d=views.search.Dialog(basePath)
+		d.Initialize()
+		ret=d.Show()
+		if ret==wx.ID_CANCEL:
+			task.Cancel()
+			return
+		#end 途中でやめた
+		val=d.GetValue()
+		d.Destroy()
+		tab=tabs.searchResult.SearchResultTab()
+		hPanel=views.ViewCreator.makePanel(self.parent.hTabCtrl)
+		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
+		tab.Initialize(self,self.pageCreator)
+		tab.hListCtrl.SetAcceleratorTable(self.parent.menu.acceleratorTable)
+		self.parent.AppendTab(tab,hPanel,active=True)
+		tab.StartSearch(basePath,out_lst,val['keyword'])
 
 	def GoForward(self,stream,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
