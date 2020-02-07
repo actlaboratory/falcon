@@ -17,7 +17,7 @@ import misc
 import constants
 import errorCodes
 import globalVars
-import listObjects
+import lists
 import tabs.mainList
 import menuItemsStore
 import fileSystemManager
@@ -97,16 +97,16 @@ class View(BaseView):
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
 		if(len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1]))):
-			lst=listObjects.FileList()
+			lst=lists.FileList()
 			lst.Initialize(os.path.expandvars(sys.argv[1]),int(globalVars.app.config["FileList"]["sorting"]),int(globalVars.app.config["FileList"]["descending"]))
 		elif(self.app.config["browse"]["startPath"]==""):
-			lst=listObjects.DriveList()
+			lst=lists.DriveList()
 			lst.Initialize(None,int(globalVars.app.config["DriveList"]["sorting"]),int(globalVars.app.config["DriveList"]["descending"]))
 		elif(os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"]))):
-			lst=listObjects.FileList()
+			lst=lists.FileList()
 			lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]),int(globalVars.app.config["FileList"]["sorting"]),int(globalVars.app.config["FileList"]["descending"]))
 		else:
-			lst=listObjects.DriveList()
+			lst=lists.DriveList()
 			lst.Initialize(None,int(globalVars.app.config["DriveList"]["sorting"]),int(globalVars.app.config["DriveList"]["descending"]))
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
@@ -436,7 +436,7 @@ class Events(BaseEvents):
 			self.parent.activeTab.DirCalc()
 			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DRIVE"):
-			if self.parent.activeTab.listObject.__class__!=listObjects.DriveList:
+			if self.parent.activeTab.listObject.__class__!=list.DriveList:
 				return
 			if self.parent.activeTab.GetFocusedItem()<0:
 				return
@@ -453,7 +453,7 @@ class Events(BaseEvents):
 				dialog(_("エラー"),_("取り外しに失敗しました。")+_("このドライブは使用中の可能性があります。"))
 			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DEVICE"):
-			if self.parent.activeTab.listObject.__class__!=listObjects.DriveList:
+			if self.parent.activeTab.listObject.__class__!=lists.DriveList:
 				return
 			if self.parent.activeTab.GetFocusedItem()<0:
 				return
@@ -525,7 +525,7 @@ class Events(BaseEvents):
 		if not e.__class__==browsableObjects.Folder:
 			return
 
-		lst=listObjects.FileList()
+		lst=lists.FileList()
 		ret=lst.Initialize(e.fullpath)
 		if ret!=errorCodes.OK:
 			dialog(_("エラー"),_("開けませんでした。"))
