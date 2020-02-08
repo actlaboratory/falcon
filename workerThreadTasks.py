@@ -34,7 +34,7 @@ def DirCalc(taskState,param):
 
 def GetRecursiveFileList(taskState,param):
 	"""
-		path から全てのフォルダを再帰的にたどって、ファイル名を out のリストに入れていく。なお、入る値は、 path からの相対パス。
+		path から全てのフォルダを再帰的にたどって、ファイル名を out のリストに入れていく。なお、入る値は、 path からの相対パス。EOL=True にしておくと、ファイルリストを全部なめた段階で、eol という文字列をリストに追加してから終了する。検索終了の判定に使っている。
 	"""
 	out_lst=param['out_lst']
 	path=param['path']
@@ -43,6 +43,7 @@ def GetRecursiveFileList(taskState,param):
 		out_lst.append(str(pathlib.Path(elem).relative_to(path)))
 	#end ファイルリストをガンガン入れる
 	if taskState.canceled: return False
+	if param['eol']: out_lst.append('eol')
 	globalVars.app.PlaySound("tip.ogg")
 	return True
 
