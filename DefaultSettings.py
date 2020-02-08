@@ -33,6 +33,16 @@ class DefaultSettings:
 			"column_width_3": 150,
 			"column_width_4": 480
 		}
+		config["SearchResultList"]={
+			"sorting": 0,
+			"descending": 0,
+			"column_width_0" : "330",
+			"column_width_1" : "150",
+			"column_width_2" : "320",
+			"column_width_3" : "320",
+			"column_width_4" : "70",
+			"column_width_5" : "240"
+		}
 		config["view"]={
 			"font": "bold 'ＭＳ ゴシック' 22 windows-932",
 			"colorMode":"normal"
