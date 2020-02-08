@@ -434,6 +434,8 @@ class Events(BaseEvents):
 				self.parent.activeTab.ShowProperties()
 			return
 		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
+			if self.parent.activeTab.GetFocusedItem()<0:
+				return
 			self.parent.activeTab.DirCalc()
 			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DRIVE"):
