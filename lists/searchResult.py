@@ -6,6 +6,7 @@
 
 import datetime
 import os
+import re
 import wx
 import logging
 import win32api
@@ -21,6 +22,8 @@ from win32com.shell import shell, shellcon
 from .base import *
 from .constants import *
 
+ESCAPE_PATTERN=re.compile(r"([\\\+\.\{\}\(\)\[\]\^\$\-\|\/])")
+
 class SearchResultList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
 	def __init__(self):
@@ -35,7 +38,11 @@ class SearchResultList(FalconListBase):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
 		self.rootPath=rootPath
 		self.searches=searches
-		self.keyword=keyword
+		#ワイルドカード (アスタリスクとクエスチョン)は、正規表現に置き換えしちゃう
+		keyword=re.sub(ESCAPE_PATTERN,r"\\\1",keyword)
+		keyword=keyword.replace("*",".*")
+		keyword=keyword.replace("?",".")
+		self.keyword=re.compile(keyword)
 		self.sortCursor=sorting
 		self.sortDescending=descending
 		self.results=[]
@@ -59,7 +66,7 @@ class SearchResultList(FalconListBase):
 				eol=True
 				break
 			#end EOL
-			if self.keyword in path:
+			if re.search(self.keyword,path):
 				fullpath=os.path.join(self.rootPath,path)
 				stat=os.stat(fullpath)
 				mod=datetime.datetime.fromtimestamp(stat.st_mtime)
