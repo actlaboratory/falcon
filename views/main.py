@@ -542,7 +542,7 @@ class Events(BaseEvents):
 		if self.parent.activeTab.listObject.__class__!=lists.FileList: return
 		basePath=self.parent.activeTab.listObject.rootDirectory
 		out_lst=[]#入力画面が出てるときに、もうファイルリスト取得を開始してしまう
-		task=workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList,{'path': basePath, 'out_lst': out_lst})
+		task=workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList,{'path': basePath, 'out_lst': out_lst,'eol':True})
 		d=views.search.Dialog(basePath)
 		d.Initialize()
 		ret=d.Show()

@@ -6,6 +6,7 @@
 
 import datetime
 import os
+import re
 import wx
 import logging
 import win32api
@@ -21,6 +22,8 @@ from win32com.shell import shell, shellcon
 from .base import *
 from .constants import *
 
+ESCAPE_PATTERN=re.compile(r"([\\\+\.\{\}\(\)\[\]\^\$\-\|\/])")
+
 class SearchResultList(FalconListBase):
 	"""ファイルとフォルダの一覧を扱うリスト。"""
 	def __init__(self):
@@ -35,7 +38,11 @@ class SearchResultList(FalconListBase):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
 		self.rootPath=rootPath
 		self.searches=searches
-		self.keyword=keyword
+		#ワイルドカード (アスタリスクとクエスチョン)は、正規表現に置き換えしちゃう
+		keyword=re.sub(ESCAPE_PATTERN,r"\\\1",keyword)
+		keyword=keyword.replace("*",".*")
+		keyword=keyword.replace("?",".")
+		self.keyword=re.compile(keyword)
 		self.sortCursor=sorting
 		self.sortDescending=descending
 		self.results=[]
@@ -57,9 +64,11 @@ class SearchResultList(FalconListBase):
 			path=self.searches[i]
 			if path=="eol":#EOLで検索終了
 				eol=True
+				globalVars.app.PlaySound("complete.ogg")
+				globalVars.app.say(_("検索終了、%(item)d件ヒットしました。") % {'item': len(self)})
 				break
 			#end EOL
-			if self.keyword in path:
+			if re.search(self.keyword,path):
 				fullpath=os.path.join(self.rootPath,path)
 				stat=os.stat(fullpath)
 				mod=datetime.datetime.fromtimestamp(stat.st_mtime)
@@ -128,7 +137,7 @@ class SearchResultList(FalconListBase):
 
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
+		return self.results[index]
 
 	def GetTopFileIndex(self):
 		"""先頭ファイルのインデックス番号を返す。"""
@@ -178,4 +187,4 @@ class SearchResultList(FalconListBase):
 		return lst.__iter__()
 
 	def __len__(self):
-		return len(self.folders)+len(self.files)
+		return len(self.results)
