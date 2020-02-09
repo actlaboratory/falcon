@@ -64,6 +64,8 @@ class SearchResultList(FalconListBase):
 			path=self.searches[i]
 			if path=="eol":#EOLで検索終了
 				eol=True
+				globalVars.app.PlaySound("complete.ogg")
+				globalVars.app.say(_("検索終了、%(item)d件ヒットしました。") % {'item': len(self)})
 				break
 			#end EOL
 			if re.search(self.keyword,path):
@@ -185,4 +187,4 @@ class SearchResultList(FalconListBase):
 		return lst.__iter__()
 
 	def __len__(self):
-		return len(self.folders)+len(self.files)
+		return len(self.results)
