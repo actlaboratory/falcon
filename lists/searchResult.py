@@ -137,7 +137,7 @@ class SearchResultList(FalconListBase):
 
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
+		return self.results[index]
 
 	def GetTopFileIndex(self):
 		"""先頭ファイルのインデックス番号を返す。"""
