@@ -104,7 +104,7 @@ class SearchResultList(FalconListBase):
 		return {
 			_("ファイル名"):wx.LIST_FORMAT_LEFT,
 			_("サイズ"):wx.LIST_FORMAT_RIGHT,
-			_("検索パス"):wx.FORMAT_LEFT,
+			_("検索パス"):wx.LIST_FORMAT_LEFT,
 			_("更新"):wx.LIST_FORMAT_LEFT,
 			_("属性"):wx.LIST_FORMAT_LEFT,
 			_("種類"):wx.LIST_FORMAT_LEFT
