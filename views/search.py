@@ -52,9 +52,6 @@ class Dialog(BaseDialog):
 
 	def GetValue(self):
 		v={}
-		self.type=self.creator.radiobox(_("検索方式"),(_("通常"),_("grep")),None,1,wx.HORIZONTAL)
-		self.keywordType=self.creator.checkbox(_("正規表現を利用"),None,False)
-
 		v["basePath"]=self.basePath
 		v["keyword"]=self.keyword.GetLineText(0)
 		v["type"]=self.type.GetSelection()
