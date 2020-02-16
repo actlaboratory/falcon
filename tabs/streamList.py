@@ -33,12 +33,6 @@ from simpleDialog import *
 from win32com.shell import shell, shellcon
 from . import base
 
-#アクションの識別子
-ACTION_FORWARD=0#ファイル/フォルダのオープン
-ACTION_FORWARD_STREAM=1#ファイル/フォルダ/副ストリームのオープン
-ACTION_BACKWARD=2#内包しているフォルダ/内包しているドライブ/副ストリームのクローズ
-ACTION_SORTNEXT=3#次の並び順
-
 class StreamListTab(base.FalconTabBase):
 	"""副ストリームリストが表示されているタブ。"""
 	def Initialize(self,parent,creator):
