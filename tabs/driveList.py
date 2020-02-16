@@ -5,7 +5,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 """
-ファイルリストやドライブ一覧リストなどです。一通りのファイル操作を行うことができます。
+ドライブリストです。ファイルリストと比べると、機能が制限されます。
 """
 
 import sys
@@ -38,16 +38,20 @@ ACTION_FORWARD_STREAM=1#ファイル/フォルダ/副ストリームのオープ
 ACTION_BACKWARD=2#内包しているフォルダ/内包しているドライブ/副ストリームのクローズ
 ACTION_SORTNEXT=3#次の並び順
 
-class FileListTab(base.FalconTabBase):
-	"""ファイル/フォルダリストが表示されているタブ。"""
-	def Initialize(self,parent,creator):
-		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。"""
-		self.log=logging.getLogger("falcon.mainListTab")
+class DriveListTab(base.FalconTabBase):
+	"""ドライブリストが表示されているタブ。"""
+	def Initialize(self,parent,creator,existing_listctrl=None):
+		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。existing_listctrl にリストコントロールがある場合、そのリストコントロールを再利用する。"""
+		self.log=logging.getLogger("falcon.driveListTab")
 		self.log.debug("Created.")
 		self.parent=parent
-		self.InstallListCtrl(creator)
-		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
-		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
+		if existing_listctrl is None:
+			self.InstallListCtrl(creator,existing_listctrl)
+		else:
+			self.hListCtrl=existing_listctrl
+		#end リストコントロールを再利用するかどうか
+		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
+		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
 		self.background_tasks=[]
 
 	def Update(self,lst,cursor=-1):
@@ -55,7 +59,6 @@ class FileListTab(base.FalconTabBase):
 		self._cancelBackgroundTasks()
 		self.hListCtrl.DeleteAllItems()
 		self.SetListColumns(lst)
-		#end 違う種類のリストかどうか
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
 		self.hListCtrl.Focus(cursor)
@@ -93,11 +96,17 @@ class FileListTab(base.FalconTabBase):
 			elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
 				self.RunFile(elem.fullpath,admin)
 			#end ストリームを開く
+			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
+				#TODO: これも昇格したほうがいい
+				self.move(elem.letter+":")
+			#end ドライブ開く
 			else:
 				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
 			#end フォルダ以外のタイプ
 		#end ACTION_FORWARD
 		if action==ACTION_BACKWARD:
+			if isinstance(self.listObject,lists.DriveList):
+				return errorCodes.BOUNDARY
 			if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
 				target=""
 				cursorTarget=self.listObject.rootDirectory[0]
@@ -107,10 +116,15 @@ class FileListTab(base.FalconTabBase):
 			return self.move(target,cursorTarget)
 
 	def move(self,target,cursorTarget=""):
-		"""targetに移動する。"""
+		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
 		targetItemIndex=-1
 		target=os.path.expandvars(target)
-		if not os.path.exists(target):
+		if target=="":#ドライブリスト
+			lst=lists.DriveList()
+			lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
+			if cursorTarget!="":
+				targetItemIndex=lst.Search(cursorTarget,1)
+		elif not os.path.exists(target):
 			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
 			return errorCodes.FILE_NOT_FOUND
 		elif os.path.isfile(target):	#副ストリームへ移動
