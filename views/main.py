@@ -18,7 +18,7 @@ import constants
 import errorCodes
 import globalVars
 import lists
-import tabs.mainList
+import tabs.fileList
 import tabs.searchResult
 import menuItemsStore
 import fileSystemManager
@@ -86,7 +86,7 @@ class View(BaseView):
 		return True
 
 	def AddNewTab(self,lst,active=False):
-		tab=tabs.mainList.MainListTab()
+		tab=tabs.fileList.FileListTab()
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
 		tab.Initialize(self,self.pageCreator)
@@ -514,7 +514,7 @@ class Events(BaseEvents):
 	def GoBackward(self):
 		"""back アクションを実行"""
 		p=self.parent
-		ret=p.activeTab.TriggerAction(tabs.mainList.ACTION_BACKWARD)
+		ret=p.activeTab.TriggerAction(tabs.fileList.ACTION_BACKWARD)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
@@ -565,7 +565,7 @@ class Events(BaseEvents):
 		if not self.parent.activeTab.GetSelectedItemCount()==1:
 			return
 		p=self.parent
-		act=tabs.mainList.ACTION_FORWARD if stream is False else tabs.mainList.ACTION_FORWARD_STREAM
+		act=tabs.fileList.ACTION_FORWARD if stream is False else tabs.fileList.ACTION_FORWARD_STREAM
 		ret=p.activeTab.TriggerAction(act,admin)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
@@ -575,7 +575,7 @@ class Events(BaseEvents):
 	def SortNext(self):
 		"""sortNext アクションを実行。"""
 		p=self.parent
-		act=tabs.mainList.ACTION_SORTNEXT
+		act=tabs.fileList.ACTION_SORTNEXT
 		ret=p.activeTab.TriggerAction(act)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))

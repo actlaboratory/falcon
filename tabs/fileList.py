@@ -38,8 +38,8 @@ ACTION_FORWARD_STREAM=1#ファイル/フォルダ/副ストリームのオープ
 ACTION_BACKWARD=2#内包しているフォルダ/内包しているドライブ/副ストリームのクローズ
 ACTION_SORTNEXT=3#次の並び順
 
-class MainListTab(base.FalconTabBase):
-	"""ファイル/フォルダ/ドライブリストが表示されているタブ。"""
+class FileListTab(base.FalconTabBase):
+	"""ファイル/フォルダリストが表示されているタブ。"""
 	def Initialize(self,parent,creator):
 		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。"""
 		self.log=logging.getLogger("falcon.mainListTab")
