@@ -115,7 +115,7 @@ class FileListTab(base.FalconTabBase):
 		if target=="":#ドライブリスト
 			newtab=DriveListTab()
 			newtab.Initialize(self.parent,None,self.hListCtrl)
-			newtab.Update(target)
+			newtab.Update(cursorTarget)
 			return newtab
 		#end ドライブリストへ行く
 		target=os.path.expandvars(target)
