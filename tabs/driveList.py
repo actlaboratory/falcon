@@ -81,22 +81,7 @@ class DriveListTab(base.FalconTabBase):
 		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
 		elem=self.listObject.GetElement(index)
-		if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
-			#TODO: 管理者モードだったら、別のfalconが昇格して開くように
-			return self.move(elem.fullpath)
-		#end フォルダ開く
-		elif isinstance(elem,browsableObjects.File):#このファイルを開く
-			if not stream: self.RunFile(elem.fullpath,admin)
-			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
-			if stream: self.move(elem.fullpath)
-		#end ファイルを開く
-		elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
-			self.RunFile(elem.fullpath,admin)
-		#end ストリームを開く
-		else:
-			return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
-		#end サポートしてないタイプ
-	#end GoForward
+		self.Move(elem.fullpath)
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
@@ -114,28 +99,23 @@ class DriveListTab(base.FalconTabBase):
 		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
 		targetItemIndex=-1
 		target=os.path.expandvars(target)
-		if target=="":#ドライブリスト
-			lst=lists.DriveList()
-			lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
-			if cursorTarget!="":
-				targetItemIndex=lst.Search(cursorTarget,1)
-		elif not os.path.exists(target):
+		if not os.path.exists(target):
 			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
 			return errorCodes.FILE_NOT_FOUND
-		elif os.path.isfile(target):	#副ストリームへ移動
-			lst=lists.StreamList()
-			lst.Initialize(target)
-		else:
-			lst=lists.FileList()
-			result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-			if result != errorCodes.OK:
-				if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
-					dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
-					if dlg.ShowModal()==wx.ID_YES:
-						self.RunFile(sys.argv[0],True,target)
-				return result#アクセス負荷
-			if cursorTarget!="":
-				targetItemIndex=lst.Search(cursorTarget)
+		#end 存在しない、なんてあるかわからんが
+		lst=lists.FileList()
+		result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
+		if result != errorCodes.OK:
+			if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
+				dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
+				if dlg.ShowModal()==wx.ID_YES: self.RunFile(sys.argv[0],True,target)
+			#end 別ウィンドウで立ち上げるかどうか
+			return result#アクセス負荷
+		#end エラーだったか
+		if cursorTarget!="":
+			targetItemIndex=lst.Search(cursorTarget)
+			newtab=FileListTab()
+			newtab.Initialize(self.parent,None,self.hListCtrl)
 		self.Update(lst)
 		if targetItemIndex>=0:
 			self.hListCtrl.Focus(targetItemIndex)
