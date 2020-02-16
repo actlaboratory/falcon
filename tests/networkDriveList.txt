@@ -1,9 +1,0 @@
-import win32wnet
-
-h=win32wnet.WNetOpenEnum(2,1,0,None)
-	#2=RESOURCE_GLOBALNET
-	#1=RESOURCETYPE_DISK
-lst=win32wnet.WNetEnumResource(h,64)	#65以上の指定不可
-win32wnet.WNetCloseEnum(h);
-
-print(lst);
