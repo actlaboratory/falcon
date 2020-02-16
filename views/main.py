@@ -576,7 +576,7 @@ class Events(BaseEvents):
 		"""sortNext アクションを実行。"""
 		p=self.parent
 		act=tabs.fileList.ACTION_SORTNEXT
-		ret=p.activeTab.TriggerAction(act)
+		ret=p.activeTab.SortNext()
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 

@@ -69,16 +69,6 @@ class FileListTab(base.FalconTabBase):
 		#end for
 		self.background_tasks=[]
 
-	def TriggerAction(self, action,admin=False):
-		if action==ACTION_SORTNEXT:
-			self.listObject.SetSortCursor()
-			self._updateEnv()
-			self.listObject.ApplySort()
-			self.hListCtrl.DeleteAllItems()
-			self.UpdateListContent(self.listObject.GetItems())
-			return
-		#end sortNext
-
 	def GoForward(self,stream,admin=False):
 		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
@@ -109,6 +99,14 @@ class FileListTab(base.FalconTabBase):
 			target=os.path.split(self.listObject.rootDirectory)[0]
 			cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
 		return self.move(target,cursorTarget)
+
+	def SortNext(self):
+		self.listObject.SetSortCursor()
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
+	#end sortNext
 
 	def move(self,target,cursorTarget=""):
 		"""targetに移動する。"""
