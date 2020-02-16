@@ -30,6 +30,7 @@ import views.mkdir
 import views.makeShortcut
 import views.objectDetail
 import views.search
+import views.makeHash
 
 import workerThreads
 import workerThreadTasks
@@ -230,6 +231,8 @@ class Menu(BaseMenu):
 
 		#ツールメニューの中身
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
+		self.RegisterMenuCommand(self.hToolMenu,"TOOL_HASHCALC",_("ファイルハッシュの計算"))
+
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DRIVE",_("ドライブの取り外し"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DEVICE",_("デバイスの取り外し"))
 
@@ -438,8 +441,16 @@ class Events(BaseEvents):
 				return
 			self.parent.activeTab.DirCalc()
 			return
+		if selected==menuItemsStore.getRef("TOOL_HASHCALC"):
+			if self.parent.activeTab.GetFocusedItem()<0:
+				return
+			d=views.makeHash.Dialog(self.parent.activeTab.GetFocusedElement().fullpath)
+			d.Initialize()
+			d.Show()
+			d.Destroy()
+			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DRIVE"):
-			if self.parent.activeTab.listObject.__class__!=list.DriveList:
+			if self.parent.activeTab.listObject.__class__!=lists.DriveList:
 				return
 			if self.parent.activeTab.GetFocusedItem()<0:
 				return

@@ -6,6 +6,7 @@
 import ctypes
 import os
 import time
+import hashlib
 import win32api
 import win32file
 from logging import getLogger
@@ -141,3 +142,13 @@ def GetExecutableState(path):
 	"""指定されたファイルパスが、実行可能ファイルであろうかどうかを調べて boolean で返す。"""
 	return os.path.splitext(path)[1].upper() in os.environ["pathext"].split(";")
 
+
+def calcHash(path,algo):
+	h = hashlib.new(algo)
+	len = hashlib.new(algo).block_size * 0x800
+	with open(path,'rb') as f:
+		BinaryData = f.read(len)
+		while BinaryData:
+			h.update(BinaryData)
+			BinaryData = f.read(len)
+			return h.hexdigest()

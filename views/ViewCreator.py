@@ -107,6 +107,20 @@ class ViewCreator():
 		self.AddSpace(self.space)
 		return hButton
 
+	def combobox(self,text,selection,event,state=-1):
+		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
+		self.sizer.Add(hStaticText,0)
+
+		v=""
+		if state>=0:
+			v=selection[state]
+		hCombo=wx.ComboBox(self.parent,wx.ID_ANY,value=v,choices=selection,style=wx.CB_READONLY,name=text)
+		hCombo.Bind(wx.EVT_TEXT,event)
+		self.SetFace(hCombo)
+		self.sizer.Add(hCombo,0,wx.ALL,5)
+		self.AddSpace(self.space)
+		return hCombo
+
 	def checkbox(self,text,event,state=False):
 		hPanel=wx.Panel(self.parent,wx.ID_ANY,)
 		hSizer=self.BoxSizer(hPanel,self.sizer.GetOrientation())
