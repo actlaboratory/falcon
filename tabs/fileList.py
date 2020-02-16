@@ -254,7 +254,7 @@ class FileListTab(base.FalconTabBase):
 
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
-		self.TriggerAction(ACTION_FORWARD)
+		self.GoForward(False)
 
 	def StartRename(self):
 		"""リネームを開始する。"""
