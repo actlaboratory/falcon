@@ -77,48 +77,38 @@ class DriveListTab(base.FalconTabBase):
 		#end for
 		self.background_tasks=[]
 
-	def TriggerAction(self, action,admin=False):
-		if action==ACTION_SORTNEXT:
-			self.listObject.SetSortCursor()
-			self._updateEnv()
-			self.listObject.ApplySort()
-			self.hListCtrl.DeleteAllItems()
-			self.UpdateListContent(self.listObject.GetItems())
-			return
-		#end sortNext
+	def GoForward(self,stream,admin=False):
+		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
-		if action==ACTION_FORWARD or action==ACTION_FORWARD_STREAM:
-			elem=self.listObject.GetElement(index)
-			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
-				#TODO: 管理者モードだったら、別のfalconが昇格して開くように
-				return self.move(elem.fullpath)
-			#end フォルダ開く
-			elif isinstance(elem,browsableObjects.File):#このファイルを開く
-				if action==ACTION_FORWARD: self.RunFile(elem.fullpath,admin)
-				#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
-				if action==ACTION_FORWARD_STREAM: self.move(elem.fullpath)
-			#end ファイルを開く
-			elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
-				self.RunFile(elem.fullpath,admin)
-			#end ストリームを開く
-			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
-				#TODO: これも昇格したほうがいい
-				self.move(elem.letter+":")
-			#end ドライブ開く
-			else:
-				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
-			#end フォルダ以外のタイプ
-		#end ACTION_FORWARD
-		if action==ACTION_BACKWARD:
-			if isinstance(self.listObject,lists.DriveList):
-				return errorCodes.BOUNDARY
-			if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
-				target=""
-				cursorTarget=self.listObject.rootDirectory[0]
-			else:
-				target=os.path.split(self.listObject.rootDirectory)[0]
-				cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
-			return self.move(target,cursorTarget)
+		elem=self.listObject.GetElement(index)
+		if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
+			#TODO: 管理者モードだったら、別のfalconが昇格して開くように
+			return self.move(elem.fullpath)
+		#end フォルダ開く
+		elif isinstance(elem,browsableObjects.File):#このファイルを開く
+			if not stream: self.RunFile(elem.fullpath,admin)
+			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
+			if stream: self.move(elem.fullpath)
+		#end ファイルを開く
+		elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
+			self.RunFile(elem.fullpath,admin)
+		#end ストリームを開く
+		else:
+			return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
+		#end サポートしてないタイプ
+	#end GoForward
+
+	def GoBackward(self):
+		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
+		return errorCodes.BOUNDARY
+
+	def SortNext(self):
+		self.listObject.SetSortCursor()
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
+	#end sortNext
 
 	def move(self,target,cursorTarget=""):
 		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
