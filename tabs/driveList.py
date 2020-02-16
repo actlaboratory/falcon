@@ -27,6 +27,7 @@ import misc
 import workerThreads
 import workerThreadTasks
 import fileSystemManager
+import tabs.fileList
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -39,13 +40,11 @@ class DriveListTab(base.FalconTabBase):
 		self.log=logging.getLogger("falcon.driveListTab")
 		self.log.debug("Created.")
 		self.parent=parent
-		if existing_listctrl is None:
-			self.InstallListCtrl(creator,existing_listctrl)
-		else:
-			self.hListCtrl=existing_listctrl
-		#end リストコントロールを再利用するかどうか
+		self.InstallListCtrl(creator,existing_listctrl)
 		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
 		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
+		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
+		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
 		self.background_tasks=[]
 
 	def Update(self,cursor=""):
@@ -89,8 +88,8 @@ class DriveListTab(base.FalconTabBase):
 		self.UpdateListContent(self.listObject.GetItems())
 	#end sortNext
 
-	def move(self,target,cursorTarget=""):
-		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
+	def Move(self,target,cursorTarget=""):
+		"""targetに移動する。"""
 		targetItemIndex=-1
 		target=os.path.expandvars(target)
 		if not os.path.exists(target):
@@ -106,15 +105,10 @@ class DriveListTab(base.FalconTabBase):
 			#end 別ウィンドウで立ち上げるかどうか
 			return result#アクセス負荷
 		#end エラーだったか
-		if cursorTarget!="":
-			targetItemIndex=lst.Search(cursorTarget)
-			newtab=FileListTab()
-			newtab.Initialize(self.parent,None,self.hListCtrl)
-		self.Update(lst)
-		if targetItemIndex>=0:
-			self.hListCtrl.Focus(targetItemIndex)
-			self.hListCtrl.Select(targetItemIndex)
-		return errorCodes.OK
+		newtab=tabs.fileList.FileListTab()
+		newtab.Initialize(self.parent,None,self.hListCtrl)
+		newtab.Update(lst)
+		return newtab
 
 	def RunFile(self,path, admin=False,prm=""):
 		"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
@@ -233,7 +227,7 @@ class DriveListTab(base.FalconTabBase):
 
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
-		self.TriggerAction(ACTION_FORWARD)
+		self.GoForward(stream=False)
 
 	def StartRename(self):
 		"""リネームを開始する。"""

@@ -40,11 +40,7 @@ class StreamListTab(base.FalconTabBase):
 		self.log=logging.getLogger("falcon.streamListTab")
 		self.log.debug("Created.")
 		self.parent=parent
-		if existing_listctrl is None:
-			self.InstallListCtrl(creator)
-		else:
-			self.hListCtrl=existing_listctrl
-		#end リストコントロールを再利用するかどうか
+		self.InstallListCtrl(creator,existing_listctrl)
 		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
 		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
 		self.background_tasks=[]

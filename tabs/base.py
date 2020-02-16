@@ -25,11 +25,14 @@ class FalconTabBase(object):
 		self.environment={}		#このタブ特有の環境変数
 		self.markedPlace=None	#マークフォルダ
 
-	def InstallListCtrl(self,creator):
+	def InstallListCtrl(self,creator,existing_listctrl=None):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
-		self.hListCtrl=creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT|wx.LC_EDIT_LABELS)
-		creator.GetPanel().Layout()
-
+		if existing_listctrl is None:
+			self.hListCtrl=creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT|wx.LC_EDIT_LABELS)
+			creator.GetPanel().Layout()
+		else:
+			self.hListCtrl=existing_listctrl
+		#end リストコントロールを再利用する
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_CLICK,self.col_click)
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
