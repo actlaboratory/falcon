@@ -97,14 +97,16 @@ class FileListTab(base.FalconTabBase):
 				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
 			#end フォルダ以外のタイプ
 		#end ACTION_FORWARD
-		if action==ACTION_BACKWARD:
-			if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
-				target=""
-				cursorTarget=self.listObject.rootDirectory[0]
-			else:
-				target=os.path.split(self.listObject.rootDirectory)[0]
-				cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
-			return self.move(target,cursorTarget)
+
+	def GoBackward(self):
+		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
+		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
+			target=""
+			cursorTarget=self.listObject.rootDirectory[0]
+		else:
+			target=os.path.split(self.listObject.rootDirectory)[0]
+			cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
+		return self.move(target,cursorTarget)
 
 	def move(self,target,cursorTarget=""):
 		"""targetに移動する。"""

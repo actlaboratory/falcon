@@ -514,7 +514,7 @@ class Events(BaseEvents):
 	def GoBackward(self):
 		"""back アクションを実行"""
 		p=self.parent
-		ret=p.activeTab.TriggerAction(tabs.fileList.ACTION_BACKWARD)
+		ret=p.activeTab.GoBackward()
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
