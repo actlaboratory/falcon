@@ -78,25 +78,27 @@ class FileListTab(base.FalconTabBase):
 			self.UpdateListContent(self.listObject.GetItems())
 			return
 		#end sortNext
+
+	def GoForward(self,stream,admin=False):
+		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
-		if action==ACTION_FORWARD or action==ACTION_FORWARD_STREAM:
-			elem=self.listObject.GetElement(index)
-			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
-				#TODO: 管理者モードだったら、別のfalconが昇格して開くように
-				return self.move(elem.fullpath)
-			#end フォルダ開く
-			elif isinstance(elem,browsableObjects.File):#このファイルを開く
-				if action==ACTION_FORWARD: self.RunFile(elem.fullpath,admin)
-				#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
-				if action==ACTION_FORWARD_STREAM: self.move(elem.fullpath)
-			#end ファイルを開く
-			elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
-				self.RunFile(elem.fullpath,admin)
-			#end ストリームを開く
-			else:
-				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
-			#end フォルダ以外のタイプ
-		#end ACTION_FORWARD
+		elem=self.listObject.GetElement(index)
+		if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
+			#TODO: 管理者モードだったら、別のfalconが昇格して開くように
+			return self.move(elem.fullpath)
+		#end フォルダ開く
+		elif isinstance(elem,browsableObjects.File):#このファイルを開く
+			if not stream: self.RunFile(elem.fullpath,admin)
+			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
+			if stream: self.move(elem.fullpath)
+		#end ファイルを開く
+		elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
+			self.RunFile(elem.fullpath,admin)
+		#end ストリームを開く
+		else:
+			return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
+		#end サポートしてないタイプ
+	#end GoForward
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""

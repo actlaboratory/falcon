@@ -565,8 +565,8 @@ class Events(BaseEvents):
 		if not self.parent.activeTab.GetSelectedItemCount()==1:
 			return
 		p=self.parent
-		act=tabs.fileList.ACTION_FORWARD if stream is False else tabs.fileList.ACTION_FORWARD_STREAM
-		ret=p.activeTab.TriggerAction(act,admin)
+		st=True if stream else False
+		ret=p.activeTab.GoForward(st,admin)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:
