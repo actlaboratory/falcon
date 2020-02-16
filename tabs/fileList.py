@@ -27,7 +27,7 @@ import misc
 import workerThreads
 import workerThreadTasks
 import fileSystemManager
-from tabs.driveList import *
+import tabs.driveList
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -106,7 +106,7 @@ class FileListTab(base.FalconTabBase):
 		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
 		targetItemIndex=-1
 		if target=="":#ドライブリスト
-			newtab=DriveListTab()
+			newtab=tabs.driveList.DriveListTab()
 			newtab.Initialize(self.parent,None,self.hListCtrl)
 			newtab.Update(cursorTarget)
 			return newtab
