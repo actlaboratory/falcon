@@ -5,6 +5,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import win32file
+import winioctlcon
 import pywintypes
 import ctypes
 import re
@@ -50,8 +51,8 @@ def ejectDrive(driveLetter):
 			#log.error(unknown error in"+e.funcname+". code="+e.winerror+" message="+e.strerror)
 			return errorCodes.UNKNOWN
 
-	#0x2D4808=IOCTL_STORAGE_EJECT_MEDIA
-	ret=win32file.DeviceIoControl(handle,0x2D4808,None,None)
+
+	ret=win32file.DeviceIoControl(handle,winioctlcon.IOCTL_DISK_EJECT_MEDIA,None,None)
 
 	handle.Close()
 
