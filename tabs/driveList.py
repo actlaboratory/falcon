@@ -54,16 +54,21 @@ class DriveListTab(base.FalconTabBase):
 		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
 		self.background_tasks=[]
 
-	def Update(self,lst,cursor=-1):
+	def Update(self,cursor=""):
 		"""指定された要素をタブに適用する。"""
 		self._cancelBackgroundTasks()
+		lst=lists.DriveList()
+		lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
 		self.hListCtrl.DeleteAllItems()
 		self.SetListColumns(lst)
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
-		self.hListCtrl.Focus(cursor)
-		if cursor>0:
-			self.hListCtrl.Select(cursor)
+		if cursor!="":
+			c=lst.Search(cursor,1)
+			self.hListCtrl.Select(c)
+			self.hListCtrl.Focus(c)
+		#end カーソル初期位置を設定
+	#end Update
 
 	def _cancelBackgroundTasks(self):
 		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""

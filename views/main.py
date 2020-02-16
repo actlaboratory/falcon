@@ -19,6 +19,7 @@ import errorCodes
 import globalVars
 import lists
 import tabs.fileList
+import tabs.base
 import tabs.searchResult
 import menuItemsStore
 import fileSystemManager
@@ -112,6 +113,17 @@ class View(BaseView):
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
 		self.AddNewTab(lst,True)
+
+	def ReplaceCurrentTab(self,newtab):
+		"""現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""
+		i=0
+		for elem in self.tabs:
+			if elem is self.activeTab: break
+			i+=1
+		#end インデックス調べる
+		self.tabs[i]=newtab
+		self.activeTab=newtab
+	#end ReplaceCurrentTab
 
 	def AppendTab(self,tab,hPanel,active=False):
 		"""タブを追加する。active=True で、追加したタブをその場でアクティブにする。"""
@@ -515,6 +527,7 @@ class Events(BaseEvents):
 		"""back アクションを実行"""
 		p=self.parent
 		ret=p.activeTab.GoBackward()
+		if issubclass(ret.__class__,tabs.base.FalconTabBase): p.ReplaceCurrentTab(ret)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:

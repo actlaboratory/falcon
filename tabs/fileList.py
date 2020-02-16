@@ -27,6 +27,7 @@ import misc
 import workerThreads
 import workerThreadTasks
 import fileSystemManager
+from tabs.driveList import *
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -109,8 +110,14 @@ class FileListTab(base.FalconTabBase):
 	#end sortNext
 
 	def move(self,target,cursorTarget=""):
-		"""targetに移動する。"""
+		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
 		targetItemIndex=-1
+		if target=="":#ドライブリスト
+			newtab=DriveListTab()
+			newtab.Initialize(self.parent,None,self.hListCtrl)
+			newtab.Update(target)
+			return newtab
+		#end ドライブリストへ行く
 		target=os.path.expandvars(target)
 		if not os.path.exists(target):
 			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
