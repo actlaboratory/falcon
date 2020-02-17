@@ -77,9 +77,6 @@ class FileListTab(base.FalconTabBase):
 			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
 			if stream: self.move(elem.fullpath)
 		#end ファイルを開く
-		elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
-			self.RunFile(elem.fullpath,admin)
-		#end ストリームを開く
 		else:
 			return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
 		#end サポートしてないタイプ
@@ -119,6 +116,10 @@ class FileListTab(base.FalconTabBase):
 		elif os.path.isfile(target):	#副ストリームへ移動
 			lst=lists.StreamList()
 			lst.Initialize(target)
+			newtab=tabs.streamList.StreamListTab()
+			newtab.Initialize(self.parent,None,self.hListCtrl)
+			newtab.Update(lst)
+			return newtab
 		else:
 			lst=lists.FileList()
 			result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
