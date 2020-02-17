@@ -7,6 +7,7 @@ import ctypes
 import os
 import time
 import hashlib
+import winreg
 import win32api
 import win32file
 from logging import getLogger
@@ -152,3 +153,10 @@ def calcHash(path,algo):
 			h.update(BinaryData)
 			BinaryData = f.read(len)
 			return h.hexdigest()
+
+#環境変数PATHに値を追加
+def addPath(paths):
+	h=winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER,"Environment",access=winreg.KEY_WRITE | winreg.KEY_READ)
+	for path in paths:
+		winreg.SetValueEx(h, 'Path', 0, winreg.REG_SZ,winreg.QueryValueEx(h, 'Path')[0]+";"+path)
+	winreg.CloseKey(h)

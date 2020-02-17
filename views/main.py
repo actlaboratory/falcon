@@ -232,7 +232,7 @@ class Menu(BaseMenu):
 		#ツールメニューの中身
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_HASHCALC",_("ファイルハッシュの計算"))
-
+		self.RegisterMenuCommand(self.hToolMenu,"TOOL_ADDPATH",_("環境変数PATHに追加"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DRIVE",_("ドライブの取り外し"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DEVICE",_("デバイスの取り外し"))
 
@@ -448,6 +448,13 @@ class Events(BaseEvents):
 			d.Initialize()
 			d.Show()
 			d.Destroy()
+			return
+		if selected==menuItemsStore.getRef("TOOL_ADDPATH"):
+			if not self.parent.activeTab.IsItemSelected:
+				return
+			t=self.parent.activeTab.GetSelectedItems().GetItemPaths()
+			misc.addPath(t)
+			dialog(_("パスの追加"),_("ユーザ環境変数PATHに追加しました。"))
 			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DRIVE"):
 			if self.parent.activeTab.listObject.__class__!=lists.DriveList:
