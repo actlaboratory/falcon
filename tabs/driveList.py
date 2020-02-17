@@ -74,7 +74,7 @@ class DriveListTab(base.FalconTabBase):
 		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
 		elem=self.listObject.GetElement(index)
-		self.Move(elem.fullpath)
+		return self.Move(elem.fullpath)
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
