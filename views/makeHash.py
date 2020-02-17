@@ -43,12 +43,13 @@ class Dialog(BaseDialog):
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
 
-		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
+		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20)
 		self.combo=self.creator.combobox(_("値の種類"),hashTypes,self.changeAlgo)
 		self.calcButton=self.creator.button(_("計算"),self.calcStart,wx.ALIGN_RIGHT)
 		self.calcButton.Enable(False)
 
-		self.resultFeeld,self.static=self.creator.inputbox(_("結果"),400)
+		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
+		self.resultFeeld,self.static=self.creator.inputbox(_("結果"),450)
 
 		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT)
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)
@@ -75,3 +76,5 @@ class Dialog(BaseDialog):
 
 	def changeAlgo(self,event):
 		self.calcButton.Enable(True)
+
+

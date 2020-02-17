@@ -85,7 +85,7 @@ class ViewCreator():
 	def button(self,text,event,layout=0):
 		hButton=wx.Button(self.parent, wx.ID_ANY,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
-		self.SetFace(hButton)
+		self.SetFace(hButton,mode=BUTTON_COLOUR)
 		self.sizer.Add(hButton,0,layout)
 		self.AddSpace(self.space)
 		return hButton
@@ -109,7 +109,7 @@ class ViewCreator():
 
 	def combobox(self,text,selection,event,state=-1):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
-		self.sizer.Add(hStaticText,0)
+		self.sizer.Add(hStaticText,0,wx.ALIGN_CENTER_VERTICAL)
 
 		v=""
 		if state>=0:
@@ -281,7 +281,7 @@ class ViewCreator():
 				target.SetForegroundColour("#000000")		#文字色＝黒
 		elif (mode==BUTTON_COLOUR):
 			if self.mode==1:
-				target.SetBackgroundColour("#222222")		#背景色＝灰色
+				target.SetBackgroundColour("#444444")		#背景色＝灰色
 				target.SetForegroundColour("#ffffff")		#文字色＝白
 		#end skip
 		target.SetThemeEnabled(False)
