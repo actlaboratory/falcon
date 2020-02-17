@@ -64,34 +64,16 @@ class StreamListTab(base.FalconTabBase):
 		self.background_tasks=[]
 
 	def GoForward(self,stream,admin=False):
-		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
+		"""選択中の服ストリーム項目を実行する。"""
 		index=self.GetFocusedItem()
 		elem=self.listObject.GetElement(index)
-		if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
-			#TODO: 管理者モードだったら、別のfalconが昇格して開くように
-			return self.move(elem.fullpath)
-		#end フォルダ開く
-		elif isinstance(elem,browsableObjects.File):#このファイルを開く
-			if not stream: self.RunFile(elem.fullpath,admin)
-			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
-			if stream: self.move(elem.fullpath)
-		#end ファイルを開く
-		elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
-			self.RunFile(elem.fullpath,admin)
-		#end ストリームを開く
-		else:
-			return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
-		#end サポートしてないタイプ
+		self.RunFile(elem.fullpath,admin)
 	#end GoForward
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
-		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
-			target=""
-			cursorTarget=self.listObject.rootDirectory[0]
-		else:
-			target=os.path.split(self.listObject.rootDirectory)[0]
-			cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
+		target=os.path.split(self.listObject.rootDirectory)[0]
+		cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
 		return self.move(target,cursorTarget)
 
 	def SortNext(self):
@@ -103,37 +85,33 @@ class StreamListTab(base.FalconTabBase):
 	#end sortNext
 
 	def move(self,target,cursorTarget=""):
-		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
+		"""targetに移動する。"""
 		targetItemIndex=-1
-		if target=="":#ドライブリスト
-			newtab=DriveListTab()
-			newtab.Initialize(self.parent,None,self.hListCtrl)
-			newtab.Update(cursorTarget)
-			return newtab
-		#end ドライブリストへ行く
 		target=os.path.expandvars(target)
 		if not os.path.exists(target):
 			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
 			return errorCodes.FILE_NOT_FOUND
-		elif os.path.isfile(target):	#副ストリームへ移動
-			lst=lists.StreamList()
-			lst.Initialize(target)
-		else:
-			lst=lists.FileList()
-			result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-			if result != errorCodes.OK:
-				if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
-					dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
-					if dlg.ShowModal()==wx.ID_YES:
-						self.RunFile(sys.argv[0],True,target)
-				return result#アクセス負荷
-			if cursorTarget!="":
-				targetItemIndex=lst.Search(cursorTarget)
-		self.Update(lst)
+		#end 存在しない
+		lst=lists.FileList()
+		result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
+		if result != errorCodes.OK:
+			if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
+				dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
+				if dlg.ShowModal()==wx.ID_YES: self.RunFile(sys.argv[0],True,target)
+			#end アクセス拒否
+			return result#アクセス負荷
+		#end 失敗したか
+		if cursorTarget!="":
+			targetItemIndex=lst.Search(cursorTarget)
+		#end 移動先が決まってる
+		newtab=tabs.fileList.FileListTab()
+		newtab.Initialize(self.parent,None,self.hListCtrl)
+		newtab.Update(lst)
 		if targetItemIndex>=0:
 			self.hListCtrl.Focus(targetItemIndex)
 			self.hListCtrl.Select(targetItemIndex)
-		return errorCodes.OK
+		#end カーソル位置設定
+		return newtab
 
 	def RunFile(self,path, admin=False,prm=""):
 		"""ファイルを起動する。admin=True の場合、管理者として実行する。"""

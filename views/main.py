@@ -580,6 +580,7 @@ class Events(BaseEvents):
 		p=self.parent
 		st=True if stream else False
 		ret=p.activeTab.GoForward(st,admin)
+		if issubclass(ret.__class__,tabs.base.FalconTabBase): p.ReplaceCurrentTab(ret)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
 		elif ret==errorCodes.BOUNDARY:

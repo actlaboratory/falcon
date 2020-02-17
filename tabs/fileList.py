@@ -75,7 +75,7 @@ class FileListTab(base.FalconTabBase):
 		elif isinstance(elem,browsableObjects.File):#このファイルを開く
 			if not stream: self.RunFile(elem.fullpath,admin)
 			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
-			if stream: self.move(elem.fullpath)
+			if stream: return self.move(elem.fullpath)
 		#end ファイルを開く
 		else:
 			return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
