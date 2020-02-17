@@ -28,6 +28,7 @@ import workerThreads
 import workerThreadTasks
 import fileSystemManager
 import tabs.driveList
+import tabs.streamList
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
