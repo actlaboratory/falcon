@@ -25,11 +25,14 @@ class FalconTabBase(object):
 		self.environment={}		#このタブ特有の環境変数
 		self.markedPlace=None	#マークフォルダ
 
-	def InstallListCtrl(self,creator):
+	def InstallListCtrl(self,creator,existing_listctrl=None):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
-		self.hListCtrl=creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT|wx.LC_EDIT_LABELS)
-		creator.GetPanel().Layout()
-
+		if existing_listctrl is None:
+			self.hListCtrl=creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT|wx.LC_EDIT_LABELS)
+			creator.GetPanel().Layout()
+		else:
+			self.hListCtrl=existing_listctrl
+		#end リストコントロールを再利用する
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_CLICK,self.col_click)
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
@@ -85,13 +88,22 @@ class FalconTabBase(object):
 	def GetListCtrl(self):
 		return self.hListCtrl
 
-	def SetListColumns(self,col):
+	def SetListColumns(self,lst):
 		"""リストコントロールにカラムを設定する。"""
+		col=lst.GetColumns()
 		self.hListCtrl.DeleteAllColumns()
 		i=0
 		for elem,format in col.items():
 			self.hListCtrl.InsertColumn(i,elem,format=format,width=wx.LIST_AUTOSIZE)
 			i+=1
+		#end カラムを作る
+		#カラム幅を設定
+		for i in range(0,len(col)):
+			w=globalVars.app.config[lst.__class__.__name__]["column_width_"+str(i)]
+			w=100 if w=="" else int(w)
+			self.hListCtrl.SetColumnWidth(i,w)
+		#end カラム幅を設定
+#end SetListColumns
 
 	def UpdateListContent(self,content):
 		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
