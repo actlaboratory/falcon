@@ -27,43 +27,30 @@ import misc
 import workerThreads
 import workerThreadTasks
 import fileSystemManager
+import tabs.driveList
+import tabs.streamList
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
 from . import base
 
-#アクションの識別子
-ACTION_FORWARD=0#ファイル/フォルダのオープン
-ACTION_FORWARD_STREAM=1#ファイル/フォルダ/副ストリームのオープン
-ACTION_BACKWARD=2#内包しているフォルダ/内包しているドライブ/副ストリームのクローズ
-ACTION_SORTNEXT=3#次の並び順
-
-class MainListTab(base.FalconTabBase):
-	"""ファイル/フォルダ/ドライブリストが表示されているタブ。"""
-	def Initialize(self,parent,creator):
-		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。"""
+class FileListTab(base.FalconTabBase):
+	"""ファイル/フォルダリストが表示されているタブ。"""
+	def Initialize(self,parent,creator,existing_listctrl=None):
+		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。existing_listctrl にリストコントロールがある場合、そのリストコントロールを再利用する。"""
 		self.log=logging.getLogger("falcon.mainListTab")
 		self.log.debug("Created.")
 		self.parent=parent
-		self.InstallListCtrl(creator)
+		self.InstallListCtrl(creator,existing_listctrl)
 		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
 		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
-		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
-		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
 		self.background_tasks=[]
 
 	def Update(self,lst,cursor=-1):
 		"""指定された要素をタブに適用する。"""
 		self._cancelBackgroundTasks()
 		self.hListCtrl.DeleteAllItems()
-		if type(self.listObject)!=type(lst):
-			self.columns=lst.GetColumns()
-			self.SetListColumns(self.columns)
-			for i in range(0,len(self.columns)):
-				w=globalVars.app.config[lst.__class__.__name__]["column_width_"+str(i)]
-				w=100 if w=="" else int(w)
-				self.hListCtrl.SetColumnWidth(i,w)
-		#end 違う種類のリストかどうか
+		self.SetListColumns(lst)
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
 		self.hListCtrl.Focus(cursor)
@@ -77,64 +64,62 @@ class MainListTab(base.FalconTabBase):
 		#end for
 		self.background_tasks=[]
 
-	def TriggerAction(self, action,admin=False):
-		if action==ACTION_SORTNEXT:
-			self.listObject.SetSortCursor()
-			self._updateEnv()
-			self.listObject.ApplySort()
-			self.hListCtrl.DeleteAllItems()
-			self.UpdateListContent(self.listObject.GetItems())
-			return
-		#end sortNext
+	def GoForward(self,stream,admin=False):
+		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
-		if action==ACTION_FORWARD or action==ACTION_FORWARD_STREAM:
-			elem=self.listObject.GetElement(index)
-			if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
-				#TODO: 管理者モードだったら、別のfalconが昇格して開くように
-				return self.move(elem.fullpath)
-			#end フォルダ開く
-			elif isinstance(elem,browsableObjects.File):#このファイルを開く
-				if action==ACTION_FORWARD: self.RunFile(elem.fullpath,admin)
-				#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
-				if action==ACTION_FORWARD_STREAM: self.move(elem.fullpath)
-			#end ファイルを開く
-			elif isinstance(elem,browsableObjects.Stream):#このストリームを開く
-				self.RunFile(elem.fullpath,admin)
-			#end ストリームを開く
-			elif isinstance(elem,browsableObjects.Drive):#このドライブを開く
-				#TODO: これも昇格したほうがいい
-				self.move(elem.letter+":")
-			#end ドライブ開く
-			else:
-				return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
-			#end フォルダ以外のタイプ
-		#end ACTION_FORWARD
-		if action==ACTION_BACKWARD:
-			if isinstance(self.listObject,lists.DriveList):
-				return errorCodes.BOUNDARY
-			if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
-				target=""
-				cursorTarget=self.listObject.rootDirectory[0]
-			else:
-				target=os.path.split(self.listObject.rootDirectory)[0]
-				cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
-			return self.move(target,cursorTarget)
+		elem=self.listObject.GetElement(index)
+		if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
+			#TODO: 管理者モードだったら、別のfalconが昇格して開くように
+			return self.move(elem.fullpath)
+		#end フォルダ開く
+		elif isinstance(elem,browsableObjects.File):#このファイルを開く
+			if not stream: self.RunFile(elem.fullpath,admin)
+			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
+			if stream: return self.move(elem.fullpath)
+		#end ファイルを開く
+		else:
+			return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
+		#end サポートしてないタイプ
+	#end GoForward
+
+	def GoBackward(self):
+		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
+		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
+			target=""
+			cursorTarget=self.listObject.rootDirectory[0]
+		else:
+			target=os.path.split(self.listObject.rootDirectory)[0]
+			cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
+		return self.move(target,cursorTarget)
+
+	def SortNext(self):
+		self.listObject.SetSortCursor()
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
+	#end sortNext
 
 	def move(self,target,cursorTarget=""):
 		"""targetに移動する。空文字を渡すとドライブ一覧へ"""
 		targetItemIndex=-1
-		target=os.path.expandvars(target)
 		if target=="":#ドライブリスト
-			lst=lists.DriveList()
-			lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
-			if cursorTarget!="":
-				targetItemIndex=lst.Search(cursorTarget,1)
-		elif not os.path.exists(target):
+			newtab=tabs.driveList.DriveListTab()
+			newtab.Initialize(self.parent,None,self.hListCtrl)
+			newtab.Update(cursorTarget)
+			return newtab
+		#end ドライブリストへ行く
+		target=os.path.expandvars(target)
+		if not os.path.exists(target):
 			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
 			return errorCodes.FILE_NOT_FOUND
 		elif os.path.isfile(target):	#副ストリームへ移動
 			lst=lists.StreamList()
 			lst.Initialize(target)
+			newtab=tabs.streamList.StreamListTab()
+			newtab.Initialize(self.parent,None,self.hListCtrl)
+			newtab.Update(lst)
+			return newtab
 		else:
 			lst=lists.FileList()
 			result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
@@ -269,7 +254,7 @@ class MainListTab(base.FalconTabBase):
 
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
-		self.TriggerAction(ACTION_FORWARD)
+		self.GoForward(False)
 
 	def StartRename(self):
 		"""リネームを開始する。"""

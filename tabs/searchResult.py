@@ -28,9 +28,9 @@ import workerThreads
 import workerThreadTasks
 
 from win32com.shell import shell, shellcon
-from . import mainList
+from . import fileList
 
-class SearchResultTab(mainList.MainListTab):
+class SearchResultTab(fileList.FileListTab):
 	"""検索結果が表示されているタブ。"""
 	def Initialize(self,parent,creator):
 		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。"""
