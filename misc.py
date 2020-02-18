@@ -156,7 +156,11 @@ def calcHash(path,algo):
 
 #環境変数PATHに値を追加
 def addPath(paths):
-	h=winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER,"Environment",access=winreg.KEY_WRITE | winreg.KEY_READ)
-	for path in paths:
-		winreg.SetValueEx(h, 'Path', 0, winreg.REG_SZ,winreg.QueryValueEx(h, 'Path')[0]+";"+path)
-	winreg.CloseKey(h)
+	try:
+		h=winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER,"Environment",access=winreg.KEY_WRITE | winreg.KEY_READ)
+		for path in paths:
+			winreg.SetValueEx(h, 'Path', 0, winreg.REG_SZ,winreg.QueryValueEx(h, 'Path')[0]+";"+path)
+		winreg.CloseKey(h)
+		return True
+	except:
+		return False

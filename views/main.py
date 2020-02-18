@@ -464,9 +464,15 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("TOOL_ADDPATH"):
 			if not self.parent.activeTab.IsItemSelected:
 				return
-			t=self.parent.activeTab.GetSelectedItems().GetItemPaths()
-			misc.addPath(t)
-			dialog(_("パスの追加"),_("ユーザ環境変数PATHに追加しました。"))
+			t=self.parent.activeTab.GetSelectedItems()
+			if item in t:
+				if item.__class__!=browsableObjects.Folder:
+					return
+			t=t.GetItemPaths()
+			if misc.addPath(t):
+				dialog(_("パスの追加"),_("ユーザ環境変数PATHに追加しました。"))
+			else:
+				dialog(_("パスの追加"),_("追加に失敗しました。"))
 			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DRIVE"):
 			if self.parent.activeTab.listObject.__class__!=lists.DriveList:
