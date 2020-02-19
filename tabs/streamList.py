@@ -56,13 +56,6 @@ class StreamListTab(base.FalconTabBase):
 		if cursor>0:
 			self.hListCtrl.Select(cursor)
 
-	def _cancelBackgroundTasks(self):
-		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
-		for elem in self.background_tasks:
-			elem.Cancel()
-		#end for
-		self.background_tasks=[]
-
 	def GoForward(self,stream,admin=False):
 		"""選択中の服ストリーム項目を実行する。"""
 		index=self.GetFocusedItem()

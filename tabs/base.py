@@ -235,3 +235,10 @@ class FalconTabBase(object):
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 	#end sortNext
+
+	def _cancelBackgroundTasks(self):
+		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
+		for elem in self.background_tasks:
+			elem.Cancel()
+		#end for
+		self.background_tasks=[]

@@ -63,13 +63,6 @@ class DriveListTab(base.FalconTabBase):
 		#end カーソル初期位置を設定
 	#end Update
 
-	def _cancelBackgroundTasks(self):
-		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
-		for elem in self.background_tasks:
-			elem.Cancel()
-		#end for
-		self.background_tasks=[]
-
 	def GoForward(self,stream,admin=False):
 		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
