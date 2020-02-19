@@ -147,13 +147,6 @@ class FileListTab(base.FalconTabBase):
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def _updateEnv(self):
-		"""ソートの環境変数を更新する。"""
-		s=self.listObject.__class__.__name__
-		globalVars.app.config[s]["sorting"]=self.listObject.GetSortCursor()
-		globalVars.app.config[s]["descending"]=int(self.listObject.GetSortDescending())
-		self.environment[s+"_sorting"]=self.listObject.GetSortCursor()
-		self.environment[s+"_descending"]=self.listObject.GetSortDescending()
 
 	def col_resize(self,event):
 		no=event.GetColumn()
