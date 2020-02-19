@@ -137,16 +137,6 @@ class FileListTab(base.FalconTabBase):
 			self.hListCtrl.Select(targetItemIndex)
 		return errorCodes.OK
 
-	def col_click(self,event):
-		no=event.GetColumn()
-		self.listObject.SetSortCursor(no)
-		if self.listObject.GetSortCursor()==no:
-			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-		self._updateEnv()
-		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
-		self.UpdateListContent(self.listObject.GetItems())
-
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True
 		self.parent.SetShortcutEnabled(False)

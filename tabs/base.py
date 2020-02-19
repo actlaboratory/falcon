@@ -217,3 +217,13 @@ class FalconTabBase(object):
 		no=event.GetColumn()
 		width=self.hListCtrl.GetColumnWidth(no)
 		globalVars.app.config[self.listObject.__class__.__name__]["column_width_"+str(no)]=str(width)
+
+	def col_click(self,event):
+		no=event.GetColumn()
+		self.listObject.SetSortCursor(no)
+		if self.listObject.GetSortCursor()==no:
+			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
