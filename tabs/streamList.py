@@ -123,11 +123,6 @@ class StreamListTab(base.FalconTabBase):
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def col_resize(self,event):
-		no=event.GetColumn()
-		width=self.hListCtrl.GetColumnWidth(no)
-		globalVars.app.config[self.listObject.__class__.__name__]["column_width_"+str(no)]=str(width)
-
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True
 		self.parent.SetShortcutEnabled(False)

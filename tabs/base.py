@@ -212,3 +212,8 @@ class FalconTabBase(object):
 		globalVars.app.config[s]["descending"]=int(self.listObject.GetSortDescending())
 		self.environment[s+"_sorting"]=self.listObject.GetSortCursor()
 		self.environment[s+"_descending"]=self.listObject.GetSortDescending()
+
+	def col_resize(self,event):
+		no=event.GetColumn()
+		width=self.hListCtrl.GetColumnWidth(no)
+		globalVars.app.config[self.listObject.__class__.__name__]["column_width_"+str(no)]=str(width)
