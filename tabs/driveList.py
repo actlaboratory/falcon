@@ -230,21 +230,6 @@ class DriveListTab(base.FalconTabBase):
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def UpdateFilelist(self,silence=False,cursorTargetName=""):
-		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
-		if silence==True:
-			globalVars.app.say(_("更新"))
-		if cursorTargetName=="":
-			item=self.listObject.GetElement(self.GetFocusedItem())
-		result=self.listObject.Update()
-		if result != errorCodes.OK:
-			return errorCodes.FILE_NOT_FOUND			#アクセス負荷など
-		if cursorTargetName=="":
-			cursor=self.listObject.Search(item.basename,0)
-		else:
-			cursor=self.listObject.Search(cursorTargetName,0)
-		self.Update(self.listObject,cursor)
-
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
 		if fileSystemManager.ValidationObjectName(dir+"\\"+newdir,fileSystemManager.pathTypes.DIRECTORY):

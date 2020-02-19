@@ -164,3 +164,18 @@ class FalconTabBase(object):
 		t="\n".join(t)
 		with clipboardHelper.Clipboard() as c:
 			c.set_unicode_text(t)
+
+	def UpdateFilelist(self,silence=False,cursorTargetName=""):
+		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
+		if silence==True:
+			globalVars.app.say(_("更新"))
+		if cursorTargetName=="":
+			item=self.listObject.GetElement(self.GetFocusedItem())
+		result=self.listObject.Update()
+		if result != errorCodes.OK:
+			return errorCodes.FILE_NOT_FOUND			#アクセス負荷など
+		if cursorTargetName=="":
+			cursor=self.listObject.Search(item.basename,0)
+		else:
+			cursor=self.listObject.Search(cursorTargetName,0)
+		self.Update(self.listObject,cursor)
