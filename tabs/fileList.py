@@ -339,11 +339,13 @@ class FileListTab(base.FalconTabBase):
 		c.SendToClipboard()
 
 	def GoToTopFile(self):
-		if not isinstance(self.listObject,list.FileList):
+		if not isinstance(self.listObject,lists.FileList):
 			dialog(_("エラー"),_("ここではこの機能を利用できません。"))
 			return
 		#end ファイルリストのときしか通さない
 		self.hListCtrl.Focus(self.listObject.GetTopFileIndex())
+		self.hListCtrl.Select(-1,0)
+		self.hListCtrl.Select(self.listObject.GetTopFileIndex())
 		globalVars.app.say(_("先頭ファイル"))
 
 	def MarkSet(self):
