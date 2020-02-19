@@ -138,6 +138,12 @@ class FalconTabBase(object):
 		"""Spaceキーが押されたらこれが呼ばれる。"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
+
 	def BeginDrag(self,event):
 		"""ドラッグ操作が開始された"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
+
+	def SelectAll(self):
+		globalVars.app.say(_("全て選択"))
+		for i in range(self.hListCtrl.GetItemCount()):
+			self.hListCtrl.Select(i)

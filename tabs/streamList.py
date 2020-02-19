@@ -409,11 +409,6 @@ class StreamListTab(base.FalconTabBase):
 		with clipboardHelper.Clipboard() as c:
 			c.set_unicode_text(t)
 
-	def SelectAll(self):
-		globalVars.app.say(_("全て選択"))
-		for i in range(self.hListCtrl.GetItemCount()):
-			self.hListCtrl.Select(i)
-
 	def GoToTopFile(self):
 		if not isinstance(self.listObject,list.FileList):
 			dialog(_("エラー"),_("ここではこの機能を利用できません。"))
