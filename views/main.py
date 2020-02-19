@@ -397,9 +397,10 @@ class Events(BaseEvents):
 			dic={}
 			dic[_("名前")]=elem.basename
 			dic[_("パス")]=elem.fullpath
-			if elem.__class__==browsableObjects.File:
+			if elem.__class__==browsableObjects.File or elem.__class__==browsableObjects.Stream:
 				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
 				dic[_("サイズ(バイト)")]=elem.size
+			if elem.__class__==browsableObjects.File:
 				dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
 				dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
 				dic[_("属性")]=elem.longAttributesString
