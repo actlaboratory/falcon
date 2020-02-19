@@ -160,7 +160,7 @@ class DriveListTab(base.FalconTabBase):
 
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
-		self.GoForward(stream=False)
+		globalVars.app.hMainView.events.GoForward()
 
 	def StartRename(self):
 		"""リネームを開始する。"""

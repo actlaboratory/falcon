@@ -597,7 +597,7 @@ class Events(BaseEvents):
 		self.parent.AppendTab(tab,hPanel,active=True)
 		tab.StartSearch(basePath,out_lst,val['keyword'])
 
-	def GoForward(self,stream,admin=False):
+	def GoForward(self,stream=False,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
 		if not self.parent.activeTab.GetSelectedItemCount()==1:
 			return
