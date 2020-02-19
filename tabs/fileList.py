@@ -344,6 +344,8 @@ class FileListTab(base.FalconTabBase):
 			return
 		#end ファイルリストのときしか通さない
 		self.hListCtrl.Focus(self.listObject.GetTopFileIndex())
+		self.hListCtrl.Select(-1,0)
+		self.hListCtrl.Select(self.listObject.GetTopFileIndex())
 		globalVars.app.say(_("先頭ファイル"))
 
 	def MarkSet(self):
