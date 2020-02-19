@@ -339,7 +339,7 @@ class FileListTab(base.FalconTabBase):
 		c.SendToClipboard()
 
 	def GoToTopFile(self):
-		if not isinstance(self.listObject,list.FileList):
+		if not isinstance(self.listObject,lists.FileList):
 			dialog(_("エラー"),_("ここではこの機能を利用できません。"))
 			return
 		#end ファイルリストのときしか通さない
