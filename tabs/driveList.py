@@ -63,13 +63,6 @@ class DriveListTab(base.FalconTabBase):
 		#end カーソル初期位置を設定
 	#end Update
 
-	def _cancelBackgroundTasks(self):
-		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
-		for elem in self.background_tasks:
-			elem.Cancel()
-		#end for
-		self.background_tasks=[]
-
 	def GoForward(self,stream,admin=False):
 		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
@@ -79,14 +72,6 @@ class DriveListTab(base.FalconTabBase):
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
 		return errorCodes.BOUNDARY
-
-	def SortNext(self):
-		self.listObject.SetSortCursor()
-		self._updateEnv()
-		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
-		self.UpdateListContent(self.listObject.GetItems())
-	#end sortNext
 
 	def Move(self,target,cursorTarget=""):
 		"""targetに移動する。"""
@@ -109,29 +94,6 @@ class DriveListTab(base.FalconTabBase):
 		newtab.Initialize(self.parent,None,self.hListCtrl)
 		newtab.Update(lst)
 		return newtab
-
-	def col_click(self,event):
-		no=event.GetColumn()
-		self.listObject.SetSortCursor(no)
-		if self.listObject.GetSortCursor()==no:
-			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-		self._updateEnv()
-		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
-		self.UpdateListContent(self.listObject.GetItems())
-
-	def _updateEnv(self):
-		"""ソートの環境変数を更新する。"""
-		s=self.listObject.__class__.__name__
-		globalVars.app.config[s]["sorting"]=self.listObject.GetSortCursor()
-		globalVars.app.config[s]["descending"]=int(self.listObject.GetSortDescending())
-		self.environment[s+"_sorting"]=self.listObject.GetSortCursor()
-		self.environment[s+"_descending"]=self.listObject.GetSortDescending()
-
-	def col_resize(self,event):
-		no=event.GetColumn()
-		width=self.hListCtrl.GetColumnWidth(no)
-		globalVars.app.config[self.listObject.__class__.__name__]["column_width_"+str(no)]=str(width)
 
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True
@@ -204,46 +166,6 @@ class DriveListTab(base.FalconTabBase):
 		"""リネームを開始する。"""
 		index=self.GetFocusedItem()
 		self.hListCtrl.EditLabel(index)
-
-	def SortSelect(self):
-		"""並び順を指定する。"""
-		m=wx.Menu()
-		s=self.listObject.GetSupportedSorts()
-		i=0
-		for elem in s:
-			m.Append(i,lists.GetSortDescription(elem))
-			i+=1
-		#end 追加
-		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
-		m.Destroy()
-		self.listObject.SetSortCursor(item)
-		self._updateEnv()
-		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
-		self.UpdateListContent(self.listObject.GetItems())
-
-	def SortCycleAd(self):
-		"""昇順と降順を交互に切り替える。"""
-		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-		self._updateEnv()
-		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
-		self.UpdateListContent(self.listObject.GetItems())
-
-	def UpdateFilelist(self,silence=False,cursorTargetName=""):
-		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
-		if silence==True:
-			globalVars.app.say(_("更新"))
-		if cursorTargetName=="":
-			item=self.listObject.GetElement(self.GetFocusedItem())
-		result=self.listObject.Update()
-		if result != errorCodes.OK:
-			return errorCodes.FILE_NOT_FOUND			#アクセス負荷など
-		if cursorTargetName=="":
-			cursor=self.listObject.Search(item.basename,0)
-		else:
-			cursor=self.listObject.Search(cursorTargetName,0)
-		self.Update(self.listObject,cursor)
 
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
@@ -389,27 +311,6 @@ class DriveListTab(base.FalconTabBase):
 		c.SetOperation(clipboard.MOVE)
 		c.SetFileList(self.GetSelectedItems().GetItemPaths())
 		c.SendToClipboard()
-
-	def FullpathCopy(self):
-		if not self.IsItemSelected(): return
-		t=self.GetSelectedItems().GetItemPaths()
-		globalVars.app.say(_("フルパスをコピー"))
-		t="\n".join(t)
-		with clipboardHelper.Clipboard() as c:
-			c.set_unicode_text(t)
-
-	def NameCopy(self):
-		if not self.IsItemSelected(): return
-		globalVars.app.say(_("ファイル名をコピー"))
-		t=self.GetSelectedItems().GetItemNames()
-		t="\n".join(t)
-		with clipboardHelper.Clipboard() as c:
-			c.set_unicode_text(t)
-
-	def SelectAll(self):
-		globalVars.app.say(_("全て選択"))
-		for i in range(self.hListCtrl.GetItemCount()):
-			self.hListCtrl.Select(i)
 
 	def GoToTopFile(self):
 		if not isinstance(self.listObject,list.FileList):

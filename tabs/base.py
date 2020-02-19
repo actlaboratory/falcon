@@ -9,10 +9,11 @@
 """
 
 import wx
+import clipboardHelper
 import errorCodes
 import globalVars
+import lists
 import misc
-
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
 	def __init__(self):
@@ -138,6 +139,106 @@ class FalconTabBase(object):
 		"""Spaceキーが押されたらこれが呼ばれる。"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
+
 	def BeginDrag(self,event):
 		"""ドラッグ操作が開始された"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
+
+	def SelectAll(self):
+		globalVars.app.say(_("全て選択"))
+		for i in range(self.hListCtrl.GetItemCount()):
+			self.hListCtrl.Select(i)
+
+	def NameCopy(self):
+		if not self.IsItemSelected(): return
+		globalVars.app.say(_("ファイル名をコピー"))
+		t=self.GetSelectedItems().GetItemNames()
+		t="\n".join(t)
+		with clipboardHelper.Clipboard() as c:
+			c.set_unicode_text(t)
+
+	def FullpathCopy(self):
+		if not self.IsItemSelected(): return
+		t=self.GetSelectedItems().GetItemPaths()
+		globalVars.app.say(_("フルパスをコピー"))
+		t="\n".join(t)
+		with clipboardHelper.Clipboard() as c:
+			c.set_unicode_text(t)
+
+	def UpdateFilelist(self,silence=False,cursorTargetName=""):
+		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
+		if silence==True:
+			globalVars.app.say(_("更新"))
+		if cursorTargetName=="":
+			item=self.listObject.GetElement(self.GetFocusedItem())
+		result=self.listObject.Update()
+		if result != errorCodes.OK:
+			return errorCodes.FILE_NOT_FOUND			#アクセス負荷など
+		if cursorTargetName=="":
+			cursor=self.listObject.Search(item.basename,0)
+		else:
+			cursor=self.listObject.Search(cursorTargetName,0)
+		self.Update(self.listObject,cursor)
+
+	def SortCycleAd(self):
+		"""昇順と降順を交互に切り替える。"""
+		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
+
+	def SortSelect(self):
+		"""並び順を指定する。"""
+		m=wx.Menu()
+		s=self.listObject.GetSupportedSorts()
+		i=0
+		for elem in s:
+			m.Append(i,lists.GetSortDescription(elem))
+			i+=1
+		#end 追加
+		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
+		m.Destroy()
+		self.listObject.SetSortCursor(item)
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
+
+	def _updateEnv(self):
+		"""ソートの環境変数を更新する。"""
+		s=self.listObject.__class__.__name__
+		globalVars.app.config[s]["sorting"]=self.listObject.GetSortCursor()
+		globalVars.app.config[s]["descending"]=int(self.listObject.GetSortDescending())
+		self.environment[s+"_sorting"]=self.listObject.GetSortCursor()
+		self.environment[s+"_descending"]=self.listObject.GetSortDescending()
+
+	def col_resize(self,event):
+		no=event.GetColumn()
+		width=self.hListCtrl.GetColumnWidth(no)
+		globalVars.app.config[self.listObject.__class__.__name__]["column_width_"+str(no)]=str(width)
+
+	def col_click(self,event):
+		no=event.GetColumn()
+		self.listObject.SetSortCursor(no)
+		if self.listObject.GetSortCursor()==no:
+			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
+
+	def SortNext(self):
+		self.listObject.SetSortCursor()
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
+	#end sortNext
+
+	def _cancelBackgroundTasks(self):
+		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
+		for elem in self.background_tasks:
+			elem.Cancel()
+		#end for
+		self.background_tasks=[]
