@@ -12,8 +12,8 @@ import wx
 import clipboardHelper
 import errorCodes
 import globalVars
+import lists
 import misc
-
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
 	def __init__(self):
@@ -183,6 +183,23 @@ class FalconTabBase(object):
 	def SortCycleAd(self):
 		"""昇順と降順を交互に切り替える。"""
 		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
+
+	def SortSelect(self):
+		"""並び順を指定する。"""
+		m=wx.Menu()
+		s=self.listObject.GetSupportedSorts()
+		i=0
+		for elem in s:
+			m.Append(i,lists.GetSortDescription(elem))
+			i+=1
+		#end 追加
+		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
+		m.Destroy()
+		self.listObject.SetSortCursor(item)
 		self._updateEnv()
 		self.listObject.ApplySort()
 		self.hListCtrl.DeleteAllItems()

@@ -208,23 +208,6 @@ class StreamListTab(base.FalconTabBase):
 		index=self.GetFocusedItem()
 		self.hListCtrl.EditLabel(index)
 
-	def SortSelect(self):
-		"""並び順を指定する。"""
-		m=wx.Menu()
-		s=self.listObject.GetSupportedSorts()
-		i=0
-		for elem in s:
-			m.Append(i,lists.GetSortDescription(elem))
-			i+=1
-		#end 追加
-		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
-		m.Destroy()
-		self.listObject.SetSortCursor(item)
-		self._updateEnv()
-		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
-		self.UpdateListContent(self.listObject.GetItems())
-
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
 		if fileSystemManager.ValidationObjectName(dir+"\\"+newdir,fileSystemManager.pathTypes.DIRECTORY):
