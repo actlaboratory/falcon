@@ -156,3 +156,11 @@ class FalconTabBase(object):
 		t="\n".join(t)
 		with clipboardHelper.Clipboard() as c:
 			c.set_unicode_text(t)
+
+	def FullpathCopy(self):
+		if not self.IsItemSelected(): return
+		t=self.GetSelectedItems().GetItemPaths()
+		globalVars.app.say(_("フルパスをコピー"))
+		t="\n".join(t)
+		with clipboardHelper.Clipboard() as c:
+			c.set_unicode_text(t)
