@@ -158,10 +158,6 @@ class DriveListTab(base.FalconTabBase):
 		if op.CheckSucceeded()==0:
 			dialog(_("エラー"),_("属性が変更できません。"))
 
-	def EnterItem(self,event):
-		"""forward アクションを実行する。"""
-		self.GoForward(stream=False)
-
 	def StartRename(self):
 		"""リネームを開始する。"""
 		index=self.GetFocusedItem()
