@@ -242,3 +242,7 @@ class FalconTabBase(object):
 			elem.Cancel()
 		#end for
 		self.background_tasks=[]
+
+	def EnterItem(self,event):
+		"""forward アクションを実行する。"""
+		globalVars.app.hMainView.events.GoForward()
