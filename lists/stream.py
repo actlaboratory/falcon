@@ -49,10 +49,10 @@ class StreamList(FalconListBase):
 			dialog(_("エラー"), _("NTFS 副ストリーム情報を取得できませんでした(%(error)s)") % {"error": str(er)})
 			return False
 		#end 情報取得失敗
+		lst=lst[1:]	#先頭はファイル本体なので省く
 		for elem in lst:
-			fullpath=file+elem[1]
 			s=browsableObjects.Stream()
-			s.Initialize(file,elem[1],fullpath,elem[0])
+			s.Initialize(file,elem[1][1:-6],file+elem[1][0:-6],elem[0])
 			self.streams.append(s)
 		#end 追加ループ
 		self.log.debug("stream list created in %d milliseconds." % t.elapsed)
