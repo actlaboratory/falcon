@@ -67,7 +67,7 @@ class StreamListTab(base.FalconTabBase):
 		"""選択中の服ストリーム項目を実行する。"""
 		index=self.GetFocusedItem()
 		elem=self.listObject.GetElement(index)
-		self.RunFile(elem.fullpath,admin)
+		misc.RunFile(elem.fullpath,admin)
 	#end GoForward
 
 	def GoBackward(self):
@@ -97,7 +97,7 @@ class StreamListTab(base.FalconTabBase):
 		if result != errorCodes.OK:
 			if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
 				dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
-				if dlg.ShowModal()==wx.ID_YES: self.RunFile(sys.argv[0],True,target)
+				if dlg.ShowModal()==wx.ID_YES: misc.RunFile(sys.argv[0],True,target)
 			#end アクセス拒否
 			return result#アクセス負荷
 		#end 失敗したか
@@ -112,35 +112,6 @@ class StreamListTab(base.FalconTabBase):
 			self.hListCtrl.Select(targetItemIndex)
 		#end カーソル位置設定
 		return newtab
-
-	def RunFile(self,path, admin=False,prm=""):
-		"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
-		path=os.path.expandvars(path)
-		msg="running %s as admin" % (path) if admin else "running %s" % (path)
-		self.log.debug(msg)
-		msg=_("管理者で起動") if admin else _("起動")
-		globalVars.app.say(msg)
-		error=""
-		if admin:
-			try:
-				executable=misc.GetExecutableState(path)
-				p=path if executable else "cmd"
-				a=prm if executable else "/c "+path+" "+prm
-				ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",p,a)
-			except pywintypes.error as e:
-				error=str(e)
-			#end shellExecuteEx failure
-		else:
-			try:
-				win32api.ShellExecute(0,"open",path,prm,"",1)
-			except win32api.error as er:
-				error=str(er)
-			#end shellExecute failure
-		#end admin or not
-		if error!="":
-			dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": error})
-		#end ファイル開けなかった
-	#end RunFile
 
 	def col_click(self,event):
 		no=event.GetColumn()

@@ -10,7 +10,10 @@ import hashlib
 import winreg
 import win32api
 import win32file
+import globalVars
 from logging import getLogger
+from simpleDialog import dialog
+
 
 log=getLogger("falcon.misc")
 
@@ -143,7 +146,6 @@ def GetExecutableState(path):
 	"""指定されたファイルパスが、実行可能ファイルであろうかどうかを調べて boolean で返す。"""
 	return os.path.splitext(path)[1].upper() in os.environ["pathext"].split(";")
 
-
 def calcHash(path,algo):
 	h = hashlib.new(algo)
 	len = hashlib.new(algo).block_size * 0x800
@@ -164,3 +166,32 @@ def addPath(paths):
 		return True
 	except:
 		return False
+
+def RunFile(path, admin=False,prm=""):
+	"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
+	path=os.path.expandvars(path)
+	msg="running %s as admin" % (path) if admin else "running %s" % (path)
+	log.debug(msg)
+	msg=_("管理者で起動") if admin else _("起動")
+	globalVars.app.say(msg)
+	error=""
+	if admin:
+		try:
+			executable=GetExecutableState(path)
+			p=path if executable else "cmd"
+			a=prm if executable else "/c "+path+" "+prm
+			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",p,a)
+		except pywintypes.error as e:
+			error=str(e)
+		#end shellExecuteEx failure
+	else:
+		try:
+			win32api.ShellExecute(0,"open",path,prm,"",1)
+		except win32api.error as er:
+			error=str(er)
+		#end shellExecute failure
+	#end admin or not
+	if error!="":
+		dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": error})
+	#end ファイル開けなかった
+#end RunFile
