@@ -9,6 +9,7 @@
 """
 
 import wx
+import clipboardHelper
 import errorCodes
 import globalVars
 import misc
@@ -147,3 +148,11 @@ class FalconTabBase(object):
 		globalVars.app.say(_("全て選択"))
 		for i in range(self.hListCtrl.GetItemCount()):
 			self.hListCtrl.Select(i)
+
+	def NameCopy(self):
+		if not self.IsItemSelected(): return
+		globalVars.app.say(_("ファイル名をコピー"))
+		t=self.GetSelectedItems().GetItemNames()
+		t="\n".join(t)
+		with clipboardHelper.Clipboard() as c:
+			c.set_unicode_text(t)

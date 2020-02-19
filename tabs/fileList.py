@@ -425,14 +425,6 @@ class FileListTab(base.FalconTabBase):
 		with clipboardHelper.Clipboard() as c:
 			c.set_unicode_text(t)
 
-	def NameCopy(self):
-		if not self.IsItemSelected(): return
-		globalVars.app.say(_("ファイル名をコピー"))
-		t=self.GetSelectedItems().GetItemNames()
-		t="\n".join(t)
-		with clipboardHelper.Clipboard() as c:
-			c.set_unicode_text(t)
-
 	def GoToTopFile(self):
 		if not isinstance(self.listObject,list.FileList):
 			dialog(_("エラー"),_("ここではこの機能を利用できません。"))
