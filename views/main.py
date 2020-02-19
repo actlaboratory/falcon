@@ -613,7 +613,6 @@ class Events(BaseEvents):
 	def SortNext(self):
 		"""sortNext アクションを実行。"""
 		p=self.parent
-		act=tabs.fileList.ACTION_SORTNEXT
 		ret=p.activeTab.SortNext()
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))

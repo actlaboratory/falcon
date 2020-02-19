@@ -80,14 +80,6 @@ class DriveListTab(base.FalconTabBase):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
 		return errorCodes.BOUNDARY
 
-	def SortNext(self):
-		self.listObject.SetSortCursor()
-		self._updateEnv()
-		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
-		self.UpdateListContent(self.listObject.GetItems())
-	#end sortNext
-
 	def Move(self,target,cursorTarget=""):
 		"""targetに移動する。"""
 		targetItemIndex=-1

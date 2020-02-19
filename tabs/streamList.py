@@ -76,14 +76,6 @@ class StreamListTab(base.FalconTabBase):
 		cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
 		return self.move(target,cursorTarget)
 
-	def SortNext(self):
-		self.listObject.SetSortCursor()
-		self._updateEnv()
-		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
-		self.UpdateListContent(self.listObject.GetItems())
-	#end sortNext
-
 	def move(self,target,cursorTarget=""):
 		"""targetに移動する。"""
 		targetItemIndex=-1

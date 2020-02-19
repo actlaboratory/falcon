@@ -227,3 +227,11 @@ class FalconTabBase(object):
 		self.listObject.ApplySort()
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
+
+	def SortNext(self):
+		self.listObject.SetSortCursor()
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())
+	#end sortNext
