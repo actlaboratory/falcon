@@ -179,3 +179,11 @@ class FalconTabBase(object):
 		else:
 			cursor=self.listObject.Search(cursorTargetName,0)
 		self.Update(self.listObject,cursor)
+
+	def SortCycleAd(self):
+		"""昇順と降順を交互に切り替える。"""
+		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
+		self._updateEnv()
+		self.listObject.ApplySort()
+		self.hListCtrl.DeleteAllItems()
+		self.UpdateListContent(self.listObject.GetItems())

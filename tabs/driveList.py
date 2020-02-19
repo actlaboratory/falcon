@@ -222,14 +222,6 @@ class DriveListTab(base.FalconTabBase):
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def SortCycleAd(self):
-		"""昇順と降順を交互に切り替える。"""
-		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-		self._updateEnv()
-		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
-		self.UpdateListContent(self.listObject.GetItems())
-
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
 		if fileSystemManager.ValidationObjectName(dir+"\\"+newdir,fileSystemManager.pathTypes.DIRECTORY):
