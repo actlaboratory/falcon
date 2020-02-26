@@ -105,8 +105,9 @@ class View(BaseView):
 		"""指定のパスにナビゲートする。"""
 		self.log.debug("Creating new tab %s..." % path)
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
-		pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
-		newtab=tabs.navigator.Navigate(os.path.expandvars(sys.argv[1]),create_new_tab_info=(parent,hPanel,pageCreator))
+		creator=views.ViewCreator.ViewCreator(1,hPanel,None)
+		newtab=tabs.navigator.Navigate(path,create_new_tab_info=(self,creator))
+		print(newtab)
 		newtab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
 		self.tabs.append(newtab)
 		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
