@@ -99,13 +99,13 @@ class View(BaseView):
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
 		if len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1])):
-			newtab=tabs.navigator.Navigate(os.path.expandvars(sys.argv[1]),parent=self)
+			newtab=tabs.navigator.Navigate(os.path.expandvars(sys.argv[1]),main_view_handle=self)
 		elif self.app.config["browse"]["startPath"]=="":
-			newtab=tabs.navigator.Navigate("",parent=self)
+			newtab=tabs.navigator.Navigate("",main_view_handle=self)
 		elif os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"])):
-			newtab=tabs.navigator.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),parent=self)
+			newtab=tabs.navigator.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),main_view_handle=self)
 		else:
-			newtab=tabs.navigator.Navigate("",parent=self)
+			newtab=tabs.navigator.Navigate("",main_view_handle=self)
 		#end どこを開くか
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})

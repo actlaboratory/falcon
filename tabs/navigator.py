@@ -10,6 +10,7 @@
 
 import ctypes
 import logging
+import os
 import wx
 import errorCodes
 import lists
@@ -19,7 +20,7 @@ import misc
 from . import fileList,driveList,streamList
 from simpleDialog import dialog
 
-	def Navigate(self,target,cursor="",previous_tab=None,main_view_handle=None):
+def Navigate(target,cursor="",previous_tab=None,main_view_handle=None):
 	"""
 		指定したパスにアクセスする。現在のタブと違う種類のタブが必要とされた場合に、新しいタブを返す。今のタブを再利用した場合は、Trueを返す。失敗時にはエラーコードを返す。
 		パスに空の文字を指定すると、ドライブリストへ行く。
