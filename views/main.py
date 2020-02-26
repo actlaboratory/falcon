@@ -18,9 +18,7 @@ import constants
 import errorCodes
 import globalVars
 import lists
-import tabs.fileList
-import tabs.base
-import tabs.searchResult
+import tabs.navigator
 import menuItemsStore
 import fileSystemManager
 import deviceCtrl
@@ -90,7 +88,7 @@ class View(BaseView):
 	def AddNewTab(self,tab,active=False):
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
-		tab.Attach(self,self.pageCreator)
+		tab.Initialize(self,self.pageCreator)
 		tab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
 		self.tabs.append(tab)
 		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
@@ -100,21 +98,19 @@ class View(BaseView):
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
-		if(len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1]))):
-			lst=lists.FileList()
-			lst.Initialize(os.path.expandvars(sys.argv[1]),int(globalVars.app.config["FileList"]["sorting"]),int(globalVars.app.config["FileList"]["descending"]))
-		elif(self.app.config["browse"]["startPath"]==""):
-			lst=lists.DriveList()
-			lst.Initialize(None,int(globalVars.app.config["DriveList"]["sorting"]),int(globalVars.app.config["DriveList"]["descending"]))
-		elif(os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"]))):
-			lst=lists.FileList()
-			lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]),int(globalVars.app.config["FileList"]["sorting"]),int(globalVars.app.config["FileList"]["descending"]))
+		if len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1])):
+			newtab=tabs.navigator.Navigate(os.path.expandvars(sys.argv[1]),parent=self)
+		elif self.app.config["browse"]["startPath"]=="":
+			newtab=tabs.navigator.Navigate("",parent=self)
+		elif os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"])):
+			newtab=tabs.navigator.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),parent=self)
 		else:
-			lst=lists.DriveList()
-			lst.Initialize(None,int(globalVars.app.config["DriveList"]["sorting"]),int(globalVars.app.config["DriveList"]["descending"]))
+			newtab=tabs.navigator.Navigate("",parent=self)
+		#end どこを開くか
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
-		self.AddNewTab(lst,True)
+		#end エラー
+		self.AddNewTab(newtab,True)
 
 	def ReplaceCurrentTab(self,newtab):
 		"""現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""
