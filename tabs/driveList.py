@@ -39,7 +39,7 @@ class DriveListTab(base.FalconTabBase):
 		"""指定された要素をタブに適用する。"""
 		self._cancelBackgroundTasks()
 		lst=lists.DriveList()
-		lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
+		lst.Initialize(None)
 		self.hListCtrl.DeleteAllItems()
 		self.SetListColumns(lst)
 		self.listObject=lst
