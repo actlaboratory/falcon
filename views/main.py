@@ -86,15 +86,18 @@ class View(BaseView):
 		return True
 
 	def AddNewTab(self,tab,active=False):
-		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
-		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
-		tab.Initialize(self,self.pageCreator)
 		tab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
 		self.tabs.append(tab)
 		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
 		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
 		if active is True: self.ActivateTab(len(self.tabs)-1)
 		return tab
+
+	def MakeNewTabPanel(self):
+		"""タブパネルを生成する。これで帰ってきた creator をタブに渡す。"""
+		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
+		pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
+		return pageCreator
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""

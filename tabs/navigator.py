@@ -34,9 +34,9 @@ def Navigate(target,cursor="",previous_tab=None,main_view_handle=None):
 			newtab=previous_tab
 		else:
 			newtab=driveList.DriveListTab()
-			newtab.Initialize(parent,None,hListCtrl)
+			newtab.Initialize(parent,hListCtrl)
 		#end 再利用するかどうか
-		newtab.Update(cursorTarget)
+		newtab.Update(cursor)
 		return newtab
 	#end ドライブリストへ行く
 	target=os.path.expandvars(target)
@@ -50,26 +50,26 @@ def Navigate(target,cursor="",previous_tab=None,main_view_handle=None):
 			newtab=previous_tab
 		else:
 			newtab=streamList.StreamListTab()
-			newtab.Initialize(parent,None,hListCtrl)
+			newtab.Initialize(parent,hListCtrl)
 		#end 再利用するかどうか
 		newtab.Update(lst)
 		return newtab
 	else:
 		lst=lists.FileList()
-		result=lst.Initialize(FILELIST_SORTING,FILELIST_DESCENDING)
+		result=lst.Initialize(target)
 		if result != errorCodes.OK:
 			if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
 				dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
 				if dlg.ShowModal()==wx.ID_YES:
 					misc.RunFile(sys.argv[0],True,target)
 			return result#アクセス負荷
-		if cursorTarget!="":
-			targetItemIndex=lst.Search(cursorTarget)
+		if cursor!="":
+			targetItemIndex=lst.Search(cursor)
 		if isinstance(previous_tab,fileList.FileListTab):#再利用
 			newtab=previous_tab
 		else:
 			newtab=fileList.FileListTab()
-			newtab.Initialize(parent,None,hListCtrl)
+			newtab.Initialize(parent,hListCtrl)
 		#end 再利用するかどうか
 	newtab.Update(lst)
 	if targetItemIndex>=0:
