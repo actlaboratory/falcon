@@ -12,7 +12,6 @@ import sys
 import os
 import views.ViewCreator
 import gettext
-import logging
 import wx
 import win32api
 import clipboard

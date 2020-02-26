@@ -7,6 +7,7 @@
 """
 タブは、必ずリストビューです。カラムの数と名前と、それに対応するリストの要素がタブを構成します。たとえば、ファイル一覧では「ファイル名」や「サイズ」などがカラムになり、その情報がリストに格納されています。ファイル操作の状況を示すタブの場合は、「進行率」や「状態」などがカラムの名前として想定されています。リスト上でエンターを押すことで、アクションを実行できます。ファイルビューではファイルやフォルダを開き、ファイル操作では問い合わせに応答することができます。
 """
+import logging
 
 import wx
 import clipboardHelper
@@ -39,7 +40,6 @@ class FalconTabBase(object):
 	def InstallListCtrl(self,existing_listctrl=None):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
 		if existing_listctrl is None:
-			creator=self.parent.MakeNewTabPanel()
 			self.hListCtrl=creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT|wx.LC_EDIT_LABELS)
 			creator.GetPanel().Layout()
 		else:

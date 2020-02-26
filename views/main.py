@@ -85,35 +85,33 @@ class View(BaseView):
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
-	def AddNewTab(self,tab,active=False):
-		tab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
-		self.tabs.append(tab)
-		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
-		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
-		if active is True: self.ActivateTab(len(self.tabs)-1)
-		return tab
-
-	def MakeNewTabPanel(self):
-		"""タブパネルを生成する。これで帰ってきた creator をタブに渡す。"""
-		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
-		pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
-		return pageCreator
-
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
 		if len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1])):
-			newtab=tabs.navigator.Navigate(os.path.expandvars(sys.argv[1]),main_view_handle=self)
+			self.Navigate(os.path.expandvars(sys.argv[1]),as_new_tab=True)
 		elif self.app.config["browse"]["startPath"]=="":
-			newtab=tabs.navigator.Navigate("",main_view_handle=self)
+			self.Navigate("",as_new_tab=True)
 		elif os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"])):
-			newtab=tabs.navigator.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),main_view_handle=self)
+			self.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),as_new_tab=True)
 		else:
-			newtab=tabs.navigator.Navigate("",main_view_handle=self)
+			self.Navigate("",as_new_tab=True)
 		#end どこを開くか
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
 		#end エラー
-		self.AddNewTab(newtab,True)
+	#end makeFirstTab
+
+	def Navigate(self,path,as_new_tab=False):
+		"""指定のパスにナビゲートする。"""
+		self.log.debug("Creating new tab %s..." % path)
+		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
+		pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
+		newtab=tabs.navigator.Navigate(os.path.expandvars(sys.argv[1]),create_new_tab_info=(parent,hPanel,pageCreator))
+		newtab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
+		self.tabs.append(newtab)
+		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
+		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
+		self.ActivateTab(len(self.tabs)-1)
 
 	def ReplaceCurrentTab(self,newtab):
 		"""現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""

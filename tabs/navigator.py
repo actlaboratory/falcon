@@ -17,24 +17,27 @@ import lists
 import globalVars
 import constants
 import misc
+import views.ViewCreator
 from . import fileList,driveList,streamList
 from simpleDialog import dialog
 
-def Navigate(target,cursor="",previous_tab=None,main_view_handle=None):
+def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
 	"""
 		指定したパスにアクセスする。現在のタブと違う種類のタブが必要とされた場合に、新しいタブを返す。今のタブを再利用した場合は、Trueを返す。失敗時にはエラーコードを返す。
 		パスに空の文字を指定すると、ドライブリストへ行く。
+		create_new_tab_info に (parent,hPanel,pageCreator) のタプルがあれば、この情報を使って新規タブを作成する。これは、メインビューで使っている
 	"""
-	if previous_tab is None and main_view_handle is None: return errorCodes.INVALID_PARAMETER
-	parent=previous_tab.parent if previous_tab is not None else main_view_handle
+	if previous_tab is None and create_new_tab_info is None: return errorCodes.INVALID_PARAMETER
+	parent=previous_tab.parent if previous_tab is not None else create_new_tab_info[0]
 	hListCtrl=previous_tab.hListCtrl if previous_tab is not None else None
+	creator=create_new_tab_info[1] if create_new_tab_info is not None else None
 	targetItemIndex=-1
 	if target=="":#ドライブリスト
 		if isinstance(previous_tab,driveList.DriveListTab):#再利用
 			newtab=previous_tab
 		else:
 			newtab=driveList.DriveListTab()
-			newtab.Initialize(parent,hListCtrl)
+			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 		newtab.Update(cursor)
 		return newtab
@@ -50,7 +53,7 @@ def Navigate(target,cursor="",previous_tab=None,main_view_handle=None):
 			newtab=previous_tab
 		else:
 			newtab=streamList.StreamListTab()
-			newtab.Initialize(parent,hListCtrl)
+			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 		newtab.Update(lst)
 		return newtab
@@ -69,7 +72,7 @@ def Navigate(target,cursor="",previous_tab=None,main_view_handle=None):
 			newtab=previous_tab
 		else:
 			newtab=fileList.FileListTab()
-			newtab.Initialize(parent,hListCtrl)
+			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 	newtab.Update(lst)
 	if targetItemIndex>=0:

@@ -32,16 +32,6 @@ from . import fileList
 
 class SearchResultTab(fileList.FileListTab):
 	"""検索結果が表示されているタブ。"""
-	def Initialize(self,parent,creator):
-		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。"""
-		self.log=logging.getLogger("falcon.searchResultTab")
-		self.log.debug("Created.")
-		self.parent=parent
-		self.InstallListCtrl(creator)
-		self.environment["sorting"]=int(globalVars.app.config["SearchResultList"]["sorting"])
-		self.environment["descending"]=int(globalVars.app.config["SearchResultList"]["descending"])
-		self.background_tasks=[]
-
 	def StartSearch(self,rootPath,searches,keyword):
 		self.listObject=lists.SearchResultList()
 		self.listObject.Initialize(rootPath,searches,keyword,self.environment["sorting"],self.environment["descending"])
