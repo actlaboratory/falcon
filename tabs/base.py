@@ -26,6 +26,14 @@ class FalconTabBase(object):
 		self.environment={}		#このタブ特有の環境変数
 		self.markedPlace=None	#マークフォルダ
 
+	def Initialize(self,parent,creator,existing_listctrl=None):
+		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。existing_listctrl にリストコントロールがある場合、そのリストコントロールを再利用する。"""
+		self.log=logging.getLogger("falcon.%s" % self.__class__.__name__)
+		self.log.debug("Created.")
+		self.parent=parent
+		self.InstallListCtrl(creator,existing_listctrl)
+		self.background_tasks=[]
+
 	def InstallListCtrl(self,creator,existing_listctrl=None):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
 		if existing_listctrl is None:

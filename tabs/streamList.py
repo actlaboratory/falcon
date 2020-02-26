@@ -35,15 +35,6 @@ from . import base
 
 class StreamListTab(base.FalconTabBase):
 	"""副ストリームリストが表示されているタブ。"""
-	def Initialize(self,parent,creator,existing_listctrl=None):
-		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。existing_listctrl にリストコントロールがある場合、そのリストコントロールを再利用する。"""
-		self.log=logging.getLogger("falcon.streamListTab")
-		self.log.debug("Created.")
-		self.parent=parent
-		self.InstallListCtrl(creator,existing_listctrl)
-		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
-		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
-		self.background_tasks=[]
 
 	def Update(self,lst,cursor=-1):
 		"""指定された要素をタブに適用する。"""

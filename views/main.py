@@ -87,14 +87,15 @@ class View(BaseView):
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
-	def AddNewTab(self,lst,active=False):
-		tab=tabs.fileList.FileListTab()
+	def AddNewTab(self,tab,active=False):
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
-		tab.Initialize(self,self.pageCreator)
-		tab.Update(lst)
+		tab.Attach(self,self.pageCreator)
 		tab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
-		self.AppendTab(tab,hPanel,active=True)
+		self.tabs.append(tab)
+		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
+		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
+		if active is True: self.ActivateTab(len(self.tabs)-1)
 		return tab
 
 	def MakeFirstTab(self):
@@ -125,13 +126,6 @@ class View(BaseView):
 		self.tabs[i]=newtab
 		self.activeTab=newtab
 	#end ReplaceCurrentTab
-
-	def AppendTab(self,tab,hPanel,active=False):
-		"""タブを追加する。active=True で、追加したタブをその場でアクティブにする。"""
-		self.tabs.append(tab)
-		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
-		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab"+str(len(self.tabs)),False)
-		if active is True: self.ActivateTab(len(self.tabs)-1)
 
 	def ActivateTab(self,pageNo):
 		"""指定されたインデックスのタブをアクティブにする。"""
