@@ -14,6 +14,8 @@ import errorCodes
 import globalVars
 import lists
 import misc
+from . import navigator
+
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
 	def __init__(self):
@@ -254,3 +256,7 @@ class FalconTabBase(object):
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
 		globalVars.app.hMainView.events.GoForward()
+
+	def Move(self,path,cursor=""):
+		"""指定の場所へ移動する。"""
+		return navigator.Navigate(path,cursor,self)
