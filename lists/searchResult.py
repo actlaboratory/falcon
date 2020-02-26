@@ -34,7 +34,7 @@ class SearchResultList(FalconListBase):
 	def Update(self):
 		return self.Initialize(self.searches,self.sortCursor,self.sortDescending,True)
 
-	def Initialize(self,rootPath,searches,keyword,sorting=0,descending=0,silent=False):
+	def Initialize(self,rootPath,searches,keyword,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
 		self.rootPath=rootPath
 		self.searches=searches
@@ -43,8 +43,8 @@ class SearchResultList(FalconListBase):
 		keyword=keyword.replace("*",".*")
 		keyword=keyword.replace("?",".")
 		self.keyword=re.compile(keyword)
-		self.sortCursor=sorting
-		self.sortDescending=descending
+		self.sortCursor=int(globalVars.app.config["SearchResultList"]["sorting"])
+		self.sortDescending=int(globalVars.app.config["SearchResultList"]["descending"])
 		self.results=[]
 		if not silent: globalVars.app.say("%sの検索結果 %s から" % (keyword,rootPath,))
 		self.log.debug("Getting search results for %s..." % keyword)
