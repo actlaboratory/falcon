@@ -277,10 +277,8 @@ class FalconTabBase(object):
 			if not stream:
 				misc.RunFile(elem.fullpath,admin)
 				return
-			#end runFile
-			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
-			if stream:
-				return navigator.Navigate(elem.fullpath)
+			else:
+				return self.Move(elem.fullpath)
 		#end ファイルを開く
 		#end なにを開くか
 	#end GoForward

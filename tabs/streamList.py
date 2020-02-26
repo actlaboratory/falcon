@@ -53,12 +53,6 @@ class StreamListTab(base.FalconTabBase):
 		misc.RunFile(elem.fullpath,admin)
 	#end GoForward
 
-	def GoBackward(self):
-		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
-		target=os.path.split(self.listObject.rootDirectory)[0]
-		cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
-		return self.move(target,cursorTarget)
-
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True
 		self.parent.SetShortcutEnabled(False)
