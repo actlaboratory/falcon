@@ -107,7 +107,6 @@ class View(BaseView):
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		creator=views.ViewCreator.ViewCreator(1,hPanel,None)
 		newtab=tabs.navigator.Navigate(path,create_new_tab_info=(self,creator))
-		print(newtab)
 		newtab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
 		self.tabs.append(newtab)
 		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
@@ -597,6 +596,7 @@ class Events(BaseEvents):
 		p=self.parent
 		st=True if stream else False
 		ret=p.activeTab.GoForward(st,admin)
+		print("ret %s" % ret)
 		if issubclass(ret.__class__,tabs.base.FalconTabBase): p.ReplaceCurrentTab(ret)
 		if ret==errorCodes.NOT_SUPPORTED:
 			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))

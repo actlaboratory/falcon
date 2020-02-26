@@ -27,6 +27,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
 		パスに空の文字を指定すると、ドライブリストへ行く。
 		create_new_tab_info に (parent,hPanel,pageCreator) のタプルがあれば、この情報を使って新規タブを作成する。これは、メインビューで使っている
 	"""
+	print("pre=%s" % previous_tab)
 	if previous_tab is None and create_new_tab_info is None: return errorCodes.INVALID_PARAMETER
 	parent=previous_tab.parent if previous_tab is not None else create_new_tab_info[0]
 	hListCtrl=previous_tab.hListCtrl if previous_tab is not None else None
