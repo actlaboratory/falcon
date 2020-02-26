@@ -14,6 +14,7 @@ from simpleDialog import dialog
 
 import globalVars
 
+from . import navigator
 
 class BaseView(object):
 	"""falconのビューの基本クラス。"""
@@ -89,3 +90,33 @@ class BaseEvents(object):
 
 		#sizerを正しく機能させるため、Skipの呼出が必須
 		event.Skip()
+
+	def GoForward(self,stream,admin=False):
+		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
+		index=self.GetFocusedItem()
+		elem=self.listObject.GetElement(index)
+		if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
+			#TODO: 管理者モードだったら、別のfalconが昇格して開くように
+			r=navigator.Navigate(elem.fullpath)
+		#end フォルダ開く
+		elif isinstance(elem,browsableObjects.File):#このファイルを開く
+			if not stream:
+				misc.RunFile(elem.fullpath,admin)
+				return
+			#end runFile
+			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
+			if stream:
+				r=navigator.Navigate(elem.fullpath)
+		#end ファイルを開く
+		#end なにを開くか
+		return errorCodes.OK if self is r else r
+
+	def GoBackward(self):
+		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
+		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
+			target=""
+			cursorTarget=self.listObject.rootDirectory[0]
+		else:
+			target=os.path.split(self.listObject.rootDirectory)[0]
+			cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
+		return self.move(target,cursorTarget)

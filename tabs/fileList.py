@@ -46,33 +46,6 @@ class FileListTab(base.FalconTabBase):
 		self.hListCtrl.Focus(cursor)
 		if cursor>0:
 			self.hListCtrl.Select(cursor)
-	def GoForward(self,stream,admin=False):
-		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
-		index=self.GetFocusedItem()
-		elem=self.listObject.GetElement(index)
-		if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
-			#TODO: 管理者モードだったら、別のfalconが昇格して開くように
-			return self.move(elem.fullpath)
-		#end フォルダ開く
-		elif isinstance(elem,browsableObjects.File):#このファイルを開く
-			if not stream: misc.RunFile(elem.fullpath,admin)
-			#TODO: 管理者として副ストリーム…まぁ、使わないだろうけど一貫性のためには開くべきだと思う
-			if stream: return self.move(elem.fullpath)
-		#end ファイルを開く
-		else:
-			return errorCodes.NOT_SUPPORTED#そのほかはまだサポートしてない
-		#end サポートしてないタイプ
-	#end GoForward
-
-	def GoBackward(self):
-		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
-		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
-			target=""
-			cursorTarget=self.listObject.rootDirectory[0]
-		else:
-			target=os.path.split(self.listObject.rootDirectory)[0]
-			cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
-		return self.move(target,cursorTarget)
 
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True
