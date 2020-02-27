@@ -557,13 +557,8 @@ class Events(BaseEvents):
 		e=self.parent.activeTab.GetFocusedElement()
 		if not e.__class__==browsableObjects.Folder:
 			return
+		self.parent.Navigate(e.fullpath,as_new_tab=True)
 
-		lst=lists.FileList()
-		ret=lst.Initialize(e.fullpath)
-		if ret!=errorCodes.OK:
-			dialog(_("エラー"),_("開けませんでした。"))
-			return
-		self.parent.AddNewTab(lst,True)
 
 	def CloseTab(self):
 		self.parent.CloseTab(self.parent.activeTab)
