@@ -517,7 +517,8 @@ class Events(BaseEvents):
 		for m in globalVars.app.userCommandManagers:
 			if m.isRefHit(selected):
 				if m == globalVars.app.favoriteDirectory:
-					self.parent.activeTab.move(m.get(selected))
+					ret=self.parent.activeTab.Move(m.get(selected))
+					if issubclass(ret.__class__,tabs.base.FalconTabBase): self.parent.ReplaceCurrentTab(ret)
 					#TODO: エラー処理する
 				else:
 					path=m.get(selected)
