@@ -25,7 +25,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
 	"""
 		指定したパスにアクセスする。現在のタブと違う種類のタブが必要とされた場合に、新しいタブを返す。今のタブを再利用した場合は、Trueを返す。失敗時にはエラーコードを返す。
 		パスに空の文字を指定すると、ドライブリストへ行く。
-		create_new_tab_info に (parent,hPanel,pageCreator) のタプルがあれば、この情報を使って新規タブを作成する。これは、メインビューで使っている
+		create_new_tab_info に (parent,hPanel) のタプルがあれば、この情報を使って新規タブを作成する。これは、メインビューで使っている
 	"""
 	if previous_tab is None and create_new_tab_info is None: return errorCodes.INVALID_PARAMETER
 	parent=previous_tab.parent if previous_tab is not None else create_new_tab_info[0]
