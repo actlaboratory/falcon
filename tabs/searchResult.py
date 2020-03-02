@@ -34,7 +34,7 @@ class SearchResultTab(fileList.FileListTab):
 	"""検索結果が表示されているタブ。"""
 	def StartSearch(self,rootPath,searches,keyword):
 		self.listObject=lists.SearchResultList()
-		self.listObject.Initialize(rootPath,searches,keyword,self.environment["sorting"],self.environment["descending"])
+		self.listObject.Initialize(rootPath,searches,keyword)
 		self.SetListColumns(self.listObject)
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
 

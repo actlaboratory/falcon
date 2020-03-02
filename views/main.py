@@ -101,15 +101,14 @@ class View(BaseView):
 		#end エラー
 	#end makeFirstTab
 
-	def Navigate(self,path,as_new_tab=False):
+	def Navigate(self,target,as_new_tab=False):
 		"""指定のパスにナビゲートする。"""
-		self.log.debug("Creating new tab %s..." % path)
+		self.log.debug("Creating new tab %s..." % target)
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		creator=views.ViewCreator.ViewCreator(1,hPanel,None)
-		newtab=tabs.navigator.Navigate(path,create_new_tab_info=(self,creator))
+		newtab=tabs.navigator.Navigate(target,create_new_tab_info=(self,creator))
 		newtab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
 		self.tabs.append(newtab)
-		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
 		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
 		self.ActivateTab(len(self.tabs)-1)
 
@@ -577,13 +576,8 @@ class Events(BaseEvents):
 		#end 途中でやめた
 		val=d.GetValue()
 		d.Destroy()
-		tab=tabs.searchResult.SearchResultTab()
-		hPanel=views.ViewCreator.makePanel(self.parent.hTabCtrl)
-		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
-		tab.Initialize(self,self.pageCreator)
-		tab.hListCtrl.SetAcceleratorTable(self.parent.menu.acceleratorTable)
-		self.parent.AppendTab(tab,hPanel,active=True)
-		tab.StartSearch(basePath,out_lst,val['keyword'])
+		target={'action': 'search', 'basePath': basePath, 'out_lst': out_lst, 'keyword': val['keyword']}
+		self.parent.Navigate(target,as_new_tab=True)
 
 	def GoForward(self,stream=False,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""

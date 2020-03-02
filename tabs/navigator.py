@@ -18,13 +18,14 @@ import globalVars
 import constants
 import misc
 import views.ViewCreator
-from . import fileList,driveList,streamList
+from . import fileList,driveList,streamList,searchResult
 from simpleDialog import dialog
 
 def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
 	"""
 		指定したパスにアクセスする。現在のタブと違う種類のタブが必要とされた場合に、新しいタブを返す。今のタブを再利用した場合は、Trueを返す。失敗時にはエラーコードを返す。
 		パスに空の文字を指定すると、ドライブリストへ行く。
+		パスに辞書を指定した場合、内容によって動作が変わる。事前に取得したファイルリストからの検索などができる。
 		create_new_tab_info に (parent,hPanel) のタプルがあれば、この情報を使って新規タブを作成する。これは、メインビューで使っている
 	"""
 	if previous_tab is None and create_new_tab_info is None: return errorCodes.INVALID_PARAMETER
@@ -32,6 +33,15 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
 	hListCtrl=previous_tab.hListCtrl if previous_tab is not None else None
 	creator=create_new_tab_info[1] if create_new_tab_info is not None else None
 	targetItemIndex=-1
+	if isinstance(target,dict):
+		if target['action']=='search':
+			newtab=searchResult.SearchResultTab()
+			newtab.Initialize(parent,creator)
+			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'])
+			return newtab
+		#end 検索
+	#end targetが辞書の時の特殊処理
+
 	if target=="":#ドライブリスト
 		if isinstance(previous_tab,driveList.DriveListTab):#再利用
 			newtab=previous_tab
