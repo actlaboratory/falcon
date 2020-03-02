@@ -7,13 +7,18 @@
 """
 タブは、必ずリストビューです。カラムの数と名前と、それに対応するリストの要素がタブを構成します。たとえば、ファイル一覧では「ファイル名」や「サイズ」などがカラムになり、その情報がリストに格納されています。ファイル操作の状況を示すタブの場合は、「進行率」や「状態」などがカラムの名前として想定されています。リスト上でエンターを押すことで、アクションを実行できます。ファイルビューではファイルやフォルダを開き、ファイル操作では問い合わせに応答することができます。
 """
+import logging
+import os
 
 import wx
+import browsableObjects
 import clipboardHelper
 import errorCodes
 import globalVars
 import lists
 import misc
+from . import navigator
+
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
 	def __init__(self):
@@ -25,6 +30,14 @@ class FalconTabBase(object):
 		globalVars.app.config.add_section(self.__class__.__name__)
 		self.environment={}		#このタブ特有の環境変数
 		self.markedPlace=None	#マークフォルダ
+
+	def Initialize(self,parent,creator,existing_listctrl=None):
+		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。existing_listctrl にリストコントロールがある場合、そのリストコントロールを再利用する。"""
+		self.log=logging.getLogger("falcon.%s" % self.__class__.__name__)
+		self.log.debug("Created.")
+		self.parent=parent
+		self.InstallListCtrl(creator,existing_listctrl)
+		self.background_tasks=[]
 
 	def InstallListCtrl(self,creator,existing_listctrl=None):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
@@ -208,6 +221,7 @@ class FalconTabBase(object):
 	def _updateEnv(self):
 		"""ソートの環境変数を更新する。"""
 		s=self.listObject.__class__.__name__
+		print(s)
 		globalVars.app.config[s]["sorting"]=self.listObject.GetSortCursor()
 		globalVars.app.config[s]["descending"]=int(self.listObject.GetSortDescending())
 		self.environment[s+"_sorting"]=self.listObject.GetSortCursor()
@@ -246,3 +260,36 @@ class FalconTabBase(object):
 	def EnterItem(self,event):
 		"""forward アクションを実行する。"""
 		globalVars.app.hMainView.events.GoForward()
+
+	def Move(self,path,cursor=""):
+		"""指定の場所へ移動する。"""
+		r=navigator.Navigate(path,cursor,previous_tab=self)
+		return errorCodes.OK if r is self else r
+
+	def GoForward(self,stream,admin=False):
+		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
+		index=self.GetFocusedItem()
+		elem=self.listObject.GetElement(index)
+		if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
+			#TODO: 管理者モードだったら、別のfalconが昇格して開くように
+			return self.Move(elem.fullpath)
+		#end フォルダ開く
+		elif isinstance(elem,browsableObjects.File):#このファイルを開く
+			if not stream:
+				misc.RunFile(elem.fullpath,admin)
+				return
+			else:
+				return self.Move(elem.fullpath)
+		#end ファイルを開く
+		#end なにを開くか
+	#end GoForward
+
+	def GoBackward(self):
+		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
+		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
+			target=""
+			cursorTarget=self.listObject.rootDirectory[0]
+		else:
+			target=os.path.split(self.listObject.rootDirectory)[0]
+			cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
+		return self.Move(target,cursorTarget)

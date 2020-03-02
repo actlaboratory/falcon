@@ -28,10 +28,10 @@ class DriveList(FalconListBase):
 	def Update(self):
 		return self.Initialize(None,self.sortCursor,self.sortDescending,True)
 
-	def Initialize(self,lst,sorting=0,descending=0,silent=False):
+	def Initialize(self,lst,silent=False):
 		"""ドライブ情報を取得し、リストを初期化する。"""
-		self.sortCursor=sorting
-		self.sortDescending=descending
+		self.sortCursor=int(globalVars.app.config["DriveList"]["sorting"])
+		self.sortDescending=int(globalVars.app.config["DriveList"]["descending"])
 		self.log.debug("Getting drives list...")
 		self.rootDirectory=""
 		t=misc.Timer()

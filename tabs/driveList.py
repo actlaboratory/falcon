@@ -12,7 +12,6 @@ import sys
 import os
 import views.ViewCreator
 import gettext
-import logging
 import wx
 import win32api
 import clipboard
@@ -35,23 +34,12 @@ from . import base
 
 class DriveListTab(base.FalconTabBase):
 	"""ドライブリストが表示されているタブ。"""
-	def Initialize(self,parent,creator,existing_listctrl=None):
-		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。existing_listctrl にリストコントロールがある場合、そのリストコントロールを再利用する。"""
-		self.log=logging.getLogger("falcon.driveListTab")
-		self.log.debug("Created.")
-		self.parent=parent
-		self.InstallListCtrl(creator,existing_listctrl)
-		self.environment["DriveList_sorting"]=int(globalVars.app.config["DriveList"]["sorting"])
-		self.environment["DriveList_descending"]=int(globalVars.app.config["DriveList"]["descending"])
-		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
-		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
-		self.background_tasks=[]
 
 	def Update(self,cursor=""):
 		"""指定された要素をタブに適用する。"""
 		self._cancelBackgroundTasks()
 		lst=lists.DriveList()
-		lst.Initialize(None,self.environment["DriveList_sorting"],self.environment["DriveList_descending"])
+		lst.Initialize(None)
 		self.hListCtrl.DeleteAllItems()
 		self.SetListColumns(lst)
 		self.listObject=lst
@@ -72,28 +60,6 @@ class DriveListTab(base.FalconTabBase):
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
 		return errorCodes.BOUNDARY
-
-	def Move(self,target,cursorTarget=""):
-		"""targetに移動する。"""
-		targetItemIndex=-1
-		target=os.path.expandvars(target)
-		if not os.path.exists(target):
-			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
-			return errorCodes.FILE_NOT_FOUND
-		#end 存在しない、なんてあるかわからんが
-		lst=lists.FileList()
-		result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-		if result != errorCodes.OK:
-			if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
-				dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
-				if dlg.ShowModal()==wx.ID_YES: misc.RunFile(sys.argv[0],True,target)
-			#end 別ウィンドウで立ち上げるかどうか
-			return result#アクセス負荷
-		#end エラーだったか
-		newtab=tabs.fileList.FileListTab()
-		newtab.Initialize(self.parent,None,self.hListCtrl)
-		newtab.Update(lst)
-		return newtab
 
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True

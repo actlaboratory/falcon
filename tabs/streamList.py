@@ -12,7 +12,6 @@ import sys
 import os
 import views.ViewCreator
 import gettext
-import logging
 import wx
 import win32api
 import clipboard
@@ -35,15 +34,6 @@ from . import base
 
 class StreamListTab(base.FalconTabBase):
 	"""副ストリームリストが表示されているタブ。"""
-	def Initialize(self,parent,creator,existing_listctrl=None):
-		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。existing_listctrl にリストコントロールがある場合、そのリストコントロールを再利用する。"""
-		self.log=logging.getLogger("falcon.streamListTab")
-		self.log.debug("Created.")
-		self.parent=parent
-		self.InstallListCtrl(creator,existing_listctrl)
-		self.environment["FileList_sorting"]=int(globalVars.app.config["FileList"]["sorting"])
-		self.environment["FileList_descending"]=int(globalVars.app.config["FileList"]["descending"])
-		self.background_tasks=[]
 
 	def Update(self,lst,cursor=-1):
 		"""指定された要素をタブに適用する。"""
@@ -62,41 +52,6 @@ class StreamListTab(base.FalconTabBase):
 		elem=self.listObject.GetElement(index)
 		misc.RunFile(elem.fullpath,admin)
 	#end GoForward
-
-	def GoBackward(self):
-		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
-		target=os.path.split(self.listObject.rootDirectory)[0]
-		cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
-		return self.move(target,cursorTarget)
-
-	def move(self,target,cursorTarget=""):
-		"""targetに移動する。"""
-		targetItemIndex=-1
-		target=os.path.expandvars(target)
-		if not os.path.exists(target):
-			dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
-			return errorCodes.FILE_NOT_FOUND
-		#end 存在しない
-		lst=lists.FileList()
-		result=lst.Initialize(target,self.environment["FileList_sorting"],self.environment["FileList_descending"])
-		if result != errorCodes.OK:
-			if result==errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
-				dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
-				if dlg.ShowModal()==wx.ID_YES: misc.RunFile(sys.argv[0],True,target)
-			#end アクセス拒否
-			return result#アクセス負荷
-		#end 失敗したか
-		if cursorTarget!="":
-			targetItemIndex=lst.Search(cursorTarget)
-		#end 移動先が決まってる
-		newtab=tabs.fileList.FileListTab()
-		newtab.Initialize(self.parent,None,self.hListCtrl)
-		newtab.Update(lst)
-		if targetItemIndex>=0:
-			self.hListCtrl.Focus(targetItemIndex)
-			self.hListCtrl.Select(targetItemIndex)
-		#end カーソル位置設定
-		return newtab
 
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True

@@ -30,10 +30,10 @@ class FileList(FalconListBase):
 	def Update(self):
 		return self.Initialize(self.rootDirectory,self.sortCursor,self.sortDescending,True)
 
-	def Initialize(self,dir, sorting=0,descending=0,silent=False):
+	def Initialize(self,dir,silent=False):
 		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、errorCodes.OK以外が返る。silentがTrueなら読み上げは行われない。"""
-		self.sortCursor=sorting
-		self.sortDescending=descending
+		self.sortCursor=int(globalVars.app.config["FileList"]["sorting"])
+		self.sortDescending=int(globalVars.app.config["FileList"]["descending"])
 		self.files=[]
 		self.folders=[]
 		if isinstance(dir,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)

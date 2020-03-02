@@ -15,6 +15,7 @@ FILE_NOT_FOUND=3	#ファイルが存在しない
 PARSING_FAILED=4	#パーシングエラー
 FATAL=5				#続行不可能なエラー
 ACCESS_DENIED=6		#アクセス拒否
+INVALID_PARAMETER=7#引数が違う
 
 
 UNKNOWN=99999

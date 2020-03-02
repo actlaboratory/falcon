@@ -18,9 +18,7 @@ import constants
 import errorCodes
 import globalVars
 import lists
-import tabs.fileList
-import tabs.base
-import tabs.searchResult
+import tabs.navigator
 import menuItemsStore
 import fileSystemManager
 import deviceCtrl
@@ -87,33 +85,32 @@ class View(BaseView):
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
-	def AddNewTab(self,lst,active=False):
-		tab=tabs.fileList.FileListTab()
-		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
-		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
-		tab.Initialize(self,self.pageCreator)
-		tab.Update(lst)
-		tab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
-		self.AppendTab(tab,hPanel,active=True)
-		return tab
-
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
-		if(len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1]))):
-			lst=lists.FileList()
-			lst.Initialize(os.path.expandvars(sys.argv[1]),int(globalVars.app.config["FileList"]["sorting"]),int(globalVars.app.config["FileList"]["descending"]))
-		elif(self.app.config["browse"]["startPath"]==""):
-			lst=lists.DriveList()
-			lst.Initialize(None,int(globalVars.app.config["DriveList"]["sorting"]),int(globalVars.app.config["DriveList"]["descending"]))
-		elif(os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"]))):
-			lst=lists.FileList()
-			lst.Initialize(os.path.expandvars(self.app.config["browse"]["startPath"]),int(globalVars.app.config["FileList"]["sorting"]),int(globalVars.app.config["FileList"]["descending"]))
+		if len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1])):
+			self.Navigate(os.path.expandvars(sys.argv[1]),as_new_tab=True)
+		elif self.app.config["browse"]["startPath"]=="":
+			self.Navigate("",as_new_tab=True)
+		elif os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"])):
+			self.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),as_new_tab=True)
 		else:
-			lst=lists.DriveList()
-			lst.Initialize(None,int(globalVars.app.config["DriveList"]["sorting"]),int(globalVars.app.config["DriveList"]["descending"]))
+			self.Navigate("",as_new_tab=True)
+		#end どこを開くか
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
-		self.AddNewTab(lst,True)
+		#end エラー
+	#end makeFirstTab
+
+	def Navigate(self,target,as_new_tab=False):
+		"""指定のパスにナビゲートする。"""
+		self.log.debug("Creating new tab %s..." % target)
+		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
+		creator=views.ViewCreator.ViewCreator(1,hPanel,None)
+		newtab=tabs.navigator.Navigate(target,create_new_tab_info=(self,creator))
+		newtab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
+		self.tabs.append(newtab)
+		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
+		self.ActivateTab(len(self.tabs)-1)
 
 	def ReplaceCurrentTab(self,newtab):
 		"""現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""
@@ -125,13 +122,6 @@ class View(BaseView):
 		self.tabs[i]=newtab
 		self.activeTab=newtab
 	#end ReplaceCurrentTab
-
-	def AppendTab(self,tab,hPanel,active=False):
-		"""タブを追加する。active=True で、追加したタブをその場でアクティブにする。"""
-		self.tabs.append(tab)
-		self.log.debug("A new tab has been added (now %d)" % len(self.tabs))
-		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab"+str(len(self.tabs)),False)
-		if active is True: self.ActivateTab(len(self.tabs)-1)
 
 	def ActivateTab(self,pageNo):
 		"""指定されたインデックスのタブをアクティブにする。"""
@@ -526,7 +516,8 @@ class Events(BaseEvents):
 		for m in globalVars.app.userCommandManagers:
 			if m.isRefHit(selected):
 				if m == globalVars.app.favoriteDirectory:
-					self.parent.activeTab.move(m.get(selected))
+					ret=self.parent.activeTab.Move(m.get(selected))
+					if issubclass(ret.__class__,tabs.base.FalconTabBase): self.parent.ReplaceCurrentTab(ret)
 					#TODO: エラー処理する
 				else:
 					path=m.get(selected)
@@ -565,13 +556,8 @@ class Events(BaseEvents):
 		e=self.parent.activeTab.GetFocusedElement()
 		if not e.__class__==browsableObjects.Folder:
 			return
+		self.parent.Navigate(e.fullpath,as_new_tab=True)
 
-		lst=lists.FileList()
-		ret=lst.Initialize(e.fullpath)
-		if ret!=errorCodes.OK:
-			dialog(_("エラー"),_("開けませんでした。"))
-			return
-		self.parent.AddNewTab(lst,True)
 
 	def CloseTab(self):
 		self.parent.CloseTab(self.parent.activeTab)
@@ -590,13 +576,8 @@ class Events(BaseEvents):
 		#end 途中でやめた
 		val=d.GetValue()
 		d.Destroy()
-		tab=tabs.searchResult.SearchResultTab()
-		hPanel=views.ViewCreator.makePanel(self.parent.hTabCtrl)
-		self.pageCreator=views.ViewCreator.ViewCreator(1,hPanel,None)
-		tab.Initialize(self,self.pageCreator)
-		tab.hListCtrl.SetAcceleratorTable(self.parent.menu.acceleratorTable)
-		self.parent.AppendTab(tab,hPanel,active=True)
-		tab.StartSearch(basePath,out_lst,val['keyword'])
+		target={'action': 'search', 'basePath': basePath, 'out_lst': out_lst, 'keyword': val['keyword']}
+		self.parent.Navigate(target,as_new_tab=True)
 
 	def GoForward(self,stream=False,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
