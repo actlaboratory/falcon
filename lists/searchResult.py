@@ -34,9 +34,9 @@ class SearchResultList(FalconListBase):
 	def Update(self):
 		return self.Initialize(self.searches,self.sortCursor,self.sortDescending,True)
 
-	def Initialize(self,rootPath,searches,keyword,silent=False):
+	def Initialize(self,rootDirectory,searches,keyword,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
-		self.rootPath=rootPath
+		self.rootDirectory=rootDirectory
 		self.searches=searches
 		#ワイルドカード (アスタリスクとクエスチョン)は、正規表現に置き換えしちゃう
 		keyword=re.sub(ESCAPE_PATTERN,r"\\\1",keyword)
@@ -46,7 +46,7 @@ class SearchResultList(FalconListBase):
 		self.sortCursor=int(globalVars.app.config["SearchResultList"]["sorting"])
 		self.sortDescending=int(globalVars.app.config["SearchResultList"]["descending"])
 		self.results=[]
-		if not silent: globalVars.app.say("%sの検索結果 %s から" % (keyword,rootPath,))
+		if not silent: globalVars.app.say("%sの検索結果 %s から" % (keyword,rootDirectory,))
 		self.log.debug("Getting search results for %s..." % keyword)
 		self._initSearch()
 
@@ -69,7 +69,7 @@ class SearchResultList(FalconListBase):
 				break
 			#end EOL
 			if re.search(self.keyword,path):
-				fullpath=os.path.join(self.rootPath,path)
+				fullpath=os.path.join(self.rootDirectory,path)
 				stat=os.stat(fullpath)
 				mod=datetime.datetime.fromtimestamp(stat.st_mtime)
 				creation=datetime.datetime.fromtimestamp(stat.st_ctime)
