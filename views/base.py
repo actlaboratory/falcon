@@ -66,6 +66,7 @@ class BaseMenu(object):
 		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
 		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
 		menu_handle.Append(menuItemsStore.getRef(ref_id),s)
+		self.blockCount[menuItemsStore.getRef(ref_id)]=0
 
 	def ApplyShortcut(self,hFrame):
 		self.acceleratorTable=self.keymap.GetTable(self.keymap_identifier)

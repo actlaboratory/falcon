@@ -295,6 +295,12 @@ class Events(BaseEvents):
 			return
 
 		selected=event.GetId()#メニュー識別しの数値が出る
+
+		#選択された(ショートカットで押された)メニューが無効状態なら何もしない
+		if self.parent.menu.blockCount[selected]>0:
+			event.Skip()
+			return
+
 		if selected==menuItemsStore.getRef("MOVE_BACKWARD"):
 			self.GoBackward()
 			return
@@ -355,8 +361,6 @@ class Events(BaseEvents):
 			self.UpdateFilelist()
 			return
 		if selected==menuItemsStore.getRef("FILE_MAKESHORTCUT"):
-			if not self.parent.activeTab.GetSelectedItemCount()==1:
-				return
 			target=self.parent.activeTab.GetSelectedItems().GetElement(0)		#browsableObjects
 
 			d=views.makeShortcut.Dialog(target.basename)
@@ -367,8 +371,6 @@ class Events(BaseEvents):
 			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
-			if not self.parent.activeTab.IsItemSelected():
-				return
 			d=views.changeAttribute.Dialog()
 			d.Initialize()
 			ret=d.Show()
@@ -389,17 +391,12 @@ class Events(BaseEvents):
 			self.parent.activeTab.FileOperationTest()
 			return
 		if selected==menuItemsStore.getRef("FILE_TRASH"):
-			if self.parent.activeTab.IsItemSelected():
-				self.parent.activeTab.Trash()
+			self.parent.activeTab.Trash()
 			return
 		if selected==menuItemsStore.getRef("FILE_DELETE"):
-			if self.parent.activeTab.IsItemSelected():
-				self.parent.activeTab.Delete()
+			self.parent.activeTab.Delete()
 			return
 		if selected==menuItemsStore.getRef("FILE_VIEW_DETAIL"):
-			if not self.parent.activeTab.IsItemSelected():
-				return
-
 			elem=self.parent.activeTab.listObject.GetElement(self.parent.activeTab.GetFocusedItem())
 			dic={}
 			dic[_("名前")]=elem.basename
@@ -453,25 +450,18 @@ class Events(BaseEvents):
 			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
-			if self.parent.activeTab.IsItemSelected():
-				self.parent.activeTab.ShowProperties()
+			self.parent.activeTab.ShowProperties()
 			return
 		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
-			if self.parent.activeTab.GetFocusedItem()<0:
-				return
 			self.parent.activeTab.DirCalc()
 			return
 		if selected==menuItemsStore.getRef("TOOL_HASHCALC"):
-			if self.parent.activeTab.GetFocusedItem()<0:
-				return
 			d=views.makeHash.Dialog(self.parent.activeTab.GetFocusedElement().fullpath)
 			d.Initialize()
 			d.Show()
 			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("TOOL_ADDPATH"):
-			if not self.parent.activeTab.IsItemSelected:
-				return
 			t=self.parent.activeTab.GetSelectedItems()
 			if item in t:
 				if item.__class__!=browsableObjects.Folder:
@@ -483,10 +473,6 @@ class Events(BaseEvents):
 				dialog(_("パスの追加"),_("追加に失敗しました。"))
 			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DRIVE"):
-			if self.parent.activeTab.listObject.__class__!=lists.DriveList:
-				return
-			if self.parent.activeTab.GetFocusedItem()<0:
-				return
 			ret=deviceCtrl.ejectDrive(self.parent.activeTab.GetFocusedElement().letter)
 			if ret==errorCodes.OK:
 				dialog(_("成功"),_("ドライブは安全に切断されました。"))
@@ -500,8 +486,6 @@ class Events(BaseEvents):
 				dialog(_("エラー"),_("取り外しに失敗しました。")+_("このドライブは使用中の可能性があります。"))
 			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DEVICE"):
-			if self.parent.activeTab.listObject.__class__!=lists.DriveList:
-				return
 			if self.parent.activeTab.GetFocusedItem()<0:
 				return
 			ret=deviceCtrl.EjectDevice(self.parent.activeTab.GetFocusedElement().letter)
@@ -568,17 +552,13 @@ class Events(BaseEvents):
 
 	def OpenNewTab(self):
 		"""選択中のディレクトリを新しいタブで開く"""
-		if not self.parent.activeTab.GetSelectedItemCount()==1:
-			return
 		e=self.parent.activeTab.GetFocusedElement()
 		self.parent.Navigate(e.fullpath,as_new_tab=True)
-
 
 	def CloseTab(self):
 		self.parent.CloseTab(self.parent.activeTab)
 
 	def Search(self):
-		if self.parent.activeTab.listObject.__class__!=lists.FileList: return
 		basePath=self.parent.activeTab.listObject.rootDirectory
 		out_lst=[]#入力画面が出てるときに、もうファイルリスト取得を開始してしまう
 		task=workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList,{'path': basePath, 'out_lst': out_lst,'eol':True})
@@ -596,8 +576,6 @@ class Events(BaseEvents):
 
 	def GoForward(self,stream=False,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
-		if not self.parent.activeTab.GetSelectedItemCount()==1:
-			return
 		p=self.parent
 		st=True if stream else False
 		ret=p.activeTab.GoForward(st,admin)
@@ -625,4 +603,3 @@ class Events(BaseEvents):
 
 	def UpdateFilelist(self,silence=True):
 		ret=self.parent.activeTab.UpdateFilelist(silence=silence)
-
