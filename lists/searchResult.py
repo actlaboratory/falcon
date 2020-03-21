@@ -32,7 +32,7 @@ class SearchResultList(FalconListBase):
 		self.log=logging.getLogger("falcon.searchResultList")
 
 	def Update(self):
-		return self.Initialize(self.searches,self.sortCursor,self.sortDescending,True)
+		return self.Initialize(self.rootDirectory,self.searches,self.keyword,True)
 
 	def Initialize(self,rootDirectory,searches,keyword,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""

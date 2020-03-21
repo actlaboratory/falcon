@@ -26,7 +26,7 @@ class DriveList(FalconListBase):
 		self.log=logging.getLogger("falcon.driveList")
 
 	def Update(self):
-		return self.Initialize(None,self.sortCursor,self.sortDescending,True)
+		return self.Initialize(None,True)
 
 	def Initialize(self,lst,silent=False):
 		"""ドライブ情報を取得し、リストを初期化する。"""

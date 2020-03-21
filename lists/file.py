@@ -28,7 +28,7 @@ class FileList(FalconListBase):
 		self.log=logging.getLogger("falcon.fileList")
 
 	def Update(self):
-		return self.Initialize(self.rootDirectory,self.sortCursor,self.sortDescending,True)
+		return self.Initialize(self.rootDirectory,True)
 
 	def Initialize(self,dir,silent=False):
 		"""ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、errorCodes.OK以外が返る。silentがTrueなら読み上げは行われない。"""
