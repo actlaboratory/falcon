@@ -11,6 +11,7 @@
 import ctypes
 import logging
 import os
+import sys
 import wx
 import errorCodes
 import lists
