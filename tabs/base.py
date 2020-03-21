@@ -416,7 +416,7 @@ class FalconTabBase(object):
 		RegisterMenuCommand(hMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
 
 		self.hListCtrl.PopupMenu(hMenu)
-		hMenu..Destroy()
+		hMenu.Destroy()
 
 	def CloseContextMenu(self,event):
 		selected=event.GetId()							#メニュー識別しの数値
