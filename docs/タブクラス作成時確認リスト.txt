@@ -1,0 +1,28 @@
+# タブクラス作成時確認リスト
+
+タブを新規作成する際などに記載可能または記載が必要な関数の抜け・漏れを確認するためのリストです。
+
+## 必須
+	def Update(self,cursor=""):
+
+## 必須　基本機能系(対応していない場合に記載が必要)
+	def GoBackward(self):
+	def MarkSet(self):
+	def BeginDrag(self,event):
+
+## 任意　ビュー操作系(対応している場合に記載が必要)
+	def GoToTopFile(self):
+	def FileOperationTest(self):
+	def ShowProperties(self):
+
+## 任意　クリップボード操作系(対応する場合に記載が必要)
+	def Copy(self):
+	def Cut(self):
+
+## 任意 ファイル操作系(実装する場合に記載が必要)
+	def Trash(self):
+	def MakeDirectory
+	def MakeShortcut(self,option):
+	def Delete(self):
+	def ChangeAttribute(self,attrib_checks):
+	def OnLabelEditEnd(self,evt):
