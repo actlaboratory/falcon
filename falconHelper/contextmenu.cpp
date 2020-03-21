@@ -1,4 +1,4 @@
-//cl /nologo /EHsc test_contextmenu.cpp
+//cl /nologo /EHsc test_contextmenu.cpp user32.lib ole32.lib shell32.lib
 #define UNICODE
 #include <windows.h>
 #include <shlobj.h>
@@ -6,10 +6,13 @@
 #include <iostream>
 #include <string>
 #include "picojson.h"
+#include "defs.h"
 using namespace std;
 
-IContextMenu* contextMenu;
+//-------------------------------------------------
+//右クリックメニューを生成して、そのメニュー項目をJSONで返すモジュールです。本当は TrackPopupMenu で表示させるのですが、WXの仕様で、できれば独自でメニューを描画したいので、このモジュールがあります。
 
+IContextMenu* contextMenu;
 HMENU contextMenuHandle;
 
 wstring rtrimBackSlash(wstring in){
@@ -26,7 +29,7 @@ wstring w2=in.substr(bs+1);
 return w2;
 }
 
-int getContextMenu(LPCTSTR in, HMENU *out){
+int _getContextMenu(LPCTSTR in, HMENU *out){
 wstring path=rtrimBackSlash(in);
 wstring file=ltrimBackSlash(in);
 if(path==TEXT("")) return 0;
@@ -98,25 +101,16 @@ contextMenu->InvokeCommand(&info);
 return 1;
 }
 
-void processMenu(HMENU menu){
-int numItems=GetMenuItemCount(menu);
-cout << "Menu has " << numItems << " items." << endl;
-picojson::object menu_object;
-picojson::array datalist;
-bool has_submenu;
-UINT cch;
-int ret;
-for(int i=0;i<numItems;++i){
+picojson::object* makePicoJsonObject(HMENU menu, int index){
 MENUITEMINFO menuitem_info;
 memset(&menuitem_info,0,sizeof(MENUITEMINFO));
 menuitem_info.cbSize=sizeof(MENUITEMINFO);
 menuitem_info.fMask=MIIM_STRING;
-ret=GetMenuItemInfo(menu,i,true,&menuitem_info);
+GetMenuItemInfo(menu,index,true,&menuitem_info);
 if(menuitem_info.cch==0){
-picojson::object obj;
-obj.insert(make_pair("type",picojson::value("separator")));
-datalist.push_back(picojson::value(obj));
-continue;
+picojson::object *obj=new picojson::object();
+obj->insert(make_pair("type",picojson::value("separator")));
+return obj;
 }
 int sz=(menuitem_info.cch*2)+2;
 wchar_t *namebuffer=(wchar_t*)malloc(sz);
@@ -126,36 +120,54 @@ menuitem_info2.cbSize=sizeof(MENUITEMINFO);
 menuitem_info2.fMask=MIIM_SUBMENU|MIIM_STRING|MIIM_FTYPE|MIIM_ID;
 menuitem_info2.dwTypeData=namebuffer;
 menuitem_info2.cch=sz;
-ret=GetMenuItemInfo(menu,i,true,&menuitem_info2);
-if(ret==0){
-cout << "error" << endl;
-free(namebuffer);
-continue;
-}
+GetMenuItemInfo(menu,index,true,&menuitem_info2);
 int bufsize=WideCharToMultiByte(CP_UTF8,0,namebuffer,-1,(char *)NULL,0,NULL,NULL);
 char *utf8=(char*)malloc(bufsize+10);
 memset(utf8,0,bufsize+10);
 WideCharToMultiByte(CP_UTF8,0,namebuffer,-1,utf8,bufsize+10,NULL,NULL);
-has_submenu=menuitem_info2.hSubMenu!=NULL;
-picojson::object obj;
-obj.insert(make_pair("type",picojson::value("menuitem")));
-obj.insert(make_pair("name",picojson::value(utf8)));
-obj.insert(make_pair("has_submenu",picojson::value(static_cast<bool>(has_submenu))));
-datalist.push_back(picojson::value(obj));
+picojson::object *obj=new picojson::object();
+obj->insert(make_pair("type",picojson::value("menuitem")));
+obj->insert(make_pair("name",picojson::value(utf8)));
+obj->insert(make_pair("id",picojson::value(static_cast<double>(menuitem_info2.wID))));
+if(menuitem_info2.hSubMenu!=NULL){
+picojson::array submenuarray;
+int numItems=GetMenuItemCount(menuitem_info2.hSubMenu);
+for(int i=0;i<numItems;i++){
+picojson::object *submenuobj=makePicoJsonObject(menuitem_info2.hSubMenu,i);
+submenuarray.push_back(picojson::value(*submenuobj));
+delete(submenuobj);
+}
+obj->insert(make_pair("submenu",picojson::value(submenuarray)));
+}
 free(namebuffer);
 free(utf8);
-}
-menu_object.insert(make_pair("menus",picojson::value(datalist)));
-cout << picojson::value(menu_object) << endl;
+return obj;
 }
 
-int main(){
-wstring path=L"D:\\log.txt";
+string processMenu(HMENU menu){
+int numItems=GetMenuItemCount(menu);
+picojson::object menu_object;
+picojson::array datalist;
+bool has_submenu;
+UINT cch;
+int ret;
+for(int i=0;i<numItems;++i){
+picojson::object *obj=makePicoJsonObject(menu,i);
+datalist.push_back(picojson::value(*obj));
+delete(obj);
+}
+menu_object.insert(make_pair("menus",picojson::value(datalist)));
+picojson::value v(menu_object);
+return v.serialize();
+}
+
+falcon_helper_funcdef char* getContextMenu(LPCTSTR path){
 HMENU menu;
-int ret=getContextMenu(path.c_str(),&menu);
-cout << "getContextMenu ret " << ret << endl;
-processMenu(menu);
-ret=destroyContextMenu();
-cout << "destroyContextMenu ret " << ret << endl;
-return 0;
+int ret=_getContextMenu(path,&menu);
+string menu_json=processMenu(menu);
+int sz=menu_json.size()+1;
+char *ptr=(char*)malloc(sz);
+memset(ptr,0,sz);
+strcpy(ptr,menu_json.c_str());
+return ptr;
 }
