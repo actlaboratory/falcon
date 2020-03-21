@@ -32,7 +32,7 @@ class FontManager():
 			with open(constants.SETTING_FILE_NAME, "w") as f: self.config.write(f)
 
 	# フォント設定ダイアログを表示
-	# 引数に親オブジェクトを指定
+	# 引数に親ウィンドウを指定
 	def ShowSettingDialog(self,parent):
 		# FontDataを生成し、設定を行う
 		fontData=wx.FontData()
