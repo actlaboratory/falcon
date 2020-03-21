@@ -87,7 +87,7 @@ CoUninitialize();
 return 1;
 }
 
-int execContextMenuItem(int nId){
+falcon_helper_funcdef int execContextMenuItem(int nId){
 if(!contextMenu) return 0;
 CMINVOKECOMMANDINFO info;
 info.cbSize=sizeof(CMINVOKECOMMANDINFO);
@@ -165,6 +165,7 @@ falcon_helper_funcdef char* getContextMenu(LPCTSTR path){
 HMENU menu;
 int ret=_getContextMenu(path,&menu);
 string menu_json=processMenu(menu);
+contextMenuHandle=menu;
 int sz=menu_json.size()+1;
 char *ptr=(char*)malloc(sz);
 memset(ptr,0,sz);
