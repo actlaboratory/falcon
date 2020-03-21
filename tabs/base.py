@@ -196,7 +196,7 @@ class FalconTabBase(object):
 	def SortCycleAd(self):
 		"""昇順と降順を交互に切り替える。"""
 		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-		self._updateEnv()
+		self._updateConfig()
 		self.listObject.ApplySort()
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
@@ -213,19 +213,16 @@ class FalconTabBase(object):
 		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
 		m.Destroy()
 		self.listObject.SetSortCursor(item)
-		self._updateEnv()
+		self._updateConfig()
 		self.listObject.ApplySort()
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
-	def _updateEnv(self):
-		"""ソートの環境変数を更新する。"""
+	def _updateConfig(self):
+		"""ソートの設定をconfigに反映する。"""
 		s=self.listObject.__class__.__name__
-		print(s)
 		globalVars.app.config[s]["sorting"]=self.listObject.GetSortCursor()
 		globalVars.app.config[s]["descending"]=int(self.listObject.GetSortDescending())
-		self.environment[s+"_sorting"]=self.listObject.GetSortCursor()
-		self.environment[s+"_descending"]=self.listObject.GetSortDescending()
 
 	def col_resize(self,event):
 		no=event.GetColumn()
@@ -237,14 +234,14 @@ class FalconTabBase(object):
 		self.listObject.SetSortCursor(no)
 		if self.listObject.GetSortCursor()==no:
 			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-		self._updateEnv()
+		self._updateConfig()
 		self.listObject.ApplySort()
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
 	def SortNext(self):
 		self.listObject.SetSortCursor()
-		self._updateEnv()
+		self._updateConfig()
 		self.listObject.ApplySort()
 		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
