@@ -21,7 +21,7 @@ import views.ViewCreator
 from . import fileList,driveList,streamList,searchResult
 from simpleDialog import dialog
 
-def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
+def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environment={}):
 	"""
 		指定したパスにアクセスする。現在のタブと違う種類のタブが必要とされた場合に、新しいタブを返す。今のタブを再利用した場合は、Trueを返す。失敗時にはエラーコードを返す。
 		パスに空の文字を指定すると、ドライブリストへ行く。
@@ -35,7 +35,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
 	targetItemIndex=-1
 	if isinstance(target,dict):
 		if target['action']=='search':
-			newtab=searchResult.SearchResultTab()
+			newtab=searchResult.SearchResultTab(environment)
 			newtab.Initialize(parent,creator)
 			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'])
 			return newtab
@@ -46,7 +46,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
 		if isinstance(previous_tab,driveList.DriveListTab):#再利用
 			newtab=previous_tab
 		else:
-			newtab=driveList.DriveListTab()
+			newtab=driveList.DriveListTab(environment)
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 		newtab.Update(cursor)
@@ -62,7 +62,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
 		if isinstance(previous_tab,streamList.StreamListTab):#再利用
 			newtab=previous_tab
 		else:
-			newtab=streamList.StreamListTab()
+			newtab=streamList.StreamListTab(environment)
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 		newtab.Update(lst)
@@ -81,7 +81,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None):
 		if isinstance(previous_tab,fileList.FileListTab):#再利用
 			newtab=previous_tab
 		else:
-			newtab=fileList.FileListTab()
+			newtab=fileList.FileListTab(environment)
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 	newtab.Update(lst)

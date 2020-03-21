@@ -207,6 +207,7 @@ class FileListTab(base.FalconTabBase):
 			focus_index+=1
 		#end 検索
 		self.hListCtrl.Focus(focus_index)
+		self.hListCtrl.Select(focus_index)
 
 	def Delete(self):
 		target=[]

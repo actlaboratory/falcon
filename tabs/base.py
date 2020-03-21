@@ -23,16 +23,59 @@ class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
 
 	blockMenuList=[]
+	selectItemMenuConditions=[]
+	selectItemMenuConditions.append([])
+	selectItemMenuConditions[0].extend([
+		"FILE_RENAME",
+		"FILE_CHANGEATTRIBUTE",
+		"FILE_MAKESHORTCUT",
+		"FILE_TRASH",
+		"FILE_DELETE",
+		"FILE_VIEW_DETAIL",
+		"FILE_SHOWPROPERTIES",
+		"EDIT_COPY",
+		"EDIT_CUT",
+		"EDIT_NAMECOPY",
+		"EDIT_FULLPATHCOPY",
+		"MOVE_FORWARD",
+		"MOVE_FORWARD_ADMIN",
+		"MOVE_FORWARD_TAB",
+		"MOVE_FORWARD_STREAM",
+		"TOOL_DIRCALC",
+		"TOOL_HASHCALC",
+		"TOOL_ADDPATH",
+		"TOOL_EJECT_DRIVE",
+		"TOOL_EJECT_DEVICE"
+	])
+	selectItemMenuConditions.append([])
+	selectItemMenuConditions.append([])
+	selectItemMenuConditions[2].extend([
+		"FILE_RENAME",
+		"FILE_MAKESHORTCUT",
+		"FILE_VIEW_DETAIL",
+		"FILE_SHOWPROPERTIES",
+		"MOVE_FORWARD",
+		"MOVE_FORWARD_ADMIN",
+		"MOVE_FORWARD_TAB",
+		"MOVE_FORWARD_STREAM",
+		"TOOL_DIRCALC",
+		"TOOL_HASHCALC",
+		"TOOL_EJECT_DRIVE",
+		"TOOL_EJECT_DEVICE"
+	])
 
-	def __init__(self):
+
+	def __init__(self,environment):
 		self.task=None
 		self.colums=[]#タブに表示されるカラムの一覧。外からは読み取りのみ。
 		self.listObject=None#リストの中身を保持している listObjects のうちのどれかのオブジェクト・インスタンス
 		self.type=None
 		self.isRenaming=False
 		globalVars.app.config.add_section(self.__class__.__name__)
-		self.environment={}		#このタブ特有の環境変数
-		self.environment["markedPlace"]=None	#マークフォルダ
+		self.environment=environment		#このタブ特有の環境変数
+		if self.environment=={}:
+			self.environment["markedPlace"]=None		#マークフォルダ
+			self.environment["selectedItemCount"]=None	#選択中のアイテム数。0or1or2=2以上。
 
 	def SetEnvironment(self,newEnv):
 		"""タブの引継ぎなどの際にenvironmentの内容をコピーするために利用"""
@@ -58,6 +101,7 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
 		self.hListCtrl.Bind(wx.EVT_LIST_END_LABEL_EDIT,self.OnLabelEditEnd)
+		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED,self.ItemSelected)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
 		self.hListCtrl.Bind(wx.EVT_KEY_DOWN,self.KeyDown)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_DRAG,self.BeginDrag)
@@ -130,6 +174,7 @@ class FalconTabBase(object):
 		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
 		self.log.debug("Updating list control...")
 		self._cancelBackgroundTasks()
+		self.ItemSelected()		#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってる場合があるため必要。
 		t=misc.Timer()
 		for elem in content:
 			self.hListCtrl.Append(elem)
@@ -295,7 +340,7 @@ class FalconTabBase(object):
 
 	def Move(self,path,cursor=""):
 		"""指定の場所へ移動する。"""
-		r=navigator.Navigate(path,cursor,previous_tab=self)
+		r=navigator.Navigate(path,cursor,previous_tab=self,environment=self.environment)
 		return errorCodes.OK if r is self else r
 
 	def GoForward(self,stream,admin=False):
@@ -345,3 +390,15 @@ class FalconTabBase(object):
 
 	def IsMarked(self):
 		return self.environment["markedPlace"]!=None
+
+	def ItemSelected(self,event=None):
+		"""リストビューのアイテムの選択・選択解除の発生時に呼ばれる"""
+		c=self.GetSelectedItemCount()
+		if c>2:c=2
+		if self.environment["selectedItemCount"]!=c:
+			print(str(self.environment["selectedItemCount"])+"=>"+str(c))
+			if self.environment["selectedItemCount"]!=None:
+				globalVars.app.hMainView.menu.UnBlock(self.selectItemMenuConditions[self.environment["selectedItemCount"]])
+			globalVars.app.hMainView.menu.Block(self.selectItemMenuConditions[c])
+			self.environment["selectedItemCount"]=c
+
