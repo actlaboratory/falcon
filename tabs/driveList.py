@@ -36,7 +36,6 @@ class DriveListTab(base.FalconTabBase):
 		"FILE_MKDIR",
 		"EDIT_CUT",
 		"EDIT_SEARCH",
-		"MOVE_FORWARD_STREAM",
 		"MOVE_BACKWARD",
 		"MOVE_TOPFILE",
 		"TOOL_DIRCALC",
