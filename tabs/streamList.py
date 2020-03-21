@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-#Falcon main list tab
+#Falcon stream list tab
 #Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
@@ -29,6 +29,20 @@ from . import base
 
 class StreamListTab(base.FalconTabBase):
 	"""副ストリームリストが表示されているタブ。"""
+
+	blockMenuList=[
+		"FILE_CHANGEATTRIBUTE",
+		"FILE_MKDIR",
+		"EDIT_SEARCH",
+		"MOVE_FORWARD_TAB",
+		"MOVE_FORWARD_STREAM",
+		"MOVE_TOPFILE",
+		"TOOL_DIRCALC",
+		"TOOL_HASHCALC",
+		"TOOL_ADDPATH",
+		"TOOL_EJECT_DRIVE",
+		"TOOL_EJECT_DEVICE"
+	]
 
 	def Update(self,lst,cursor=-1):
 		"""指定された要素をタブに適用する。"""

@@ -21,6 +21,9 @@ from . import navigator
 
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
+
+	blockMenuList=[]
+
 	def __init__(self):
 		self.task=None
 		self.colums=[]#タブに表示されるカラムの一覧。外からは読み取りのみ。
@@ -339,3 +342,6 @@ class FalconTabBase(object):
 	def OnLabelEditStart(self,evt):
 		self.isRenaming=True
 		self.parent.SetShortcutEnabled(False)
+
+	def IsMarked(self):
+		return self.environment["markedPlace"]!=None

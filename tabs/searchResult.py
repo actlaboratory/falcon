@@ -27,6 +27,17 @@ from . import fileList
 
 class SearchResultTab(fileList.FileListTab):
 	"""検索結果が表示されているタブ。"""
+
+	blockMenuList=[
+		"FILE_CHANGEATTRIBUTE",
+		"EDIT_SEARCH",
+		"MOVE_TOPFILE",
+		"TOOL_ADDPATH",
+		"TOOL_EJECT_DRIVE",
+		"TOOL_EJECT_DEVICE"
+
+	]
+
 	def StartSearch(self,rootPath,searches,keyword):
 		self.listObject=lists.SearchResultList()
 		self.listObject.Initialize(rootPath,searches,keyword)

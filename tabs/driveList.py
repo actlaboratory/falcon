@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-#Falcon main list tab
+#Falcon Drive List tab
 #Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
@@ -28,6 +28,21 @@ from . import base
 
 class DriveListTab(base.FalconTabBase):
 	"""ドライブリストが表示されているタブ。"""
+
+	blockMenuList=[
+		"FILE_CHANGEATTRIBUTE",
+		"FILE_TRASH",
+		"FILE_DELETE",
+		"FILE_MKDIR",
+		"EDIT_CUT",
+		"EDIT_SEARCH",
+		"MOVE_FORWARD_STREAM",
+		"MOVE_BACKWARD",
+		"MOVE_TOPFILE",
+		"TOOL_DIRCALC",
+		"TOOL_HASHCALC",
+		"TOOL_ADDPATH"
+	]
 
 	def Update(self,cursor=""):
 		"""指定された要素をタブに適用する。"""

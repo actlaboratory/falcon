@@ -17,6 +17,7 @@ import globalVars
 
 class BaseView(object):
 	"""falconのビューの基本クラス。"""
+
 	def __init__(self):
 		self.SetShortcutEnable=True
 
@@ -47,6 +48,9 @@ class BaseView(object):
 	#end SetShortcutEnabled
 
 class BaseMenu(object):
+	def __init__(self):
+		self.blockCount={}
+
 	def InitShortcut(self,identifier):
 		self.keymap=keymap.KeymapHandler(defaultKeymap.defaultKeymap)
 		self.keymap_identifier=identifier
@@ -65,6 +69,36 @@ class BaseMenu(object):
 
 	def ApplyShortcut(self,hFrame):
 		self.acceleratorTable=self.keymap.GetTable(self.keymap_identifier)
+
+	def Block(self,ref):
+		"""
+			メニュー項目の利用をブロックし、無効状態にする
+			refはリスト
+		"""
+		for i in ref:
+			try:
+				self.blockCount[menuItemsStore.getRef(i)]+=1
+			except KeyError:
+				self.blockCount[menuItemsStore.getRef(i)]=1
+
+			#新規にブロック
+			if self.blockCount[menuItemsStore.getRef(i)]==1:
+				self.hMenuBar.Enable(menuItemsStore.getRef(i),False)
+
+	def UnBlock(self,ref):
+		"""
+			メニュー項目のブロック自由が消滅したので、ブロックカウントを減らす。0になったら有効化する
+			refはリスト
+		"""
+		for i in ref:
+			try:
+				self.blockCount[menuItemsStore.getRef(i)]-=1
+			except KeyError:
+				self.blockCount[menuItemsStore.getRef(i)]=0
+
+			#ブロック解除
+			if self.blockCount[menuItemsStore.getRef(i)]==0:
+				self.hMenuBar.Enable(menuItemsStore.getRef(i),True)
 
 class BaseEvents(object):
 	"""イベント処理のデフォルトの動作をいくつか定義してあります。"""

@@ -123,12 +123,24 @@ class View(BaseView):
 		#environmentの内容を引き継ぐ
 		newtab.SetEnvironment(self.activeTab.environment)
 
+		#メニューのブロック情報を変更
+		self.menu.Block(newtab.blockMenuList)
+		self.menu.UnBlock(self.activeTab.blockMenuList)
+		self.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),newtab.IsMarked())
+
 		self.tabs[i]=newtab
 		self.activeTab=newtab
 	#end ReplaceCurrentTab
 
 	def ActivateTab(self,pageNo):
 		"""指定されたインデックスのタブをアクティブにする。"""
+
+		#メニューのブロック状態を変更
+		if self.activeTab:
+			self.menu.UnBlock(self.activeTab.blockMenuList)
+		self.menu.Block(self.tabs[pageNo].blockMenuList)
+		self.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),self.tabs[pageNo].IsMarked())
+
 		self.activeTab=self.tabs[pageNo]
 		self.hTabCtrl.SetSelection(pageNo)
 		self.activeTab.hListCtrl.SetFocus()
@@ -181,6 +193,9 @@ class View(BaseView):
 
 
 class Menu(BaseMenu):
+	def __init__(self):
+		super().__init__()
+
 	def Apply(self,target,event):
 		"""指定されたウィンドウに、メニューを適用する。"""
 
@@ -209,7 +224,7 @@ class Menu(BaseMenu):
 		#編集メニューの中身
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_COPY",_("コピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_CUT",_("切り取り"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_NAMECOPY",_("ファイル名をコピー"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_NAMECOPY",_("名前をコピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SELECTALL",_("全て選択"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTNEXT",_("次の並び順"))
@@ -271,7 +286,6 @@ class Menu(BaseMenu):
 		self.hDisableSubMenu=wx.Menu()
 		self.hDisableMenuBar.Append(self.hDisableSubMenu,_("現在メニューは操作できません"))
 
-
 class Events(BaseEvents):
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
@@ -319,6 +333,7 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_MARKSET"):
 			self.parent.activeTab.MarkSet()
+			self.parent.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),True)
 			return
 		if selected==menuItemsStore.getRef("MOVE_MARK"):
 			self.parent.activeTab.GoToMark()
@@ -556,8 +571,6 @@ class Events(BaseEvents):
 		if not self.parent.activeTab.GetSelectedItemCount()==1:
 			return
 		e=self.parent.activeTab.GetFocusedElement()
-		if not e.__class__==browsableObjects.Folder:
-			return
 		self.parent.Navigate(e.fullpath,as_new_tab=True)
 
 

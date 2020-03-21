@@ -31,6 +31,11 @@ from . import base
 class FileListTab(base.FalconTabBase):
 	"""ファイル/フォルダリストが表示されているタブ。"""
 
+	blockMenuList=[
+		"TOOL_EJECT_DRIVE",
+		"TOOL_EJECT_DEVICE"
+	]
+
 	def Update(self,lst,cursor=-1):
 		"""指定された要素をタブに適用する。"""
 		self._cancelBackgroundTasks()
