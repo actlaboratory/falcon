@@ -105,6 +105,8 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
 		self.hListCtrl.Bind(wx.EVT_KEY_DOWN,self.KeyDown)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_DRAG,self.BeginDrag)
+		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OpenContextMenu)
+		self.hListCtrl.Bind(wx.EVT_MENU, self.CloseContextMenu)
 
 	def GetListColumns(self):
 		return self.columns
@@ -396,9 +398,31 @@ class FalconTabBase(object):
 		c=self.GetSelectedItemCount()
 		if c>2:c=2
 		if self.environment["selectedItemCount"]!=c:
-			print(str(self.environment["selectedItemCount"])+"=>"+str(c))
+			#print(str(self.environment["selectedItemCount"])+"=>"+str(c))
 			if self.environment["selectedItemCount"]!=None:
 				globalVars.app.hMainView.menu.UnBlock(self.selectItemMenuConditions[self.environment["selectedItemCount"]])
 			globalVars.app.hMainView.menu.Block(self.selectItemMenuConditions[c])
 			self.environment["selectedItemCount"]=c
+
+	def OpenContextMenu(self,event):
+		RegisterMenuCommand=globalVars.app.hMainView.menu.RegisterMenuCommand
+
+		targetPath=self.listObject.GetElement(self.hListCtrl.HitTest(event.GetPoint())[0]).fullpath
+
+		hMenu = wx.Menu()
+		RegisterMenuCommand(hMenu,"EDIT_COPY",_("コピー"))
+		RegisterMenuCommand(hMenu,"EDIT_CUT",_("切り取り"))
+		RegisterMenuCommand(hMenu,"EDIT_NAMECOPY",_("名前をコピー"))
+		RegisterMenuCommand(hMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
+
+		self.hListCtrl.PopupMenu(hMenu)
+		hMenu..Destroy()
+
+	def CloseContextMenu(self,event):
+		selected=event.GetId()							#メニュー識別しの数値
+
+		if selected>=5000:
+			event.Skip()
+		else:
+			pass
 
