@@ -274,19 +274,6 @@ class StreamListTab(base.FalconTabBase):
 		self.hListCtrl.Focus(self.listObject.GetTopFileIndex())
 		globalVars.app.say(_("先頭ファイル"))
 
-	def MarkSet(self):
-		"""現在開いている場所をマークする"""
-		globalVars.app.say(_("マーク設定"))
-		self.markedPlace=self.listObject.rootDirectory
-		self.log.debug("markset at \""+self.markedPlace + "\"")
-
-	def GoToMark(self):
-		ret=self.move(self.markedPlace)
-		if ret!=errorCodes.OK:
-			return ret
-		globalVars.app.say(_("マーク位置へ移動"))
-		return errorCodes.OK
-
 	def DirCalc(self):
 		lst=[]
 		for i in self.GetSelectedItems(index_mode=True):

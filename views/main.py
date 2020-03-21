@@ -119,6 +119,10 @@ class View(BaseView):
 			if elem is self.activeTab: break
 			i+=1
 		#end インデックス調べる
+
+		#environmentの内容を引き継ぐ
+		newtab.SetEnvironment(self.activeTab.environment)
+
 		self.tabs[i]=newtab
 		self.activeTab=newtab
 	#end ReplaceCurrentTab
@@ -319,8 +323,6 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("MOVE_MARK"):
 			self.parent.activeTab.GoToMark()
 			return
-
-
 
 		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
 			self.SortNext()

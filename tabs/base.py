@@ -29,7 +29,11 @@ class FalconTabBase(object):
 		self.isRenaming=False
 		globalVars.app.config.add_section(self.__class__.__name__)
 		self.environment={}		#このタブ特有の環境変数
-		self.markedPlace=None	#マークフォルダ
+		self.environment["markedPlace"]=None	#マークフォルダ
+
+	def SetEnvironment(self,newEnv):
+		"""タブの引継ぎなどの際にenvironmentの内容をコピーするために利用"""
+		self.environment=newEnv
 
 	def Initialize(self,parent,creator,existing_listctrl=None):
 		"""タブを初期化する。親ウィンドウの上にリストビューを作るだけ。existing_listctrl にリストコントロールがある場合、そのリストコントロールを再利用する。"""
@@ -135,10 +139,6 @@ class FalconTabBase(object):
 
 	def EnterItem(self,event):
 		"""アイテムの上でエンターを押したときに実行される。本当はビューのショートカットキーにしたかったんだけど、エンターの入力だけはこっちでとらないとできなかった。"""
-		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
-
-	def MarkSet():
-		"""現在開いている場所をマークする"""
 		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
 
 	def KeyDown(self,event):
@@ -290,3 +290,18 @@ class FalconTabBase(object):
 			target=os.path.split(self.listObject.rootDirectory)[0]
 			cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
 		return self.Move(target,cursorTarget)
+
+	def MarkSet(self):
+		"""現在開いている場所をマークする"""
+		globalVars.app.say(_("マーク設定"))
+		self.environment["markedPlace"]=self.listObject.rootDirectory
+		self.log.debug("markset at \""+self.environment["markedPlace"] + "\"")
+
+	def GoToMark(self):
+		"""マークした場所へ移動する"""
+		ret=self.Move(self.environment["markedPlace"])
+		if ret!=errorCodes.OK:
+			return ret
+		globalVars.app.say(_("マーク位置へ移動"))
+		return errorCodes.OK
+
