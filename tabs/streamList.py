@@ -8,19 +8,14 @@
 副ストリームのリストです。
 """
 
-import sys
 import os
-import views.ViewCreator
 import gettext
 import wx
-import win32api
 import clipboard
-import clipboardHelper
 import errorCodes
 import lists
 import browsableObjects
 import globalVars
-import constants
 import fileOperator
 import misc
 import workerThreads
@@ -46,17 +41,6 @@ class StreamListTab(base.FalconTabBase):
 		if cursor>0:
 			self.hListCtrl.Select(cursor)
 
-	def GoForward(self,stream,admin=False):
-		"""選択中の服ストリーム項目を実行する。"""
-		index=self.GetFocusedItem()
-		elem=self.listObject.GetElement(index)
-		misc.RunFile(elem.fullpath,admin)
-	#end GoForward
-
-	def OnLabelEditStart(self,evt):
-		self.isRenaming=True
-		self.parent.SetShortcutEnabled(False)
-
 	def OnLabelEditEnd(self,evt):
 		self.isRenaming=False
 		self.parent.SetShortcutEnabled(True)
@@ -70,10 +54,7 @@ class StreamListTab(base.FalconTabBase):
 		elif isinstance(f,browsableObjects.File):
 			newName=f.directory+"\\"+e.GetLineText(0)
 			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.FILE)
-		else:
-			newName=e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.VOLUME_LABEL)
-		#end フォルダかファイルかドライブか
+		#end フォルダかファイルか
 		if error:
 			dialog(_("エラー"),error)
 			evt.Veto()
@@ -87,54 +68,8 @@ class StreamListTab(base.FalconTabBase):
 			return
 		#end fail
 		f.basename=e.GetLineText(0)
-		if isinstance(f,browsableObjects.File):
-			f.fullpath=f.directory+"\\"+f.basename
-		if isinstance(f,browsableObjects.Stream):
-			f.fullpath=f.file+f.basename
+		f.fullpath=f.file+f.basename
 	#end onLabelEditEnd
-
-	def ChangeAttribute(self,attrib_checks):
-		lst=self.GetSelectedItems()
-		inst={"operation": "changeAttribute"}
-		f=[]
-		t=[]
-		for elem in lst:
-			attrib=elem.GetNewAttributes(attrib_checks)
-			if attrib!=-1:#変更の必要があるので追加
-				f.append(elem.fullpath)
-				t.append(attrib)
-			#end 追加
-		#end 選択中のファイルの数だけ
-		inst['from']=f
-		inst['to_attrib']=t#to じゃないのは、日時変更に対応していたときのなごり
-		op=fileOperator.FileOperator(inst)
-		if len(t)==0:
-			dialog(_("情報"),_("変更が必要な俗世はありませんでした。"))
-			return
-		#end なにも変更しなくてよかった
-		ret=op.Execute()
-		if op.CheckSucceeded()==0:
-			dialog(_("エラー"),_("属性が変更できません。"))
-
-	def StartRename(self):
-		"""リネームを開始する。"""
-		index=self.GetFocusedItem()
-		self.hListCtrl.EditLabel(index)
-
-	def MakeDirectory(self,newdir):
-		dir=self.listObject.rootDirectory
-		if fileSystemManager.ValidationObjectName(dir+"\\"+newdir,fileSystemManager.pathTypes.DIRECTORY):
-			dialog(_("エラー"),fileSystemManager.ValidationObjectName(newdir))
-			return
-		dest=os.path.join(dir,newdir)
-		inst={"operation": "mkdir", "target": [dest]}
-		op=fileOperator.FileOperator(inst)
-		ret=op.Execute()
-		if op.CheckSucceeded()==0:
-			dialog(_("エラー"),_("フォルダを作成できません。"))
-			return
-		#end error
-		self.UpdateFilelist(silence=True,cursorTargetName=newdir)
 
 	def MakeShortcut(self,option):
 		prm=""
@@ -266,62 +201,8 @@ class StreamListTab(base.FalconTabBase):
 		c.SetFileList(self.GetSelectedItems().GetItemPaths())
 		c.SendToClipboard()
 
-	def GoToTopFile(self):
-		if not isinstance(self.listObject,list.FileList):
-			dialog(_("エラー"),_("ここではこの機能を利用できません。"))
-			return
-		#end ファイルリストのときしか通さない
-		self.hListCtrl.Focus(self.listObject.GetTopFileIndex())
-		globalVars.app.say(_("先頭ファイル"))
-
-	def DirCalc(self):
-		lst=[]
-		for i in self.GetSelectedItems(index_mode=True):
-			elem=self.listObject.GetElement(i)
-			if elem.__class__.__name__=="Folder":
-				self.hListCtrl.SetItem(index=i,column=1,label=_("<計算中>"))
-				lst.append((i,elem.fullpath))
-			#end フォルダだったら
-		#end for
-		param={'lst': lst, 'callback': self._dirCalc_receive}
-		self.background_tasks.append(workerThreads.RegisterTask(workerThreadTasks.DirCalc,param))
-
-	def _dirCalc_receive(self,results,taskState):
-		"""DirCalc の結果を受ける。"""
-		for elem in results:
-			self.listObject.GetElement(elem[0]).size=elem[1]
-			if elem[1]>=0:
-				self.hListCtrl.SetItem(index=elem[0],column=1,label=misc.ConvertBytesTo(elem[1],misc.UNIT_AUTO,True))
-			else:
-				self.hListCtrl.SetItem(index=elem[0],column=1,label="<取得失敗>")
-		#end for
-		self.background_tasks.remove(taskState)
-
-	def OnSpaceKey(self):
-		"""spaceキー押下時、アイテムをチェック/チェック解除する"""
-		#item=self.hListCtrl.GetItem(self.GetFocusedItem())
-		#item.SetBackgroundColour(wx.Colour("#ff00ff"))
-		#self.hListCtrl.RefreshItem(self.GetFocusedItem())
-		if self.hListCtrl.GetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED)==wx.LIST_STATE_DROPHILITED:
-			#チェック解除
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_DROPHILITED)
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_SELECTED)
-
-			globalVars.app.say(_("チェック解除"))
-			self.hListCtrl.Update()
-		else:
-			#チェック
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
-			globalVars.app.say(_("チェック"))
-		#カーソルを１つ下へ移動
-		self.hListCtrl.Focus(self.GetFocusedItem()+1)
-		self.hListCtrl.Select(self.GetFocusedItem())
-
 	def BeginDrag(self,event):
-		data=wx.FileDataObject()
-		for f in self.GetSelectedItems():
-			data.AddFile(f.fullpath)
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
-		obj=wx.DropSource(data,globalVars.app.hMainView.hFrame)
-		obj.DoDragDrop()
-
+	def MarkSet(self):
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない

@@ -121,7 +121,7 @@ class FalconTabBase(object):
 			w=100 if w=="" else int(w)
 			self.hListCtrl.SetColumnWidth(i,w)
 		#end カラム幅を設定
-#end SetListColumns
+	#end SetListColumns
 
 	def UpdateListContent(self,content):
 		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
@@ -133,13 +133,26 @@ class FalconTabBase(object):
 		#end 追加
 		self.log.debug("List control updated in %f seconds." % t.elapsed)
 
-	def TriggerAction(self, action,admin=False):
-		"""タブの指定要素に対してアクションを実行する。成功した場合は、errorCodes.OK を返し、失敗した場合は、その他のエラーコードを返す。admin=True で、管理者として実行する。"""
+	def MakeDirectory(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
-	def EnterItem(self,event):
-		"""アイテムの上でエンターを押したときに実行される。本当はビューのショートカットキーにしたかったんだけど、エンターの入力だけはこっちでとらないとできなかった。"""
-		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
+	def Trash(self):
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
+	def Delete(self):
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
+	def ChangeAttribute(self,attrib_checks):
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
+	def Copy(self):
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
+	def Cut(self):
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
+	def GoToTopFile(self):
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
 	def KeyDown(self,event):
 		"""キーが押されたらここにくる。SpaceがEnterと同一視されるので対策する。"""
@@ -149,13 +162,32 @@ class FalconTabBase(object):
 			self.OnSpaceKey()
 
 	def OnSpaceKey(self):
-		"""Spaceキーが押されたらこれが呼ばれる。"""
-		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
+		"""spaceキー押下時、アイテムをチェック/チェック解除する"""
+		#item=self.hListCtrl.GetItem(self.GetFocusedItem())
+		if self.hListCtrl.GetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED)==wx.LIST_STATE_DROPHILITED:
+			#チェック解除
+			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_DROPHILITED)
+			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_SELECTED)
 
+			globalVars.app.say(_("チェック解除"))
+			self.hListCtrl.Update()
+		else:
+			#チェック
+			self.hListCtrl.SetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
+			#item.SetBackgroundColour(wx.Colour("#ff00ff"))
+			#self.hListCtrl.RefreshItem(self.GetFocusedItem())
+			globalVars.app.say(_("チェック"))
+		#カーソルを１つ下へ移動
+		self.hListCtrl.Focus(self.GetFocusedItem()+1)
+		self.hListCtrl.Select(self.GetFocusedItem())
 
 	def BeginDrag(self,event):
-		"""ドラッグ操作が開始された"""
-		return errorCodes.NOT_SUPPORTED#オーバーライドしてね
+		data=wx.FileDataObject()
+		for f in self.GetSelectedItems():
+			data.AddFile(f.fullpath)
+
+		obj=wx.DropSource(data,globalVars.app.hMainView.hFrame)
+		obj.DoDragDrop()
 
 	def SelectAll(self):
 		globalVars.app.say(_("全て選択"))
@@ -179,8 +211,8 @@ class FalconTabBase(object):
 			c.set_unicode_text(t)
 
 	def UpdateFilelist(self,silence=False,cursorTargetName=""):
-		"""同じフォルダで、ファイルとフォルダ情報を最新に更新する。"""
-		if silence==True:
+		"""同じリストで、内容を再取得して更新する。"""
+		if silence==False:
 			globalVars.app.say(_("更新"))
 		if cursorTargetName=="":
 			item=self.listObject.GetElement(self.GetFocusedItem())
@@ -264,21 +296,16 @@ class FalconTabBase(object):
 		return errorCodes.OK if r is self else r
 
 	def GoForward(self,stream,admin=False):
-		"""選択中のフォルダに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
+		"""選択中のフォルダやドライブに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
 		elem=self.listObject.GetElement(index)
-		if isinstance(elem,browsableObjects.Folder):#このフォルダを開く
-			#TODO: 管理者モードだったら、別のfalconが昇格して開くように
+		if (not stream) and type(elem)==browsableObjects.File:#このファイルを開く
+			misc.RunFile(elem.fullpath,admin)
+			return
+		else:
+			#TODO: 管理者権限が要求され、自身が管理者権限を有していないなら、別のfalconが昇格して開くように
 			return self.Move(elem.fullpath)
-		#end フォルダ開く
-		elif isinstance(elem,browsableObjects.File):#このファイルを開く
-			if not stream:
-				misc.RunFile(elem.fullpath,admin)
-				return
-			else:
-				return self.Move(elem.fullpath)
-		#end ファイルを開く
-		#end なにを開くか
+		#end ファイルを開くか移動するか
 	#end GoForward
 
 	def GoBackward(self):
@@ -305,3 +332,10 @@ class FalconTabBase(object):
 		globalVars.app.say(_("マーク位置へ移動"))
 		return errorCodes.OK
 
+	def StartRename(self):
+		index=self.GetFocusedItem()
+		self.hListCtrl.EditLabel(index)
+
+	def OnLabelEditStart(self,evt):
+		self.isRenaming=True
+		self.parent.SetShortcutEnabled(False)

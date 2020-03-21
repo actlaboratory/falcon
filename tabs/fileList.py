@@ -8,19 +8,14 @@
 ファイルリストやドライブ一覧リストなどです。一通りのファイル操作を行うことができます。
 """
 
-import sys
 import os
-import views.ViewCreator
 import gettext
 import wx
-import win32api
 import clipboard
-import clipboardHelper
 import errorCodes
 import lists
 import browsableObjects
 import globalVars
-import constants
 import fileOperator
 import misc
 import workerThreads
@@ -47,10 +42,6 @@ class FileListTab(base.FalconTabBase):
 		if cursor>0:
 			self.hListCtrl.Select(cursor)
 
-	def OnLabelEditStart(self,evt):
-		self.isRenaming=True
-		self.parent.SetShortcutEnabled(False)
-
 	def OnLabelEditEnd(self,evt):
 		self.isRenaming=False
 		self.parent.SetShortcutEnabled(True)
@@ -64,10 +55,7 @@ class FileListTab(base.FalconTabBase):
 		elif isinstance(f,browsableObjects.File):
 			newName=f.directory+"\\"+e.GetLineText(0)
 			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.FILE)
-		else:
-			newName=e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.VOLUME_LABEL)
-		#end フォルダかファイルかドライブか
+		#end フォルダかファイルか
 		if error:
 			dialog(_("エラー"),error)
 			evt.Veto()
@@ -109,11 +97,6 @@ class FileListTab(base.FalconTabBase):
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
 			dialog(_("エラー"),_("属性が変更できません。"))
-
-	def StartRename(self):
-		"""リネームを開始する。"""
-		index=self.GetFocusedItem()
-		self.hListCtrl.EditLabel(index)
 
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
@@ -261,9 +244,6 @@ class FileListTab(base.FalconTabBase):
 		c.SendToClipboard()
 
 	def GoToTopFile(self):
-		if not isinstance(self.listObject,lists.FileList):
-			dialog(_("エラー"),_("ここではこの機能を利用できません。"))
-			return
 		#end ファイルリストのときしか通さない
 		self.hListCtrl.Focus(self.listObject.GetTopFileIndex())
 		self.hListCtrl.Select(-1,0)
@@ -292,32 +272,3 @@ class FileListTab(base.FalconTabBase):
 				self.hListCtrl.SetItem(index=elem[0],column=1,label="<取得失敗>")
 		#end for
 		self.background_tasks.remove(taskState)
-
-	def OnSpaceKey(self):
-		"""spaceキー押下時、アイテムをチェック/チェック解除する"""
-		#item=self.hListCtrl.GetItem(self.GetFocusedItem())
-		#item.SetBackgroundColour(wx.Colour("#ff00ff"))
-		#self.hListCtrl.RefreshItem(self.GetFocusedItem())
-		if self.hListCtrl.GetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED)==wx.LIST_STATE_DROPHILITED:
-			#チェック解除
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_DROPHILITED)
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_SELECTED)
-
-			globalVars.app.say(_("チェック解除"))
-			self.hListCtrl.Update()
-		else:
-			#チェック
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
-			globalVars.app.say(_("チェック"))
-		#カーソルを１つ下へ移動
-		self.hListCtrl.Focus(self.GetFocusedItem()+1)
-		self.hListCtrl.Select(self.GetFocusedItem())
-
-	def BeginDrag(self,event):
-		data=wx.FileDataObject()
-		for f in self.GetSelectedItems():
-			data.AddFile(f.fullpath)
-
-		obj=wx.DropSource(data,globalVars.app.hMainView.hFrame)
-		obj.DoDragDrop()
-
