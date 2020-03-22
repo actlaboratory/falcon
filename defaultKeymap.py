@@ -24,6 +24,7 @@ defaultKeymap["mainView"]={
 	"EDIT_SORTSELECT": "ctrl+S",
 	"EDIT_SORTCYCLEAD": "shift+F11",
 	"EDIT_UPDATEFILELIST": "F5",
+	"EDIT_OPENCONTEXTMENU": "shift+f10/applications",
 	"MOVE_FORWARD": "return",
 	"MOVE_BACKWARD": "BACK/LEFT",
 	"MOVE_FORWARD_STREAM": "RIGHT",
