@@ -405,6 +405,18 @@ class FalconTabBase(object):
 			globalVars.app.hMainView.menu.Block(self.selectItemMenuConditions[c])
 			self.environment["selectedItemCount"]=c
 
+	def _appendContextMenu(self,hMenu,elem):
+		if elem['type']=="separator": return
+		if 'submenu' in elem:
+			hSubMenu=wx.Menu()
+			hMenu.AppendSubMenu(hSubMenu,elem['name'])
+			for elem2 in elem['submenu']:
+				self._appendContextMenu(hSubMenu,elem2)
+			#end for
+			return
+		#end has sub menu
+		hMenu.Append(elem['id'],elem['name'])
+
 	def OpenContextMenu(self,event):
 		RegisterMenuCommand=globalVars.app.hMainView.menu.RegisterMenuCommand
 
@@ -423,7 +435,7 @@ class FalconTabBase(object):
 		RegisterMenuCommand(hMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
 		for elem in menus:
 			if elem['type']=="separator": continue
-			hMenu.Append(elem['id'],elem['name'])
+			self._appendContextMenu(hMenu,elem)
 		#end for
 
 		self.hListCtrl.PopupMenu(hMenu)
