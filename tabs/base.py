@@ -7,6 +7,7 @@
 """
 タブは、必ずリストビューです。カラムの数と名前と、それに対応するリストの要素がタブを構成します。たとえば、ファイル一覧では「ファイル名」や「サイズ」などがカラムになり、その情報がリストに格納されています。ファイル操作の状況を示すタブの場合は、「進行率」や「状態」などがカラムの名前として想定されています。リスト上でエンターを押すことで、アクションを実行できます。ファイルビューではファイルやフォルダを開き、ファイル操作では問い合わせに応答することができます。
 """
+import json
 import logging
 import os
 
@@ -450,7 +451,6 @@ class FalconTabBase(object):
 				if self.environment["selectingItemCount"][elem.__class__]==1:	#新規ブロック
 					globalVars.app.hMainView.menu.Block(self.selectItemTypeMenuConditions[elem.__class__])
 
-
 	def ItemDeSelected(self,event=None):
 		#種類ベースでのメニューのアンロック
 		if event:
@@ -462,16 +462,38 @@ class FalconTabBase(object):
 			if self.environment["selectingItemCount"][elem.__class__]==0:	#ブロック解除
 				globalVars.app.hMainView.menu.UnBlock(self.selectItemTypeMenuConditions[elem.__class__])
 
+	def _appendContextMenu(self,hMenu,elem):
+		if elem['type']=="separator": return
+		if 'submenu' in elem:
+			hSubMenu=wx.Menu()
+			hMenu.AppendSubMenu(hSubMenu,elem['name'])
+			for elem2 in elem['submenu']:
+				self._appendContextMenu(hSubMenu,elem2)
+			#end for
+			return
+		#end has sub menu
+		hMenu.Append(elem['id'],elem['name'])
+
 	def OpenContextMenu(self,event):
 		RegisterMenuCommand=globalVars.app.hMainView.menu.RegisterMenuCommand
 
-		targetPath=self.listObject.GetElement(self.hListCtrl.HitTest(event.GetPoint())[0]).fullpath
-
+		if event:
+			targetPath=self.listObject.GetElement(self.hListCtrl.HitTest(event.GetPoint())[0]).fullpath
+		else:
+			targetPath=self.GetFocusedElement().fullpath
+		#end イベントあるか
+		s=misc.GetContextMenu(targetPath)
+		s_json=json.loads(s)
+		menus=s_json['menus']
 		hMenu = wx.Menu()
 		RegisterMenuCommand(hMenu,"EDIT_COPY",_("コピー"))
 		RegisterMenuCommand(hMenu,"EDIT_CUT",_("切り取り"))
 		RegisterMenuCommand(hMenu,"EDIT_NAMECOPY",_("名前をコピー"))
 		RegisterMenuCommand(hMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
+		for elem in menus:
+			if elem['type']=="separator": continue
+			self._appendContextMenu(hMenu,elem)
+		#end for
 
 		self.hListCtrl.PopupMenu(hMenu)
 		hMenu.Destroy()
@@ -482,5 +504,6 @@ class FalconTabBase(object):
 		if selected>=5000:
 			event.Skip()
 		else:
-			pass
-
+			misc.ExecContextMenuItem(selected)
+		#end exec context menu action
+		misc.DestroyContextMenu()

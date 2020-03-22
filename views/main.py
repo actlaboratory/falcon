@@ -236,6 +236,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTSELECT",_("並び順を選択"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_OPENCONTEXTMENU",_("コンテキストメニューを開く"))
 
 		#移動メニューの中身
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD",_("開く"))
@@ -363,6 +364,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("EDIT_UPDATEFILELIST"):
 			self.UpdateFilelist()
+			return
+		if selected==menuItemsStore.getRef("EDIT_OPENCONTEXTMENU"):
+			self.OpenContextMenu()
 			return
 		if selected==menuItemsStore.getRef("FILE_MAKESHORTCUT"):
 			target=self.parent.activeTab.GetSelectedItems().GetElement(0)		#browsableObjects
@@ -607,3 +611,6 @@ class Events(BaseEvents):
 
 	def UpdateFilelist(self,silence=True):
 		ret=self.parent.activeTab.UpdateFilelist(silence=silence)
+
+	def OpenContextMenu(self,silence=True):
+		self.parent.activeTab.OpenContextMenu(event=None)
