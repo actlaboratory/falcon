@@ -7,6 +7,7 @@
 """
 タブは、必ずリストビューです。カラムの数と名前と、それに対応するリストの要素がタブを構成します。たとえば、ファイル一覧では「ファイル名」や「サイズ」などがカラムになり、その情報がリストに格納されています。ファイル操作の状況を示すタブの場合は、「進行率」や「状態」などがカラムの名前として想定されています。リスト上でエンターを押すことで、アクションを実行できます。ファイルビューではファイルやフォルダを開き、ファイル操作では問い合わせに応答することができます。
 """
+import json
 import logging
 import os
 
@@ -412,14 +413,18 @@ class FalconTabBase(object):
 		else:
 			targetPath=self.GetFocusedElement().fullpath
 		#end イベントあるか
-		json=misc.GetContextMenu(targetPath)
-		print(json)
-
+		s=misc.GetContextMenu(targetPath)
+		s_json=json.loads(s)
+		menus=s_json['menus']
 		hMenu = wx.Menu()
 		RegisterMenuCommand(hMenu,"EDIT_COPY",_("コピー"))
 		RegisterMenuCommand(hMenu,"EDIT_CUT",_("切り取り"))
 		RegisterMenuCommand(hMenu,"EDIT_NAMECOPY",_("名前をコピー"))
 		RegisterMenuCommand(hMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
+		for elem in menus:
+			if elem['type']=="separator": continue
+			hMenu.Append(elem['id'],elem['name'])
+		#end for
 
 		self.hListCtrl.PopupMenu(hMenu)
 		hMenu.Destroy()
