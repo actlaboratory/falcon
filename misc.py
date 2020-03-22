@@ -105,6 +105,21 @@ def getDiscDriveTypes():
 	return ret
 #end getDiscDriveTypes
 
+def GetContextMenu(path):
+	path_bytes=path.encode('UTF-16')
+	ptr=falconHelper.getContextMenu(path_bytes)
+	s=ctypes.c_char_p(ptr).value
+	falconHelper.releasePtr(ptr)
+	s2=s.decode('UTF-8')
+	print(s2)
+	return
+
+def DestroyContextMenu():
+	falconHelper.destroyContextMenu()
+
+def ExecContextMenuAction(id):
+	falconHelper.execContextMenuAction(id)
+
 def disableWindowStyleFlag(hwnd,flag):
 	"""指定されたウィンドウハンドルの DWL_STYLE の値を撮って、指定されたフラグを折る。"""
 	value=win32api.GetWindowLong(hwnd,-16)#-16 が DWL_STYLE らしい
