@@ -116,8 +116,8 @@ def GetContextMenu(path):
 def DestroyContextMenu():
 	falconHelper.destroyContextMenu()
 
-def ExecContextMenuAction(id):
-	falconHelper.execContextMenuAction(id)
+def ExecContextMenuItem(id):
+	falconHelper.execContextMenuItem(id)
 
 def disableWindowStyleFlag(hwnd,flag):
 	"""指定されたウィンドウハンドルの DWL_STYLE の値を撮って、指定されたフラグを折る。"""
