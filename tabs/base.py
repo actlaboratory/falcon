@@ -64,6 +64,23 @@ class FalconTabBase(object):
 		"TOOL_EJECT_DEVICE"
 	])
 
+	selectItemTypeMenuConditions={}
+	selectItemTypeMenuConditions[browsableObjects.File]=[]
+	selectItemTypeMenuConditions[browsableObjects.File].extend([
+		"TOOL_DIRCALC",
+		"MOVE_FORWARD_TAB"
+	])
+
+	selectItemTypeMenuConditions[browsableObjects.Folder]=[]
+	selectItemTypeMenuConditions[browsableObjects.Folder].extend([
+		"TOOL_HASHCALC",
+		"TOOL_ADDPATH"
+	])
+	#以下３つは専用のタブになってるのでこの機能でやる必要はない。KeyErrorにならないようにしとくだけ。
+	selectItemTypeMenuConditions[browsableObjects.Drive]=[]
+	selectItemTypeMenuConditions[browsableObjects.Stream]=[]
+	selectItemTypeMenuConditions[browsableObjects.NetworkResource]=[]
+
 
 	def __init__(self,environment):
 		self.task=None
@@ -76,6 +93,7 @@ class FalconTabBase(object):
 		if self.environment=={}:
 			self.environment["markedPlace"]=None		#マークフォルダ
 			self.environment["selectedItemCount"]=None	#選択中のアイテム数。0or1or2=2以上。
+			self.environment["selectingItemCount"]={}	#選択中アイテムの種類(browsableObjects)毎の個数
 
 	def SetEnvironment(self,newEnv):
 		"""タブの引継ぎなどの際にenvironmentの内容をコピーするために利用"""
@@ -102,6 +120,7 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
 		self.hListCtrl.Bind(wx.EVT_LIST_END_LABEL_EDIT,self.OnLabelEditEnd)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED,self.ItemSelected)
+		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED,self.ItemDeSelected)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
 		self.hListCtrl.Bind(wx.EVT_KEY_DOWN,self.KeyDown)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_DRAG,self.BeginDrag)
@@ -176,7 +195,8 @@ class FalconTabBase(object):
 		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
 		self.log.debug("Updating list control...")
 		self._cancelBackgroundTasks()
-		self.ItemSelected()		#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってる場合があるため必要。
+		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってる場合があるため必要。
+
 		t=misc.Timer()
 		for elem in content:
 			self.hListCtrl.Append(elem)
@@ -245,7 +265,6 @@ class FalconTabBase(object):
 			self.hListCtrl.Select(i)
 
 	def NameCopy(self):
-		if not self.IsItemSelected(): return
 		globalVars.app.say(_("ファイル名をコピー"))
 		t=self.GetSelectedItems().GetItemNames()
 		t="\n".join(t)
@@ -253,7 +272,6 @@ class FalconTabBase(object):
 			c.set_unicode_text(t)
 
 	def FullpathCopy(self):
-		if not self.IsItemSelected(): return
 		t=self.GetSelectedItems().GetItemPaths()
 		globalVars.app.say(_("フルパスをコピー"))
 		t="\n".join(t)
@@ -394,15 +412,55 @@ class FalconTabBase(object):
 		return self.environment["markedPlace"]!=None
 
 	def ItemSelected(self,event=None):
-		"""リストビューのアイテムの選択・選択解除の発生時に呼ばれる"""
+		"""リストビューのアイテムの選択時に呼ばれる"""
+
+		#個数ベースでのメニューのロック・アンロック
 		c=self.GetSelectedItemCount()
 		if c>2:c=2
+		#print(str(self.environment["selectedItemCount"])+"=>"+str(c))
 		if self.environment["selectedItemCount"]!=c:
-			#print(str(self.environment["selectedItemCount"])+"=>"+str(c))
 			if self.environment["selectedItemCount"]!=None:
 				globalVars.app.hMainView.menu.UnBlock(self.selectItemMenuConditions[self.environment["selectedItemCount"]])
 			globalVars.app.hMainView.menu.Block(self.selectItemMenuConditions[c])
 			self.environment["selectedItemCount"]=c
+
+		#種類ベースでのメニューのロック
+		if event:		#アイテムが選択された
+			elem=self.listObject.GetElement(event.GetIndex())
+			try:
+				self.environment["selectingItemCount"][elem.__class__]+=1
+			except KeyError:
+				self.environment["selectingItemCount"][elem.__class__]=1
+			if self.environment["selectingItemCount"][elem.__class__]==1:	#新規ブロック
+				globalVars.app.hMainView.menu.Block(self.selectItemTypeMenuConditions[elem.__class__])
+		else:	#ビューを再描画した場合など
+			#全部の選択をなかったことにする
+			for i,v in self.environment["selectingItemCount"].items():
+				if v>0:
+					self.environment["selectingItemCount"][i]=0
+					globalVars.app.hMainView.menu.UnBlock(self.selectItemTypeMenuConditions[i])
+			#選択中アイテムの状況を取得して処理する
+			if not self.IsItemSelected():
+				return
+			for elem in self.GetSelectedItems():
+				try:
+					self.environment["selectingItemCount"][elem.__class__]+=1
+				except KeyError:
+					self.environment["selectingItemCount"][elem.__class__]=1
+				if self.environment["selectingItemCount"][elem.__class__]==1:	#新規ブロック
+					globalVars.app.hMainView.menu.Block(self.selectItemTypeMenuConditions[elem.__class__])
+
+
+	def ItemDeSelected(self,event=None):
+		#種類ベースでのメニューのアンロック
+		if event:
+			elem=self.listObject.GetElement(event.GetIndex())
+			try:
+				self.environment["selectingItemCount"][elem.__class__]-=1
+			except KeyError:
+				self.environment["selectingItemCount"][elem.__class__]=0
+			if self.environment["selectingItemCount"][elem.__class__]==0:	#ブロック解除
+				globalVars.app.hMainView.menu.UnBlock(self.selectItemTypeMenuConditions[elem.__class__])
 
 	def OpenContextMenu(self,event):
 		RegisterMenuCommand=globalVars.app.hMainView.menu.RegisterMenuCommand
