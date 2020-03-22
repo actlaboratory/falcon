@@ -408,6 +408,8 @@ class FalconTabBase(object):
 		RegisterMenuCommand=globalVars.app.hMainView.menu.RegisterMenuCommand
 
 		targetPath=self.listObject.GetElement(self.hListCtrl.HitTest(event.GetPoint())[0]).fullpath
+		json=misc.GetContextMenu(targetPath)
+		print(json)
 
 		hMenu = wx.Menu()
 		RegisterMenuCommand(hMenu,"EDIT_COPY",_("コピー"))
@@ -419,6 +421,7 @@ class FalconTabBase(object):
 		hMenu.Destroy()
 
 	def CloseContextMenu(self,event):
+		misc.DestroyContextMenu()
 		selected=event.GetId()							#メニュー識別しの数値
 
 		if selected>=5000:

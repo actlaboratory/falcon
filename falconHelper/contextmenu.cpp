@@ -90,7 +90,7 @@ int _getContextMenu(LPCTSTR in, HMENU *out)
 	return 1;
 }
 
-int destroyContextMenu()
+falcon_helper_funcdef int destroyContextMenu()
 {
 	if (!contextMenu)
 		return 0;

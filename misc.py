@@ -111,8 +111,7 @@ def GetContextMenu(path):
 	s=ctypes.c_char_p(ptr).value
 	falconHelper.releasePtr(ptr)
 	s2=s.decode('UTF-8')
-	print(s2)
-	return
+	return s2
 
 def DestroyContextMenu():
 	falconHelper.destroyContextMenu()
