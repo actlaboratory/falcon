@@ -361,6 +361,9 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("EDIT_UPDATEFILELIST"):
 			self.UpdateFilelist()
 			return
+		if selected==menuItemsStore.getRef("EDIT_OPENCONTEXTMENU"):
+			self.OpenContextMenu()
+			return
 		if selected==menuItemsStore.getRef("FILE_MAKESHORTCUT"):
 			target=self.parent.activeTab.GetSelectedItems().GetElement(0)		#browsableObjects
 
@@ -604,3 +607,6 @@ class Events(BaseEvents):
 
 	def UpdateFilelist(self,silence=True):
 		ret=self.parent.activeTab.UpdateFilelist(silence=silence)
+
+	def OpenContextMenu(self,silence=True):
+		self.parent.activeTab.OpenContextMenu(event=None)

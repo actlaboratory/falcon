@@ -407,7 +407,11 @@ class FalconTabBase(object):
 	def OpenContextMenu(self,event):
 		RegisterMenuCommand=globalVars.app.hMainView.menu.RegisterMenuCommand
 
-		targetPath=self.listObject.GetElement(self.hListCtrl.HitTest(event.GetPoint())[0]).fullpath
+		if event:
+			targetPath=self.listObject.GetElement(self.hListCtrl.HitTest(event.GetPoint())[0]).fullpath
+		else:
+			targetPath=self.GetFocusedElement().fullpath
+		#end イベントあるか
 		json=misc.GetContextMenu(targetPath)
 		print(json)
 
