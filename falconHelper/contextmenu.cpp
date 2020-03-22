@@ -10,10 +10,21 @@
 using namespace std;
 
 //-------------------------------------------------
-//�E�N���b�N���j���[�𐶐����āA���̃��j���[���ڂ�JSON�ŕԂ����W���[���ł��B�{���� TrackPopupMenu �ŕ\��������̂ł����AWX�̎d�l�ŁA�ł���ΓƎ��Ń��j���[��`�悵�����̂ŁA���̃��W���[��������܂��B
+//・ｽE・ｽN・ｽ・ｽ・ｽb・ｽN・ｽ・ｽ・ｽj・ｽ・ｽ・ｽ[・ｽｶ撰ｿｽ・ｽ・ｽ・ｽﾄ、・ｽ・ｽ・ｽﾌ・ｿｽ・ｽj・ｽ・ｽ・ｽ[・ｽ・ｽ・ｽﾚゑｿｽJSON・ｽﾅ返ゑｿｽ・ｽ・ｽ・ｽW・ｽ・ｽ・ｽ[・ｽ・ｽ・ｽﾅゑｿｽ・ｽB・ｽ{・ｽ・ｽ・ｽ・ｽ TrackPopupMenu ・ｽﾅ表・ｽ・ｽ・ｽ・ｽ・ｽ・ｽ・ｽ・ｽﾌでゑｿｽ・ｽ・ｽ・ｽAWX・ｽﾌ仕・ｽl・ｽﾅ、・ｽﾅゑｿｽ・ｽ・ｽﾎ独趣ｿｽ・ｽﾅ・ｿｽ・ｽj・ｽ・ｽ・ｽ[・ｽ・ｽ`・ｽ謔ｵ・ｽ・ｽ・ｽ・ｽ・ｽﾌで、・ｽ・ｽ・ｽﾌ・ｿｽ・ｽW・ｽ・ｽ・ｽ[・ｽ・ｽ・ｽ・ｽ・ｽ・ｽ・ｽ・ｽﾜゑｿｽ・ｽB
 
 IContextMenu *contextMenu;
 HMENU contextMenuHandle;
+
+string wide2sjis(const wchar_t *str)
+{
+	char *buf = NULL;
+	int chars = WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, str, -1, buf, 0, NULL, NULL);
+	buf = (char *)malloc(chars * sizeof(char));
+	WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, str, -1, buf, chars, NULL, NULL);
+	string ret = buf;
+	free(buf);
+	return ret;
+}
 
 wstring rtrimBackSlash(wstring in)
 {
@@ -186,6 +197,7 @@ falcon_helper_funcdef char *getContextMenu(LPCTSTR path)
 {
 	HMENU menu;
 	int ret = _getContextMenu(path, &menu);
+	
 	string menu_json = processMenu(menu);
 	contextMenuHandle = menu;
 	int sz = menu_json.size() + 1;

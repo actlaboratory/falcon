@@ -106,8 +106,9 @@ def getDiscDriveTypes():
 #end getDiscDriveTypes
 
 def GetContextMenu(path):
-	path_bytes=path.encode('UTF-16LE')
-	ptr=falconHelper.getContextMenu(path_bytes)
+	path_bytes=bytearray(path.encode('UTF-16LE'))
+	path_bytes.extend(b'\x00\x00')
+	ptr=falconHelper.getContextMenu(bytes(path_bytes))
 	s=ctypes.c_char_p(ptr).value
 	falconHelper.releasePtr(ptr)
 	s2=s.decode('UTF-8')
