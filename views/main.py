@@ -130,6 +130,7 @@ class View(BaseView):
 
 		self.tabs[i]=newtab
 		self.activeTab=newtab
+		newtab.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
 	#end ReplaceCurrentTab
 
 	def ActivateTab(self,pageNo):
@@ -144,6 +145,9 @@ class View(BaseView):
 		self.activeTab=self.tabs[pageNo]
 		self.hTabCtrl.SetSelection(pageNo)
 		self.activeTab.hListCtrl.SetFocus()
+
+		self.activeTab.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
+
 
 	def CloseTab(self,pageNo):
 		"""指定されたインデックスのタブを閉じる。閉じたタブがアクティブだった場合は、別のタブをアクティブ状態にする。全てのタブが閉じられた場合は、終了イベントを投げる。"""
