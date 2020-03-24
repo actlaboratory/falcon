@@ -60,6 +60,10 @@ class falconAppMain(wx.App):
 		elif(reader=="AUTO"):
 			self.log.info("use reader 'AUTO'")
 			self.speech=accessible_output2.outputs.auto.Auto()
+		elif(reader=="JAWS"):
+			self.log.info("use reader 'JAWS'")
+			self.speech=accessible_output2.outputs.jaws.Jaws()
+
 		else:
 			self.config.set("speech","reader","AUTO")
 			self.log.warning("Setting missed! speech.reader reset to 'AUTO'")
