@@ -44,7 +44,7 @@ def Execute(op):
 			else:
 				win32file.RemoveDirectory(elem)
 		except win32file.error as err:
-			appendRetry(op.output,elem)
+			if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem)
 			continue
 		#end except
 		op.output["succeeded"]+=1
