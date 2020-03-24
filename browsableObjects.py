@@ -145,3 +145,15 @@ class Stream(FalconBrowsableBase):
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
 		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True))
+
+class NetworkResource(FalconBrowsableBase):
+	"""ネットワーク上のディスクリソースを表す。このオブジェクトは情報を保持するだけで、指し示すリソースにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
+	def Initialize(self,basename="", fullpath="", address=""):
+		"""必要な情報をセットする"""
+		self.basename=basename
+		self.fullpath=fullpath
+		self.size=-1
+		self.address=address
+	def GetListTuple(self):
+		"""表示に必要なタプルを返す。"""
+		return (self.basename, self.basename, address)
