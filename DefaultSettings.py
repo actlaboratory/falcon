@@ -56,7 +56,9 @@ class DefaultSettings:
 		}
 		config["sounds"]={
 			"startup" : "tip.ogg",
-			"boundary" : "tip.ogg"
+			"boundary" : "tip.ogg",
+			"checked":"click.ogg",
+			"check":"checked.ogg"
 		}
 		config["favorite_directories"]={
 			"ドキュメント" : "%%%%userprofile%%%%\documents",

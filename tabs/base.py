@@ -232,10 +232,17 @@ class FalconTabBase(object):
 		else:
 			self.OnSpaceKey()
 
+	def _IsItemChecked(self,index):
+		"""
+			アイテムインデックスから、そのアイテムがチェック状態か否かを調べる
+			外からはSelectと合わせて調べる必要性以外にないはずなのでprivate
+		"""
+		return self.hListCtrl.GetItemState(index,wx.LIST_STATE_DROPHILITED)==wx.LIST_STATE_DROPHILITED
+
 	def OnSpaceKey(self):
 		"""spaceキー押下時、アイテムをチェック/チェック解除する"""
 		#item=self.hListCtrl.GetItem(self.GetFocusedItem())
-		if self.hListCtrl.GetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED)==wx.LIST_STATE_DROPHILITED:
+		if self._IsItemChecked(self.GetFocusedItem()):
 			#チェック解除
 			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_DROPHILITED)
 			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_SELECTED)
@@ -245,6 +252,8 @@ class FalconTabBase(object):
 		else:
 			#チェック
 			self.hListCtrl.SetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
+			globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
+
 			#item.SetBackgroundColour(wx.Colour("#ff00ff"))
 			#self.hListCtrl.RefreshItem(self.GetFocusedItem())
 			globalVars.app.say(_("チェック"))
@@ -414,6 +423,12 @@ class FalconTabBase(object):
 
 	def ItemSelected(self,event=None):
 		"""リストビューのアイテムの選択時に呼ばれる"""
+
+		#チェック状態のアイテムなら音を鳴らす
+		if event:
+			if self._IsItemChecked(event.GetIndex()):
+				globalVars.app.PlaySound(globalVars.app.config["sounds"]["checked"])
+
 
 		#個数ベースでのメニューのロック・アンロック
 		c=self.GetSelectedItemCount()
