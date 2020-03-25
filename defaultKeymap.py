@@ -32,5 +32,6 @@ defaultKeymap["mainView"]={
 	"MOVE_CLOSECURRENTTAB": "ctrl+w",
 	"MOVE_TOPFILE": "alt+down",
 	"MOVE_MARKSET": "INSERT",
-	"MOVE_MARK": "shift+BACK"
+	"MOVE_MARK": "shift+BACK",
+	"READ_CURRENTFOLDER": "alt+f5"
 }

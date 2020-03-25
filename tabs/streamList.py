@@ -253,3 +253,8 @@ class StreamListTab(base.FalconTabBase):
 
 	def MarkSet(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
+	def ReadCurrentFolder(self):
+		f=self.listObject.rootDirectory.split(":\\")
+		s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': self.listObject.rootDirectory[0], 'folder': f[1] if len(f)==2 else "ルート"}
+		globalVars.app.say(s)

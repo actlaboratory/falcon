@@ -365,7 +365,6 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("MOVE_MARK"):
 			self.parent.activeTab.GoToMark()
 			return
-
 		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
 			self.SortNext()
 			return
@@ -386,7 +385,6 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("FILE_MAKESHORTCUT"):
 			target=self.parent.activeTab.GetSelectedItems().GetElement(0)		#browsableObjects
-
 			d=views.makeShortcut.Dialog(target.basename)
 			d.Initialize()
 			ret=d.Show()
@@ -475,6 +473,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
 			self.parent.activeTab.ShowProperties()
+			return
+		if selected==menuItemsStore.getRef("READ_CURRENTFOLDER"):
+			self.parent.activeTab.ReadCurrentFolder()
 			return
 		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
 			self.parent.activeTab.DirCalc()
