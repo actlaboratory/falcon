@@ -35,6 +35,7 @@ def Execute(op):
 		ret=shell.SHFileOperation(sh)
 		if ret[0]!=0:
 			if helper.CommonFailure(op,elem,ret[0],log): appendRetry(op.output,elem)
+			continue
 		#end except
 		op.output["succeeded"]+=1
 	#end ゴミ箱ループ

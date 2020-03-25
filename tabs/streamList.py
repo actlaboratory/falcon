@@ -138,6 +138,7 @@ class StreamListTab(base.FalconTabBase):
 		inst={"operation": "trash", "target": target}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
+		print("succeeded %s" % op.CheckSucceeded())
 		if op.CheckSucceeded()==0:
 			dialog(_("エラー"),_("ファイルをゴミ箱に移動できませんでした。"))
 			return
