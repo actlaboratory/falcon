@@ -255,6 +255,22 @@ class Menu(BaseMenu):
 				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
 			self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
 
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
+
+		#読みメニューの中身
+		subMenu=wx.Menu()
+		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READALL",_("テキスト全文読み"))
+		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READHEADER",_("テキストヘッダー読み"))
+		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READFOOTER",_("テキストフッター読み"))
+		self.RegisterMenuCommand(subMenu,"READ_CONTENT_PLAYSOUND",_("音の再生"))
+		self.hReadMenu.AppendSubMenu(subMenu,_("ファイル内容の読み上げ"))
+		self.RegisterMenuCommand(self.hReadMenu,"READ_FILEINFO",_("ファイル情報"))
+		self.RegisterMenuCommand(self.hReadMenu,"READ_DRIVEINFO",_("ドライブ情報"))
+		self.RegisterMenuCommand(self.hReadMenu,"READ_CURRENTFOLDER",_("現在のフォルダ名を読み上げ"))
+		self.RegisterMenuCommand(self.hReadMenu,"READ_FOLDERFILENUMBER",_("フォルダ数とファイル数を読み上げ"))
+		self.RegisterMenuCommand(self.hReadMenu,"READ_LISTINFO",_("一覧情報を読み上げ"))
+		self.RegisterMenuCommand(self.hReadMenu,"READ_SETMOVEMENTREAD",_("移動先の読み方を設定"))
+
 		#ツールメニューの中身
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_HASHCALC",_("ファイルハッシュの計算"))
