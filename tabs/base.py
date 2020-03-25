@@ -95,7 +95,8 @@ class FalconTabBase(object):
 			self.environment["markedPlace"]=None		#マークフォルダ
 			self.environment["selectedItemCount"]=None	#選択中のアイテム数。0or1or2=2以上。
 			self.environment["selectingItemCount"]={}	#選択中アイテムの種類(browsableObjects)毎の個数
-		self.checkedItem=set()
+			self.checkedItem=set()
+			self.stopSoundHandle=None
 
 	def SetEnvironment(self,newEnv):
 		"""タブの引継ぎなどの際にenvironmentの内容をコピーするために利用"""
@@ -238,7 +239,12 @@ class FalconTabBase(object):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
 	def KeyDown(self,event):
-		"""キーが押されたらここにくる。SpaceがEnterと同一視されるので対策する。"""
+		"""キーが押されたらここにくる。"""
+		if self.stopSoundHandle is not None:#音を鳴らしてたので止める
+			globalVars.app.StopSound(self.stopSoundHandle)
+			self.stopSoundHandle=None
+		#end 音を出した
+		#SpaceがEnterと同一視されるので対策する。
 		if not event.GetKeyCode()==32:
 			event.Skip()
 		else:
@@ -403,6 +409,7 @@ class FalconTabBase(object):
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
+		if self.stopSoundHandle is not None: globalVars.app.StopSound(self.stopSoundHandle)#キーイベントが発火する前にここに来ちゃうので
 		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
 			target=""
 			cursorTarget=self.listObject.rootDirectory[0]
@@ -544,3 +551,11 @@ class FalconTabBase(object):
 			misc.ExecContextMenuItem(selected)
 		#end exec context menu action
 		misc.DestroyContextMenu()
+
+	def ReadCurrentFolder(self):
+		return errorCodes.NOT_SUPPORTED
+
+	def PlaySound(self):
+		self.stopSoundHandle=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
+
+

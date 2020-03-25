@@ -176,7 +176,6 @@ class FileListTab(base.FalconTabBase):
 			return
 		#end error
 		failed=op.CheckFailed()
-		print("fail %d" % len(failed))
 		self.UpdateFilelist(silence=True)
 		#カーソルをどこに動かすかを決定、まずはもともとフォーカスしてた項目があるかどうか
 		if os.path.exists(paths[focus_index]):
@@ -278,3 +277,8 @@ class FileListTab(base.FalconTabBase):
 				self.hListCtrl.SetItem(index=elem[0],column=1,label="<取得失敗>")
 		#end for
 		self.background_tasks.remove(taskState)
+
+	def ReadCurrentFolder(self):
+		f=self.listObject.rootDirectory.split(":\\")
+		s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': self.listObject.rootDirectory[0], 'folder': f[1] if len(f)==2 else "ルート"}
+		globalVars.app.say(s)

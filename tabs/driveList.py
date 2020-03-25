@@ -126,3 +126,7 @@ class DriveListTab(base.FalconTabBase):
 	def ShowProperties(self):
 		index=self.GetFocusedItem()
 		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
+
+def ReadCurrentFolder(self):
+		print("a")
+		globalVars.app.say("現在は、ドライブ洗濯")

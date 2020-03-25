@@ -119,3 +119,9 @@ class DriveList(FalconListBase):
 		f=self._getSortFunction(attrib)
 		self.drives.sort(key=f, reverse=(descending==1))
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
+
+	def __iter__(self):
+		return self.drives.__iter__()
+
+	def __len__(self):
+		return self.drives.__len__()
