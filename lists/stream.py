@@ -81,6 +81,9 @@ class StreamList(FalconListBase):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.streams[index]
 
+	def __iter__(self):
+		return self.streams.__iter__()
+
 	def GetItemPaths(self):
 		"""リストの中身をパスのリストで取得する。フォルダが上にくる。"""
 		lst=[]

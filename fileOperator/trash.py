@@ -32,10 +32,10 @@ def Execute(op):
 			None,
 			""
 		)
-		try:
-			ret=shell.SHFileOperation(sh)
-		except win32con.error as err:
-			if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem)
+		ret=shell.SHFileOperation(sh)
+		if ret[0]!=0:
+			if helper.CommonFailure(op,elem,ret[0],log): appendRetry(op.output,elem)
+			continue
 		#end except
 		op.output["succeeded"]+=1
 	#end ゴミ箱ループ

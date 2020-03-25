@@ -138,6 +138,7 @@ class StreamListTab(base.FalconTabBase):
 		inst={"operation": "trash", "target": target}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
+		print("succeeded %s" % op.CheckSucceeded())
 		if op.CheckSucceeded()==0:
 			dialog(_("エラー"),_("ファイルをゴミ箱に移動できませんでした。"))
 			return
@@ -176,6 +177,8 @@ class StreamListTab(base.FalconTabBase):
 		self.hListCtrl.Focus(focus_index)
 
 	def Delete(self):
+		focus_index=self.GetFocusedItem()
+		paths=self.listObject.GetItemPaths()#パスのリストを取っておく
 		target=[]
 		for elem in self.GetSelectedItems():
 			target.append(elem.fullpath)
@@ -195,6 +198,36 @@ class StreamListTab(base.FalconTabBase):
 			return
 		#end error
 		self.UpdateFilelist(silence=True)
+		failed=op.CheckFailed()
+		if os.path.exists(paths[focus_index]):
+			new_cursor_path=paths[focus_index]#フォーカスしてたファイル
+		else:#あるファイルを上下に探索
+			new_cursor_path=""
+			ln=len(paths)
+			i=1
+			while(True):
+				if i>focus_index and i>ln-focus_index-1: break#探索し尽くしたらやめる
+				tmp=focus_index-i
+				if tmp>=0 and os.path.exists(paths[tmp]):#あった
+					new_cursor_path=paths[tmp]
+					break
+				#end 上
+				tmp=focus_index+i
+				if tmp>=ln and os.path.exists(paths[tmp]):#あった
+					new_cursor_path=paths[tmp]
+					break
+				#end 下
+				i+=1
+			#end 探索
+		#end さっきフォーカスしてた項目がなくなってた
+		#カーソルをどの項目に動かすか分かった
+		focus_index=0
+		for elem in self.listObject:
+			if elem.fullpath==new_cursor_path: break
+			focus_index+=1
+		#end 検索
+		self.hListCtrl.Focus(focus_index)
+		self.hListCtrl.Select(focus_index)
 
 	def ShowProperties(self):
 		index=self.GetFocusedItem()
