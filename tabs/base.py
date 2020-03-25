@@ -394,6 +394,7 @@ class FalconTabBase(object):
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
+		if self.stopSoundHandle is not None: globalVars.app.StopSound(self.stopSoundHandle)#キーイベントが発火する前にここに来ちゃうので
 		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
 			target=""
 			cursorTarget=self.listObject.rootDirectory[0]
