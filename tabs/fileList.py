@@ -176,7 +176,6 @@ class FileListTab(base.FalconTabBase):
 			return
 		#end error
 		failed=op.CheckFailed()
-		print("fail %d" % len(failed))
 		self.UpdateFilelist(silence=True)
 		#カーソルをどこに動かすかを決定、まずはもともとフォーカスしてた項目があるかどうか
 		if os.path.exists(paths[focus_index]):
