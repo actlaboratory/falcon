@@ -84,6 +84,9 @@ class StreamList(FalconListBase):
 	def __iter__(self):
 		return self.streams.__iter__()
 
+	def __len__(self):
+		return self.streams.__len__()
+
 	def GetItemPaths(self):
 		"""リストの中身をパスのリストで取得する。フォルダが上にくる。"""
 		lst=[]
