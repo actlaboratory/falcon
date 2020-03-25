@@ -72,7 +72,7 @@ class SearchResultTab(fileList.FileListTab):
 		if evt.IsEditCancelled():		#ユーザによる編集キャンセル
 			return
 		e=self.hListCtrl.GetEditControl()
-		f=self.listObject.GetElement(self.hListCtrl.GetFocusedItem())
+		f=self.listObject.GetElement(self.GetFocusedItem())
 		if isinstance(f,browsableObjects.Folder):
 			newName=f.directory+"\\"+e.GetLineText(0)
 			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.DIRECTORY)

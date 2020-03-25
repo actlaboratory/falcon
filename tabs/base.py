@@ -59,7 +59,6 @@ class FalconTabBase(object):
 		"MOVE_FORWARD_ADMIN",
 		"MOVE_FORWARD_TAB",
 		"MOVE_FORWARD_STREAM",
-		"TOOL_DIRCALC",
 		"TOOL_HASHCALC",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE"
@@ -69,7 +68,8 @@ class FalconTabBase(object):
 	selectItemTypeMenuConditions[browsableObjects.File]=[]
 	selectItemTypeMenuConditions[browsableObjects.File].extend([
 		"TOOL_DIRCALC",
-		"MOVE_FORWARD_TAB"
+		"MOVE_FORWARD_TAB",
+		"TOOL_ADDPATH"
 	])
 
 	selectItemTypeMenuConditions[browsableObjects.Folder]=[]
@@ -95,6 +95,7 @@ class FalconTabBase(object):
 			self.environment["markedPlace"]=None		#マークフォルダ
 			self.environment["selectedItemCount"]=None	#選択中のアイテム数。0or1or2=2以上。
 			self.environment["selectingItemCount"]={}	#選択中アイテムの種類(browsableObjects)毎の個数
+		self.checkedItem=set()
 
 	def SetEnvironment(self,newEnv):
 		"""タブの引継ぎなどの際にenvironmentの内容をコピーするために利用"""
@@ -145,26 +146,36 @@ class FalconTabBase(object):
 			return None
 		return self.listObject.GetElement(self.GetFocusedItem())
 
-	# 選択されているアイテムが１つ以上存在するか否か
-	def IsItemSelected(self):
-		return self.hListCtrl.GetSelectedItemCount()>0
+	def IsItemSelected(self,index=-1):
+		if index>=0:
+			return index in self.GetSelectedItems(True)
+		else:
+			# 選択されているアイテムが１つ以上存在するか否か
+			return self.GetSelectedItemCount()>0
 
 	def GetSelectedItemCount(self):
-		return self.hListCtrl.GetSelectedItemCount()
+		return len(self.GetSelectedItems(True))
 
 	def GetSelectedItems(self,index_mode=False):
 		"""選択中のアイテムを、 ListObject で帰す。index_mode が true の場合、 リスト上での index のリストを返す。"""
-		next=self.hListCtrl.GetFirstSelected()
-		if next==-1: return None
 		lst=[]
-		while(True):
-			if index_mode:
-				lst.append(next)
-			else:
-				lst.append(self.listObject.GetElement(next))
-			next=self.hListCtrl.GetNextSelected(next)
-			if next==-1: break
-		#end while
+		next=self.hListCtrl.GetFirstSelected()
+		if next>=0:
+			while(True):
+				if index_mode:
+					lst.append(next)
+				else:
+					lst.append(self.listObject.GetElement(next))
+				next=self.hListCtrl.GetNextSelected(next)
+				if next==-1: break
+			#end while
+		if index_mode:
+			lst=list(set(lst)|self.checkedItem)
+		else:
+			for i in self.checkedItem:
+				lst.append(self.listObject.GetElement(i))
+		lst.sort()
+
 		#リストを作る
 		if index_mode: return lst
 		r=type(self.listObject)()
@@ -197,6 +208,7 @@ class FalconTabBase(object):
 		self.log.debug("Updating list control...")
 		self._cancelBackgroundTasks()
 		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってる場合があるため必要。
+		self.checkedItem=set()
 
 		t=misc.Timer()
 		for elem in content:
@@ -237,7 +249,8 @@ class FalconTabBase(object):
 			アイテムインデックスから、そのアイテムがチェック状態か否かを調べる
 			外からはSelectと合わせて調べる必要性以外にないはずなのでprivate
 		"""
-		return self.hListCtrl.GetItemState(index,wx.LIST_STATE_DROPHILITED)==wx.LIST_STATE_DROPHILITED
+		#return self.hListCtrl.GetItemState(index,wx.LIST_STATE_DROPHILITED)==wx.LIST_STATE_DROPHILITED
+		return index in self.checkedItem
 
 	def OnSpaceKey(self):
 		"""spaceキー押下時、アイテムをチェック/チェック解除する"""
@@ -245,21 +258,23 @@ class FalconTabBase(object):
 		if self._IsItemChecked(self.GetFocusedItem()):
 			#チェック解除
 			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_DROPHILITED)
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_SELECTED)
-
+			self.checkedItem.discard(self.GetFocusedItem())
 			globalVars.app.say(_("チェック解除"))
 			self.hListCtrl.Update()
 		else:
 			#チェック
 			self.hListCtrl.SetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
 			globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
+			self.checkedItem.add(self.GetFocusedItem())
 
 			#item.SetBackgroundColour(wx.Colour("#ff00ff"))
 			#self.hListCtrl.RefreshItem(self.GetFocusedItem())
 			globalVars.app.say(_("チェック"))
 		#カーソルを１つ下へ移動
-		self.hListCtrl.Focus(self.GetFocusedItem()+1)
-		self.hListCtrl.Select(self.GetFocusedItem())
+		if self.GetFocusedItem()!=len(self.listObject)-1:		#カーソルが一番下以外にある時
+			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_SELECTED)
+			self.hListCtrl.Focus(self.GetFocusedItem()+1)
+			self.hListCtrl.Select(self.GetFocusedItem())
 
 	def BeginDrag(self,event):
 		data=wx.FileDataObject()
@@ -429,7 +444,6 @@ class FalconTabBase(object):
 			if self._IsItemChecked(event.GetIndex()):
 				globalVars.app.PlaySound(globalVars.app.config["sounds"]["checked"])
 
-
 		#個数ベースでのメニューのロック・アンロック
 		c=self.GetSelectedItemCount()
 		if c>2:c=2
@@ -442,6 +456,9 @@ class FalconTabBase(object):
 
 		#種類ベースでのメニューのロック
 		if event:		#アイテムが選択された
+			#チェック済みアイテムなら何もしない
+			if self._IsItemChecked(event.GetIndex()):
+				return
 			elem=self.listObject.GetElement(event.GetIndex())
 			try:
 				self.environment["selectingItemCount"][elem.__class__]+=1
@@ -466,16 +483,21 @@ class FalconTabBase(object):
 				if self.environment["selectingItemCount"][elem.__class__]==1:	#新規ブロック
 					globalVars.app.hMainView.menu.Block(self.selectItemTypeMenuConditions[elem.__class__])
 
-	def ItemDeSelected(self,event=None):
+	def ItemDeSelected(self,event=None,index=0):
 		#種類ベースでのメニューのアンロック
 		if event:
+			#チェック状態なら何もしない
+			if self.IsItemSelected(event.GetIndex()):
+				return
 			elem=self.listObject.GetElement(event.GetIndex())
-			try:
-				self.environment["selectingItemCount"][elem.__class__]-=1
-			except KeyError:
-				self.environment["selectingItemCount"][elem.__class__]=0
-			if self.environment["selectingItemCount"][elem.__class__]==0:	#ブロック解除
-				globalVars.app.hMainView.menu.UnBlock(self.selectItemTypeMenuConditions[elem.__class__])
+		else:
+			elem=self.listObject.GetElement(index)
+		try:
+			self.environment["selectingItemCount"][elem.__class__]-=1
+		except KeyError:
+			self.environment["selectingItemCount"][elem.__class__]=0
+		if self.environment["selectingItemCount"][elem.__class__]==0:	#ブロック解除
+			globalVars.app.hMainView.menu.UnBlock(self.selectItemTypeMenuConditions[elem.__class__])
 
 	def _appendContextMenu(self,hMenu,elem):
 		if elem['type']=="separator": return
