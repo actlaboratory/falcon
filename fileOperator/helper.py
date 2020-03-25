@@ -9,6 +9,7 @@ import winerror
 #ヘルパー関数
 def GetErrorNumber(err):
 	"""windows 例外文字列から、エラーナンバーを取得する。"""
+	if isinstance(err,int): return err
 	s=str(err)
 	s=s.lstrip("(")
 	return int(s.split(",")[0])
