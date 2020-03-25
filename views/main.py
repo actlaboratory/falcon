@@ -477,6 +477,9 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("READ_CURRENTFOLDER"):
 			self.parent.activeTab.ReadCurrentFolder()
 			return
+		if selected==menuItemsStore.getRef("READ_CONTENT_PLAYSOUND"):
+			self.parent.activeTab.PlaySound()
+			return
 		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
 			self.parent.activeTab.DirCalc()
 			return

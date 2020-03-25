@@ -138,9 +138,9 @@ class falconAppMain(wx.App):
 		"""スクリーンリーダーでしゃべらせる。"""
 		self.speech.speak(s)
 
-	def PlaySound(self,path):
+	def PlaySound(self,path,custom_location=True):
 		"""サウンドファイルを再生する。"""
-		path="fx/"+path
+		if not custom_location: path="fx/"+path 
 		if not os.path.isfile(path):
 			if path!="":
 				self.log.error("Sound file '"+path+"' not found.")
@@ -151,6 +151,11 @@ class falconAppMain(wx.App):
 			return
 		#end error
 		pybass.BASS_ChannelPlay(handle,True)
+		return handle
+
+	def StopSound(self,handle):
+		pybass.BASS_ChannelStop(handle)
+
 
 	def OnExit(self):
 		workerThreads.Stop()
