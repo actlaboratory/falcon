@@ -259,11 +259,10 @@ class Menu(BaseMenu):
 
 		#読みメニューの中身
 		subMenu=wx.Menu()
-		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READALL",_("テキスト全文読み"))
+		self.RegisterMenuCommand(subMenu,"READ_CONTENT_PREVIEW",_("ファイルをプレビュー"))
 		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READHEADER",_("テキストヘッダー読み"))
 		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READFOOTER",_("テキストフッター読み"))
-		self.RegisterMenuCommand(subMenu,"READ_CONTENT_PLAYSOUND",_("音の再生"))
-		self.hReadMenu.AppendSubMenu(subMenu,_("ファイル内容の読み上げ"))
+		self.hReadMenu.AppendSubMenu(subMenu,_("プレビュー"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_FILEINFO",_("ファイル情報"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_DRIVEINFO",_("ドライブ情報"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_CURRENTFOLDER",_("現在のフォルダ名を読み上げ"))
@@ -477,7 +476,7 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("READ_CURRENTFOLDER"):
 			self.parent.activeTab.ReadCurrentFolder()
 			return
-		if selected==menuItemsStore.getRef("READ_CONTENT_PLAYSOUND"):
+		if selected==menuItemsStore.getRef("READ_CONTENT_PREVIEW"):
 			self.parent.activeTab.PlaySound()
 			return
 		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
