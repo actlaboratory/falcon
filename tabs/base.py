@@ -522,3 +522,6 @@ class FalconTabBase(object):
 			misc.ExecContextMenuItem(selected)
 		#end exec context menu action
 		misc.DestroyContextMenu()
+
+	def ReadCurrentFolder(self):
+		return errorCodes.NOT_SUPPORTED

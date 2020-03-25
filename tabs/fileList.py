@@ -277,3 +277,8 @@ class FileListTab(base.FalconTabBase):
 				self.hListCtrl.SetItem(index=elem[0],column=1,label="<取得失敗>")
 		#end for
 		self.background_tasks.remove(taskState)
+
+	def ReadCurrentFolder(self):
+		f=self.listObject.rootDirectory.split(":\\")
+		s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': self.listObject.rootDirectory[0], 'folder': f[1] if len(f)==2 else "ルート"}
+		globalVars.app.say(s)
