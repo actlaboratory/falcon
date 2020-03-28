@@ -110,3 +110,7 @@ class SearchResultTab(fileList.FileListTab):
 
 	def ReadListItemNumber(self):
 		globalVars.app.say(_("検索結果 %(results)d件") % {'results': len(self.listObject)})
+
+	def ReadListInfo(self):
+		globalVars.app.say(_("%(keyword)sの検索結果を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'keyword': self.listObject.GetKeywordString(), 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1})
+

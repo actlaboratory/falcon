@@ -22,6 +22,7 @@ class StreamList(FalconListBase):
 	"""NTFS 副ストリームを扱うリスト。"""
 	def __init__(self):
 		super().__init__()
+		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE]
 		self.log=logging.getLogger("falcon.streamList")
 
 	def Update(self):
@@ -100,3 +101,11 @@ class StreamList(FalconListBase):
 		for elem in self.streams:
 			lst.append(elem.basename)
 		return lst
+
+	def _sort(self,attrib, descending):
+		"""指定した要素で、リストを並べ替える。"""
+		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
+		t=misc.Timer()
+		f=self._getSortFunction(attrib)
+		self.streams.sort(key=f, reverse=(descending==1))
+		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)

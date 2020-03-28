@@ -108,7 +108,11 @@ class View(BaseView):
 
 	def Navigate(self,target,as_new_tab=False):
 		"""指定のパスにナビゲートする。"""
-		self.log.debug("Creating new tab %s..." % target)
+		if isinstance(target,dict):
+			self.log.debug("Creating new tab %s..." % target['action'])
+		else:
+			self.log.debug("Creating new tab %s..." % target)
+		#end log
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		creator=views.ViewCreator.ViewCreator(1,hPanel,None)
 		newtab=tabs.navigator.Navigate(target,create_new_tab_info=(self,creator))
@@ -487,6 +491,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("READ_LISTITEMNUMBER"):
 			self.parent.activeTab.ReadListItemNumber()
+			return
+		if selected==menuItemsStore.getRef("READ_LISTINFO"):
+			self.parent.activeTab.ReadListInfo()
 			return
 		if selected==menuItemsStore.getRef("READ_CONTENT_PREVIEW"):
 			self.parent.activeTab.PlaySound()

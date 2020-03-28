@@ -289,3 +289,9 @@ class FileListTab(base.FalconTabBase):
 		curdir=_("%(letter)sルート") % {'letter': tmp[0][0]} if len(tmp)==1 else tmp[-1]
 		globalVars.app.say(_("%(containing)sの中には、フォルダ %(folders)d個、 ファイル %(files)d個") % {'containing': curdir, 'folders': folders, 'files': files})
 
+	def ReadListInfo(self):
+		tmp=self.listObject.rootDirectory.split("\\")
+		curdir=_("%(letter)sルート") % {'letter': tmp[0][0]} if len(tmp)==1 else tmp[-1]
+		prefix=_("フォルダ ") if len(tmp)>1 else ""
+		globalVars.app.say(_("%(prefix)s%(dir)sを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'prefix': prefix, 'dir': curdir, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1})
+

@@ -265,3 +265,7 @@ class StreamListTab(base.FalconTabBase):
 		streams=len(self.listObject)
 		curdir=self.listObject.rootDirectory.split("\\")[-1]
 		globalVars.app.say(_("%(containing)sの中には、ストリーム %(streams)d個") % {'containing': curdir, 'streams': streams})
+
+	def ReadListInfo(self):
+		tmp=self.listObject.rootDirectory.split("\\")[-1]
+		globalVars.app.say(_("%(dir)sに含まれるストリームを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'dir': tmp, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1})

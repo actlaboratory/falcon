@@ -133,3 +133,7 @@ class DriveListTab(base.FalconTabBase):
 
 	def ReadListItemNumber(self):
 		globalVars.app.say(_("ドライブ %(drives)d個") % {'drives': len(self.listObject)})
+
+	def ReadListInfo(self):
+		globalVars.app.say(_("ドライブ一覧を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1})
+
