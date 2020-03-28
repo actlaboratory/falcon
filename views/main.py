@@ -268,8 +268,6 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READHEADER",_("テキストヘッダー読み"))
 		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READFOOTER",_("テキストフッター読み"))
 		self.hReadMenu.AppendSubMenu(subMenu,_("プレビュー"))
-		self.RegisterMenuCommand(self.hReadMenu,"READ_FILEINFO",_("ファイル情報"))
-		self.RegisterMenuCommand(self.hReadMenu,"READ_DRIVEINFO",_("ドライブ情報"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_CURRENTFOLDER",_("現在のフォルダ名を読み上げ"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_LISTITEMNUMBER",_("リスト項目数を読み上げ"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_LISTINFO",_("一覧情報を読み上げ"))
