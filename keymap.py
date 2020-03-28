@@ -12,6 +12,9 @@ import defaultKeymap
 import errorCodes
 import menuItemsStore
 
+import tabs
+import browsableObjects
+
 from simpleDialog import *
 
 str2key={
@@ -202,8 +205,10 @@ class KeymapHandler():
 		#wx.AcceleratorEntry.__eq__=AcceleratorEntry_eq
 		self.log=logging.getLogger("falcon.keymapHandler")
 		self.errors={}
-		self.entries={}
-		self.map={}
+		self.entries={}		#生成したAcceleratorEntry
+		self.map={}			#ref番号→ショートカットキーに変換
+		self.refMap={}		#キーの重複によりこのインスタンスで処理する必要のあるメニューと、そのとび先の本来のref
+
 		if dict:
 			read=configparser.ConfigParser()
 			read.read_dict(defaultKeymap.defaultKeymap)
@@ -262,9 +267,17 @@ class KeymapHandler():
 				continue
 
 			#キーの重複確認
-			if entry in self.entries[identifier]:
-				self.addError(identifier,ref,key)
-				continue
+			checkList=[]		#要確認リスト
+			for i in self.entries[identifier]:
+				if entry==i:
+					checkList.append(i)
+			if checkList:
+					checkList.append(entry)
+					if self.checkConfrict(checkList,identifier):
+						entry=None
+					else:
+						self.addError(identifier,ref,key)
+						continue
 
 			#GetKeyStringに備えてself.mapに追加
 			if ref in self.map[identifier]:
@@ -273,8 +286,11 @@ class KeymapHandler():
 			else:
 				#self.mapに新規エントリとして追加
 				self.map[identifier][ref]=e
+
 			#self.entriesに追加
-			self.entries[identifier].append(entry)
+			#重複確認・置換処理の関係でNoneになってる場合には既に追加済みを意味するのでここでは何もしない
+			if entry:
+				self.entries[identifier].append(entry)
 		return
 
 	def addError(self,identifier,ref,key):
@@ -320,20 +336,70 @@ class KeymapHandler():
 		codestr=codestr[len(codestr)-1]
 		if not codestr in str2key:
 			return False
-		return AcceleratorEntry(flags,str2key[codestr],menuItemsStore.getRef(ref.upper()))
+		return AcceleratorEntry(flags,str2key[codestr],menuItemsStore.getRef(ref.upper()),ref.upper())
 
 	def GetTable(self, identifier):
 		"""アクセラレーターテーブルを取得します。identifier で、どのビューでのテーブルを取得するかを指定します。"""
 		identifier=identifier.upper()
-
 		return wx.AcceleratorTable(self.entries[identifier])
 
+	#複数メニューに対するキーの割り当ての重複を許すか否かを調べる
+	#itemsには調べたいAcceleratorEntryのリストを入れる
+	def checkConfrict(self,items,identifier):
+		flg=0
+		for i in [j.refName for j in items]:
+			iFlag=0
+			if i not in tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File]:
+				iFlag+=1
+			if i not in tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.Folder]:
+				iFlag+=2
+			if i not in tabs.streamList.StreamListTab.blockMenuList:
+				iFlag+=4
+			if i not in tabs.driveList.DriveListTab.blockMenuList:
+				iFlag+=8
+			if iFlag&flg==0:
+				flg+=iFlag
+			else:
+				#重複によるエラー
+				self.log.debug("key confricted. "+i+" is confrict in "+str(items))
+				return False
+		self.log.debug("key not confricted. "+i+" is not confrict in "+str(items))
+
+		#重複してるが問題なしの場合
+		#refを書き換える
+		newref=menuItemsStore.getRef("keymap_"+items[0].ToRawString())
+		self.refMap[newref]=[]
+
+		#self.entriesからいったん削除
+		for i in range(len(items)-1):
+			self.entries[identifier].remove(items[0])
+
+		#refを差し替えて再登録
+		for i in items:
+			self.refMap[newref].append(i.GetCommand())
+			self.entries[identifier].append(AcceleratorEntry(i.GetFlags(),i.GetKeyCode(),newref,i.GetRefName()))
+		return True
+
+	def isRefHit(self,ref):
+		return ref in self.refMap
+
+	def GetOriginalRefs(self,ref):
+		return self.refMap[ref]
 
 class AcceleratorEntry(wx.AcceleratorEntry):
 	#ショートカットキーの一致によって判定され、登録されたメニューコマンドの一致は無視される
+	#refをstrで保持する
+
+	def __init__(self,flags,key,cmd,refName=""):
+		super().__init__(flags,key,cmd)
+		self.refName=refName
+
 	def __eq__(self,other):
 		# isinstance(other, Person)を除去
 		if other is None or type(self) != type(other): return False
 		if self.GetFlags()==other.GetFlags() and self.GetKeyCode()==other.GetKeyCode():
 			return True
 		return False
+
+	def GetRefName(self):
+		return self.refName

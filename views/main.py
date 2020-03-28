@@ -65,6 +65,11 @@ class View(BaseView):
 		#お気に入りフォルダと「ここで開く」のショートカットキーを登録
 		for target in (globalVars.app.userCommandManagers):
 			for v in target.keyMap:
+				if target==globalVars.app.openHereCommand:
+					tabs.base.FalconTabBase.selectItemMenuConditions[0].append(target.refHead+v)
+					tabs.base.FalconTabBase.selectItemMenuConditions[2].append(target.refHead+v)
+					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File].append(target.refHead+v)
+					tabs.streamList.StreamListTab.blockMenuList.append(target.refHead+v)
 				self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
 		errors=self.menu.keymap.GetError(self.identifier)
 		if errors:
@@ -253,11 +258,6 @@ class Menu(BaseMenu):
 			subMenu=wx.Menu()
 			for v in m.paramMap:
 				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
-				if m==globalVars.app.openHereCommand:
-					tabs.base.FalconTabBase.selectItemMenuConditions[0].append(m.refHead+v)
-					tabs.base.FalconTabBase.selectItemMenuConditions[2].append(m.refHead+v)
-					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File].append(m.refHead+v)
-					tabs.streamList.StreamListTab.blockMenuList.append(m.refHead+v)
 			self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
 
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
@@ -318,6 +318,12 @@ class Events(BaseEvents):
 			return
 
 		selected=event.GetId()#メニュー識別しの数値が出る
+
+		if globalVars.app.hMainView.menu.keymap.isRefHit(selected):
+			for ref in globalVars.app.hMainView.menu.keymap.GetOriginalRefs(selected):
+				newEvent=wx.CommandEvent(event.GetEventType(),ref)
+				wx.PostEvent(globalVars.app.hMainView.hFrame.GetEventHandler(),newEvent)
+			return
 
 		#選択された(ショートカットで押された)メニューが無効状態なら何もしない
 		if self.parent.menu.blockCount[selected]>0:
@@ -558,7 +564,7 @@ class Events(BaseEvents):
 					path=path.replace("%1",self.parent.activeTab.listObject.rootDirectory)
 					prm=re.sub(r"^[^ ]* (.*)$",r"\1",path)
 					path=re.sub(r"^([^ ]*).*$",r"\1",path)
-					self.parent.activeTab.RunFile(path,False,prm)
+					misc.RunFile(path,False,prm)
 				return
 
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
