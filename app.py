@@ -138,7 +138,7 @@ class falconAppMain(wx.App):
 		"""スクリーンリーダーでしゃべらせる。"""
 		self.speech.speak(s)
 
-	def PlaySound(self,path,custom_location=True):
+	def PlaySound(self,path,custom_location=False):
 		"""サウンドファイルを再生する。"""
 		if not custom_location: path="fx/"+path 
 		if not os.path.isfile(path):
