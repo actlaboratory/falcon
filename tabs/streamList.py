@@ -258,3 +258,8 @@ class StreamListTab(base.FalconTabBase):
 		f=self.listObject.rootDirectory.split(":\\")
 		s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': self.listObject.rootDirectory[0], 'folder': f[1] if len(f)==2 else "ルート"}
 		globalVars.app.say(s)
+
+	def ReadListItemNumber(self):
+		streams=len(self.listObject)
+		curdir=self.listObject.rootDirectory.split("\\")[-1]
+		globalVars.app.say(_("%(containing)sの中には、ストリーム %(streams)d個") % {'containing': curdir, 'streams': streams})
