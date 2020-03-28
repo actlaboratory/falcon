@@ -257,7 +257,7 @@ class Menu(BaseMenu):
 					tabs.base.FalconTabBase.selectItemMenuConditions[0].append(m.refHead+v)
 					tabs.base.FalconTabBase.selectItemMenuConditions[2].append(m.refHead+v)
 					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File].append(m.refHead+v)
-					tabs.streamList.blockMenuList.append(m.refHead+v)
+					tabs.streamList.StreamListTab.blockMenuList.append(m.refHead+v)
 			self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
 
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
