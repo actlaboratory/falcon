@@ -40,7 +40,8 @@ class DriveListTab(base.FalconTabBase):
 		"MOVE_TOPFILE",
 		"TOOL_DIRCALC",
 		"TOOL_HASHCALC",
-		"TOOL_ADDPATH"
+		"TOOL_ADDPATH",
+		"READ_CONTENT_PREVIEW"
 	]
 
 	def Update(self,cursor=""):

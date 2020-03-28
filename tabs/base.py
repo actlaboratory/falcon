@@ -46,7 +46,8 @@ class FalconTabBase(object):
 		"TOOL_HASHCALC",
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
-		"TOOL_EJECT_DEVICE"
+		"TOOL_EJECT_DEVICE",
+		"READ_CONTENT_PREVIEW"
 	])
 	selectItemMenuConditions.append([])
 	selectItemMenuConditions.append([])
@@ -61,7 +62,8 @@ class FalconTabBase(object):
 		"MOVE_FORWARD_STREAM",
 		"TOOL_HASHCALC",
 		"TOOL_EJECT_DRIVE",
-		"TOOL_EJECT_DEVICE"
+		"TOOL_EJECT_DEVICE",
+		"READ_CONTENT_PREVIEW"
 	])
 
 	selectItemTypeMenuConditions={}
@@ -75,7 +77,8 @@ class FalconTabBase(object):
 	selectItemTypeMenuConditions[browsableObjects.Folder]=[]
 	selectItemTypeMenuConditions[browsableObjects.Folder].extend([
 		"TOOL_HASHCALC",
-		"TOOL_ADDPATH"
+		"TOOL_ADDPATH",
+		"READ_CONTENT_PREVIEW"
 	])
 	#以下３つは専用のタブになってるのでこの機能でやる必要はない。KeyErrorにならないようにしとくだけ。
 	selectItemTypeMenuConditions[browsableObjects.Drive]=[]
