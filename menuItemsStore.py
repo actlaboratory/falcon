@@ -15,6 +15,7 @@ class _MenuItemsStore(object):
 		self.nextID=5000
 
 	def _getRef(self,identifier):
+		identifier=identifier.upper()
 		try:
 			return self.refs[identifier]
 		except KeyError:#なかったら作る

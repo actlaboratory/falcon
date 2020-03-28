@@ -253,6 +253,11 @@ class Menu(BaseMenu):
 			subMenu=wx.Menu()
 			for v in m.paramMap:
 				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
+				if m==globalVars.app.openHereCommand:
+					tabs.base.FalconTabBase.selectItemMenuConditions[0].append(m.refHead+v)
+					tabs.base.FalconTabBase.selectItemMenuConditions[2].append(m.refHead+v)
+					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File].append(m.refHead+v)
+					tabs.streamList.blockMenuList.append(m.refHead+v)
 			self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
 
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
