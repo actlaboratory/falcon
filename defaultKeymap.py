@@ -34,5 +34,6 @@ defaultKeymap["mainView"]={
 	"MOVE_MARKSET": "INSERT",
 	"MOVE_MARK": "shift+BACK",
 	"READ_CURRENTFOLDER": "alt+f5",
-	"READ_CONTENT_PREVIEW": "shift+return"
+	"READ_CONTENT_PREVIEW": "shift+return",
+	"READ_LISTITEMNUMBER": "alt+f3"
 }

@@ -124,4 +124,4 @@ class DriveList(FalconListBase):
 		return self.drives.__iter__()
 
 	def __len__(self):
-		return self.drives.__len__()
+		return len(self.drives)+len(self.unusableDrives)
