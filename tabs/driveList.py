@@ -127,6 +127,8 @@ class DriveListTab(base.FalconTabBase):
 		index=self.GetFocusedItem()
 		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
 
-def ReadCurrentFolder(self):
-		print("a")
+	def ReadCurrentFolder(self):
 		globalVars.app.say("現在は、ドライブ洗濯")
+
+	def ReadListItemNumber(self):
+		globalVars.app.say(_("ドライブ %(drives)d個") % {'drives': len(self.listObject)})

@@ -266,7 +266,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hReadMenu,"READ_FILEINFO",_("ファイル情報"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_DRIVEINFO",_("ドライブ情報"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_CURRENTFOLDER",_("現在のフォルダ名を読み上げ"))
-		self.RegisterMenuCommand(self.hReadMenu,"READ_FOLDERFILENUMBER",_("リスト項目数を読み上げ"))
+		self.RegisterMenuCommand(self.hReadMenu,"READ_LISTITEMNUMBER",_("リスト項目数を読み上げ"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_LISTINFO",_("一覧情報を読み上げ"))
 		self.RegisterMenuCommand(self.hReadMenu,"READ_SETMOVEMENTREAD",_("移動先の読み方を設定"))
 
@@ -476,8 +476,8 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("READ_CURRENTFOLDER"):
 			self.parent.activeTab.ReadCurrentFolder()
 			return
-		if selected==menuItemsStore.getRef("READ_FOLDERFILENUMBER"):
-			self.parent.activeTab.ReadFolderFileNumber()
+		if selected==menuItemsStore.getRef("READ_LISTITEMNUMBER"):
+			self.parent.activeTab.ReadListItemNumber()
 			return
 		if selected==menuItemsStore.getRef("READ_CONTENT_PREVIEW"):
 			self.parent.activeTab.PlaySound()
