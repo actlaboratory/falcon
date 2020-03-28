@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #Filer user commands manager
-#Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 import FalconConfigParser
@@ -29,9 +29,9 @@ class UserCommandManager:
 		config.read_dict(dic)
 
 		#configから２つのmapを生成
-		#config
 		for k in config.options("param"):
 			if(config.has_option("key",k)):
+				k=k.upper()
 				self.paramMap[k]=config["param"][k]
 				self.keyMap[k]=config["key"][k]
 				self.refMap[menuItemsStore.getRef(refHead+k)]=k
@@ -49,6 +49,7 @@ class UserCommandManager:
 
 	def add(self,name,param,key):
 		"""指定した要素を追加"""
+		name=name.upper()
 		self.paramMap[name]=param
 		self.keyMap[name]=key
 		self.refMap[name]=menuItemsStore.getRef(self.refHead+name)
