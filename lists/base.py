@@ -53,6 +53,12 @@ class FalconListBase(object):
 	def GetSortDescending(self):
 		return self.sortDescending
 
+	def GetSortKindString(self):
+		return GetSortDescription(self.supportedSorts[self.sortCursor])
+
+	def GetSortAdString(self):
+		return _("昇順") if self.sortDescending==0 else _("降順")
+
 	def ApplySort(self):
 		"""ソートを適用。並び順と照準/降順は、setSortCursor / SetSortDescending で設定しておく。"""
 		if len(self.supportedSorts)==0: return
