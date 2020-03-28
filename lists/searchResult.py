@@ -183,8 +183,7 @@ class SearchResultList(FalconListBase):
 		return ret
 
 	def __iter__(self):
-		lst=self.folders+self.files
-		return lst.__iter__()
+		return self.results.__iter__()
 
 	def __len__(self):
 		return len(self.results)
