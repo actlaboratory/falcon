@@ -36,8 +36,10 @@ class SearchResultList(FalconListBase):
 
 	def Initialize(self,rootDirectory,searches,keyword,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
+		self.finished=False
 		self.rootDirectory=rootDirectory
 		self.searches=searches
+		self.keyword_string=keyword
 		#ワイルドカード (アスタリスクとクエスチョン)は、正規表現に置き換えしちゃう
 		keyword=re.sub(ESCAPE_PATTERN,r"\\\1",keyword)
 		keyword=keyword.replace("*",".*")
@@ -64,6 +66,7 @@ class SearchResultList(FalconListBase):
 			path=self.searches[i]
 			if path=="eol":#EOLで検索終了
 				eol=True
+				self.finished=True
 				globalVars.app.PlaySound("complete.ogg")
 				globalVars.app.say(_("検索終了、%(item)d件ヒットしました。") % {'item': len(self)})
 				break
@@ -99,6 +102,8 @@ class SearchResultList(FalconListBase):
 		#end 検索ループ
 		return eol,ret_list
 
+	def GetKeywordString(self):
+		return self.keyword_string
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
 		return {
@@ -182,6 +187,8 @@ class SearchResultList(FalconListBase):
 		if found[ARCHIVE]==l: ret[ARCHIVE]=constants.FULL_CHECKED
 		return ret
 
+	def GetFinishedStatus(self):
+		return self.finished
 	def __iter__(self):
 		return self.results.__iter__()
 

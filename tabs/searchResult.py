@@ -103,3 +103,10 @@ class SearchResultTab(fileList.FileListTab):
 	#end onLabelEditEnd
 
 	#TODO:GoToTopFile(self):
+
+	def ReadCurrentFolder(self):
+		state=_("検索完了") if self.listObject.GetFinishedStatus() is True else _("検索中")
+		globalVars.app.say(_("キーワード %(keyword)s で ディレクトリ %(dir)s を%(state)s") % {'keyword': self.listObject.GetKeywordString(), 'dir': self.listObject.rootDirectory, 'state': state})
+
+	def ReadListItemNumber(self):
+		globalVars.app.say(_("検索結果 %(results)d件") % {'results': len(self.listObject)})

@@ -95,11 +95,11 @@ class FalconTabBase(object):
 		globalVars.app.config.add_section(self.__class__.__name__)
 		self.environment=environment		#このタブ特有の環境変数
 		self.stopSoundHandle=None
+		self.checkedItem=set()
 		if self.environment=={}:
 			self.environment["markedPlace"]=None		#マークフォルダ
 			self.environment["selectedItemCount"]=None	#選択中のアイテム数。0or1or2=2以上。
 			self.environment["selectingItemCount"]={}	#選択中アイテムの種類(browsableObjects)毎の個数
-			self.checkedItem=set()
 
 	def SetEnvironment(self,newEnv):
 		"""タブの引継ぎなどの際にenvironmentの内容をコピーするために利用"""
