@@ -282,3 +282,10 @@ class FileListTab(base.FalconTabBase):
 		f=self.listObject.rootDirectory.split(":\\")
 		s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': self.listObject.rootDirectory[0], 'folder': f[1] if len(f)==2 else "ルート"}
 		globalVars.app.say(s)
+
+	def ReadListItemNumber(self):
+		folders,files=self.listObject.GetFolderFileNumber()
+		tmp=self.listObject.rootDirectory.split("\\")
+		curdir=_("%(letter)sルート") % {'letter': tmp[0][0]} if len(tmp)==1 else tmp[-1]
+		globalVars.app.say(_("%(containing)sの中には、フォルダ %(folders)d個、 ファイル %(files)d個") % {'containing': curdir, 'folders': folders, 'files': files})
+
