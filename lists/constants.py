@@ -37,7 +37,8 @@ def GetSortDescription(attrib):
 			SORT_TYPE_VOLUMELABEL:_("ラベル"),
 			SORT_TYPE_DRIVELETTER:_("ラベル"),
 			SORT_TYPE_FREESPACE:_("空き"),
-			SORT_TYPE_TOTALSPACE:_("合計")
+			SORT_TYPE_TOTALSPACE:_("合計"),
+			SORT_TYPE_SEARCHPATH: _("検索パス")
 		}
 	#end 辞書作る
 	return SORT_DESCRIPTIONS[attrib]

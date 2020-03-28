@@ -563,3 +563,6 @@ class FalconTabBase(object):
 
 	def ReadListItemNumber(self):
 		return errorCodes.NOT_SUPPORTED
+
+	def ReadListInfo(self):
+		return errorCodes.NOT_SUPPORTED

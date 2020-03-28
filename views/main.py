@@ -482,6 +482,9 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("READ_LISTITEMNUMBER"):
 			self.parent.activeTab.ReadListItemNumber()
 			return
+		if selected==menuItemsStore.getRef("READ_LISTINFO"):
+			self.parent.activeTab.ReadListInfo()
+			return
 		if selected==menuItemsStore.getRef("READ_CONTENT_PREVIEW"):
 			self.parent.activeTab.PlaySound()
 			return
