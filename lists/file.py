@@ -185,3 +185,6 @@ class FileList(FalconListBase):
 
 	def __len__(self):
 		return len(self.folders)+len(self.files)
+
+	def GetFolderFileNumber(self):
+		return len(self.folders), len(self.files)

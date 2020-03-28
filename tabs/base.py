@@ -536,4 +536,5 @@ class FalconTabBase(object):
 	def PlaySound(self):
 		self.stopSoundHandle=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
 
-
+	def ReadFolderFileNumber(self):
+		return errorCodes.NOT_SUPPORTED
