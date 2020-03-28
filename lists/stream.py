@@ -22,6 +22,7 @@ class StreamList(FalconListBase):
 	"""NTFS 副ストリームを扱うリスト。"""
 	def __init__(self):
 		super().__init__()
+		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE]
 		self.log=logging.getLogger("falcon.streamList")
 
 	def Update(self):
