@@ -43,6 +43,9 @@ class falconAppMain(wx.App):
 		# 起動サウンドの再生
 		self.PlaySound(self.config["sounds"]["startup"])
 
+		#falconHelperの初期設定
+		misc.InitContextMenu()
+
 		# 音声読み上げの準備
 		reader=self.config["speech"]["reader"]
 		if(reader=="PCTK"):
@@ -158,6 +161,7 @@ class falconAppMain(wx.App):
 
 
 	def OnExit(self):
+		misc.ExitContextMenu()
 		workerThreads.Stop()
 		return wx.App.OnExit(self)
 

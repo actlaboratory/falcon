@@ -529,21 +529,8 @@ class FalconTabBase(object):
 		else:
 			targetPath=self.GetFocusedElement().fullpath
 		#end イベントあるか
-		s=misc.GetContextMenu(targetPath)
-		s_json=json.loads(s)
-		menus=s_json['menus']
-		hMenu = wx.Menu()
-		RegisterMenuCommand(hMenu,"EDIT_COPY",_("コピー"))
-		RegisterMenuCommand(hMenu,"EDIT_CUT",_("切り取り"))
-		RegisterMenuCommand(hMenu,"EDIT_NAMECOPY",_("名前をコピー"))
-		RegisterMenuCommand(hMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
-		for elem in menus:
-			if elem['type']=="separator": continue
-			self._appendContextMenu(hMenu,elem)
-		#end for
-
-		self.hListCtrl.PopupMenu(hMenu)
-		hMenu.Destroy()
+		cmd=misc.GetContextMenu(targetPath)
+		print("menu %d" % cmd)
 
 	def CloseContextMenu(self,event):
 		selected=event.GetId()							#メニュー識別しの数値
@@ -553,7 +540,6 @@ class FalconTabBase(object):
 		else:
 			misc.ExecContextMenuItem(selected)
 		#end exec context menu action
-		misc.DestroyContextMenu()
 
 	def ReadCurrentFolder(self):
 		return errorCodes.NOT_SUPPORTED

@@ -105,17 +105,16 @@ def getDiscDriveTypes():
 	return ret
 #end getDiscDriveTypes
 
+def InitContextMenu():
+	falconHelper.initContextMenu()
+
+def ExitContextMenu():
+	falconHelper.exitContextMenu()
+
 def GetContextMenu(path):
 	path_bytes=bytearray(path.encode('UTF-16LE'))
 	path_bytes.extend(b'\x00\x00')
-	ptr=falconHelper.getContextMenu(bytes(path_bytes))
-	s=ctypes.c_char_p(ptr).value
-	falconHelper.releasePtr(ptr)
-	s2=s.decode('UTF-8')
-	return s2
-
-def DestroyContextMenu():
-	falconHelper.destroyContextMenu()
+	return falconHelper.getContextMenu(bytes(path_bytes),globalVars.app.hMainView.hFrame.GetHandle())
 
 def ExecContextMenuItem(id):
 	falconHelper.execContextMenuItem(id)

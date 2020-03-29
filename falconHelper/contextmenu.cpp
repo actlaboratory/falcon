@@ -4,13 +4,14 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include "picojson.h"
 #include "defs.h"
 using namespace std;
 
 //-------------------------------------------------
-//�A�v���P�[�V�����L�[�ŊJ����R���e�L�X�g���j���[
+//context menu manager
 
 IContextMenu *contextMenu = NULL;
 IContextMenu2 *g_pcm2;
@@ -175,6 +176,11 @@ falcon_helper_funcdef int destroyContextMenu()
 		return 0;
 	DestroyMenu(contextMenuHandle);
 	contextMenu->Release();
+	contextMenu=NULL;
+	if(g_pcm2) g_pcm2->Release();
+	if(g_pcm3) g_pcm3->Release();
+	g_pcm2=NULL;
+	g_pcm3=NULL;
 	CoUninitialize();
 	return 1;
 }
@@ -261,11 +267,18 @@ string processMenu(HMENU menu)
 	return v.serialize();
 }
 
-falcon_helper_funcdef int getContextMenu(LPCTSTR path)
+falcon_helper_funcdef int getContextMenu(LPCTSTR path, HWND wnd)
 {
 	HMENU menu;
 	int ret = _getContextMenu(path, &menu);
-	return static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD, 0, 0, window, NULL));
+	int cmd=static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD, 0, 0, wnd, NULL));
+	if(cmd==0){
+		wstringstream w;
+		w << L"menu handle=" << menu << L", window=" << window << L", Error code " << GetLastError();
+		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
+	}
+	destroyContextMenu();
+	return cmd;
 }
 
 falcon_helper_funcdef void initContextMenu()
