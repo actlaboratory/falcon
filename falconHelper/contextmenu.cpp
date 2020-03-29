@@ -10,14 +10,14 @@
 using namespace std;
 
 //-------------------------------------------------
-//ƒAƒvƒŠƒP[ƒVƒ‡ƒ“ƒL[‚ÅŠJ‚¯‚éƒRƒ“ƒeƒLƒXƒgƒƒjƒ…[
+//ï¿½Aï¿½vï¿½ï¿½ï¿½Pï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½Lï¿½[ï¿½ÅŠJï¿½ï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½eï¿½Lï¿½Xï¿½gï¿½ï¿½ï¿½jï¿½ï¿½ï¿½[
 
-IContextMenu *contextMenu=NULL;
+IContextMenu *contextMenu = NULL;
 IContextMenu2 *g_pcm2;
 IContextMenu3 *g_pcm3;
-HMENU contextMenuHandle=NULL;
-HANDLE hThread=NULL;
-HWND window=NULL;
+HMENU contextMenuHandle = NULL;
+HANDLE hThread = NULL;
+HWND window = NULL;
 
 string wide2sjis(const wchar_t *str)
 {
@@ -48,51 +48,65 @@ wstring ltrimBackSlash(wstring in)
 	return w2;
 }
 
-LRESULT CALLBACK contextMenuWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
-if (g_pcm3) {
-LRESULT lres;
-if (SUCCEEDED(g_pcm3->HandleMenuMsg2(uMsg, wParam, lParam, &lres))) {
-return lres;
+LRESULT CALLBACK contextMenuWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (g_pcm3)
+	{
+		LRESULT lres;
+		if (SUCCEEDED(g_pcm3->HandleMenuMsg2(uMsg, wParam, lParam, &lres)))
+		{
+			return lres;
+		}
+	}
+	else if (g_pcm2)
+	{
+		if (SUCCEEDED(g_pcm2->HandleMenuMsg(uMsg, wParam, lParam)))
+		{
+			return 0;
+		}
+	}
+
+	switch (uMsg)
+	{
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	default:
+		break;
+	}
+	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-}else if (g_pcm2) {
-if (SUCCEEDED(g_pcm2->HandleMenuMsg(uMsg, wParam, lParam))) {
-return 0;
-}
-}
-
-	switch (uMsg) {
-case WM_DESTROY:
-PostQuitMessage(0);
-return 0;
-default:
-break;
-}
-return DefWindowProc(hwnd, uMsg, wParam, lParam);
-}
-
-DWORD WINAPI windowThread(void* param){
-WNDCLASSEX wc;
-wc.cbSize=sizeof(WNDCLASSEX);
-wc.style=0;
-wc.lpfnWndProc=contextMenuWindowProc;
-wc.cbClsExtra=0;
-wc.cbWndExtra=0;
-wc.hInstance=GetModuleHandle(NULL);
-wc.hIcon=NULL;
-wc.hCursor=NULL;
-wc.hbrBackground=NULL;
-wc.lpszMenuName=NULL;
-wc.lpszClassName=L"FALCON_HELPER";
-wc.hIconSm=NULL;
-if(RegisterClassEx(&wc)==0) return 0;
-window=CreateWindowEx(0,L"FALCON_HELPER",NULL,WS_OVERLAPPEDWINDOW,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,HWND_MESSAGE,NULL,wc.hInstance,NULL);
-if(wnd==NULL) return 0;
-MSG msg;
-while (GetMessage(&msg,NULL,0,0)>0){
-TranslateMessage(&msg);
-DispatchMessage(&msg);
-}
+DWORD WINAPI windowThread(void *param)
+{
+	WNDCLASSEX wc;
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.style = 0;
+	wc.lpfnWndProc = contextMenuWindowProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = GetModuleHandle(NULL);
+	wc.hIcon = NULL;
+	wc.hCursor = NULL;
+	wc.hbrBackground = NULL;
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = L"FALCON_HELPER";
+	wc.hIconSm = NULL;
+	if (RegisterClassEx(&wc) == 0)
+		return 0;
+	window = CreateWindowEx(0, L"FALCON_HELPER", NULL, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, HWND_MESSAGE, NULL, wc.hInstance, NULL);
+	if (window == NULL)
+	{
+		MessageBox(NULL, L"cannot create window", L"cannot create window", MB_OK);
+		return 0;
+	}
+	MSG msg;
+	while (GetMessage(&msg, NULL, 0, 0) > 0)
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	return 1;
 }
 
 int _getContextMenu(LPCTSTR in, HMENU *out)
@@ -145,8 +159,8 @@ int _getContextMenu(LPCTSTR in, HMENU *out)
 	}
 	contextMenuHandle = CreatePopupMenu();
 	contextMenu->QueryContextMenu(contextMenuHandle, 0, 101, 0x7fff, CMF_NORMAL);
-	contextMenu->QueryInterface(IID_IContextMenu2, (void**)&g_pcm2);
-	contextMenu->QueryInterface(IID_IContextMenu3, (void**)&g_pcm3);
+	contextMenu->QueryInterface(IID_IContextMenu2, (void **)&g_pcm2);
+	contextMenu->QueryInterface(IID_IContextMenu3, (void **)&g_pcm3);
 
 	fld->Release();
 	desktop->Release();
@@ -247,25 +261,25 @@ string processMenu(HMENU menu)
 	return v.serialize();
 }
 
-falcon_helper_funcdef char *getContextMenu(LPCTSTR path)
+falcon_helper_funcdef int getContextMenu(LPCTSTR path)
 {
 	HMENU menu;
 	int ret = _getContextMenu(path, &menu);
-pcm->QueryInterface(IID_IContextMenu2, (void**)&g_pcm2);
-
-	int cmd=TrackPopupMenuEx(menu,TPM_RETURNCMD,0,0,window,NULL);
-
+	return static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD, 0, 0, window, NULL));
 }
 
-falcon_helper_funcdef void initContextMenu(){
-DWORD id;
-hThread=CreateThread(0,0,windowThread,NULL,0,&id);
+falcon_helper_funcdef void initContextMenu()
+{
+	DWORD id;
+	hThread = CreateThread(0, 0, windowThread, NULL, 0, &id);
 }
 
-falcon_helper_funcdef void exitContextMenu(){
-if(window!=0){
-SendMessage(window,WM_DESTROY,0,0);
-WaitForSingleObject(hThread,INFINITE);
-CloseHandle(hThread);
-}//if
+falcon_helper_funcdef void exitContextMenu()
+{
+	if (window != 0)
+	{
+		SendMessage(window, WM_DESTROY, 0, 0);
+		WaitForSingleObject(hThread, INFINITE);
+		CloseHandle(hThread);
+	} //if
 }
