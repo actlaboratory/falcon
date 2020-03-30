@@ -105,11 +105,8 @@ def getDiscDriveTypes():
 	return ret
 #end getDiscDriveTypes
 
-def InitContextMenu():
-	falconHelper.initContextMenu()
-
-def ExitContextMenu():
-	falconHelper.exitContextMenu()
+def InitContextMenu(wnd):
+	falconHelper.initContextMenu(wnd)
 
 def GetContextMenu(path):
 	path_bytes=bytearray(path.encode('UTF-16LE'))

@@ -14,11 +14,11 @@ using namespace std;
 //context menu manager
 
 IContextMenu *contextMenu = NULL;
-IContextMenu2 *g_pcm2;
-IContextMenu3 *g_pcm3;
+IContextMenu2 *g_pcm2=NULL;
+IContextMenu3 *g_pcm3=NULL;
 HMENU contextMenuHandle = NULL;
-HANDLE hThread = NULL;
-HWND window = NULL;
+HWND hParent=NULL;
+WNDPROC parentWindowProc;
 
 string wide2sjis(const wchar_t *str)
 {
@@ -67,48 +67,9 @@ LRESULT CALLBACK contextMenuWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 		}
 	}
 
-	switch (uMsg)
-	{
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	default:
-		break;
-	}
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return parentWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-DWORD WINAPI windowThread(void *param)
-{
-	WNDCLASSEX wc;
-	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.style = 0;
-	wc.lpfnWndProc = contextMenuWindowProc;
-	wc.cbClsExtra = 0;
-	wc.cbWndExtra = 0;
-	wc.hInstance = GetModuleHandle(NULL);
-	wc.hIcon = NULL;
-	wc.hCursor = NULL;
-	wc.hbrBackground = NULL;
-	wc.lpszMenuName = NULL;
-	wc.lpszClassName = L"FALCON_HELPER";
-	wc.hIconSm = NULL;
-	if (RegisterClassEx(&wc) == 0)
-		return 0;
-	window = CreateWindowEx(0, L"FALCON_HELPER", NULL, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, HWND_MESSAGE, NULL, wc.hInstance, NULL);
-	if (window == NULL)
-	{
-		MessageBox(NULL, L"cannot create window", L"cannot create window", MB_OK);
-		return 0;
-	}
-	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0) > 0)
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-	return 1;
-}
 
 int _getContextMenu(LPCTSTR in, HMENU *out)
 {
@@ -267,32 +228,23 @@ string processMenu(HMENU menu)
 	return v.serialize();
 }
 
-falcon_helper_funcdef int getContextMenu(LPCTSTR path, HWND wnd)
+falcon_helper_funcdef int getContextMenu(LPCTSTR path)
 {
 	HMENU menu;
 	int ret = _getContextMenu(path, &menu);
-	int cmd=static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD, 0, 0, wnd, NULL));
+	int cmd=static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD, 0, 0, hParent, NULL));
 	if(cmd==0){
 		wstringstream w;
-		w << L"menu handle=" << menu << L", window=" << window << L", Error code " << GetLastError();
+		w << L"menu handle=" << menu << L", window=" << hParent << L", Error code " << GetLastError();
 		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
 	}
 	destroyContextMenu();
 	return cmd;
 }
 
-falcon_helper_funcdef void initContextMenu()
+falcon_helper_funcdef void initContextMenu(HWND parent)
 {
-	DWORD id;
-	hThread = CreateThread(0, 0, windowThread, NULL, 0, &id);
-}
-
-falcon_helper_funcdef void exitContextMenu()
-{
-	if (window != 0)
-	{
-		SendMessage(window, WM_DESTROY, 0, 0);
-		WaitForSingleObject(hThread, INFINITE);
-		CloseHandle(hThread);
-	} //if
+hParent=parent;
+parentWindowProc = (WNDPROC)GetWindowLongPtr(parent, GWLP_WNDPROC);
+SetWindowLongPtr(parent, GWLP_WNDPROC, (LONG)contextMenuWindowProc);
 }
