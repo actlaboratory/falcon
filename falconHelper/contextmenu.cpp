@@ -247,4 +247,7 @@ falcon_helper_funcdef void initContextMenu(HWND parent)
 hParent=parent;
 parentWindowProc = (WNDPROC)GetWindowLongPtr(parent, GWLP_WNDPROC);
 SetWindowLongPtr(parent, GWLP_WNDPROC, (LONG)contextMenuWindowProc);
+wstringstream w;
+w << hParent;
+		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
 }
