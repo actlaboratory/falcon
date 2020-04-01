@@ -98,7 +98,11 @@ class Folder(File):
 class Drive(FalconBrowsableBase):
 	"""ドライブを表す。"""
 	def Initialize(self, letter, free, total, type, name=""):
-		"""必要な情報をセットする"""
+		"""
+			必要な情報をセットする
+			変数名はNetworkResourceと互換しているため、変更した場合は両方に反映すること！
+
+		"""
 		self.letter=letter
 		self.free=free
 		self.total=total
@@ -130,7 +134,10 @@ class Drive(FalconBrowsableBase):
 
 
 	def GetListTuple(self):
-		"""表示に必要なタプルを返す。"""
+		"""
+			表示に必要なタプルを返す。
+			変更した場合はNetworkResourceの方にも反映すること！
+		"""
 		return (self.basename, self.letter, misc.ConvertBytesTo(self.free, misc.UNIT_AUTO, True), misc.ConvertBytesTo(self.total, misc.UNIT_AUTO, True), self.typeString)
 
 class Stream(FalconBrowsableBase):
@@ -149,11 +156,22 @@ class Stream(FalconBrowsableBase):
 class NetworkResource(FalconBrowsableBase):
 	"""ネットワーク上のディスクリソースを表す。このオブジェクトは情報を保持するだけで、指し示すリソースにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
 	def Initialize(self,basename="", fullpath="", address=""):
-		"""必要な情報をセットする"""
+		"""
+			必要な情報をセットする
+			ドライブリストに表示するため、変数名はDriveのものと互換
+		"""
 		self.basename=basename
 		self.fullpath=fullpath
-		self.size=-1
+		self.letter=""
+		self.free=-1
+		self.total=-1
+		self.type=-1
+		self.typeString=_("ネットワークリソース")
 		self.address=address
+
 	def GetListTuple(self):
-		"""表示に必要なタプルを返す。"""
-		return (self.basename, self.basename, address)
+		"""
+			表示に必要なタプルを返す。
+			ここもDriveと同じ内容に統一
+		"""
+		return (self.basename, self.letter,"", "", self.typeString)
