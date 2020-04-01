@@ -178,10 +178,11 @@ class FalconTabBase(object):
 		else:
 			for i in self.checkedItem:
 				lst.append(self.listObject.GetElement(i))
-		lst.sort()
+		if index_mode:
+			lst.sort()
+			return lst
 
 		#リストを作る
-		if index_mode: return lst
 		r=type(self.listObject)()
 		r.Initialize(lst)
 		return r
