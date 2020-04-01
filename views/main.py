@@ -69,6 +69,7 @@ class View(BaseView):
 					tabs.base.FalconTabBase.selectItemMenuConditions[0].append(target.refHead+v)
 					tabs.base.FalconTabBase.selectItemMenuConditions[2].append(target.refHead+v)
 					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File].append(target.refHead+v)
+					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.NetworkResource].append(target.refHead+v)
 					tabs.streamList.StreamListTab.blockMenuList.append(target.refHead+v)
 				self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
 		errors=self.menu.keymap.GetError(self.identifier)

@@ -80,11 +80,16 @@ class FalconTabBase(object):
 		"TOOL_ADDPATH",
 		"READ_CONTENT_PREVIEW"
 	])
+	selectItemTypeMenuConditions[browsableObjects.NetworkResource]=[]
+	selectItemTypeMenuConditions[browsableObjects.NetworkResource].extend([
+		"FILE_RENAME",
+		"EDIT_COPY",
+		"TOOL_EJECT_DRIVE",
+		"TOOL_EJECT_DEVICE"
+	])
 	#以下３つは専用のタブになってるのでこの機能でやる必要はない。KeyErrorにならないようにしとくだけ。
 	selectItemTypeMenuConditions[browsableObjects.Drive]=[]
 	selectItemTypeMenuConditions[browsableObjects.Stream]=[]
-	selectItemTypeMenuConditions[browsableObjects.NetworkResource]=[]
-
 
 	def __init__(self,environment):
 		self.task=None
