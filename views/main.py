@@ -479,6 +479,8 @@ class Events(BaseEvents):
 				if elem.free>=0:
 					dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
 				dic[_("種類")]=elem.typeString
+			if elem.__class__==browsableObjects.NetworkResource:
+				dic[_("IPアドレス")]=elem.address
 			d=views.objectDetail.Dialog()
 			d.Initialize(dic)
 			d.Show()
