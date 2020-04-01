@@ -232,11 +232,11 @@ falcon_helper_funcdef int getContextMenu(LPCTSTR path)
 {
 	HMENU menu;
 	int ret = _getContextMenu(path, &menu);
-	int cmd=static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD, 0, 0, hParent, NULL));
+	int cmd=static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD|TPM_NONOTIFY, 0, 0, hParent, NULL));
 	if(cmd==0){
 		wstringstream w;
 		w << L"menu handle=" << menu << L", window=" << hParent << L", Error code " << GetLastError();
-		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
+//		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
 	}
 	destroyContextMenu();
 	return cmd;
@@ -247,7 +247,4 @@ falcon_helper_funcdef void initContextMenu(HWND parent)
 hParent=parent;
 parentWindowProc = (WNDPROC)GetWindowLongPtr(parent, GWLP_WNDPROC);
 SetWindowLongPtr(parent, GWLP_WNDPROC, (LONG)contextMenuWindowProc);
-wstringstream w;
-w << hParent;
-		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
 }
