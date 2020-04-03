@@ -7,7 +7,6 @@
 #include <string>
 #include "picojson.h"
 #include "defs.h"
-#include "common.h"
 using namespace std;
 
 //--------------------------------------------------
@@ -168,9 +167,6 @@ string processMenu(HMENU menu)
 	int numItems = GetMenuItemCount(menu);
 	picojson::object menu_object;
 	picojson::array datalist;
-	bool has_submenu;
-	UINT cch;
-	int ret;
 	for (int i = 0; i < numItems; ++i)
 	{
 		picojson::object *obj = makePicoJsonObject(menu, i);
@@ -186,12 +182,12 @@ falcon_helper_funcdef char *getContextMenu(LPCTSTR path)
 {
 	HMENU menu;
 	int ret = _getContextMenu(path, &menu);
-	
+
 	string menu_json = processMenu(menu);
 	contextMenuHandle = menu;
 	int sz = menu_json.size() + 1;
 	char *ptr = (char *)malloc(sz);
 	memset(ptr, 0, sz);
-	strcpy(ptr, menu_json.c_str());
+	strcpy_s(ptr, menu_json.size(), menu_json.c_str());
 	return ptr;
 }

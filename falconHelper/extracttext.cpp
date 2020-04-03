@@ -9,7 +9,7 @@ using namespace std;
 
 typedef int (*FUNCTYPE)(BSTR lpFilePath, bool bProp,  BSTR*lpFileText);
 
-wchar_t* extractText(wchar_t *path)
+char* extractText(wchar_t *path)
 {
     wstring filename=path;
     size_t pos;
@@ -17,7 +17,7 @@ wchar_t* extractText(wchar_t *path)
     bool unsupported;
     pos = filename.rfind(TEXT("."));
     if (pos == wstring::npos)
-        return 0;
+        return NULL;
     ext = filename.substr(pos + 1);
     unsupported = true;
     if (lstrcmpi(ext.c_str(), TEXT("txt")) == 0)
@@ -107,8 +107,7 @@ wchar_t* extractText(wchar_t *path)
     BSTR fname = SysAllocString(filename.c_str());
     BSTR fileText = SysAllocString(TEXT(""));
     int nFileLength = ExtractText(fname, false, &fileText);
-    content = (LPCTSTR)fileText;
-    char *ret=wide2utf8(content);
+    char *ret=wide2utf8(fileText);
     FreeLibrary(hInstDLL);
     SysFreeString(fname);
     SysFreeString(fileText);
