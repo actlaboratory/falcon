@@ -14,6 +14,7 @@ import os
 import wx
 import browsableObjects
 import clipboardHelper
+import constants
 import errorCodes
 import globalVars
 import lists
@@ -564,8 +565,14 @@ class FalconTabBase(object):
 	def ReadCurrentFolder(self):
 		return errorCodes.NOT_SUPPORTED
 
-	def PlaySound(self):
-		self.stopSoundHandle=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
+	def Preview(self):
+		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
+		if ext in constants.SUPPORTED_AUDIO_FORMATS:
+			self.stopSoundHandle=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
+		elif ext in constants.SUPPORTED_DOCUMENT_FORMATS:
+			globalVars.app.say(misc.ExtractText(self.GetFocusedElement().fullpath))
+		else:
+			globalVars.app.say(_("プレビューに対応していないファイル形式です。"))
 
 	def ReadListItemNumber(self):
 		return errorCodes.NOT_SUPPORTED
