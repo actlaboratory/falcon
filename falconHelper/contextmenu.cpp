@@ -188,6 +188,6 @@ falcon_helper_funcdef char *getContextMenu(LPCTSTR path)
 	int sz = menu_json.size() + 1;
 	char *ptr = (char *)malloc(sz);
 	memset(ptr, 0, sz);
-	strcpy_s(ptr, menu_json.size(), menu_json.c_str());
+	strcpy(ptr, menu_json.c_str());
 	return ptr;
 }
