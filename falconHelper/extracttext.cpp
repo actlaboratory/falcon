@@ -9,7 +9,7 @@ using namespace std;
 
 typedef int (*FUNCTYPE)(BSTR lpFilePath, bool bProp,  BSTR*lpFileText);
 
-char* extractText(wchar_t *path)
+falcon_helper_funcdef char* extractText(wchar_t *path)
 {
     wstring filename=path;
     size_t pos;
