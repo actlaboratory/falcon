@@ -1,3 +1,4 @@
+CPPFLAGS= /nologo /W3 /c /EHsc /O2
 OBJS= common.obj contextmenu.obj ctlcolor.obj disctype.obj findradiobuttons.obj ejectDevice.obj
 LIBS= user32.lib Ole32.lib OleAut32.lib gdi32.lib Cfgmgr32.lib Setupapi.lib shell32.lib
 .SILENT:
@@ -5,7 +6,7 @@ falconHelper.dll: $(OBJS)
 	link /nologo /DLL $(OBJS) $(LIBS) /OUT:falconHelper.dll
 
 %.obj: %.cpp
-	cl /nologo /EHsc /c /O2 $<
+	cl $(CPPFLAGS) $<
 
 .PHONY: clean
 clean:
