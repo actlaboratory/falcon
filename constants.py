@@ -61,3 +61,11 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'123',
 	'wri'
 }
+
+SUPPORTED_AUDIO_FORMATS={
+	'wav',
+	'mp3',
+	'ogg',
+	'wma',
+	'flac',
+}
