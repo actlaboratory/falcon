@@ -84,5 +84,10 @@ class DefaultSettings:
 			"header_line_count": 10,
 			"footer_line_count": 10
 		}
+		config['on_list_moved']={
+			"read_directory_level": True,
+			"read_directory_name": True,
+			"read_item_count": True
+		}
 		return config
 
