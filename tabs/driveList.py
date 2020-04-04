@@ -131,8 +131,11 @@ class DriveListTab(base.FalconTabBase):
 	def ReadCurrentFolder(self):
 		globalVars.app.say("現在は、ドライブ洗濯")
 
-	def ReadListItemNumber(self):
-		globalVars.app.say(_("ドライブ %(drives)d個") % {'drives': len(self.listObject)})
+	def ReadListItemNumber(self,short=False):
+		if short:
+			globalVars.app.say(_("ドライブ数 %(drives)d") % {'drives': len(self.listObject)})
+		else:
+			globalVars.app.say(_("ドライブ %(drives)d個") % {'drives': len(self.listObject)})
 
 	def ReadListInfo(self):
 		globalVars.app.say(_("ドライブ一覧を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1})

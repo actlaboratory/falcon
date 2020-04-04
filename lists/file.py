@@ -44,7 +44,11 @@ class FileList(FalconListBase):
 		dir_spl=dir.split("\\")
 		level=len(dir_spl)
 		if not silent:
-			globalVars.app.say("%s%d %s" % (dir[0],level,dir_spl[level-1]))
+			r=[]
+			if globalVars.app.config['on_list_moved']['read_directory_level']=='True': r.append("%s%d " % (dir[0],level))
+			if globalVars.app.config['on_list_moved']['read_directory_name']=='True': r.append(dir_spl[level-1])
+			if len(r)>0: globalVars.app.say("".join(r))
+		#end read
 		self.rootDirectory=dir
 		self.log.debug("Getting file list for %s..." % self.rootDirectory)
 		t=misc.Timer()

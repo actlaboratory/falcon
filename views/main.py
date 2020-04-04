@@ -507,6 +507,9 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("READ_CONTENT_READFOOTER"):
 			self.parent.activeTab.ReadFooter()
 			return
+		if selected==menuItemsStore.getRef("READ_SETMOVEMENTREAD"):
+			self.parent.activeTab.SetMovementRead()
+			return
 		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
 			self.parent.activeTab.DirCalc()
 			return
