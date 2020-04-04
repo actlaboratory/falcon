@@ -598,7 +598,7 @@ class FalconTabBase(object):
 		prefix=_("末尾%(ln)d行") % {'ln': ln}
 		globalVars.app.say("%s %s" % (prefix,"\n".join(s)))
 
-	def ReadListItemNumber(self):
+	def ReadListItemNumber(self,short=False):
 		return errorCodes.NOT_SUPPORTED
 
 	def ReadListInfo(self):

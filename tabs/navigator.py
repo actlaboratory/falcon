@@ -51,6 +51,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 		newtab.Update(cursor)
+		if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
 		return newtab
 	#end ドライブリストへ行く
 	target=os.path.expandvars(target)
@@ -67,6 +68,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 		newtab.Update(lst)
+		if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
 		return newtab
 	else:
 		lst=lists.FileList()
@@ -89,5 +91,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 	if targetItemIndex>=0:
 		hListCtrl.Focus(targetItemIndex)
 		hListCtrl.Select(targetItemIndex)
+	#end ターゲットにフォーカス
+	if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
 	return newtab
 #end Navigate
