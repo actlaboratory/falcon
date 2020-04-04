@@ -35,6 +35,8 @@ defaultKeymap["mainView"]={
 	"MOVE_MARK": "shift+BACK",
 	"READ_CURRENTFOLDER": "alt+f5",
 	"READ_CONTENT_PREVIEW": "shift+return",
+	"READ_CONTENT_READHEADER": "alt+home",
+	"READ_CONTENT_READFOOTER": "alt+end",
 	"READ_LISTITEMNUMBER": "alt+f3",
 	"READ_LISTINFO": "alt+f1",
 }
