@@ -171,22 +171,21 @@ class FalconTabBase(object):
 		lst=[]
 		next=self.hListCtrl.GetFirstSelected()
 		if next>=0:
-			while(True):
+			while(next>=0):
 				if index_mode:
 					lst.append(next)
 				else:
 					lst.append(self.listObject.GetElement(next))
 				next=self.hListCtrl.GetNextSelected(next)
-				if next==-1: break
 			#end while
 		if index_mode:
 			lst=list(set(lst)|self.checkedItem)
+			lst.sort()
+			return lst
 		else:
 			for i in self.checkedItem:
 				lst.append(self.listObject.GetElement(i))
-		if index_mode:
-			lst.sort()
-			return lst
+				lst=list(dict.fromkeys(lst))
 
 		#リストを作る
 		r=type(self.listObject)()
