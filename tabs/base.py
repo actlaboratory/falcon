@@ -580,7 +580,7 @@ class FalconTabBase(object):
 			globalVars.app.say(_("ドキュメントファイルではありません。"))
 			return
 		#end 非対応
-		ln=10
+		ln=int(globalVars.app.config["preview"]["header_line_count"])
 		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
 		if len(s)>ln: s=s[0:ln]
 		prefix=_("先頭%(ln)d行") % {'ln': ln}
@@ -592,7 +592,7 @@ class FalconTabBase(object):
 			globalVars.app.say(_("ドキュメントファイルではありません。"))
 			return
 		#end 非対応
-		ln=10
+		ln=int(globalVars.app.config['preview']['footer_line_count'])
 		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
 		if len(s)>10: s=s[-10:]
 		prefix=_("末尾%(ln)d行") % {'ln': ln}
