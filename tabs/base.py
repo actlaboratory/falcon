@@ -603,3 +603,18 @@ class FalconTabBase(object):
 
 	def ReadListInfo(self):
 		return errorCodes.NOT_SUPPORTED
+
+	def SetMovementRead(self):
+		m=wx.Menu()
+		m.AppendCheckItem(0,_("フォルダ階層を読み上げ"))
+		m.AppendCheckItem(1,_("フォルダ名を読み上げ"))
+		m.AppendCheckItem(2,_("項目数を読み上げ"))
+		m.Check(0,globalVars.app.config['on_list_moved']['read_directory_level']=='True')
+		m.Check(1,globalVars.app.config['on_list_moved']['read_directory_name']=='True')
+		m.Check(2,globalVars.app.config['on_list_moved']['read_item_count']=='True')
+		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
+		globalVars.app.config['on_list_moved']['read_directory_level']=m.IsChecked(0)
+		globalVars.app.config['on_list_moved']['read_directory_name']=m.IsChecked(1)
+		globalVars.app.config['on_list_moved']['read_item_count']=m.IsChecked(2)
+
+
