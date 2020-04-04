@@ -80,6 +80,9 @@ class DefaultSettings:
 			"コマンド プロンプト" : "ctrl+shift+o",
 			"Windows Power Shell" : "ctrl+shift+p"
 		}
-
+		config["preview"]={
+			"header_line_count": 10,
+			"footer_line_count": 10
+		}
 		return config
 
