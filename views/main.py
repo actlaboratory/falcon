@@ -501,6 +501,12 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("READ_CONTENT_PREVIEW"):
 			self.parent.activeTab.Preview()
 			return
+		if selected==menuItemsStore.getRef("READ_CONTENT_READHEADER"):
+			self.parent.activeTab.ReadHeader()
+			return
+		if selected==menuItemsStore.getRef("READ_CONTENT_READFOOTER"):
+			self.parent.activeTab.ReadFooter()
+			return
 		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
 			self.parent.activeTab.DirCalc()
 			return

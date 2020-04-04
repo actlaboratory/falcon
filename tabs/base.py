@@ -574,6 +574,30 @@ class FalconTabBase(object):
 		else:
 			globalVars.app.say(_("プレビューに対応していないファイル形式です。"))
 
+	def ReadHeader(self):
+		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
+		if not ext in constants.SUPPORTED_DOCUMENT_FORMATS:
+			globalVars.app.say(_("ドキュメントファイルではありません。"))
+			return
+		#end 非対応
+		ln=int(globalVars.app.config["preview"]["header_line_count"])
+		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
+		if len(s)>ln: s=s[0:ln]
+		prefix=_("先頭%(ln)d行") % {'ln': ln}
+		globalVars.app.say("%s %s" % (prefix,"\n".join(s)))
+
+	def ReadFooter(self):
+		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
+		if not ext in constants.SUPPORTED_DOCUMENT_FORMATS:
+			globalVars.app.say(_("ドキュメントファイルではありません。"))
+			return
+		#end 非対応
+		ln=int(globalVars.app.config['preview']['footer_line_count'])
+		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
+		if len(s)>10: s=s[-10:]
+		prefix=_("末尾%(ln)d行") % {'ln': ln}
+		globalVars.app.say("%s %s" % (prefix,"\n".join(s)))
+
 	def ReadListItemNumber(self):
 		return errorCodes.NOT_SUPPORTED
 
