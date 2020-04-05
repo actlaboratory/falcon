@@ -42,10 +42,10 @@ class GrepResultTab(fileList.FileListTab):
 		self.listObject=lists.GrepResultList()
 		self.listObject.Initialize(rootPath,searches,keyword)
 		self.SetListColumns(self.listObject)
-		workerThreads.RegisterTask(workerThreadTasks.PerformGrepSearch,{'listObject': self.listObject, 'tabObject': self})
+		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
 
 	def _onSearchHitCallback(self,hits):
-		"""コールバックで、ヒットした browsableObject のリストが降ってくるので、それをリストビューに追加していく。"""
+		"""コールバックで、ヒットしたオブジェクトのリストが降ってくるので、それをリストビューに追加していく。"""
 		globalVars.app.PlaySound("click.ogg")
 		for elem in hits:
 			t=elem.GetListTuple()
