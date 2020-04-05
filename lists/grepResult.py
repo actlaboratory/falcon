@@ -77,6 +77,7 @@ class GrepResultList(FalconListBase):
 				content=misc.ExtractText(fullpath).split("\n")
 				fileobj=None#複数ヒットでファイルオブジェクトを生成し続けないようにキャッシュする
 				ln=1
+				hitobjects=[]
 				for	 elem in content:
 					m=re.search(self.keyword,elem)
 					if m:
@@ -91,12 +92,19 @@ class GrepResultList(FalconListBase):
 							fileobj=browsableObjects.File()
 							fileobj.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,stat.st_size,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
 						#end make fileobj
-						retobj=(ln,preview,f)
-						self.results.append(retobj)
-						ret_list.append(retobj)
+						obj=browsableObjects.GrepItem()
+						obj.Initialize(ln,preview,fileobj)
+						hitobjects.append(obj)
 					#end ヒット
 					ln+=1
 				#end 行数ごとに検索
+				if len(hitobjects)>0:#このファイルの中でヒットがあった
+				for elem in hitobjects:
+					hits=len(hitobjects)
+					elem.SetHitCount(hits)
+				#end 最終的なヒットカウントを設定
+				self.results.extend(hitobjects)
+				ret_list.extend(hitobjects)
 			#end 対応している拡張子
 			viewed+=1
 			if viewed==100:

@@ -96,7 +96,7 @@ class Folder(File):
 			return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
 	class GrepItem(FalconBrowsableBase):
-		def __init__(self,ln,preview,fileobject):
+		def Initialize(self,ln,preview,fileobject):
 			"""grepの結果は、ファイルの情報に加えて、行数・プレビュー・ヒット数を含む。ヒット数は、後から設定する。ファイル名などは、与えられたファイルオブジェクトからとる。"""
 			self.basename=fileobject.basename
 			self.size=basename.size
