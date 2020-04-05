@@ -490,22 +490,22 @@ class Events(BaseEvents):
 			self.parent.activeTab.ShowProperties()
 			return
 		if selected==menuItemsStore.getRef("READ_CURRENTFOLDER"):
-			self.parent.activeTab.ReadCurrentFolder()
+			self.DelaiedCall(self.parent.activeTab.ReadCurrentFolder)
 			return
 		if selected==menuItemsStore.getRef("READ_LISTITEMNUMBER"):
-			self.parent.activeTab.ReadListItemNumber()
+			self.DelaiedCall(self.parent.activeTab.ReadListItemNumber)
 			return
 		if selected==menuItemsStore.getRef("READ_LISTINFO"):
-			self.parent.activeTab.ReadListInfo()
+			self.DelaiedCall(self.parent.activeTab.ReadListInfo)
 			return
 		if selected==menuItemsStore.getRef("READ_CONTENT_PREVIEW"):
-			self.parent.activeTab.Preview()
+			self.DelaiedCall(self.parent.activeTab.Preview)
 			return
 		if selected==menuItemsStore.getRef("READ_CONTENT_READHEADER"):
-			self.parent.activeTab.ReadHeader()
+			self.DelaiedCall(self.parent.activeTab.ReadHeader)
 			return
 		if selected==menuItemsStore.getRef("READ_CONTENT_READFOOTER"):
-			self.parent.activeTab.ReadFooter()
+			self.DelaiedCall(self.parent.activeTab.ReadFooter)
 			return
 		if selected==menuItemsStore.getRef("READ_SETMOVEMENTREAD"):
 			self.parent.activeTab.SetMovementRead()
@@ -593,6 +593,16 @@ class Events(BaseEvents):
 		"""リネームを開始する。"""
 		self.parent.activeTab.StartRename()
 	#end StartRename
+
+	def DelaiedCall(self,callable):
+		"""メニューから、すぐに何かを読み上げる機能を実行すると、メニューが閉じてリストに戻った読み上げにかき消されてしまう。なので、エンターが押されているかどうかを判定して、その場合にcallableの実行時間を遅らせる。"""
+		print(wx.GetKeyState(wx.WXK_RETURN))
+		if not wx.GetKeyState(wx.WXK_RETURN):
+			callable()
+			return
+		else:
+			later=wx.CallLater(200,callable)
+	#end delaiedCall
 
 	def ShowVersionInfo(self):
 		"""バージョン情報を表示する。"""
