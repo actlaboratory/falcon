@@ -59,7 +59,15 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'wk3',
 	'wk4',
 	'123',
-	'wri'
+	'wri',
+	'ini',
+	'md',
+	'py',
+	'cpp',
+	'hsp',
+	'js',
+	'rb',
+	'as'
 }
 
 SUPPORTED_AUDIO_FORMATS={
