@@ -57,12 +57,11 @@ class GrepResultList(FalconListBase):
 		self.searched_index=0#インデックスいくつまで検索したか
 
 	def _performSearchStep(self):
-		"""検索を1ステップ実行する。100県のファイルを検索するか、リストが終わるまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。"""
+		"""検索を1ステップ実行する。100県のヒットが出るまで検索するか、リストが終わるまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。"""
 		ret_list=[]
 		i=self.searched_index
 		eol=False
-		hit=0
-		viewed=0
+		total_hits=0
 		while(True):
 			path=self.searches[i]
 			if path=="eol":#EOLで検索終了
@@ -100,6 +99,7 @@ class GrepResultList(FalconListBase):
 					ln+=1
 				#end 行数ごとに検索
 				if len(hitobjects)>0:#このファイルの中でヒットがあった
+					total_hits+=len(hitobjects)
 					for elem in hitobjects:
 						hits=len(hitobjects)
 						elem.SetHitCount(hits)
@@ -108,8 +108,7 @@ class GrepResultList(FalconListBase):
 					ret_list.extend(hitobjects)
 				#end このファイルでヒットがあった
 			#end 対応している拡張子
-			viewed+=1
-			if viewed==100:
+			if total_hits>=100:
 				self.searched_index=i+1#次の位置をキャッシュ
 				break
 			#end 100県検索
