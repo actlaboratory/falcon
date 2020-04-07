@@ -99,7 +99,7 @@ class GrepItem(FalconBrowsableBase):
 	def Initialize(self,ln,preview,fileobject):
 		"""grepの結果は、ファイルの情報に加えて、行数・プレビュー・ヒット数を含む。ヒット数は、後から設定する。ファイル名などは、与えられたファイルオブジェクトからとる。"""
 		self.basename=fileobject.basename
-		self.size=basename.size
+		self.size=fileobject.size
 		self.modDate=fileobject.modDate
 		self.attributes=fileobject.attributes
 		self.typeString=fileobject.typeString

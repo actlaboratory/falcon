@@ -125,6 +125,7 @@ class GrepResultList(FalconListBase):
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
+		print("get column")
 		return {
 			_("ファイル名"):wx.LIST_FORMAT_LEFT,
 			_("行"): wx.LIST_FORMAT_RIGHT,
