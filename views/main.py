@@ -639,6 +639,7 @@ class Events(BaseEvents):
 		#end 途中でやめた
 		val=d.GetValue()
 		d.Destroy()
+		print(val['type'])
 		target={'action': 'search', 'basePath': basePath, 'out_lst': out_lst, 'keyword': val['keyword']}
 		self.parent.Navigate(target,as_new_tab=True)
 
