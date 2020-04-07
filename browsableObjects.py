@@ -113,7 +113,7 @@ class GrepItem(FalconBrowsableBase):
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
-		return (self.basename, self.hits, self.ln, self.preview, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+		return (self.basename, self.ln, self.preview, self.hits, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
 class Drive(FalconBrowsableBase):
 	"""ドライブを表す。"""
