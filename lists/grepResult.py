@@ -118,6 +118,7 @@ class GrepResultList(FalconListBase):
 				break
 			#end リストが追いついてない
 		#end 検索ループ
+		print(ret_list)
 		return eol,ret_list
 
 	def GetKeywordString(self):
@@ -125,7 +126,6 @@ class GrepResultList(FalconListBase):
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
-		print("get column")
 		return {
 			_("ファイル名"):wx.LIST_FORMAT_LEFT,
 			_("行"): wx.LIST_FORMAT_RIGHT,
