@@ -118,7 +118,6 @@ class GrepResultList(FalconListBase):
 				break
 			#end リストが追いついてない
 		#end 検索ループ
-		print(ret_list)
 		return eol,ret_list
 
 	def GetKeywordString(self):

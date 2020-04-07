@@ -48,8 +48,7 @@ class GrepResultTab(fileList.FileListTab):
 		"""コールバックで、ヒットしたオブジェクトのリストが降ってくるので、それをリストビューに追加していく。"""
 		globalVars.app.PlaySound("click.ogg")
 		for elem in hits:
-			t=elem.GetListTuple()
-			self.hListCtrl.Append((t[0],t[1],elem.fullpath,t[2],t[3],t[4]))
+			self.hListCtrl.Append(elem.GetListTuple())
 
 	def Copy(self):
 		if not self.IsItemSelected(): return
