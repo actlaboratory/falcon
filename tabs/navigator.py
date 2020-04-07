@@ -19,7 +19,7 @@ import globalVars
 import constants
 import misc
 import views.ViewCreator
-from . import fileList,driveList,streamList,searchResult
+from . import fileList,driveList,streamList,searchResult, grepResult
 from simpleDialog import dialog
 
 def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environment={}):
@@ -41,6 +41,12 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'])
 			return newtab
 		#end 検索
+		if target['action']=='grep':
+			newtab=grepResult.GrepResultTab(environment)
+			newtab.Initialize(parent,creator)
+			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'])
+			return newtab
+		#end grep検索
 	#end targetが辞書の時の特殊処理
 
 	if target=="":#ドライブリスト
