@@ -95,6 +95,27 @@ class Folder(File):
 		else:
 			return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
+class GrepItem(FalconBrowsableBase):
+	def Initialize(self,ln,preview,fileobject):
+		"""grepの結果は、ファイルの情報に加えて、行数・プレビュー・ヒット数を含む。ヒット数は、後から設定する。ファイル名などは、与えられたファイルオブジェクトからとる。"""
+		self.basename=fileobject.basename
+		self.fullpath=fileobject.fullpath
+		self.size=fileobject.size
+		self.modDate=fileobject.modDate
+		self.attributesString=fileobject.attributesString
+		self.typeString=fileobject.typeString
+		self.ln=ln
+		self.preview=preview
+		self.hits=0#とりあえず入れておく
+
+	def SetHitCount(self,h):
+		"""ヒット数を設定する。"""
+		self.hits=h
+
+	def GetListTuple(self):
+		"""表示に必要なタプルを返す。"""
+		return (self.basename, self.ln, self.preview, self.hits, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+
 class Drive(FalconBrowsableBase):
 	"""ドライブを表す。"""
 	def Initialize(self, letter, free, total, type, name=""):
