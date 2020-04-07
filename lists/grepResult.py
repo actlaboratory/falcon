@@ -28,7 +28,7 @@ class GrepResultList(FalconListBase):
 	"""grep検索の結果を扱うリスト。"""
 	def __init__(self):
 		super().__init__()
-		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_HITCOUNT,SORT_TYPE_HITLINE,SORT_TYPE_PREVIEW,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
+		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_HITLINE,SORT_TYPE_PREVIEW,SORT_TYPE_HITCOUNT,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
 		self.log=logging.getLogger("falcon.grepResultList")
 
 	def Update(self):
@@ -49,7 +49,7 @@ class GrepResultList(FalconListBase):
 		self.sortDescending=int(globalVars.app.config["SearchResultList"]["descending"])
 		self.results=[]
 		if not silent: globalVars.app.say("%sの検索結果 %s から" % (keyword,rootDirectory,))
-		self.log.debug("Getting search results for %s..." % keyword)
+		self.log.debug("Getting grep search results for %s..." % keyword)
 		self._initSearch()
 
 	def _initSearch(self):
@@ -126,9 +126,9 @@ class GrepResultList(FalconListBase):
 		"""このリストのカラム情報を返す。"""
 		return {
 			_("ファイル名"):wx.LIST_FORMAT_LEFT,
-			_("ヒット件数"): wx.LIST_FORMAT_RIGHT,
 			_("行"): wx.LIST_FORMAT_RIGHT,
 			_("プレビュー"): wx.LIST_FORMAT_LEFT,
+			_("ヒット件数"): wx.LIST_FORMAT_RIGHT,
 			_("サイズ"):wx.LIST_FORMAT_RIGHT,
 			_("更新"):wx.LIST_FORMAT_LEFT,
 			_("属性"):wx.LIST_FORMAT_LEFT,
@@ -145,14 +145,14 @@ class GrepResultList(FalconListBase):
 	def GetItemPaths(self):
 		"""リストの中身をパスのリストで取得する。"""
 		lst=[]
-		for elem in self.files:
+		for elem in self.results:
 			lst.append(elem.fullpath)
 		return lst
 
 	def GetItemNames(self):
 		"""リストの中身をファイル名のリストで取得する。"""
 		lst=[]
-		for elem in self.files:
+		for elem in self.results:
 			lst.append(elem.basename)
 		return lst
 
@@ -165,7 +165,7 @@ class GrepResultList(FalconListBase):
 		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
 		t=misc.Timer()
 		f=self._getSortFunction(attrib)
-		self.files.sort(key=f, reverse=(descending==1))
+		self.results.sort(key=f, reverse=(descending==1))
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
 	def GetAttributeCheckState(self):
