@@ -62,6 +62,7 @@ class GrepResultList(FalconListBase):
 		i=self.searched_index
 		eol=False
 		hit=0
+		viewed=0
 		while(True):
 			path=self.searches[i]
 			if path=="eol":#EOLで検索終了
@@ -99,12 +100,13 @@ class GrepResultList(FalconListBase):
 					ln+=1
 				#end 行数ごとに検索
 				if len(hitobjects)>0:#このファイルの中でヒットがあった
-				for elem in hitobjects:
-					hits=len(hitobjects)
-					elem.SetHitCount(hits)
-				#end 最終的なヒットカウントを設定
-				self.results.extend(hitobjects)
-				ret_list.extend(hitobjects)
+					for elem in hitobjects:
+						hits=len(hitobjects)
+						elem.SetHitCount(hits)
+					#end 最終的なヒットカウントを設定
+					self.results.extend(hitobjects)
+					ret_list.extend(hitobjects)
+				#end このファイルでヒットがあった
 			#end 対応している拡張子
 			viewed+=1
 			if viewed==100:
