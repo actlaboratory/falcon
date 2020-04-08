@@ -78,3 +78,6 @@ class FalconListBase(object):
 		if attrib==SORT_TYPE_DRIVELETTER: return lambda x: x.letter
 		if attrib==SORT_TYPE_FREESPACE: return lambda x: x.free
 		if attrib==SORT_TYPE_TOTALSPACE: return lambda x: x.total
+		if attrib==SORT_TYPE_HITCOUNT: return lambda x: x.hits
+		if attrib==SORT_TYPE_HITLINE: return lambda x: x.ln
+		if attrib==SORT_TYPE_PREVIEW: return lambda x: x.preview
