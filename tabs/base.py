@@ -89,6 +89,7 @@ class FalconTabBase(object):
 		"TOOL_EJECT_DEVICE"
 	])
 	#以下３つは専用のタブになってるのでこの機能でやる必要はない。KeyErrorにならないようにしとくだけ。
+	selectItemTypeMenuConditions[browsableObjects.GrepItem]=[]
 	selectItemTypeMenuConditions[browsableObjects.Drive]=[]
 	selectItemTypeMenuConditions[browsableObjects.Stream]=[]
 
@@ -407,7 +408,7 @@ class FalconTabBase(object):
 		"""選択中のフォルダやドライブに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
 		elem=self.listObject.GetElement(index)
-		if (not stream) and type(elem)==browsableObjects.File:#このファイルを開く
+		if (not stream) and (type(elem)==browsableObjects.File or type(elem)==browsableObjects.GrepItem) :#このファイルを開く
 			misc.RunFile(elem.fullpath,admin)
 			return
 		else:
