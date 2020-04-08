@@ -129,14 +129,14 @@ class DriveListTab(base.FalconTabBase):
 		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
 
 	def ReadCurrentFolder(self):
-		globalVars.app.say("現在は、ドライブ洗濯")
+		globalVars.app.say(_("現在は、ドライブ洗濯"), interrupt=True)
 
 	def ReadListItemNumber(self,short=False):
 		if short:
 			globalVars.app.say(_("ドライブ数 %(drives)d") % {'drives': len(self.listObject)})
 		else:
-			globalVars.app.say(_("ドライブ %(drives)d個") % {'drives': len(self.listObject)})
+			globalVars.app.say(_("ドライブ %(drives)d個") % {'drives': len(self.listObject)}, interrupt=True)
 
 	def ReadListInfo(self):
-		globalVars.app.say(_("ドライブ一覧を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1})
+		globalVars.app.say(_("ドライブ一覧を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
