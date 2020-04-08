@@ -44,7 +44,7 @@ def GetSortDescription(attrib):
 			SORT_TYPE_SEARCHPATH: _("検索パス"),
 			SORT_TYPE_HITLINE: _("行"),
 			SORT_TYPE_HITCOUNT: _("ヒット"),
-			SORT_TYPE_PREVIEW: _("検プレビュー")
+			SORT_TYPE_PREVIEW: _("プレビュー")
 		}
 	#end 辞書作る
 	return SORT_DESCRIPTIONS[attrib]
