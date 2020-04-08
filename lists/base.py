@@ -72,7 +72,7 @@ class FalconListBase(object):
 		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename
 		if attrib==SORT_TYPE_FILESIZE: return lambda x: x.size
 		if attrib==SORT_TYPE_MODDATE: return lambda x: x.modDate
-		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributes
+		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributesString
 		if attrib==SORT_TYPE_TYPESTRING: return lambda x: x.typeString
 		if attrib==SORT_TYPE_VOLUMELABEL: return lambda x: x.basename
 		if attrib==SORT_TYPE_DRIVELETTER: return lambda x: x.letter
