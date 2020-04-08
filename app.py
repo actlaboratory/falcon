@@ -134,9 +134,9 @@ class falconAppMain(wx.App):
 		"""コンパイル済みのexeで実行されている場合はTrue、インタプリタで実行されている場合はFalseを帰す。"""
 		return self.frozen
 
-	def say(self,s):
+	def say(self,s,interrupt=False):
 		"""スクリーンリーダーでしゃべらせる。"""
-		self.speech.speak(s, interrupt=True)
+		self.speech.speak(s, interrupt=interrupt)
 
 	def PlaySound(self,path,custom_location=False):
 		"""サウンドファイルを再生する。"""

@@ -259,7 +259,7 @@ class StreamListTab(base.FalconTabBase):
 	def ReadCurrentFolder(self):
 		f=self.listObject.rootDirectory.split(":\\")
 		s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': self.listObject.rootDirectory[0], 'folder': f[1] if len(f)==2 else "ルート"}
-		globalVars.app.say(s)
+		globalVars.app.say(s, interrupt=True)
 
 	def ReadListItemNumber(self,short=False):
 		streams=len(self.listObject)
@@ -268,8 +268,8 @@ class StreamListTab(base.FalconTabBase):
 			return
 		#end short
 		curdir=self.listObject.rootDirectory.split("\\")[-1]
-		globalVars.app.say(_("%(containing)sの中には、ストリーム %(streams)d個") % {'containing': curdir, 'streams': streams})
+		globalVars.app.say(_("%(containing)sの中には、ストリーム %(streams)d個") % {'containing': curdir, 'streams': streams}, interrupt=True)
 
 	def ReadListInfo(self):
 		tmp=self.listObject.rootDirectory.split("\\")[-1]
-		globalVars.app.say(_("%(dir)sに含まれるストリームを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'dir': tmp, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1})
+		globalVars.app.say(_("%(dir)sに含まれるストリームを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'dir': tmp, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
