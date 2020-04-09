@@ -569,6 +569,7 @@ class FalconTabBase(object):
 	def Preview(self):
 		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
 		if ext in constants.SUPPORTED_AUDIO_FORMATS:
+			if self.stopSoundHandle: globalVars.app.StopSound(self.stopSoundHandle)
 			self.stopSoundHandle=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
 		elif ext in constants.SUPPORTED_DOCUMENT_FORMATS:
 			globalVars.app.say(misc.ExtractText(self.GetFocusedElement().fullpath))

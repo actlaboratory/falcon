@@ -281,7 +281,7 @@ class FileListTab(base.FalconTabBase):
 	def ReadCurrentFolder(self):
 		f=self.listObject.rootDirectory.split(":\\")
 		s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': self.listObject.rootDirectory[0], 'folder': f[1] if len(f)==2 else "ルート"}
-		globalVars.app.say(s)
+		globalVars.app.say(s, interrupt=True)
 
 	def ReadListItemNumber(self,short=False):
 		folders,files=self.listObject.GetFolderFileNumber()
@@ -291,11 +291,11 @@ class FileListTab(base.FalconTabBase):
 		#end short
 		tmp=self.listObject.rootDirectory.split("\\")
 		curdir=_("%(letter)sルート") % {'letter': tmp[0][0]} if len(tmp)==1 else tmp[-1]
-		globalVars.app.say(_("%(containing)sの中には、フォルダ %(folders)d個、 ファイル %(files)d個") % {'containing': curdir, 'folders': folders, 'files': files})
+		globalVars.app.say(_("%(containing)sの中には、フォルダ %(folders)d個、 ファイル %(files)d個") % {'containing': curdir, 'folders': folders, 'files': files}, interrupt=True)
 
 	def ReadListInfo(self):
 		tmp=self.listObject.rootDirectory.split("\\")
 		curdir=_("%(letter)sルート") % {'letter': tmp[0][0]} if len(tmp)==1 else tmp[-1]
 		prefix=_("フォルダ ") if len(tmp)>1 else ""
-		globalVars.app.say(_("%(prefix)s%(dir)sを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'prefix': prefix, 'dir': curdir, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1})
+		globalVars.app.say(_("%(prefix)s%(dir)sを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'prefix': prefix, 'dir': curdir, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
