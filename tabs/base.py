@@ -273,18 +273,19 @@ class FalconTabBase(object):
 		#item=self.hListCtrl.GetItem(self.GetFocusedItem())
 		if self._IsItemChecked(self.GetFocusedItem()):
 			#チェック解除
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_DROPHILITED)
+			#self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_DROPHILITED)
 			self.checkedItem.discard(self.GetFocusedItem())
 			globalVars.app.say(_("チェック解除"))
+			self.hListCtrl.SetItemBackgroundColour(self.GetFocusedItem(),"#000000")
 			self.hListCtrl.Update()
 		else:
 			#チェック
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
+			#self.hListCtrl.SetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
 			globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
 			self.checkedItem.add(self.GetFocusedItem())
 
-			#item.SetBackgroundColour(wx.Colour("#ff00ff"))
-			#self.hListCtrl.RefreshItem(self.GetFocusedItem())
+			self.hListCtrl.SetItemBackgroundColour(self.GetFocusedItem(),"#0000FF")
+			self.hListCtrl.RefreshItem(self.GetFocusedItem())
 			globalVars.app.say(_("チェック"))
 		#カーソルを１つ下へ移動
 		if self.GetFocusedItem()!=len(self.listObject)-1:		#カーソルが一番下以外にある時
