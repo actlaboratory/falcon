@@ -1,25 +1,26 @@
-# �^�u�N���X�쐬���m�F���X�g
+# タブクラス作成時確認リスト
 
-�^�u��V�K�쐬����ۂȂǂɋL�ډ\�܂��͋L�ڂ��K�v�Ȋ֐��̔����E�R����m�F���邽�߂̃��X�g�ł��B
+タブを新規作成する際などに記載可能または記載が必要な関数の抜け・漏れを確認するためのリストです。
+このリストとは別に、メニューバー管理手順も別途読んでください。重複する内容はこのリストには記載されていません。
 
-## �K�{
+## 必須
 	def Update(self,cursor=""):
 
-## �K�{�@��{�@�\�n(�Ή����Ă��Ȃ��ꍇ�ɋL�ڂ��K�v)
+## 必須　基本機能系(対応していない場合に記載が必要)
 	def GoBackward(self):
 	def MarkSet(self):
 	def BeginDrag(self,event):
 
-## �C�Ӂ@�r���[����n(�Ή����Ă���ꍇ�ɋL�ڂ��K�v)
+## 任意　ビュー操作系(対応している場合に記載が必要)
 	def GoToTopFile(self):
 	def FileOperationTest(self):
 	def ShowProperties(self):
 
-## �C�Ӂ@�N���b�v�{�[�h����n(�Ή�����ꍇ�ɋL�ڂ��K�v)
+## 任意　クリップボード操作系(対応する場合に記載が必要)
 	def Copy(self):
 	def Cut(self):
 
-## �C�� �t�@�C������n(��������ꍇ�ɋL�ڂ��K�v)
+## 任意 ファイル操作系(実装する場合に記載が必要)
 	def Trash(self):
 	def MakeDirectory
 	def MakeShortcut(self,option):
