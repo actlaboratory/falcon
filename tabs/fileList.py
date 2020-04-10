@@ -299,3 +299,33 @@ class FileListTab(base.FalconTabBase):
 		prefix=_("フォルダ ") if len(tmp)>1 else ""
 		globalVars.app.say(_("%(prefix)s%(dir)sを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'prefix': prefix, 'dir': curdir, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
+	def Past(self):
+		c=clipboard.ClipboardFile()
+		target=c.GetFileList()
+		op=c.GetOperation()
+		op_str=_("コピー") if op==clipboard.COPY else _("移動")
+		if len(target)==0: return
+		if len(target)==1:
+			msg=_("%(file)s\nこのファイルを、 %(dest)s に%(op)sしますか？") % {'file': target[0], 'dest': self.listObject.rootDirectory, 'op': op_str}
+		else:
+			msg=_("選択中の項目%(num)d件を、 %(dest)s に%(op)sしますか？") % {'num': len(target), 'dest': self.listObject.rootDirectory, 'op': op_str}
+		#end メッセージどっちにするか
+		dlg=wx.MessageDialog(None,msg,_("%(op)sの確認") % {'op': op_str}, wx.YES_NO|wx.ICON_QUESTION)
+		if dlg.ShowModal()==wx.ID_NO: return
+		inst={"operation": "past", "target": target, "to": self.listObject.rootDirectory, 'copy_move_flag': op}
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		c=op.GetConfirmationCount()
+		self.log.debug("%d confirmations" % c)
+		confs=op.GetConfirmationManager()
+		#for elem in confs.Iterate():#渓谷を1個ずつ処理できる
+			#elem.SetResponse("overwrite")#渓谷に対して、文字列でレスポンスする
+		#end for
+		#op.UpdateConfirmation()#これで繁栄する
+		#op.Execute()#これでコピーを再実行
+
+		if op.CheckSucceeded()==0 and ret==0:
+			dialog(_("エラー"),_("%(op)sに失敗しました。" % {'op': op_str}))
+		#end failure
+	#end past
+
