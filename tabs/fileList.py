@@ -302,6 +302,10 @@ class FileListTab(base.FalconTabBase):
 	def Past(self):
 		c=clipboard.ClipboardFile()
 		target=c.GetFileList()
+		if not target:
+			dialog(_("エラー"),_("貼り付けるものがありません。"))
+			return
+		#end 貼り付ける物がない
 		op=c.GetOperation()
 		op_str=_("コピー") if op==clipboard.COPY else _("移動")
 		if len(target)==0: return
