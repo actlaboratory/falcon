@@ -238,6 +238,7 @@ class Menu(BaseMenu):
 		#編集メニューの中身
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_COPY",_("コピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_CUT",_("切り取り"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_PAST",_("貼り付け"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_NAMECOPY",_("名前をコピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SELECTALL",_("全て選択"))

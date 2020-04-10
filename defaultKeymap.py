@@ -17,6 +17,7 @@ defaultKeymap["mainView"]={
 	"FILE_SHOWPROPERTIES": "ctrl+shift+return",
 	"EDIT_COPY": "ctrl+c",
 	"EDIT_CUT": "ctrl+x",
+	"EDIT_PAST": "ctrl+v",
 	"EDIT_FULLPATHCOPY": "ctrl+shift+c",
 	"EDIT_SELECTALL": "ctrl+a",
 	"EDIT_SEARCH": "ctrl+f/F3",
