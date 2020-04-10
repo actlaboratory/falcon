@@ -360,6 +360,9 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("EDIT_CUT"):
 			self.parent.activeTab.Cut()
 			return
+		if selected==menuItemsStore.getRef("EDIT_PAST"):
+			self.parent.activeTab.Past()
+			return
 		if selected==menuItemsStore.getRef("EDIT_NAMECOPY"):
 			self.parent.activeTab.NameCopy()
 			return
