@@ -25,16 +25,23 @@ class ClipboardFile(object):
 		self.byte.append(0)
 		self.byte.append(0)
 
-
-
 	def SetOperation(self,op):
 		self.operation=op
 
 	def GetFileList(self):
-		pass
+		with clipboardHelper.Clipboard() as c:
+			lst=c.get_dropped_files()
+		#end ファイルリスト取る
+		return lst
 
 	def GetOperation(self):
-		pass
+		with clipboardHelper.Clipboard() as c:
+			fmt=c.register_format("Preferred DropEffect")
+			buf=c.get_data(fmt)
+			op=struct.unpack('i',buf)[0]
+		#end with
+		return op
+	#end getOperation
 
 	def SendToClipboard(self):
 		with clipboardHelper.Clipboard() as c:
