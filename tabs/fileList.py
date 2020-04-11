@@ -331,5 +331,7 @@ class FileListTab(base.FalconTabBase):
 		if op.CheckSucceeded()==0 and ret==0:
 			dialog(_("エラー"),_("%(op)sに失敗しました。" % {'op': op_str}))
 		#end failure
+		self.UpdateFilelist(silence=True)
+
 	#end past
 
