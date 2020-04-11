@@ -171,6 +171,20 @@ class FileOperator(object):
 		"""終了したファイルオペレーションに対して、処理失敗となった項目の情報を取得する。"""
 		return self.output["failed"]
 
+	def GetConfirmationCount(self):
+		"""確認待ちで停まっている項目の数を取得する。"""
+		return len(self.output["need_to_confirm"])
+
+	def GetConfirmationManager(self):
+		"""確認項目を取得するのに使える confirmationManager の参照を返す。"""
+		return self.output["need_to_confirm"]
+
+	def UpdateConfirmation(self):
+		self.resume=True
+		for elem in self.output["need_to_confirm"].Iterate():
+			if elem.GetResponse()=="overwrite": self.instructions["target"].append(elem.elem)
+			self.output["need_to_confirm"].Take(elem)
+
 	def pickle(self,name=""):
 		"""ファイルオペレーションの現在の状態を、テンポラリフォルダに保存する。保存したファイル名(完全なファイル名ではない)を帰す。これをそのまま unpickle に渡す。固められなかったらFalse。name に指定すると、強制的にその名前で書く。"""
 		temp=win32api.GetEnvironmentVariable("TEMP")
