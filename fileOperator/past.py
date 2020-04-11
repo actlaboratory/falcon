@@ -115,13 +115,13 @@ def Execute(op,resume=False):
 	return retry
 
 def ProcessError(output,elem,msg,resume):
-	"""リトライするリストに追加する。"""
+	"""アクセス拒否であれば、リトライするリストに追加する。昇格しても失敗するエラーであれば、 need_to_confirm に追加する。"""
 	number=helper.GetErrorNumber(msg)
 	if helper.IsAccessDenied(number):#アクセス拒否なので、リトライするリストに追加する
 		output["retry"]["target"].append(elem)
 		return
 	#end リトライ
-	#すでに存在するエラーだったら、確認扱いにする
+	#コピー/移動先ファイルがすでに存在する
 	if number==80 or number==183:
 		output["need_to_confirm"].Append(confirmElement.ConfirmElement(elem,number,msg))
 		return
