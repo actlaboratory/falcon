@@ -307,7 +307,7 @@ class FileListTab(base.FalconTabBase):
 			return
 		#end 貼り付ける物がない
 		op=c.GetOperation()
-		op_str=_("コピー") if op==clipboard.COPY else _("移動")
+		op_str=_("複写") if op==clipboard.COPY else _("移動")
 		if len(target)==0: return
 		if len(target)==1:
 			msg=_("%(file)s\nこのファイルを、 %(dest)s に%(op)sしますか？") % {'file': target[0], 'dest': self.listObject.rootDirectory, 'op': op_str}
