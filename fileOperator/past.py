@@ -118,7 +118,7 @@ def ProcessError(output,elem,msg,resume):
 	"""リトライするリストに追加する。"""
 	number=helper.GetErrorNumber(msg)
 	if helper.IsAccessDenied(number):#アクセス拒否なので、リトライするリストに追加する
-		output["retry"]["target"].append(target)
+		output["retry"]["target"].append(elem)
 		return
 	#end リトライ
 	#すでに存在するエラーだったら、確認扱いにする
