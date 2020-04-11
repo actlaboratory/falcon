@@ -101,7 +101,11 @@ class FileOperator(object):
 		#end hardLink
 		if op=="delete":
 			retry=delete.Execute(self)
-		#end hardLink
+		#end delete
+		if op=="past":
+			retry=past.Execute(self)
+		#end past
+
 		self.log.debug("success %s, retry %s, failure %s." % (self.output["succeeded"], retry, len(self.output["failed"])))
 		if not self.elevated and retry>0: self._elevate()#昇格してリトライ
 		if self.elevated: self._postElevation()#昇格した後の後処理
