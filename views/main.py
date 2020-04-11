@@ -266,8 +266,6 @@ class Menu(BaseMenu):
 				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
 			self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
 
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
-
 		#読みメニューの中身
 		subMenu=wx.Menu()
 		self.RegisterMenuCommand(subMenu,"READ_CONTENT_PREVIEW",_("ファイルをプレビュー"))

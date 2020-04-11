@@ -554,7 +554,7 @@ class FalconTabBase(object):
 		hMenu.Destroy()
 
 	def CloseContextMenu(self,event):
-		selected=event.GetId()							#メニュー識別しの数値
+		selected=event.GetId()							#メニュー識別子の数値
 
 		if selected>=5000:
 			event.Skip()
