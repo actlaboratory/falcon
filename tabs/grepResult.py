@@ -30,6 +30,7 @@ class GrepResultTab(fileList.FileListTab):
 
 	blockMenuList=[
 		"FILE_CHANGEATTRIBUTE",
+		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_TOPFILE",
 		"TOOL_ADDPATH",
