@@ -16,7 +16,7 @@ from simpleDialog import dialog
 import globalVars
 import misc
 
-from . import rename, changeAttribute, failedElement, mkdir,trash,shortcut,symbolicLink,hardLink,delete
+from . import rename, changeAttribute, failedElement, mkdir,trash,shortcut,symbolicLink,hardLink,delete, past
 
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
 
