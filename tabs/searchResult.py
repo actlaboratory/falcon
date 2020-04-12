@@ -33,6 +33,7 @@ class SearchResultTab(fileList.FileListTab):
 		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_TOPFILE",
+		"MOVE_BACKWARD",
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE"
@@ -104,6 +105,10 @@ class SearchResultTab(fileList.FileListTab):
 	#end onLabelEditEnd
 
 	#TODO:GoToTopFile(self):
+
+	def GoBackward(self):
+		return errorCodes.BOUNDARY
+
 
 	def ReadCurrentFolder(self):
 		state=_("検索完了") if self.listObject.GetFinishedStatus() is True else _("検索中")

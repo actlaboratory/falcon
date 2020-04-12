@@ -33,6 +33,7 @@ class GrepResultTab(fileList.FileListTab):
 		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_TOPFILE",
+		"MOVE_BACKWARD",
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE"
@@ -102,6 +103,8 @@ class GrepResultTab(fileList.FileListTab):
 			f.fullpath=f.file+f.basename
 	#end onLabelEditEnd
 
+	def GoBackward(self):
+		return errorCodes.BOUNDARY
 
 	def ReadCurrentFolder(self):
 		state=_("grep検索完了") if self.listObject.GetFinishedStatus() is True else _("grep検索中")
