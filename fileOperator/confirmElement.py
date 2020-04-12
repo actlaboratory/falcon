@@ -20,6 +20,13 @@ class ConfirmElement(object):
 	def GetResponse(self):
 		return self.response
 
+	def take(self):
+		"""ファイルオペレーションに回されたことを通知する。"""
+		self.taken=ファイルオペレーションに回されたらTrue
+
+	def GetIfTaken(self):
+		return self.taken
+
 	def __str__(self):
 		return "[%s] %s (%s)" % (self.msg_number,self.msg_str,self.elem)
 
