@@ -24,6 +24,18 @@ class DefaultSettings:
 			"column_width_3" : "70",
 			"column_width_4" : "240"
 		}
+		config["GrepResultList"]={
+			"sorting": 0,
+			"descending": 0,
+			"column_width_0" : 300,
+			"column_width_1" : 80,
+			"column_width_2" : 300,
+			"column_width_3" : 70,
+			"column_width_4" : 150,
+			"column_width_5" : 320,
+			"column_width_6" : 70,
+			"column_width_7" : 240
+		}
 		config["DriveList"]={
 			"sorting": 1,
 			"descending": 0,
