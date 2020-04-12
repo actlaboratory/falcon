@@ -95,6 +95,7 @@ falcon_helper_funcdef int destroyContextMenu()
 		return 0;
 	DestroyMenu(contextMenuHandle);
 	contextMenu->Release();
+	contextMenu=NULL;
 	CoUninitialize();
 	return 1;
 }

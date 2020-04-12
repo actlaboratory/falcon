@@ -634,15 +634,28 @@ class Events(BaseEvents):
 		task=workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList,{'path': basePath, 'out_lst': out_lst,'eol':True})
 		d=views.search.Dialog(basePath)
 		d.Initialize()
-		ret=d.Show()
-		if ret==wx.ID_CANCEL:
-			task.Cancel()
-			return
-		#end 途中でやめた
-		val=d.GetValue()
+		canceled=False
+		while(True):
+			ret=d.Show()
+			if ret==wx.ID_CANCEL:
+				task.Cancel()
+				canceled=True
+				break
+			#end キャンセルして抜ける
+			val=d.GetValue()
+			if val['isRegularExpression']:
+				ret=misc.ValidateRegularExpression(val['keyword'])
+				if ret!="OK":
+					dialog(_("エラー"), _("正規表現の文法が間違っています。\nエラー内容: %(error)s") % {'error': ret})
+					continue
+				#end 正規表現違う
+			#end 正規表現モードがオンかどうか
+			break
+		#end 入力が正しくなるまで
 		d.Destroy()
+		if canceled: return
 		actionstr="search" if val['type']==0 else "grep"
-		target={'action': actionstr, 'basePath': basePath, 'out_lst': out_lst, 'keyword': val['keyword']}
+		target={'action': actionstr, 'basePath': basePath, 'out_lst': out_lst, 'keyword': val['keyword'], 'isRegularExpression': val['isRegularExpression']}
 		self.parent.Navigate(target,as_new_tab=True)
 
 	def GoForward(self,stream=False,admin=False):

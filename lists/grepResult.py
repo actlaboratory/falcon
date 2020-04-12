@@ -34,16 +34,18 @@ class GrepResultList(FalconListBase):
 	def Update(self):
 		return self.Initialize(self.rootDirectory,self.searches,self.keyword,True)
 
-	def Initialize(self,rootDirectory,searches,keyword,silent=False):
+	def Initialize(self,rootDirectory,searches,keyword,isRegularExpression,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
 		self.finished=False
 		self.rootDirectory=rootDirectory
 		self.searches=searches
 		self.keyword_string=keyword
 		#ワイルドカード (アスタリスクとクエスチョン)は、正規表現に置き換えしちゃう
-		keyword=re.sub(ESCAPE_PATTERN,r"\\\1",keyword)
-		keyword=keyword.replace("*",".*")
-		keyword=keyword.replace("?",".")
+		if not isRegularExpression:
+			keyword=re.sub(ESCAPE_PATTERN,r"\\\1",keyword)
+			keyword=keyword.replace("*",".*")
+			keyword=keyword.replace("?",".")
+		#end ワイルドカード置き換え
 		self.keyword=re.compile(keyword)
 		self.sortCursor=int(globalVars.app.config["SearchResultList"]["sorting"])
 		self.sortDescending=int(globalVars.app.config["SearchResultList"]["descending"])
