@@ -341,7 +341,6 @@ class FileListTab(base.FalconTabBase):
 			d=views.OperationSelecter.Dialog(info,views.OperationSelecter.GetMethod("ALREADY_EXISTS"),False)
 			d.Initialize()
 			d.Show()
-			print(d.GetValue())
 			elem.SetResponse(d.GetValue())#渓谷に対して、文字列でレスポンスする
 		#end for
 		#op.UpdateConfirmation()#これで繁栄する

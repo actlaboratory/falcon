@@ -8,11 +8,14 @@ class ConfirmElement(object):
 		self.elem=elem
 		self.msg_number=msg_number
 		self.msg_str=msg_str
-		self.response=""
+		self.response=None
 		self.taken=False#ファイルオペレーションに回されたらTrue
 
 	def SetResponse(self,res):
 		self.response=res
+
+	def GetIfResponded(self):
+		return self.response is not None
 
 	def GetResponse(self):
 		return self.response
@@ -42,7 +45,4 @@ class ConfirmationManager(object):
 		#end for
 	#end IterateWithFilter
 
-	def Take(self,elem):
-		"""ファイルオペレーションに渡った要素を指定して、監視対象から削除する。"""
-		self.confirmations.remove(elem)
-
+	
