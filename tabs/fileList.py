@@ -8,9 +8,10 @@
 ファイルリストやドライブ一覧リストなどです。一通りのファイル操作を行うことができます。
 """
 
-import time
+import datetime
 import os
 import gettext
+import time
 import wx
 import clipboard
 import errorCodes
@@ -334,18 +335,23 @@ class FileListTab(base.FalconTabBase):
 		self.log.debug("%d confirmations" % c)
 		confs=op.GetConfirmationManager()
 		for elem in confs.Iterate():#渓谷を1個ずつ処理できる
+			e=elem.GetElement()
+			from_path=e.path
+			dest_path=e.destpath
+			from_stat=os.stat(from_path)
+			dest_stat=os.stat(dest_path)
 			info=[
 				(_("名前"),"test.txt","",""),
-				(_("サイズ"),"2KB","→","3KB")
+				(_("サイズ"),misc.ConvertBytesTo(dest_stat.st_size,misc.UNIT_AUTO,True),"→",misc.ConvertBytesTo(from_stat.st_size,misc.UNIT_AUTO,True)),
+				(_("更新日時"),datetime.datetime.fromtimestamp(dest_stat.st_mtime),"→",datetime.datetime.fromtimestamp(from_stat.st_mtime))
 			]
 			d=views.OperationSelecter.Dialog(info,views.OperationSelecter.GetMethod("ALREADY_EXISTS"),False)
 			d.Initialize()
 			d.Show()
-			print(d.GetValue())
 			elem.SetResponse(d.GetValue())#渓谷に対して、文字列でレスポンスする
 		#end for
-		#op.UpdateConfirmation()#これで繁栄する
-		#op.Execute()#これでコピーを再実行
+		op.UpdateConfirmation()#これで繁栄する
+		op.Execute()#これでコピーを再実行
 
 		if op.CheckSucceeded()==0 and ret==0:
 			dialog(_("エラー"),_("%(op)sに失敗しました。" % {'op': op_str}))
