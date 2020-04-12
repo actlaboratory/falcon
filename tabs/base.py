@@ -174,11 +174,11 @@ class FalconTabBase(object):
 		if next>=0:
 			while(next>=0):
 				if index_mode:
-					if next in lst:
+					if not next in lst:
 						lst.append(next)
 				else:
 					elem=self.listObject.GetElement(next)
-					if elem in lst:
+					if not elem in lst:
 						lst.append(elem)
 				next=self.hListCtrl.GetNextSelected(next)
 			#end while
