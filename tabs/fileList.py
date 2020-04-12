@@ -342,8 +342,8 @@ class FileListTab(base.FalconTabBase):
 			dest_stat=os.stat(dest_path)
 			info=[
 				(_("名前"),"test.txt","",""),
-				(_("サイズ"),misc.ConvertBytesTo(from_stat.st_size,misc.UNIT_AUTO,True),"→",misc.ConvertBytesTo(from_stat.st_size,misc.UNIT_AUTO,True)),
-				(_("更新日時"),datetime.datetime.fromtimestamp(from_stat.st_mtime),"→",datetime.datetime.fromtimestamp(dest_stat.st_mtime))
+				(_("サイズ"),misc.ConvertBytesTo(dest_stat.st_size,misc.UNIT_AUTO,True),"→",misc.ConvertBytesTo(from_stat.st_size,misc.UNIT_AUTO,True)),
+				(_("更新日時"),datetime.datetime.fromtimestamp(dest_stat.st_mtime),"→",datetime.datetime.fromtimestamp(from_stat.st_mtime))
 			]
 			d=views.OperationSelecter.Dialog(info,views.OperationSelecter.GetMethod("ALREADY_EXISTS"),False)
 			d.Initialize()
