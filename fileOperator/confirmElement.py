@@ -11,6 +11,9 @@ class ConfirmElement(object):
 		self.response=None
 		self.taken=False#ファイルオペレーションに回されたらTrue
 
+	def GetElement(self):
+		return self.elem
+
 	def SetResponse(self,res):
 		self.response=res
 
