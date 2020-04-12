@@ -26,6 +26,9 @@ class ConfirmElement(object):
 	def __str__(self):
 		return "[%s] %s (%s)" % (self.msg_number,self.msg_str,self.elem)
 
+	def Take(self):
+		self.taken=True
+
 class ConfirmationManager(object):
 	def __init__(self):
 		self.confirmations=[]
@@ -38,11 +41,12 @@ class ConfirmationManager(object):
 
 	def Iterate(self):
 		for elem in self.confirmations:
-			yield elem
+			if not elem.taken: yield elem
 
 	def IterateWithFilter(self,number=None):
 		for elem in self.confirmations:
 			ok=True
+			if elem.taken: ok=False
 			if number is not None and elem.msg_number!=number: ok=False
 			if ok:yield elem
 		#end for

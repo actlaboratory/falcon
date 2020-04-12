@@ -350,8 +350,8 @@ class FileListTab(base.FalconTabBase):
 			d.Show()
 			elem.SetResponse(d.GetValue())#渓谷に対して、文字列でレスポンスする
 		#end for
-		#op.UpdateConfirmation()#これで繁栄する
-		#op.Execute()#これでコピーを再実行
+		op.UpdateConfirmation()#これで繁栄する
+		op.Execute()#これでコピーを再実行
 
 		if op.CheckSucceeded()==0 and ret==0:
 			dialog(_("エラー"),_("%(op)sに失敗しました。" % {'op': op_str}))

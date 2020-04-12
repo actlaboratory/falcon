@@ -184,8 +184,12 @@ class FileOperator(object):
 	def UpdateConfirmation(self):
 		self.resume=True
 		for elem in self.output["need_to_confirm"].Iterate():
-			if elem.GetResponse()=="overwrite": self.instructions["target"].append(elem.elem)
-			self.output["need_to_confirm"].Take(elem)
+			if elem.GetResponse()=="overwrite":
+				self.instructions["target"].append(elem.elem)
+				elem.Take()
+			#end overwrite なら追加
+		#end for
+	#end UpdateConfirmation
 
 	def pickle(self,name=""):
 		"""ファイルオペレーションの現在の状態を、テンポラリフォルダに保存する。保存したファイル名(完全なファイル名ではない)を帰す。これをそのまま unpickle に渡す。固められなかったらFalse。name に指定すると、強制的にその名前で書く。"""
