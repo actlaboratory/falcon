@@ -87,7 +87,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			return result#アクセス負荷
 		if cursor!="":
 			targetItemIndex=lst.Search(cursor)
-		if isinstance(previous_tab,fileList.FileListTab):#再利用
+		if type(previous_tab==fileList.FileListTab:#再利用
 			newtab=previous_tab
 		else:
 			newtab=fileList.FileListTab(environment)
