@@ -185,7 +185,7 @@ class FileOperator(object):
 		self.resume=True
 		for elem in self.output["need_to_confirm"].Iterate():
 			if elem.GetResponse()=="overwrite":
-				self.instructions["target"].append(elem.elem)
+				self.instructions["target"].append(elem.elem.path)
 				elem.Take()
 			#end overwrite なら追加
 		#end for
