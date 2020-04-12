@@ -54,6 +54,7 @@ class Dialog(BaseDialog):
 
 		#処理の選択
 		self.select=self.creator.radiobox(_("アクション"),list(self.choices.keys()),None,0,wx.VERTICAL)
+		self.check=self.creator.checkbox(_("以降も同様に処理する"),None,False)
 
 		#ボタンエリア
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,"",wx.ALIGN_RIGHT)
@@ -71,14 +72,16 @@ class Dialog(BaseDialog):
 		self.wnd.Destroy()
 
 	def GetValue(self):
-		return self.choices[self.select.GetStringSelection()]
+		return {
+			"response" : self.choices[self.select.GetStringSelection()],
+			"all" : self.check.IsChecked()
+		}
 
 
 def GetMethod(request):
 	methods={}
 	methods["ALREADY_EXISTS"]={
 		_("上書きする"):"overwrite",
-		_("以降全て上書きする"):"overwrite_ALL",
 		_("スキップ"):"skip"
 	}
 	return methods[request]
