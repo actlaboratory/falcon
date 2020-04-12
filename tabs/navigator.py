@@ -38,13 +38,13 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 		if target['action']=='search':
 			newtab=searchResult.SearchResultTab(environment)
 			newtab.Initialize(parent,creator)
-			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'])
+			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'], target['isRegularExpression'])
 			return newtab
 		#end 検索
 		if target['action']=='grep':
 			newtab=grepResult.GrepResultTab(environment)
 			newtab.Initialize(parent,creator)
-			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'])
+			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'], target['isRegularExpression'])
 			return newtab
 		#end grep検索
 	#end targetが辞書の時の特殊処理

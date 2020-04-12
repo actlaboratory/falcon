@@ -39,9 +39,9 @@ class GrepResultTab(fileList.FileListTab):
 
 	]
 
-	def StartSearch(self,rootPath,searches,keyword):
+	def StartSearch(self,rootPath,searches,keyword, isRegularExpression):
 		self.listObject=lists.GrepResultList()
-		self.listObject.Initialize(rootPath,searches,keyword)
+		self.listObject.Initialize(rootPath,searches,keyword, isRegularExpression)
 		self.SetListColumns(self.listObject)
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
 

@@ -5,6 +5,7 @@
 
 import ctypes
 import os
+import re
 import time
 import hashlib
 import winreg
@@ -220,3 +221,12 @@ def RunFile(path, admin=False,prm=""):
 		dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": error})
 	#end ファイル開けなかった
 #end RunFile
+
+def ValidateRegularExpression(exp):
+	try:
+		test=re.compile(exp)
+	except Exception as e:
+		return str(e)
+	#end error
+	return "OK"
+	
