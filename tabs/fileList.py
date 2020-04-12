@@ -8,6 +8,7 @@
 ファイルリストやドライブ一覧リストなどです。一通りのファイル操作を行うことができます。
 """
 
+import time
 import os
 import gettext
 import wx
@@ -18,6 +19,7 @@ import browsableObjects
 import globalVars
 import fileOperator
 import misc
+import views.OperationSelecter
 import workerThreads
 import workerThreadTasks
 import fileSystemManager
@@ -300,6 +302,7 @@ class FileListTab(base.FalconTabBase):
 		globalVars.app.say(_("%(prefix)s%(dir)sを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'prefix': prefix, 'dir': curdir, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
 	def Past(self):
+		#クリップボードから情報取得し、ユーザに確認表示
 		c=clipboard.ClipboardFile()
 		target=c.GetFileList()
 		if not target:
@@ -316,14 +319,30 @@ class FileListTab(base.FalconTabBase):
 		#end メッセージどっちにするか
 		dlg=wx.MessageDialog(None,msg,_("%(op)sの確認") % {'op': op_str}, wx.YES_NO|wx.ICON_QUESTION)
 		if dlg.ShowModal()==wx.ID_NO: return
+
+		#fileOperatorに処理依頼
 		inst={"operation": "past", "target": target, "to": self.listObject.rootDirectory, 'copy_move_flag': op}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
+
+		#0.5秒待つ
+		time.sleep(0.5)
+
+		#状況確認
+		#TODO:タブに分ける処理
 		c=op.GetConfirmationCount()
 		self.log.debug("%d confirmations" % c)
 		confs=op.GetConfirmationManager()
-		#for elem in confs.Iterate():#渓谷を1個ずつ処理できる
-			#elem.SetResponse("overwrite")#渓谷に対して、文字列でレスポンスする
+		for elem in confs.Iterate():#渓谷を1個ずつ処理できる
+			info=[
+				(_("名前"),"test.txt","",""),
+				(_("サイズ"),"2KB","→","3KB")
+			]
+			d=views.OperationSelecter.Dialog(info,views.OperationSelecter.GetMethod("ALREADY_EXISTS"),False)
+			d.Initialize()
+			d.Show()
+			print(d.GetValue())
+			elem.SetResponse(d.GetValue())#渓谷に対して、文字列でレスポンスする
 		#end for
 		#op.UpdateConfirmation()#これで繁栄する
 		#op.Execute()#これでコピーを再実行
@@ -332,6 +351,5 @@ class FileListTab(base.FalconTabBase):
 			dialog(_("エラー"),_("%(op)sに失敗しました。" % {'op': op_str}))
 		#end failure
 		self.UpdateFilelist(silence=True)
-
 	#end past
 
