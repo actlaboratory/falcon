@@ -85,11 +85,28 @@ class View(BaseView):
 		self.activeTab=None#最初なので空
 		self.hTabCtrl=self.creator.tabCtrl(_("タブ選択"),self.ChangeTab,0,1,wx.EXPAND)
 		self.MakeFirstTab()
-
+		self.hFrame.Bind(wx.EVT_CLOSE, self.OnClose)
 		self.hFrame.Show()
 		self.app.SetTopWindow(self.hFrame)
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
+
+	def OnClose(self,event=None):
+		"""ウィンドウが閉じられる直前に呼ばれる。"""
+		if not event.CanVeto():#強制シャットダウン
+			self.hFrame.Destroy()
+			return
+		#end 強制終了
+		num=self.GetNumberOfTabs()
+		if num>1:
+			dlg=wx.MessageDialog(self.hFrame,_("%(tabs)d個のタブが開いています。これらのタブを全て閉じて、Falconを終了してもよろしいですか？") % {'tabs': num},_("終了確認"),wx.YES_NO|wx.ICON_QUESTION)
+			ret=dlg.ShowModal()
+			if ret==wx.ID_NO:
+				event.Veto()
+				return
+			#end no
+		#end 複数タブが開いている渓谷
+		self.hFrame.Destroy()
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
@@ -187,6 +204,9 @@ class View(BaseView):
 		#end アクティブタブを閉じた場合に後ろのタブを持って来る
 
 	#end closeTab
+
+	def GetNumberOfTabs(self):
+		return len(self.tabs)
 
 	def ChangeTab(self,event):
 		"""タブ変更イベント"""
@@ -314,6 +334,7 @@ class Menu(BaseMenu):
 		self.hDisableMenuBar.Append(self.hDisableSubMenu,_("現在メニューは操作できません"))
 
 class Events(BaseEvents):
+
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
 		#ショートカットキーが無効状態のときは何もしない
