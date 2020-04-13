@@ -49,7 +49,7 @@ class Dialog(BaseDialog):
 		self.calcButton.Enable(False)
 
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
-		self.resultFeeld,self.static=self.creator.inputbox(_("結果"),450)
+		self.resultFeeld,self.static=self.creator.inputbox(_("結果"),450,style=wx.TE_READONLY)
 
 		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_RIGHT)
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)
