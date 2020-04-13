@@ -428,8 +428,22 @@ class FalconTabBase(object):
 			target=""
 			cursorTarget=self.listObject.rootDirectory[0]
 		else:
-			target=os.path.split(self.listObject.rootDirectory)[0]
-			cursorTarget=os.path.split(self.listObject.rootDirectory)[1]
+			root=self.listObject.rootDirectory
+			while(True):
+				if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
+					target=""
+					cursorTarget=self.listObject.rootDirectory[0]
+					break
+				#end 下がっていってドライブリスト
+				spl=os.path.split(root)
+				target=spl[0]
+				if os.path.isdir(target):
+					cursorTarget=spl[1]
+					break
+				#end 移動先が存在するので抜ける
+				root=target
+			#end フォルダがアルマで下がる
+		#end ドライブリスト直行かそうでないか
 		return self.Move(target,cursorTarget)
 
 	def MarkSet(self):
