@@ -120,3 +120,16 @@ class SearchResultTab(fileList.FileListTab):
 	def ReadListInfo(self):
 		globalVars.app.say(_("%(keyword)sの検索結果を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'keyword': self.listObject.GetKeywordString(), 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
+	def GoForward(self,stream,admin=False):
+		"""検索結果表示では、フォルダを開くときに別タブを生成する。"""
+		index=self.GetFocusedItem()
+		elem=self.listObject.GetElement(index)
+		if (not stream) and (type(elem)==browsableObjects.File or type(elem)==browsableObjects.GrepItem) :#このファイルを開く
+			misc.RunFile(elem.fullpath,admin)
+			return
+		else:
+			#新しいタブで開く
+			globalVars.app.hMainView.Navigate(elem.fullpath,as_new_tab=True)
+		#end ファイルを開くか移動するか
+	#end GoForward
+
