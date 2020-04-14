@@ -270,6 +270,9 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTNEXT",_("次の並び順"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SEARCH",_("検索"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM",_("チェック／チェック解除"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_ALL",_("すべてチェック"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_INVERSE",_("チェック状態反転"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTSELECT",_("並び順を選択"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_OPENCONTEXTMENU",_("コンテキストメニューを開く"))
@@ -427,6 +430,15 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
 			self.SortNext()
+			return
+		if selected==menuItemsStore.getRef("EDIT_MARKITEM"):
+			self.parent.activeTab.OnSpaceKey()
+			return
+		if selected==menuItemsStore.getRef("EDIT_MARKITEM_ALL"):
+			self.parent.activeTab.CheckAll()
+			return
+		if selected==menuItemsStore.getRef("EDIT_MARKITEM_INVERSE"):
+			self.parent.activeTab.CheckInverse()
 			return
 		if selected==menuItemsStore.getRef("EDIT_SORTSELECT"):
 			self.SortSelect()

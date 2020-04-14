@@ -39,6 +39,7 @@ class FalconTabBase(object):
 		"EDIT_CUT",
 		"EDIT_NAMECOPY",
 		"EDIT_FULLPATHCOPY",
+		"EDIT_MARKITEM",
 		"MOVE_FORWARD",
 		"MOVE_FORWARD_ADMIN",
 		"MOVE_FORWARD_TAB",
@@ -260,10 +261,7 @@ class FalconTabBase(object):
 			self.stopSoundHandle=None
 		#end 音を出した
 		#SpaceがEnterと同一視されるので対策する。
-		if not event.GetKeyCode()==32:
-			event.Skip()
-		else:
-			self.OnSpaceKey()
+		event.Skip()
 
 	def _IsItemChecked(self,index):
 		"""
@@ -275,28 +273,44 @@ class FalconTabBase(object):
 
 	def OnSpaceKey(self):
 		"""spaceキー押下時、アイテムをチェック/チェック解除する"""
-		#item=self.hListCtrl.GetItem(self.GetFocusedItem())
-		if self._IsItemChecked(self.GetFocusedItem()):
-			#チェック解除
-			#self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_DROPHILITED)
-			self.checkedItem.discard(self.GetFocusedItem())
-			globalVars.app.say(_("チェック解除"))
-			self.hListCtrl.SetItemBackgroundColour(self.GetFocusedItem(),"#000000")
-			self.hListCtrl.Update()
-		else:
-			#チェック
-			#self.hListCtrl.SetItemState(self.GetFocusedItem(),wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
-			globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
-			self.checkedItem.add(self.GetFocusedItem())
+		self.ItemMarkProcess([self.GetFocusedItem()])
 
-			self.hListCtrl.SetItemBackgroundColour(self.GetFocusedItem(),"#0000FF")
-			self.hListCtrl.RefreshItem(self.GetFocusedItem())
-			globalVars.app.say(_("チェック"))
-		#カーソルを１つ下へ移動
-		if self.GetFocusedItem()!=len(self.listObject)-1:		#カーソルが一番下以外にある時
-			self.hListCtrl.SetItemState(self.GetFocusedItem(),0,wx.LIST_STATE_SELECTED)
-			self.hListCtrl.Focus(self.GetFocusedItem()+1)
-			self.hListCtrl.Select(self.GetFocusedItem())
+	def CheckAll(self):
+		self.ItemMarkProcess(range(len(self.listObject)),True)
+		globalVars.app.say(_("すべてチェック"))
+
+	def CheckInverse(self):
+		self.ItemMarkProcess(range(len(self.listObject)))
+		globalVars.app.say(_("チェック反転"))
+
+	def ItemMarkProcess(self,items,checkStrict=False):
+		"""
+			itemsをチェック・チェック解除する。現在状態と比べて反転させる
+			checkStrictの時は、itemsを全部チェック状態にする
+		"""
+		for item in items:
+			if (not checkStrict) and self._IsItemChecked(item):
+				#チェック解除
+				#self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_DROPHILITED)
+				self.checkedItem.discard(item)
+				if len(items)==1:
+					globalVars.app.say(_("チェック解除"))
+				self.hListCtrl.SetItemBackgroundColour(item,"#000000")
+				self.hListCtrl.Update()
+			else:				#チェック
+				#self.hListCtrl.SetItemState(item,wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
+				if len(items)==1:
+					globalVars.app.say(_("チェック"))
+					if not checkStrict:
+						globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
+				self.checkedItem.add(item)
+				self.hListCtrl.SetItemBackgroundColour(item,"#0000FF")
+				self.hListCtrl.RefreshItem(item)
+			#カーソルを１つ下へ移動
+			if len(items)==1 and item!=len(self.listObject)-1:		#カーソルが一番下以外にある時
+				self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_SELECTED)
+				self.hListCtrl.Focus(item+1)
+				self.hListCtrl.Select(item+1)
 
 	def BeginDrag(self,event):
 		data=wx.FileDataObject()
