@@ -30,6 +30,7 @@ import views.makeShortcut
 import views.objectDetail
 import views.search
 import views.makeHash
+import views.registOriginalAssociation
 
 import workerThreads
 import workerThreadTasks
@@ -272,6 +273,7 @@ class Menu(BaseMenu):
 		#移動メニューの中身
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD",_("開く"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_ADMIN",_("管理者として開く"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_EXEC_ORIGINAL_ASSOCIATION",_("独自関連付けで実行"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_TAB",_("別のタブで開く"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_STREAM",_("開く(ストリーム)"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
@@ -306,6 +308,7 @@ class Menu(BaseMenu):
 
 
 		#環境メニューの中身
+		self.RegisterMenuCommand(self.hEnvMenu,"ENV_REGIST_ORIGINAL_ASSOCIATION",_("独自関連付けの管理"))
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_TESTDIALOG",_("テストダイアログを表示"))
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_FONTTEST",_("フォントテストダイアログを表示"))
 		#ヘルプメニューの中身
@@ -344,6 +347,8 @@ class Events(BaseEvents):
 
 		selected=event.GetId()#メニュー識別しの数値が出る
 
+		#キー重複対応のためのIDの場合には、イベントを投げ直す
+		#複数投げられるが、有効状態の者は１つだけなはず
 		if globalVars.app.hMainView.menu.keymap.isRefHit(selected):
 			for ref in globalVars.app.hMainView.menu.keymap.GetOriginalRefs(selected):
 				newEvent=wx.CommandEvent(event.GetEventType(),ref)
@@ -360,6 +365,18 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD"):
 			self.GoForward(False)
+			return
+		if selected==menuItemsStore.getRef("MOVE_EXEC_ORIGINAL_ASSOCIATION"):
+			elem=self.parent.activeTab.GetFocusedElement()
+			if isinstance(elem,(browsableObjects.File,browsableObjects.Stream,browsableObjects.GrepItem)):
+				extention=os.path.splitext(elem.fullpath)[1][1:].lower()
+				if extention in globalVars.app.config["originalAssociation"]:
+					config=globalVars.app.config["originalAssociation"][extention]
+				else:
+					config=globalVars.app.config["originalAssociation"]["<default_file>"]
+			else:
+				config=globalVars.app.config["originalAssociation"]["<default_dir>"]
+			misc.RunFile(config,prm=elem.fullpath)
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_ADMIN"):
 			self.GoForward(False,admin=True)
@@ -575,6 +592,18 @@ class Events(BaseEvents):
 				self.UpdateFilelist(False)
 			elif ret==errorCodes.UNKNOWN:
 				dialog(_("エラー"),_("デバイスの取り外しに失敗しました。"))
+			return
+		if selected==menuItemsStore.getRef("ENV_REGIST_ORIGINAL_ASSOCIATION"):
+			config=globalVars.app.config["originalAssociation"]
+			d=views.registOriginalAssociation.Dialog(dict(config.items()))
+			d.Initialize()
+			if d.Show()==wx.ID_CANCEL:
+				d.Destroy()
+				return
+			result={}
+			result["originalAssociation"]=d.GetValue()
+			globalVars.app.config.remove_section("originalAssociation")
+			globalVars.app.config.read_dict(result)
 			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):
 			self.testdialog=views.test.View()

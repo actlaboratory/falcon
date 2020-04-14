@@ -13,9 +13,9 @@ class BaseDialog(object):
 	def __init__(self):
 		pass
 
-	def Initialize(self, parent,ttl):
+	def Initialize(self, parent,ttl,style=0):
 		"""タイトルを指定して、ウィンドウを初期化し、親の中央に配置するように設定。"""
-		self.wnd=wx.Dialog(parent,-1, ttl,style=wx.DEFAULT_DIALOG_STYLE | wx.BORDER_DEFAULT)
+		self.wnd=wx.Dialog(parent,-1, ttl,style=wx.DEFAULT_DIALOG_STYLE | wx.BORDER_DEFAULT | style)
 		_winxptheme.SetWindowTheme(self.wnd.GetHandle(),"","")
 
 		self.panel = wx.Panel(self.wnd,wx.ID_ANY)
