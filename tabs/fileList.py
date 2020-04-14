@@ -334,7 +334,7 @@ class FileListTab(base.FalconTabBase):
 		self.log.debug("Start checking confirmation")
 		confs=op.GetConfirmationManager()
 		while(True):
-			confs_list=list(confs.IterateNotResponded)
+			confs_list=list(confs.IterateNotResponded())
 			self.log.debug("%d confirmations." % len(confs_list))
 			if len(confs_list)==0: break
 			elem=confs_list[0]
@@ -351,7 +351,12 @@ class FileListTab(base.FalconTabBase):
 			d=views.OperationSelecter.Dialog(info,views.OperationSelecter.GetMethod("ALREADY_EXISTS"),False)
 			d.Initialize()
 			d.Show()
-			elem.SetResponse(d.GetValue())#渓谷に対して、文字列でレスポンスする
+			val=d.GetValue()
+			if val['all'] is True:#「以降も同様に処理」がオン
+				confs.RespondAll(elem,val['response'])
+			else:#この1件だけ
+				elem.SetResponse(d.GetValue())#渓谷に対して、文字列でレスポンスする
+			#end これ以降全てかこれだけか
 		#end while
 		self.log.debug("End checking confirmation.")
 		op.UpdateConfirmation()#これで繁栄する

@@ -15,7 +15,7 @@ class ConfirmElement(object):
 		return self.elem
 
 	def GetMessageNumber(self):
-		return self.message_number
+		return self.msg_number
 
 	def SetResponse(self,res):
 		self.response=res
@@ -69,8 +69,9 @@ class ConfirmationManager(object):
 		#end インデックス番号を見つける
 		msg_number=elem.GetMessageNumber()
 		for i2 in range(i,len(self.confirmations)):
-			if self.confirmations[i2].GetMessageNumber==message_number: self.confirmations[i].SetResponse(response)
+			if self.confirmations[i2].GetMessageNumber()==msg_number: self.confirmations[i2].SetResponse(response)
 		#end 全部応答
+		for elem in self.confirmations: print(elem.GetResponse())
 	#end RespondAll
 
 
