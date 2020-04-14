@@ -41,6 +41,9 @@ from .base import *
 
 from simpleDialog import *
 
+EVENT_FROM_SELF=-1	#適当な数字。そのイベントは自分自身で投げたものであることを示している
+
+
 class View(BaseView):
 	def Initialize(self):
 		t=misc.Timer()
@@ -353,11 +356,14 @@ class Events(BaseEvents):
 		if globalVars.app.hMainView.menu.keymap.isRefHit(selected):
 			for ref in globalVars.app.hMainView.menu.keymap.GetOriginalRefs(selected):
 				newEvent=wx.CommandEvent(event.GetEventType(),ref)
+				newEvent.SetExtraLong(EVENT_FROM_SELF)		#キー操作無効を示す音を鳴らさない
 				wx.PostEvent(globalVars.app.hMainView.hFrame.GetEventHandler(),newEvent)
 			return
 
 		#選択された(ショートカットで押された)メニューが無効状態なら何もしない
 		if self.parent.menu.blockCount[selected]>0:
+			if not event.GetExtraLong()==EVENT_FROM_SELF:
+				globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
 			event.Skip()
 			return
 
