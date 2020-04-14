@@ -58,7 +58,7 @@ def PerformSearch(taskState,param):
 		finished,hits=l._performSearchStep()
 		if len(hits)>0: wx.CallAfter(t._onSearchHitCallback,hits)
 		if finished: break#全て検索した
-		time.sleep(0.5)
+		time.sleep(0.1)
 	#end 検索ループ
 	return True
 
