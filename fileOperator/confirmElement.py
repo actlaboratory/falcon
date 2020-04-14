@@ -14,6 +14,9 @@ class ConfirmElement(object):
 	def GetElement(self):
 		return self.elem
 
+	def GetMessageNumber(self):
+		return self.message_number
+
 	def SetResponse(self,res):
 		self.response=res
 
@@ -43,6 +46,10 @@ class ConfirmationManager(object):
 		for elem in self.confirmations:
 			if not elem.taken: yield elem
 
+	def IterateNotResponded(self):
+		for elem in self.confirmations:
+			if not elem.taken and not elem.GetIfResponded(): yield elem
+
 	def IterateWithFilter(self,number=None):
 		for elem in self.confirmations:
 			ok=True
@@ -51,5 +58,21 @@ class ConfirmationManager(object):
 			if ok:yield elem
 		#end for
 	#end IterateWithFilter
+
+	def RespondAll(self,elem,response):
+		"""指定したものより先にある、同じエラー番号の項目を、全て response として返答する。"""
+		#インデックス番号を見つける
+		i=0
+		for e in self.confirmations:
+			if e is elem: break
+			i+=1
+		#end インデックス番号を見つける
+		msg_number=elem.GetMessageNumber()
+		for i2 in range(i,len(self.confirmations)):
+			if self.confirmations[i2].GetMessageNumber==message_number: self.confirmations[i].SetResponse(response)
+		#end 全部応答
+	#end RespondAll
+
+
 
 	
