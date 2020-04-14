@@ -76,4 +76,6 @@ SUPPORTED_AUDIO_FORMATS={
 	'ogg',
 	'wma',
 	'flac',
+	'aac',
+	'm4a'
 }
