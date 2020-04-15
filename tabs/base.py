@@ -76,7 +76,8 @@ class FalconTabBase(object):
 	selectItemTypeMenuConditions[browsableObjects.File].extend([
 		"TOOL_DIRCALC",
 		"MOVE_FORWARD_TAB",
-		"TOOL_ADDPATH"
+		"TOOL_ADDPATH",
+		"MOVE_FORWARD_TAB"
 	])
 
 	selectItemTypeMenuConditions[browsableObjects.Folder]=[]

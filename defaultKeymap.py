@@ -45,4 +45,5 @@ defaultKeymap["mainView"]={
 	"READ_LISTITEMNUMBER": "alt+f3",
 	"READ_LISTINFO": "alt+f1",
 	"VIEW_DRIVE_INFO": "alt+f2",
+	"TOOL_EXEC_PROGRAM": "ctrl+h"
 }

@@ -43,7 +43,8 @@ class StreamListTab(base.FalconTabBase):
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE",
-		"READ_CONTENT_PREVIEW"
+		"READ_CONTENT_PREVIEW",
+		"TOOL_EXEC_PROGRAM"
 	]
 
 	def Update(self,lst,cursor=-1):

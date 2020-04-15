@@ -36,8 +36,8 @@ class GrepResultTab(fileList.FileListTab):
 		"MOVE_BACKWARD",
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
-		"TOOL_EJECT_DEVICE"
-
+		"TOOL_EJECT_DEVICE",
+		"TOOL_OPEN_PROGRAM"
 	]
 
 	def StartSearch(self,rootPath,searches,keyword, isRegularExpression):

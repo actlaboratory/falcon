@@ -31,6 +31,7 @@ import views.objectDetail
 import views.search
 import views.makeHash
 import views.registOriginalAssociation
+import views.execProgram
 
 import workerThreads
 import workerThreadTasks
@@ -309,6 +310,7 @@ class Menu(BaseMenu):
 		#ツールメニューの中身
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_HASHCALC",_("ファイルハッシュの計算"))
+		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EXEC_PROGRAM",_("ファイル名を指定して実行"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_ADDPATH",_("環境変数PATHに追加"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DRIVE",_("ドライブの取り外し"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DEVICE",_("デバイスの取り外し"))
@@ -528,6 +530,14 @@ class Events(BaseEvents):
 			d.Initialize()
 			d.Show()
 			d.Destroy()
+			return
+		if selected==menuItemsStore.getRef("TOOL_EXEC_PROGRAM"):
+			d=views.execProgram.Dialog()
+			d.Initialize()
+			d.Show()
+			d.Destroy()
+			#TODO:GetValueした結果を実行プログラム名とパスとに分ける。半角スペースが基本だが、クオートとかも使えるので注意されたし。
+			#TODO:今開いている場所がカレントの状態になるようにセットして実行する
 			return
 		if selected==menuItemsStore.getRef("TOOL_ADDPATH"):
 			t=self.parent.activeTab.GetSelectedItems()

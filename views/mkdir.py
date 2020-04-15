@@ -34,11 +34,8 @@ class Dialog(BaseDialog):
 		self.bOk=self.creator.okbutton(_("ＯＫ"),None)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
-		self.sizer.Fit(self.wnd)
-
-
 	def Show(self):
-		result=self.wnd.ShowModal()
+		result=self.ShowModal()
 		self.Destroy()
 		return result
 
