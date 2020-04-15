@@ -606,7 +606,7 @@ class FalconTabBase(object):
 		if ext in constants.SUPPORTED_AUDIO_FORMATS:
 			if self.stopSoundHandle: globalVars.app.StopSound(self.stopSoundHandle)
 			self.stopSoundHandle=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
-		elif ext in constants.SUPPORTED_DOCUMENT_FORMATS:
+		elif ext in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats:
 			globalVars.app.say(misc.ExtractText(self.GetFocusedElement().fullpath))
 		else:
 			globalVars.app.say(_("プレビューに対応していないファイル形式です。"))

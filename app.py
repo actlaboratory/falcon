@@ -36,6 +36,7 @@ class falconAppMain(wx.App):
 		self.SetTimeZone()
 		self.InitTranslation()
 		self.LoadUserCommandSettings()
+		self.LoadUserExtentionSettings()
 		self.InitSound()
 		self.InitCaches()
 		workerThreads.Start()
@@ -115,6 +116,25 @@ class falconAppMain(wx.App):
 				self.favoriteDirectory : _("お気に入りディレクトリ"),
 				self.openHereCommand : _("ここで開く")
 			}
+
+	def LoadUserExtentionSettings(self):
+		#サポートするドキュメント形式の追加設定
+		self.documentFormats=set()
+		documentFormats=self.config["extentions"]["document"].split("/")
+		err_audio=[]
+		err_format=[]
+		for ext in documentFormats:
+			ext=ext.lower()
+			if ext in constants.SUPPORTED_AUDIO_FORMATS:
+				err_audio.append(ext)
+			if "." in ext:
+				err_format.append(ext)
+			else:
+				self.documentFormats.add(ext)
+		if err_format:
+			dialog(_("エラー"),_("以下の拡張子は、利用できない文字を含んでいるため登録できません。\n\n")+str(err_audio))
+		if err_audio:
+			dialog(_("エラー"),_("以下の拡張子は、既に音声データの拡張子として登録されているため、テキスト形式として登録できません。\n\n")+str(err_audio))
 
 	def InitTranslation(self):
 		"""翻訳を初期化する。"""
