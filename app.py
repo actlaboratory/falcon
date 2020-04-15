@@ -132,7 +132,7 @@ class falconAppMain(wx.App):
 			else:
 				self.documentFormats.add(ext)
 		if err_format:
-			dialog(_("エラー"),_("以下の拡張子は、利用できない文字を含んでいるため登録できません。\n\n")+str(err_audio))
+			dialog(_("エラー"),_("以下の拡張子は、利用できない文字を含んでいるため登録できません。\n\n")+str(err_format))
 		if err_audio:
 			dialog(_("エラー"),_("以下の拡張子は、既に音声データの拡張子として登録されているため、テキスト形式として登録できません。\n\n")+str(err_audio))
 
