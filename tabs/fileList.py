@@ -316,7 +316,7 @@ class FileListTab(base.FalconTabBase):
 		if len(target)==1:
 			msg=_("%(file)s\nこのファイルを、 %(dest)s に%(op)sしますか？") % {'file': target[0], 'dest': self.listObject.rootDirectory, 'op': op_str}
 		else:
-			msg=_("選択中の項目%(num)d件を、 %(dest)s に%(op)sしますか？") % {'num': len(target), 'dest': self.listObject.rootDirectory, 'op': op_str}
+			msg=_("%(num)d 項目を、 %(dest)s に%(op)sしますか？") % {'num': len(target), 'dest': self.listObject.rootDirectory, 'op': op_str}
 		#end メッセージどっちにするか
 		dlg=wx.MessageDialog(None,msg,_("%(op)sの確認") % {'op': op_str}, wx.YES_NO|wx.ICON_QUESTION)
 		if dlg.ShowModal()==wx.ID_NO: return
