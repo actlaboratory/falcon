@@ -110,6 +110,9 @@ class Dialog(BaseDialog):
 	def delete(self,event):
 		index=self.hListCtrl.GetFocusedItem()
 		ext=self.hListCtrl.GetItemText(index,0)
+		if "<default" in ext:
+			dialog(_("エラー"),_("デフォルト設定は削除できません。"))
+			return
 		del(self.config[ext])
 		self.hListCtrl.DeleteItem(index)
 
