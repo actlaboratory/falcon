@@ -32,6 +32,7 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'xls',
 	'ppt',
 	'mht',
+	'htm',
 	'html',
 	'eml',
 	'sxw',
@@ -61,13 +62,19 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'123',
 	'wri',
 	'ini',
+	'conf',
 	'md',
 	'py',
+	'c',
+	'h',
 	'cpp',
+	'cs',
 	'hsp',
 	'js',
 	'rb',
+	'sql',
 	'as'
+	"manifest"
 }
 
 SUPPORTED_AUDIO_FORMATS={
