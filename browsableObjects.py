@@ -85,6 +85,9 @@ class File(FalconBrowsableBase):
 		return attrib if self.attributes!=attrib else -1
 	#end GetNewAttributes
 
+	def GetRootDrivePath(self):
+		return self.fullpath[0]
+
 class Folder(File):
 	__slots__=[]
 
@@ -95,7 +98,7 @@ class Folder(File):
 		else:
 			return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
-class GrepItem(FalconBrowsableBase):
+class GrepItem(File):
 	def Initialize(self,ln,preview,fileobject):
 		"""grepの結果は、ファイルの情報に加えて、行数・プレビュー・ヒット数を含む。ヒット数は、後から設定する。ファイル名などは、与えられたファイルオブジェクトからとる。"""
 		self.basename=fileobject.basename
@@ -161,6 +164,9 @@ class Drive(FalconBrowsableBase):
 		"""
 		return (self.basename, self.letter, misc.ConvertBytesTo(self.free, misc.UNIT_AUTO, True), misc.ConvertBytesTo(self.total, misc.UNIT_AUTO, True), self.typeString)
 
+	def GetRootDrivePath(self):
+		return self.fullpath[0]
+
 class Stream(FalconBrowsableBase):
 	"""NTFS 副ストリームを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
 	def Initialize(self,file="", basename="", fullpath="", size=-1):
@@ -173,6 +179,9 @@ class Stream(FalconBrowsableBase):
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
 		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True))
+
+	def GetRootDrivePath(self):
+		return self.fullpath[0]
 
 class NetworkResource(FalconBrowsableBase):
 	"""ネットワーク上のディスクリソースを表す。このオブジェクトは情報を保持するだけで、指し示すリソースにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
@@ -196,3 +205,6 @@ class NetworkResource(FalconBrowsableBase):
 			ここもDriveと同じ内容に統一
 		"""
 		return (self.basename, self.letter,"", "", self.typeString)
+
+	def GetRootDrivePath(self):
+		return self.basename

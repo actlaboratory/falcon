@@ -50,7 +50,8 @@ class FalconTabBase(object):
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE",
-		"READ_CONTENT_PREVIEW"
+		"READ_CONTENT_PREVIEW",
+		"VIEW_DRIVE_INFO"
 	])
 	selectItemMenuConditions.append([])
 	selectItemMenuConditions.append([])

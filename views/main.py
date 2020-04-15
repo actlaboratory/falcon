@@ -313,6 +313,8 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DRIVE",_("ドライブの取り外し"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DEVICE",_("デバイスの取り外し"))
 
+		#表示メニューの中身
+		self.RegisterMenuCommand(self.hViewMenu,"VIEW_DRIVE_INFO",_("ドライブ情報の表示"))
 
 		#環境メニューの中身
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_REGIST_ORIGINAL_ASSOCIATION",_("独自関連付けの管理"))
@@ -492,58 +494,7 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("FILE_VIEW_DETAIL"):
 			elem=self.parent.activeTab.listObject.GetElement(self.parent.activeTab.GetFocusedItem())
-			dic={}
-			dic[_("名前")]=elem.basename
-			dic[_("パス")]=elem.fullpath
-			if elem.__class__==browsableObjects.File or elem.__class__==browsableObjects.Stream:
-				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
-				dic[_("サイズ(バイト)")]=elem.size
-			if elem.__class__==browsableObjects.File:
-				dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-				dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-				dic[_("属性")]=elem.longAttributesString
-				dic[_("種類")]=elem.typeString
-				if not elem.shortName=="":
-					dic[_("短い名前")]=elem.shortName
-				else:
-					dic[_("短い名前")]=_("なし")
-			if elem.__class__==browsableObjects.Folder:
-				if elem.size>=0:
-					dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
-					dic[_("サイズ(バイト)")]=elem.size
-				else:
-					size=misc.GetDirectorySize(elem.fullpath)
-					if size>=0:
-						dic[_("サイズ")]=misc.ConvertBytesTo(size,misc.UNIT_AUTO,True)
-						dic[_("サイズ(バイト)")]=size
-					else:
-						dic[_("サイズ")]=_("不明")
-						dic[_("サイズ(バイト)")]=_("不明")
-				dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-				dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-				dic[_("属性")]=elem.longAttributesString
-				dic[_("種類")]=elem.typeString
-				if not elem.shortName=="":
-					dic[_("短い名前")]=elem.shortName
-				else:
-					dic[_("短い名前")]=_("なし")
-			if elem.__class__==browsableObjects.Drive:
-				if elem.free>=0:
-					dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
-					dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO,True)
-				else:
-					dic[_("フォーマット")]=_("未挿入")
-				if elem.total>0:
-					dic[_("空き容量")]+=" ("+str(elem.free*100//elem.total)+"%)"
-				if elem.free>=0:
-					dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
-				dic[_("種類")]=elem.typeString
-			if elem.__class__==browsableObjects.NetworkResource:
-				dic[_("IPアドレス")]=elem.address
-			d=views.objectDetail.Dialog()
-			d.Initialize(dic)
-			d.Show()
-			d.Destroy()
+			self.ShowDetail(elem)
 			return
 		if selected==menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
 			self.parent.activeTab.ShowProperties()
@@ -603,14 +554,28 @@ class Events(BaseEvents):
 				dialog(_("エラー"),_("取り外しに失敗しました。")+_("このドライブは使用中の可能性があります。"))
 			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DEVICE"):
-			if self.parent.activeTab.GetFocusedItem()<0:
-				return
 			ret=deviceCtrl.EjectDevice(self.parent.activeTab.GetFocusedElement().letter)
 			if ret==errorCodes.OK:
 				dialog(_("成功"),_("デバイスは安全に取り外せる状態になりました。"))
 				self.UpdateFilelist(False)
 			elif ret==errorCodes.UNKNOWN:
 				dialog(_("エラー"),_("デバイスの取り外しに失敗しました。"))
+			return
+		if selected==menuItemsStore.getRef("VIEW_DRIVE_INFO"):
+			rootPath=self.parent.activeTab.GetFocusedElement().GetRootDrivePath()
+			elem=None
+			if len(rootPath)==1:
+				elem=lists.drive.GetDriveObject(int(ord(rootPath)-65))
+			else:	#ネットワークリソース
+				lst=lists.drive.DriveList()
+				lst.Initialize(None,True)
+				for d in lst:
+					if d.basename==rootPath:
+						elem=d
+			if elem==None:
+				dialog(_("エラー"),_("ドライブ情報の取得に失敗しました。"))
+				return
+			self.ShowDetail(elem)
 			return
 		if selected==menuItemsStore.getRef("ENV_REGIST_ORIGINAL_ASSOCIATION"):
 			config=globalVars.app.config["originalAssociation"]
@@ -759,3 +724,50 @@ class Events(BaseEvents):
 
 	def OpenContextMenu(self,silence=True):
 		self.parent.activeTab.OpenContextMenu(event=None)
+
+	def ShowDetail(self,elem):
+		dic={}
+		dic[_("名前")]=elem.basename
+		dic[_("パス")]=elem.fullpath
+		if elem.__class__==browsableObjects.File or elem.__class__==browsableObjects.Stream:
+			dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
+			dic[_("サイズ(バイト)")]=elem.size
+		elif elem.__class__==browsableObjects.Folder:
+			if elem.size>=0:
+				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
+				dic[_("サイズ(バイト)")]=elem.size
+			else:
+				size=misc.GetDirectorySize(elem.fullpath)
+				if size>=0:
+					dic[_("サイズ")]=misc.ConvertBytesTo(size,misc.UNIT_AUTO,True)
+					dic[_("サイズ(バイト)")]=size
+				else:
+					dic[_("サイズ")]=_("不明")
+					dic[_("サイズ(バイト)")]=_("不明")
+		if isinstance(elem,browsableObjects.File):
+			dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
+			dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
+			dic[_("属性")]=elem.longAttributesString
+			dic[_("種類")]=elem.typeString
+			if not elem.shortName=="":
+				dic[_("短い名前")]=elem.shortName
+			else:
+				dic[_("短い名前")]=_("なし")
+		if elem.__class__==browsableObjects.Drive:
+			if elem.free>=0:
+				dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
+				dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO,True)
+			else:
+				dic[_("フォーマット")]=_("未挿入")
+			if elem.total>0:
+				dic[_("空き容量")]+=" ("+str(elem.free*100//elem.total)+"%)"
+			if elem.free>=0:
+				dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
+			dic[_("種類")]=elem.typeString
+		if elem.__class__==browsableObjects.NetworkResource:
+			dic[_("IPアドレス")]=elem.address
+		d=views.objectDetail.Dialog()
+		d.Initialize(dic)
+		d.Show()
+		d.Destroy()
+		return

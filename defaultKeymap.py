@@ -44,4 +44,5 @@ defaultKeymap["mainView"]={
 	"READ_CONTENT_READFOOTER": "alt+end",
 	"READ_LISTITEMNUMBER": "alt+f3",
 	"READ_LISTINFO": "alt+f1",
+	"VIEW_DRIVE_INFO": "alt+f2",
 }

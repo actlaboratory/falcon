@@ -107,25 +107,8 @@ class DriveList(FalconListBase):
 		}
 
 	def Append(self,index):
-		"""ドライブ情報を調べて、リストに追加する。Aドライブが0、Zドライブが25。"""
-		letter=chr(index+65)
-		path=letter+":\\"
-		type=win32file.GetDriveType(path)
-		f=-1
-		t=-1
-		n=""
-		try:
-			freeSpace=win32api.GetDiskFreeSpaceEx(path)
-			f=freeSpace[0]
-			t=freeSpace[1]
-			volumeInfo=win32api.GetVolumeInformation(path)
-			n=volumeInfo[0]
-		except pywintypes.error as err:
-			pass
-		#エラーは無視
-		d=browsableObjects.Drive()
-		d.Initialize(letter,f,t,type,n)
-		if t==-1:
+		d=GetDriveObject(index)
+		if d.total==-1:
 			self.unusableDrives.append(d)
 		else:
 			self.drives.append(d)
@@ -186,3 +169,24 @@ class DriveList(FalconListBase):
 
 	def __len__(self):
 		return len(self.drives)+len(self.unusableDrives)+len(self.networkResources)
+
+def GetDriveObject(index):
+	"""ドライブ情報を調べて、browsableObjectsで返す。Aドライブが0、Zドライブが25。"""
+	letter=chr(index+65)
+	path=letter+":\\"
+	type=win32file.GetDriveType(path)
+	f=-1
+	t=-1
+	n=""
+	try:
+		freeSpace=win32api.GetDiskFreeSpaceEx(path)
+		f=freeSpace[0]
+		t=freeSpace[1]
+		volumeInfo=win32api.GetVolumeInformation(path)
+		n=volumeInfo[0]
+	except pywintypes.error as err:
+		pass
+	#エラーは無視
+	d=browsableObjects.Drive()
+	d.Initialize(letter,f,t,type,n)
+	return d
