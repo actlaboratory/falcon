@@ -127,6 +127,7 @@ class View(BaseView):
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
 		#end エラー
+		self.activeTab.hListCtrl.SetFocus()
 	#end makeFirstTab
 
 	def Navigate(self,target,as_new_tab=False):
@@ -177,7 +178,6 @@ class View(BaseView):
 
 		self.activeTab=self.tabs[pageNo]
 		self.hTabCtrl.SetSelection(pageNo)
-		self.activeTab.hListCtrl.SetFocus()
 
 		self.activeTab.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
 
@@ -642,7 +642,6 @@ class Events(BaseEvents):
 
 	def DelaiedCall(self,callable):
 		"""メニューから、すぐに何かを読み上げる機能を実行すると、メニューが閉じてリストに戻った読み上げにかき消されてしまう。なので、エンターが押されているかどうかを判定して、その場合にcallableの実行時間を遅らせる。"""
-		print(wx.GetKeyState(wx.WXK_RETURN))
 		if not wx.GetKeyState(wx.WXK_RETURN):
 			callable()
 			return
