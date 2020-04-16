@@ -44,7 +44,6 @@ def GetRecursiveFileList(taskState,param):
 	#end ファイルリストをガンガン入れる
 	if taskState.canceled: return False
 	if param['eol']: out_lst.append('eol')
-	globalVars.app.PlaySound("tip.ogg")
 	return True
 
 def PerformSearch(taskState,param):
