@@ -433,7 +433,7 @@ class Events(BaseEvents):
 			self.parent.activeTab.GoToMark()
 			return
 		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
-			self.SortNext()
+			self.DelaiedCall(self.SortNext)
 			return
 		if selected==menuItemsStore.getRef("EDIT_MARKITEM"):
 			self.parent.activeTab.OnSpaceKey()
@@ -448,7 +448,7 @@ class Events(BaseEvents):
 			self.SortSelect()
 			return
 		if selected==menuItemsStore.getRef("EDIT_SORTCYCLEAD"):
-			self.SortCycleAd()
+			self.DelaiedCall(self.SortCycleAd)
 			return
 		if selected==menuItemsStore.getRef("EDIT_SEARCH"):
 			self.Search()
