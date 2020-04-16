@@ -512,7 +512,7 @@ class Events(BaseEvents):
 			self.DelaiedCall(self.parent.activeTab.ReadListInfo)
 			return
 		if selected==menuItemsStore.getRef("READ_CONTENT_PREVIEW"):
-			self.DelaiedCall(self.parent.activeTab.Preview)
+			self.parent.activeTab.Preview()
 			return
 		if selected==menuItemsStore.getRef("READ_CONTENT_READHEADER"):
 			self.DelaiedCall(self.parent.activeTab.ReadHeader)
