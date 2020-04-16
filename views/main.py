@@ -313,9 +313,9 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DEVICE",_("デバイスの取り外し"))
 
 		#表示メニューの中身
-		self.RegisterMenuCommand(self.hViewMenu,"EDIT_SORTNEXT",_("次の並び順"))
-		self.RegisterMenuCommand(self.hViewMenu,"EDIT_SORTSELECT",_("並び順を選択"))
-		self.RegisterMenuCommand(self.hViewMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
+		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORTNEXT",_("次の並び順"))
+		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORTSELECT",_("並び順を選択"))
+		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORTCYCLEAD",_("昇順/降順切り替え"))
 		self.RegisterMenuCommand(self.hViewMenu,"VIEW_DRIVE_INFO",_("ドライブ情報の表示"))
 
 		#環境メニューの中身
@@ -432,7 +432,7 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("MOVE_MARK"):
 			self.parent.activeTab.GoToMark()
 			return
-		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
+		if selected==menuItemsStore.getRef("VIEW_SORTNEXT"):
 			self.SortNext()
 			return
 		if selected==menuItemsStore.getRef("EDIT_MARKITEM"):
@@ -444,10 +444,10 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("EDIT_MARKITEM_INVERSE"):
 			self.parent.activeTab.CheckInverse()
 			return
-		if selected==menuItemsStore.getRef("EDIT_SORTSELECT"):
+		if selected==menuItemsStore.getRef("VIEW_SORTSELECT"):
 			self.SortSelect()
 			return
-		if selected==menuItemsStore.getRef("EDIT_SORTCYCLEAD"):
+		if selected==menuItemsStore.getRef("VIEW_SORTCYCLEAD"):
 			self.SortCycleAd()
 			return
 		if selected==menuItemsStore.getRef("EDIT_SEARCH"):
