@@ -137,7 +137,8 @@ class View(BaseView):
 		else:
 			self.log.debug("Creating new tab %s..." % target)
 		#end log
-		globalVars.app.say(_("新しいタブ"))
+		s=_("新しいタブ") if len(self.tabs)>0 else _("falcon")
+		globalVars.app.say(s)
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		creator=views.ViewCreator.ViewCreator(1,hPanel,None)
 		newtab=tabs.navigator.Navigate(target,create_new_tab_info=(self,creator))
