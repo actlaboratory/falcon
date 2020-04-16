@@ -291,11 +291,11 @@ class FalconTabBase(object):
 
 	def CheckAll(self):
 		self.ItemMarkProcess(range(len(self.listObject)),True)
-		globalVars.app.say(_("すべてチェック"))
+		globalVars.app.say(_("すべてチェック"), interrupt=True)
 
 	def CheckInverse(self):
 		self.ItemMarkProcess(range(len(self.listObject)))
-		globalVars.app.say(_("チェック反転"))
+		globalVars.app.say(_("チェック反転"), interrupt=True)
 
 	def ItemMarkProcess(self,items,checkStrict=False):
 		"""
@@ -308,13 +308,13 @@ class FalconTabBase(object):
 				#self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_DROPHILITED)
 				self.checkedItem.discard(item)
 				if len(items)==1:
-					globalVars.app.say(_("チェック解除"))
+					globalVars.app.say(_("チェック解除"), interrupt=True)
 				self.hListCtrl.SetItemBackgroundColour(item,"#000000")
 				self.hListCtrl.Update()
 			else:				#チェック
 				#self.hListCtrl.SetItemState(item,wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
 				if len(items)==1:
-					globalVars.app.say(_("チェック"))
+					globalVars.app.say(_("チェック"), interrupt=True)
 					if not checkStrict:
 						globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
 				self.checkedItem.add(item)
@@ -335,12 +335,12 @@ class FalconTabBase(object):
 		obj.DoDragDrop()
 
 	def SelectAll(self):
-		globalVars.app.say(_("全て選択"))
+		globalVars.app.say(_("全て選択"), interrupt=True)
 		for i in range(self.hListCtrl.GetItemCount()):
 			self.hListCtrl.Select(i)
 
 	def NameCopy(self):
-		globalVars.app.say(_("ファイル名をコピー"))
+		globalVars.app.say(_("ファイル名をコピー"), interrupt=True)
 		t=self.GetSelectedItems().GetItemNames()
 		t="\n".join(t)
 		with clipboardHelper.Clipboard() as c:
@@ -348,7 +348,7 @@ class FalconTabBase(object):
 
 	def FullpathCopy(self):
 		t=self.GetSelectedItems().GetItemPaths()
-		globalVars.app.say(_("フルパスをコピー"))
+		globalVars.app.say(_("フルパスをコピー"), interrupt=True)
 		t="\n".join(t)
 		with clipboardHelper.Clipboard() as c:
 			c.set_unicode_text(t)
@@ -356,7 +356,7 @@ class FalconTabBase(object):
 	def UpdateFilelist(self,silence=False,cursorTargetName=""):
 		"""同じリストで、内容を再取得して更新する。"""
 		if silence==False:
-			globalVars.app.say(_("更新"))
+			globalVars.app.say(_("更新"), interrupt=True)
 		if cursorTargetName=="":
 			item=self.listObject.GetElement(self.GetFocusedItem())
 		result=self.listObject.Update()
@@ -478,7 +478,7 @@ class FalconTabBase(object):
 
 	def MarkSet(self):
 		"""現在開いている場所をマークする"""
-		globalVars.app.say(_("マーク設定"))
+		globalVars.app.say(_("マーク設定"), interrupt=True)
 		self.environment["markedPlace"]=self.listObject.rootDirectory
 		self.log.debug("markset at \""+self.environment["markedPlace"] + "\"")
 
@@ -487,7 +487,7 @@ class FalconTabBase(object):
 		ret=self.Move(self.environment["markedPlace"])
 		if ret!=errorCodes.OK:
 			return ret
-		globalVars.app.say(_("マーク位置へ移動"))
+		globalVars.app.say(_("マーク位置へ移動"), interrupt=True)
 		return errorCodes.OK
 
 	def StartRename(self):
@@ -619,33 +619,33 @@ class FalconTabBase(object):
 			if self.stopSoundHandle: globalVars.app.StopSound(self.stopSoundHandle)
 			self.stopSoundHandle=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
 		elif ext in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats:
-			globalVars.app.say(misc.ExtractText(self.GetFocusedElement().fullpath))
+			globalVars.app.say(misc.ExtractText(self.GetFocusedElement().fullpath), interrupt=True)
 		else:
-			globalVars.app.say(_("プレビューに対応していないファイル形式です。"))
+			globalVars.app.say(_("プレビューに対応していないファイル形式です。"), interrupt=True)
 
 	def ReadHeader(self):
 		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
 		if not ext in constants.SUPPORTED_DOCUMENT_FORMATS:
-			globalVars.app.say(_("ドキュメントファイルではありません。"))
+			globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
 			return
 		#end 非対応
 		ln=int(globalVars.app.config["preview"]["header_line_count"])
 		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
 		if len(s)>ln: s=s[0:ln]
 		prefix=_("先頭%(ln)d行") % {'ln': ln}
-		globalVars.app.say("%s %s" % (prefix,"\n".join(s)))
+		globalVars.app.say("%s %s" % (prefix,"\n".join(s)), interrupt=True)
 
 	def ReadFooter(self):
 		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
 		if not ext in constants.SUPPORTED_DOCUMENT_FORMATS:
-			globalVars.app.say(_("ドキュメントファイルではありません。"))
+			globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
 			return
 		#end 非対応
 		ln=int(globalVars.app.config['preview']['footer_line_count'])
 		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
 		if len(s)>10: s=s[-10:]
 		prefix=_("末尾%(ln)d行") % {'ln': ln}
-		globalVars.app.say("%s %s" % (prefix,"\n".join(s)))
+		globalVars.app.say("%s %s" % (prefix,"\n".join(s)), interrupt=True)
 
 	def ReadListItemNumber(self,short=False):
 		return errorCodes.NOT_SUPPORTED
