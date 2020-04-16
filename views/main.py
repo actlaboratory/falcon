@@ -268,14 +268,11 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_NAMECOPY",_("名前をコピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SELECTALL",_("全て選択"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTNEXT",_("次の並び順"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SEARCH",_("検索"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM",_("チェック／チェック解除"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_ALL",_("すべてチェック"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_INVERSE",_("チェック状態反転"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTSELECT",_("並び順を選択"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_OPENCONTEXTMENU",_("コンテキストメニューを開く"))
 
 		#移動メニューの中身
@@ -316,6 +313,9 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DEVICE",_("デバイスの取り外し"))
 
 		#表示メニューの中身
+		self.RegisterMenuCommand(self.hViewMenu,"EDIT_SORTNEXT",_("次の並び順"))
+		self.RegisterMenuCommand(self.hViewMenu,"EDIT_SORTSELECT",_("並び順を選択"))
+		self.RegisterMenuCommand(self.hViewMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
 		self.RegisterMenuCommand(self.hViewMenu,"VIEW_DRIVE_INFO",_("ドライブ情報の表示"))
 
 		#環境メニューの中身
