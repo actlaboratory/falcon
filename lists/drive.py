@@ -21,6 +21,7 @@ import errorCodes
 from simpleDialog import dialog
 from .base import *
 from .constants import *
+from win32com.shell import shell, shellcon
 
 class DriveList(FalconListBase):
 	"""ドライブの一覧を扱うクラス。"""
@@ -91,8 +92,9 @@ class DriveList(FalconListBase):
 		#end 情報取得失敗
 		lst.pop(0)	#先頭はドライブではない者が入るので省く
 		for l in lst:
+			ret, shfileinfo=shell.SHGetFileInfo(l.lpRemoteName,0,shellcon.SHGFI_ICON)
 			s=browsableObjects.NetworkResource()
-			s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,socket.getaddrinfo(l.lpRemoteName[2:],None)[0][4][0])
+			s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,socket.getaddrinfo(l.lpRemoteName[2:],None)[0][4][0],shfileinfo[0])
 			self.networkResources.append(s)
 		#end 追加ループ
 
@@ -188,5 +190,6 @@ def GetDriveObject(index):
 		pass
 	#エラーは無視
 	d=browsableObjects.Drive()
-	d.Initialize(letter,f,t,type,n)
+	ret, shfileinfo=shell.SHGetFileInfo(letter+":\\",0,shellcon.SHGFI_ICON)
+	d.Initialize(letter,f,t,type,n,shfileinfo[0])
 	return d

@@ -128,7 +128,7 @@ class FalconTabBase(object):
 	def InstallListCtrl(self,creator,existing_listctrl=None):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
 		if existing_listctrl is None:
-			self.hListCtrl=creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT|wx.LC_EDIT_LABELS)
+			self.hListCtrl=creator.ListCtrl(1,wx.EXPAND,style=wx.LC_REPORT | wx.LC_EDIT_LABELS | wx.LC_ALIGN_LEFT)
 			creator.GetPanel().Layout()
 		else:
 			self.hListCtrl=existing_listctrl
@@ -234,6 +234,18 @@ class FalconTabBase(object):
 			self.hListCtrl.Append(elem)
 		#end 追加
 		self.log.debug("List control updated in %f seconds." % t.elapsed)
+
+		#アイコン設定
+		self.hIconList=wx.ImageList(32,32,False,len(self.listObject))
+		self.hListCtrl.AssignImageList(self.hIconList,wx.IMAGE_LIST_SMALL)
+
+		for elem in self.listObject:
+			icon=wx.Icon()
+			if elem.hIcon>=0:
+				icon.CreateFromHICON(elem.hIcon)
+				index=self.hIconList.Add(icon)
+				self.hListCtrl.SetItemImage(index,index,index)
+
 
 	def MakeDirectory(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない

@@ -51,9 +51,9 @@ class FalconBrowsableBase():
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
-	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString"]
+	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString","hIcon"]
 
-	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None,shortName=""):
+	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None,shortName="",hIcon=-1):
 		"""必要な情報をセットする"""
 		self.directory=directory
 		self.basename=basename
@@ -65,6 +65,7 @@ class File(FalconBrowsableBase):
 		self.GetAttributesString()
 		self.typeString=typeString
 		self.shortName=shortName
+		self.hIcon=hIcon
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
@@ -121,7 +122,7 @@ class GrepItem(File):
 
 class Drive(FalconBrowsableBase):
 	"""ドライブを表す。"""
-	def Initialize(self, letter, free, total, type, name=""):
+	def Initialize(self, letter, free, total, type, name="",hIcon=-1):
 		"""
 			必要な情報をセットする
 			変数名はNetworkResourceと互換しているため、変更した場合は両方に反映すること！
@@ -134,6 +135,7 @@ class Drive(FalconBrowsableBase):
 		self.UpdateTypeString()
 		self.basename=name
 		self.fullpath=letter+":"
+		self.hIcon=hIcon
 
 	def UpdateTypeString(self):
 		"""タイプの数値を文字列に変換し、self.typeString にセットする。"""
@@ -175,6 +177,7 @@ class Stream(FalconBrowsableBase):
 		self.basename=basename
 		self.fullpath=fullpath
 		self.size=size
+		self.hIcon=-1			#ストリームにアイコンはない
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
@@ -185,7 +188,7 @@ class Stream(FalconBrowsableBase):
 
 class NetworkResource(FalconBrowsableBase):
 	"""ネットワーク上のディスクリソースを表す。このオブジェクトは情報を保持するだけで、指し示すリソースにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
-	def Initialize(self,basename="", fullpath="", address=""):
+	def Initialize(self,basename="", fullpath="", address="",hIcon=-1):
 		"""
 			必要な情報をセットする
 			ドライブリストに表示するため、変数名はDriveのものと互換
@@ -198,6 +201,7 @@ class NetworkResource(FalconBrowsableBase):
 		self.type=-1
 		self.typeString=_("ネットワークリソース")
 		self.address=address
+		self.hIcon=hIcon
 
 	def GetListTuple(self):
 		"""

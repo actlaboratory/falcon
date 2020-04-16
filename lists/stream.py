@@ -89,14 +89,14 @@ class StreamList(FalconListBase):
 		return self.streams.__len__()
 
 	def GetItemPaths(self):
-		"""リストの中身をパスのリストで取得する。フォルダが上にくる。"""
+		"""リストの中身をパスのリストで取得する。"""
 		lst=[]
 		for elem in self.streams:
 			lst.append(elem.fullpath)
 		return lst
 
 	def GetItemNames(self):
-		"""リストの中身をファイル名のリストで取得する。フォルダが上にくる。"""
+		"""リストの中身をファイル名のリストで取得する。"""
 		lst=[]
 		for elem in self.streams:
 			lst.append(elem.basename)

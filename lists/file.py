@@ -69,14 +69,14 @@ class FileList(FalconListBase):
 		#end 空のフォルダだったらさっさと帰る
 		for elem in lst:
 			fullpath=dir+"\\"+elem[8]
-			ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON|shellcon.SHGFI_TYPENAME)
+			ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON | shellcon.SHGFI_TYPENAME)
 			if os.path.isfile(fullpath):
 				f=browsableObjects.File()
-				f.Initialize(dir,elem[8],fullpath,(elem[4]<<32)+elem[5], elem[3], elem[0], shfileinfo[4],elem[1],elem[9])
+				f.Initialize(dir,elem[8],fullpath,(elem[4]<<32)+elem[5], elem[3], elem[0], shfileinfo[4],elem[1],elem[9],shfileinfo[0])
 				self.files.append(f)
 			else:
 				f=browsableObjects.Folder()
-				f.Initialize(dir,elem[8],fullpath,-1,elem[3], elem[0], shfileinfo[4],elem[1],elem[9])
+				f.Initialize(dir,elem[8],fullpath,-1,elem[3], elem[0], shfileinfo[4],elem[1],elem[9],shfileinfo[0])
 				self.folders.append(f)
 			#end どっちについかするか？
 		#end 追加ループ
