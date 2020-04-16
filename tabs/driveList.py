@@ -45,7 +45,7 @@ class DriveListTab(base.FalconTabBase):
 		"TOOL_ADDPATH",
 		"READ_CONTENT_PREVIEW"
 		"VIEW_DRIVE_INFO",
-		"TOOL_OPEN_PROGRAM"
+		"TOOL_EXEC_PROGRAM"
 	]
 
 	def Update(self,cursor=""):
