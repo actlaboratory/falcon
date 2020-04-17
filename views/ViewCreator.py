@@ -7,6 +7,7 @@ import wx
 import _winxptheme
 import wx.adv
 import ctypes
+import win32api
 from . import fontManager
 
 falconHelper=ctypes.cdll.LoadLibrary("falconHelper.dll")
@@ -215,6 +216,7 @@ class ViewCreator():
 		self.SetFace(hListCtrl)
 		self.SetFace(hListCtrl.GetMainWindow())
 		self.sizer.Add(hListCtrl,proportion,sizerFlag)
+		_winxptheme.SetWindowTheme(win32api.SendMessage(hListCtrl.GetHandle(),0x101F,0,0),"","")#ヘッダーのウィンドウテーマを引っぺがす
 		self.AddSpace(self.space)
 		return hListCtrl
 
