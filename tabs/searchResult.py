@@ -133,3 +133,15 @@ class SearchResultTab(fileList.FileListTab):
 		#end ファイルを開くか移動するか
 	#end GoForward
 
+	def UpdateFilelist(self,silence=False,cursorTargetName=""):
+		"""検索をやり直す。ファイルは非同期処理で増えるので、cursorTargetNameは使用されない。"""
+		if not self.listObject.GetFinishedStatus():
+			globalVars.app.say(_("現在検索中です。再建策はできません。"), interrupt=True)
+			return
+		#end まだ検索終わってない
+		if silence==False:
+			globalVars.app.say(_("再建策"), interrupt=True)
+		#end not silence
+		self.hListCtrl.DeleteAllItems()
+		self.listObject.RedoSearch()
+		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
