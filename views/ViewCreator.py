@@ -217,7 +217,6 @@ class ViewCreator():
 		self.SetFace(hListCtrl.GetMainWindow())
 		self.sizer.Add(hListCtrl,proportion,sizerFlag)
 		_winxptheme.SetWindowTheme(win32api.SendMessage(hListCtrl.GetHandle(),0x101F,0,0),"","")#ヘッダーのウィンドウテーマを引っぺがす
-
 		self.AddSpace(self.space)
 		return hListCtrl
 
