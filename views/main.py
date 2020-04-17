@@ -283,6 +283,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_TAB",_("別のタブで開く"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_STREAM",_("開く(ストリーム)"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_NEWTAB",_("新しいタブ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_CLOSECURRENTTAB",_("現在のタブを閉じる"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARKSET",_("表示中の場所をマーク"))
@@ -404,6 +405,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_CLOSECURRENTTAB"):
 			self.CloseTab()
+			return
+		if selected==menuItemsStore.getRef("MOVE_NEWTAB"):
+			self.NewTab()
 			return
 		if selected==menuItemsStore.getRef("EDIT_COPY"):
 			self.parent.activeTab.Copy()
@@ -671,6 +675,12 @@ class Events(BaseEvents):
 
 	def CloseTab(self):
 		self.parent.CloseTab(self.parent.activeTab)
+
+	def NewTab(self):
+		if os.path.isdir(os.path.expandvars(globalVars.app.config["browse"]["startPath"])):
+			self.parent.Navigate(os.path.expandvars(globalVars.app.config["browse"]["startPath"]),as_new_tab=True)
+		else:
+			self.parent.Navigate("",as_new_tab=True)
 
 	def Search(self):
 		basePath=self.parent.activeTab.listObject.rootDirectory

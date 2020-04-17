@@ -34,6 +34,7 @@ defaultKeymap["mainView"]={
 	"MOVE_BACKWARD": "BACK/LEFT",
 	"MOVE_FORWARD_STREAM": "RIGHT",
 	"MOVE_FORWARD_TAB": "shift+return",
+	"MOVE_NEWTAB": "ctrl+t",
 	"MOVE_CLOSECURRENTTAB": "ctrl+w",
 	"MOVE_TOPFILE": "alt+down",
 	"MOVE_MARKSET": "INSERT",
