@@ -36,7 +36,6 @@ class SearchResultList(FalconListBase):
 
 	def Initialize(self,rootDirectory,searches,keyword,isRegularExpression,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
-		self.finished=False
 		self.rootDirectory=rootDirectory
 		self.searches=searches
 		self.keyword_string=keyword
@@ -49,13 +48,17 @@ class SearchResultList(FalconListBase):
 		self.keyword=re.compile(keyword)
 		self.sortCursor=int(globalVars.app.config["SearchResultList"]["sorting"])
 		self.sortDescending=int(globalVars.app.config["SearchResultList"]["descending"])
-		self.results=[]
 		if not silent: globalVars.app.say("%sの検索結果 %s から" % (keyword,rootDirectory,))
-		self.log.debug("Getting search results for %s..." % keyword)
+		self._initSearch()
+
+	def RedoSearch(self):
 		self._initSearch()
 
 	def _initSearch(self):
 		"""検索する前に準備する。"""
+		self.finished=False
+		self.results=[]
+		self.log.debug("Getting search results for %s..." % self.keyword)
 		self.searched_index=0#インデックスいくつまで検索したか
 
 	def _performSearchStep(self):
