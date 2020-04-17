@@ -116,3 +116,15 @@ class GrepResultTab(fileList.FileListTab):
 	def ReadListInfo(self):
 		globalVars.app.say(_("%(keyword)sのgrep検索結果を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'keyword': self.listObject.GetKeywordString(), 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
+	def UpdateFilelist(self,silence=False,cursorTargetName=""):
+		"""検索をやり直す。ファイルは非同期処理で増えるので、cursorTargetNameは使用されない。"""
+		if not self.listObject.GetFinishedStatus():
+			globalVars.app.say(_("現在検索中です。再建策はできません。"), interrupt=True)
+			return
+		#end まだ検索終わってない
+		if silence==False:
+			globalVars.app.say(_("再建策"), interrupt=True)
+		#end not silence
+		self.hListCtrl.DeleteAllItems()
+		self.listObject.RedoSearch()
+		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
