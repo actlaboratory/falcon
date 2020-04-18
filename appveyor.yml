@@ -1,4 +1,4 @@
-version: 1.0.{build}-{branch}
+version: development.{build}-{branch}
 #branches:
   #only:
     #- master
@@ -50,5 +50,5 @@ deploy:
     username: nyanchangames
     password:
       secure: DLAhdZUmNV7ONiHIulw73A==
-    folder: /home/nyanchangames/www/
+    folder: www/
     debug: true
