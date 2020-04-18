@@ -18,8 +18,9 @@ if len(sys.argv)==2 and sys.argv[1]=="--appveyor":
 
 print("Starting build (appveyor mode=%s)" % appveyor)
 
-pyinstaller_path="pyinstaller.exe" if appveyor is False else "%%PYTHON%%\\Scripts\\pyinstaller.exe"
+pyinstaller_path="pyinstaller.exe" if appveyor is False else "%PYTHON%\\Scripts\\pyinstaller.exe"
 
+print("pyinstaller_path=%s" % pyinstaller_path)
 if not os.path.exists("locale"):
 	print("Error: no locale folder found. Your working directory must be the root of the falcon project. You shouldn't cd to tools and run this script.")
 
