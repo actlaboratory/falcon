@@ -32,6 +32,7 @@ class GrepResultTab(fileList.FileListTab):
 		"FILE_CHANGEATTRIBUTE",
 		"EDIT_PAST",
 		"EDIT_SEARCH",
+		"MOVE_FORWARD_TAB",
 		"MOVE_TOPFILE",
 		"MOVE_BACKWARD",
 		"TOOL_ADDPATH",
