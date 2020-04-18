@@ -229,4 +229,13 @@ def ValidateRegularExpression(exp):
 		return str(e)
 	#end error
 	return "OK"
-	
+
+def CommandLineToArgv(cmd):
+	nargs=ctypes.c_int()
+	ctypes.windll.shell32.CommandLineToArgvW.restype=ctypes.POINTER(ctypes.c_wchar_p)
+	lpargs=ctypes.windll.shell32.CommandLineToArgvW(cmd,ctypes.byref(nargs))
+	args = [lpargs[i] for i in range(nargs.value)]
+	if ctypes.windll.kernel32.LocalFree(lpargs):
+		raise AssertionError
+	#end error
+	return args
