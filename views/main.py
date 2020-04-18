@@ -743,7 +743,7 @@ class Events(BaseEvents):
 		t=self.parent.activeTab
 		t.SortCycleAd()
 
-	def UpdateFilelist(self,silence=True):
+	def UpdateFilelist(self,silence=False):
 		ret=self.parent.activeTab.UpdateFilelist(silence=silence)
 
 	def OpenContextMenu(self,silence=True):
