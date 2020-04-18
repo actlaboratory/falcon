@@ -1,10 +1,10 @@
 version: development.{build}-{branch}
-#branches:
-  #only:
-    #- master
-    #- release
+branches:
+  only:
+    - master
+    - release
 
-#skip_branch_with_pr: true
+skip_branch_with_pr: true
 
 environment:
 
