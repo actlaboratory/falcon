@@ -29,7 +29,7 @@ class SearchResultTab(fileList.FileListTab):
 	"""検索結果が表示されているタブ。"""
 
 	blockMenuList=[
-		"FILE_CHANGEATTRIBUTE",
+		"FILE_MKDIR"
 		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_TOPFILE",
@@ -53,62 +53,10 @@ class SearchResultTab(fileList.FileListTab):
 			t=elem.GetListTuple()
 			self.hListCtrl.Append((t[0],t[1],elem.fullpath,t[2],t[3],t[4]))
 
-	def Copy(self):
-		if not self.IsItemSelected(): return
-		globalVars.app.say(_("コピー"))
-		c=clipboard.ClipboardFile()
-		c.SetFileList(self.GetSelectedItems().GetItemPaths())
-		c.SendToClipboard()
-
-	def Cut(self):
-		if not self.IsItemSelected(): return
-		globalVars.app.say(_("切り取り"))
-		c=clipboard.ClipboardFile()
-		c.SetOperation(clipboard.MOVE)
-		c.SetFileList(self.GetSelectedItems().GetItemPaths())
-		c.SendToClipboard()
-
-	def OnLabelEditEnd(self,evt):
-		self.isRenaming=False
-		self.parent.SetShortcutEnabled(True)
-		if evt.IsEditCancelled():		#ユーザによる編集キャンセル
-			return
-		e=self.hListCtrl.GetEditControl()
-		f=self.listObject.GetElement(self.GetFocusedItem())
-		if isinstance(f,browsableObjects.Folder):
-			newName=f.directory+"\\"+e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.DIRECTORY)
-		elif isinstance(f,browsableObjects.File):
-			newName=f.directory+"\\"+e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.FILE)
-		else:
-			newName=e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.VOLUME_LABEL)
-		#end フォルダかファイルかドライブか
-		if error:
-			dialog(_("エラー"),error)
-			evt.Veto()
-			return
-		inst={"operation": "rename", "files": [f.fullpath], "to": [newName]}
-		op=fileOperator.FileOperator(inst)
-		ret=op.Execute()
-		if op.CheckSucceeded()==0:
-			dialog(_("エラー"),_("名前が変更できません。"))
-			evt.Veto()
-			return
-		#end fail
-		f.basename=e.GetLineText(0)
-		if isinstance(f,browsableObjects.File):
-			f.fullpath=f.directory+"\\"+f.basename
-		if isinstance(f,browsableObjects.Stream):
-			f.fullpath=f.file+f.basename
-	#end onLabelEditEnd
-
 	#TODO:GoToTopFile(self):
 
 	def GoBackward(self):
 		return errorCodes.BOUNDARY
-
 
 	def ReadCurrentFolder(self):
 		state=_("検索完了") if self.listObject.GetFinishedStatus() is True else _("検索中")
