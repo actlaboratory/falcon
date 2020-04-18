@@ -13,11 +13,14 @@ def _(string): pass#dummy
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+import sys
+import traceback
 import app as application
 import constants
 import globalVars
 
 def main():
+	if os.path.exists("errorLog.txt"): os.remove("errorLog.txt")
 	global app
 	app=application.falconAppMain()
 	globalVars.app=app
@@ -25,5 +28,15 @@ def main():
 	app.MainLoop()
 	app.config.write()
 
+def exchandler(type, exc, tb):
+	msg=traceback.format_exception(type, exc, tb)
+	print("".join(msg))
+	f=open("errorLog.txt", "a")
+	f.writelines(msg)
+	f.close()
+	if globalVars.app: globalVars.app.PlayErrorSound()
+
 #global schope
+sys.excepthook=exchandler
+
 if __name__ == "__main__": main()
