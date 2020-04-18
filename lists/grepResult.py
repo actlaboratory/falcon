@@ -34,8 +34,11 @@ class GrepResultList(FalconListBase):
 	def Update(self):
 		return self.Initialize(self.rootDirectory,self.searches,self.keyword,True)
 
-	def Initialize(self,rootDirectory,searches,keyword,isRegularExpression,silent=False):
+	def Initialize(self,rootDirectory,searches="",keyword="",isRegularExpression=False,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
+		if isinstance(rootDirectory,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
+			self.results=rootDirectory
+			return
 		self.rootDirectory=rootDirectory
 		self.searches=searches
 		self.keyword_string=keyword

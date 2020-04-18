@@ -34,8 +34,11 @@ class SearchResultList(FalconListBase):
 	def Update(self):
 		return self.Initialize(self.rootDirectory,self.searches,self.keyword,True)
 
-	def Initialize(self,rootDirectory,searches,keyword,isRegularExpression,silent=False):
+	def Initialize(self,rootDirectory,searches="",keyword="",isRegularExpression=False,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
+		if isinstance(rootDirectory,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
+			self.results=rootDirectory
+			return errorCodes.OK
 		self.rootDirectory=rootDirectory
 		self.searches=searches
 		self.keyword_string=keyword
@@ -109,6 +112,7 @@ class SearchResultList(FalconListBase):
 
 	def GetKeywordString(self):
 		return self.keyword_string
+
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
 		return {
@@ -128,20 +132,16 @@ class SearchResultList(FalconListBase):
 		return lst
 
 	def GetItemPaths(self):
-		"""リストの中身をパスのリストで取得する。フォルダが上にくる。"""
+		"""リストの中身をパスのリストで取得する。"""
 		lst=[]
-		for elem in self.folders:
-			lst.append(elem.fullpath)
-		for elem in self.files:
+		for elem in self.results:
 			lst.append(elem.fullpath)
 		return lst
 
 	def GetItemNames(self):
-		"""リストの中身をファイル名のリストで取得する。フォルダが上にくる。"""
+		"""リストの中身をファイル名のリストで取得する。"""
 		lst=[]
-		for elem in self.folders:
-			lst.append(elem.basename)
-		for elem in self.files:
+		for elem in self.results:
 			lst.append(elem.basename)
 		return lst
 
@@ -149,17 +149,12 @@ class SearchResultList(FalconListBase):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
 		return self.results[index]
 
-	def GetTopFileIndex(self):
-		"""先頭ファイルのインデックス番号を返す。"""
-		return len(self.folders)
-
 	def _sort(self,attrib, descending):
 		"""指定した要素で、リストを並べ替える。"""
 		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
 		t=misc.Timer()
 		f=self._getSortFunction(attrib)
-		self.files.sort(key=f, reverse=(descending==1))
-		self.folders.sort(key=f, reverse=(descending==1))
+		self.results.sort(key=f, reverse=(descending==1))
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
 	def GetAttributeCheckState(self):
@@ -194,6 +189,7 @@ class SearchResultList(FalconListBase):
 
 	def GetFinishedStatus(self):
 		return self.finished
+
 	def __iter__(self):
 		return self.results.__iter__()
 

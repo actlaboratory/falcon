@@ -29,7 +29,7 @@ class SearchResultTab(fileList.FileListTab):
 	"""検索結果が表示されているタブ。"""
 
 	blockMenuList=[
-		"FILE_MKDIR"
+		"FILE_MKDIR",
 		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_TOPFILE",

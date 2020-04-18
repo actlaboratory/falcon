@@ -237,14 +237,12 @@ class FileListTab(base.FalconTabBase):
 		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
 
 	def Copy(self):
-		if not self.IsItemSelected(): return
 		globalVars.app.say(_("コピー"))
 		c=clipboard.ClipboardFile()
 		c.SetFileList(self.GetSelectedItems().GetItemPaths())
 		c.SendToClipboard()
 
 	def Cut(self):
-		if not self.IsItemSelected(): return
 		globalVars.app.say(_("切り取り"))
 		c=clipboard.ClipboardFile()
 		c.SetOperation(clipboard.MOVE)
