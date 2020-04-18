@@ -50,5 +50,5 @@ deploy:
     username: nyanchangames
     password:
       secure: DLAhdZUmNV7ONiHIulw73A==
-      folder: 'www/'
+      folder: /home/nyanchangames/www/
       debug: true
