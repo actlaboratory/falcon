@@ -212,6 +212,9 @@ class FalconTabBase(object):
 		i=0
 		for elem,format in col.items():
 			self.hListCtrl.InsertColumn(i,elem,format=format,width=wx.LIST_AUTOSIZE)
+			#column=self.hListCtrl.GetColumn(i)
+			#column.SetBackgroundColour("ff0000")
+			#self.hListCtrl.SetColumn(i,column)
 			i+=1
 		#end カラムを作る
 		#カラム幅を設定

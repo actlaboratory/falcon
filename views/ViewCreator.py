@@ -212,7 +212,10 @@ class ViewCreator():
 		return hRadioBox
 
 	def ListCtrl(self,proportion,sizerFlag,**settings):
-		hListCtrl=wx.ListCtrl(self.parent,wx.ID_ANY,**settings)
+		hListCtrl=wx.ListCtrl()
+		hListCtrl.EnableSystemTheme(False)
+		hListCtrl.SetHeaderAttr(wx.ItemAttr("888888","888888",self.font.GetFont()))
+		hListCtrl.Create(self.parent,wx.ID_ANY,**settings)
 		self.SetFace(hListCtrl)
 		self.SetFace(hListCtrl.GetMainWindow())
 		self.sizer.Add(hListCtrl,proportion,sizerFlag)
