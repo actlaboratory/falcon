@@ -667,7 +667,6 @@ class FalconTabBase(object):
 		globalVars.app.config['on_list_moved']['read_item_count']=m.IsChecked(2)
 
 	def ExecProgram(self,val):
-		print("eeee")
 		argv=misc.CommandLineToArgv(val)
 		path=argv[0]
 		prm=" ".join(argv[1:])
