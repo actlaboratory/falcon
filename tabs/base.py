@@ -39,6 +39,7 @@ class FalconTabBase(object):
 		"EDIT_CUT",
 		"EDIT_NAMECOPY",
 		"EDIT_FULLPATHCOPY",
+		"EDIT_OPENCONTEXTMENU",
 		"EDIT_MARKITEM",
 		"MOVE_FORWARD",
 		"MOVE_FORWARD_ADMIN",
@@ -248,7 +249,6 @@ class FalconTabBase(object):
 				icon.CreateFromHICON(elem.hIcon)
 				index=self.hIconList.Add(icon)
 				self.hListCtrl.SetItemImage(index,index,index)
-
 
 	def MakeDirectory(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
