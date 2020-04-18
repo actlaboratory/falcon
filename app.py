@@ -31,6 +31,7 @@ class falconAppMain(wx.App):
 		t=misc.Timer()
 		self.frozen=hasattr(sys,"frozen")
 		self.InitLogger()
+		self.error_sound_handle=None
 		self.LoadSettings()
 		locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
 		self.SetTimeZone()
@@ -187,3 +188,9 @@ class falconAppMain(wx.App):
 		minutes=bias%60
 		self.timezone=datetime.timezone(datetime.timedelta(hours=hours,minutes=minutes))
 
+	def PlayErrorSound(self):
+		"""例外が発生したときに音を鳴らす。"""
+		if not self.error_sound_handle:
+			self.error_sound_handle=pybass.BASS_StreamCreateFile(False,"fx\\internal_error.ogg",0,0,pybass.BASS_STREAM_AUTOFREE|pybass.BASS_UNICODE)
+		#end load
+		pybass.BASS_ChannelPlay(self.error_sound_handle,True)

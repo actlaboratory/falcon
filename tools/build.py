@@ -30,7 +30,7 @@ if os.path.isdir("dist\\falcon"):
 	shutil.rmtree("build\\")
 
 print("Building Falcon...")
-runcmd("%s --log-level=ERROR falcon.py" % pyinstaller_path)
+runcmd("%s --windowed --log-level=ERROR falcon.py" % pyinstaller_path)
 shutil.copytree("locale\\","dist\\falcon\\locale", ignore=shutil.ignore_patterns("*.po", "*.pot", "*.po~"))
 shutil.copytree("fx\\","dist\\falcon\\fx")
 if os.path.exists("dist\\falcon\\bass"): os.rename("dist\\falcon\\bass","dist\\falcon\\bass.dll")
