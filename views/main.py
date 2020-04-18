@@ -537,12 +537,7 @@ class Events(BaseEvents):
 			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("TOOL_EXEC_PROGRAM"):
-			d=views.execProgram.Dialog()
-			d.Initialize()
-			d.Show()
-			d.Destroy()
-			#TODO:GetValueした結果を実行プログラム名とパスとに分ける。半角スペースが基本だが、クオートとかも使えるので注意されたし。
-			#TODO:今開いている場所がカレントの状態になるようにセットして実行する
+			self.ExecProgram()
 			return
 		if selected==menuItemsStore.getRef("TOOL_ADDPATH"):
 			t=self.parent.activeTab.GetSelectedItems()
@@ -657,6 +652,15 @@ class Events(BaseEvents):
 	def ShowVersionInfo(self):
 		"""バージョン情報を表示する。"""
 		dialog(_("バージョン情報"),_("%(app)s Version %(ver)s.\nCopyright (C) %(year)s %(names)s") % {"app":constants.APP_NAME, "ver":constants.APP_VERSION, "year":constants.APP_COPYRIGHT_YEAR, "names":constants.APP_DEVELOPERS})
+
+
+	def ExecProgram(self):
+		d=views.execProgram.Dialog()
+		d.Initialize()
+		d.Show()
+		val=d.GetValue()
+		d.Destroy()
+		self.parent.activeTab.ExecProgram(val)
 
 	def GoBackward(self):
 		"""back アクションを実行"""

@@ -193,7 +193,7 @@ def addPath(paths):
 	except:
 		return False
 
-def RunFile(path, admin=False,prm=""):
+def RunFile(path, admin=False,prm="", workdir=""):
 	"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
 	path=os.path.expandvars(path)
 	msg="running %s as admin" % (path) if admin else "running %s" % (path)
@@ -212,7 +212,7 @@ def RunFile(path, admin=False,prm=""):
 		#end shellExecuteEx failure
 	else:
 		try:
-			win32api.ShellExecute(0,"open",path,prm,"",1)
+			win32api.ShellExecute(0,"open",path,prm,workdir,1)
 		except win32api.error as er:
 			error=str(er)
 		#end shellExecute failure
@@ -229,4 +229,13 @@ def ValidateRegularExpression(exp):
 		return str(e)
 	#end error
 	return "OK"
-	
+
+def CommandLineToArgv(cmd):
+	nargs=ctypes.c_int()
+	ctypes.windll.shell32.CommandLineToArgvW.restype=ctypes.POINTER(ctypes.c_wchar_p)
+	lpargs=ctypes.windll.shell32.CommandLineToArgvW(cmd,ctypes.byref(nargs))
+	args = [lpargs[i] for i in range(nargs.value)]
+	if ctypes.windll.kernel32.LocalFree(lpargs):
+		raise AssertionError
+	#end error
+	return args
