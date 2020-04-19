@@ -675,3 +675,8 @@ class FalconTabBase(object):
 		prm=" ".join(argv[1:])
 		misc.RunFile(path,prm=prm,workdir=self.listObject.rootDirectory)
 
+	def OnBeforeChangeTab(self):
+		"""タブ切り替えが起きる前に呼ばれる。"""
+		if self.stopSoundHandle is not None:#音を鳴らしてたので止める
+			globalVars.app.StopSound(self.stopSoundHandle)
+			self.stopSoundHandle=None
