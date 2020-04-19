@@ -106,7 +106,10 @@ class GrepItem(File):
 		self.fullpath=fileobject.fullpath
 		self.size=fileobject.size
 		self.modDate=fileobject.modDate
+		self.creationDate=fileobject.creationDate
 		self.attributesString=fileobject.attributesString
+		self.longAttributesString=fileobject.longAttributesString
+		self.shortName=fileobject.shortName
 		self.typeString=fileobject.typeString
 		self.ln=ln
 		self.preview=preview
