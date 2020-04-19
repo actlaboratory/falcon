@@ -12,10 +12,8 @@ import os
 import gettext
 import logging
 import wx
-import clipboard
 import errorCodes
 import lists
-import browsableObjects
 import globalVars
 import fileOperator
 import misc
@@ -57,59 +55,21 @@ class GrepResultTab(fileList.FileListTab):
 		for elem in hits:
 			self.hListCtrl.Append(elem.GetListTuple())
 
-	def Copy(self):
-		if not self.IsItemSelected(): return
-		globalVars.app.say(_("コピー"))
-		c=clipboard.ClipboardFile()
-		c.SetFileList(self.GetSelectedItems().GetItemPaths())
-		c.SendToClipboard()
-
-	def Cut(self):
-		if not self.IsItemSelected(): return
-		globalVars.app.say(_("切り取り"))
-		c=clipboard.ClipboardFile()
-		c.SetOperation(clipboard.MOVE)
-		c.SetFileList(self.GetSelectedItems().GetItemPaths())
-		c.SendToClipboard()
-
-	def OnLabelEditEnd(self,evt):
-		self.isRenaming=False
-		self.parent.SetShortcutEnabled(True)
-		if evt.IsEditCancelled():		#ユーザによる編集キャンセル
-			return
-		e=self.hListCtrl.GetEditControl()
-		f=self.listObject.GetElement(self.GetFocusedItem())
-		if isinstance(f,browsableObjects.Folder):
-			newName=f.directory+"\\"+e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.DIRECTORY)
-		elif isinstance(f,browsableObjects.File):
-			newName=f.directory+"\\"+e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.FILE)
-		else:
-			newName=e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.VOLUME_LABEL)
-		#end フォルダかファイルかドライブか
-		if error:
-			dialog(_("エラー"),error)
-			evt.Veto()
-			return
-		inst={"operation": "rename", "files": [f.fullpath], "to": [newName]}
-		op=fileOperator.FileOperator(inst)
-		ret=op.Execute()
-		if op.CheckSucceeded()==0:
-			dialog(_("エラー"),_("名前が変更できません。"))
-			evt.Veto()
-			return
-		#end fail
-		f.basename=e.GetLineText(0)
-		if isinstance(f,browsableObjects.File):
-			f.fullpath=f.directory+"\\"+f.basename
-		if isinstance(f,browsableObjects.Stream):
-			f.fullpath=f.file+f.basename
-	#end onLabelEditEnd
-
 	def GoBackward(self):
 		return errorCodes.BOUNDARY
+
+	def GoForward(self,stream,admin=False):
+		"""検索結果表示では、フォルダを開くときに別タブを生成する。"""
+		index=self.GetFocusedItem()
+		elem=self.listObject.GetElement(index)
+		if (not stream) and (type(elem)==browsableObjects.File or type(elem)==browsableObjects.GrepItem) :#このファイルを開く
+			misc.RunFile(elem.fullpath,admin)
+			return
+		else:
+			#新しいタブで開く
+			globalVars.app.hMainView.Navigate(elem.fullpath,as_new_tab=True)
+		#end ファイルを開くか移動するか
+	#end GoForward
 
 	def ReadCurrentFolder(self):
 		state=_("grep検索完了") if self.listObject.GetFinishedStatus() is True else _("grep検索中")
