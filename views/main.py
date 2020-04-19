@@ -217,6 +217,7 @@ class View(BaseView):
 
 	def ChangeTab(self,event):
 		"""タブ変更イベント"""
+		self.activeTab.OnBeforeChangeTab()
 		pageNo=event.GetSelection()
 		self.ActivateTab(pageNo)
 
