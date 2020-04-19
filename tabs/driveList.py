@@ -62,6 +62,10 @@ class DriveListTab(base.FalconTabBase):
 			self.hListCtrl.Select(c)
 			self.hListCtrl.Focus(c)
 		#end カーソル初期位置を設定
+
+		#タブの名前変更を通知
+		globalVars.app.hMainView.UpdateTabName()
+
 	#end Update
 
 	def GoBackward(self):
@@ -144,3 +148,6 @@ class DriveListTab(base.FalconTabBase):
 	def ReadListInfo(self):
 		globalVars.app.say(_("ドライブ一覧を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
+	def GetTabName(self):
+		"""タブコントロールに表示する名前"""
+		return _("ドライブ一覧")

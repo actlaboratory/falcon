@@ -144,16 +144,14 @@ class View(BaseView):
 		newtab=tabs.navigator.Navigate(target,create_new_tab_info=(self,creator))
 		newtab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
 		self.tabs.append(newtab)
-		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
+		#self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
+		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,newtab.GetTabName(),False)
+
 		self.ActivateTab(len(self.tabs)-1)
 
 	def ReplaceCurrentTab(self,newtab):
 		"""現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""
-		i=0
-		for elem in self.tabs:
-			if elem is self.activeTab: break
-			i+=1
-		#end インデックス調べる
+		i=self.GetTabIndex(self.activeTab)
 
 		#environmentの内容を引き継ぐ
 		newtab.SetEnvironment(self.activeTab.environment)
@@ -166,6 +164,9 @@ class View(BaseView):
 		self.tabs[i]=newtab
 		self.activeTab=newtab
 		newtab.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
+
+		#タブ名変更。activeTab書き換え後に呼ぶ必要がある
+		self.UpdateTabName()
 	#end ReplaceCurrentTab
 
 	def ActivateTab(self,pageNo):
@@ -209,11 +210,18 @@ class View(BaseView):
 			if new_pageNo>=len(self.tabs): new_pageNo=len(self.tabs)-1
 			self.ActivateTab(new_pageNo)
 		#end アクティブタブを閉じた場合に後ろのタブを持って来る
-
 	#end closeTab
 
 	def GetNumberOfTabs(self):
 		return len(self.tabs)
+
+	def GetTabIndex(self,target):
+		"""targetで指定されたtabObjectがtabsの中でインデックス何番か取得"""
+		i=0
+		for elem in self.tabs:
+			if elem is target: return i
+			i+=1
+		return -1
 
 	def ChangeTab(self,event):
 		"""タブ変更イベント"""
@@ -232,6 +240,12 @@ class View(BaseView):
 			self.hFrame.SetMenuBar(self.menu.hDisableMenuBar)
 		#SetMenuBarの後に呼び出しが必要
 		self.creator.GetSizer().Layout()
+
+	def UpdateTabName(self):
+		"""タブ名変更の可能性があるときにtabsからたたかれる"""
+		index=self.GetTabIndex(self.activeTab)
+		if index>=0:
+			self.hTabCtrl.SetPageText(index,self.activeTab.GetTabName())
 
 
 class Menu(BaseMenu):

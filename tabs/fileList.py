@@ -26,6 +26,7 @@ import workerThreadTasks
 import fileSystemManager
 import tabs.driveList
 import tabs.streamList
+import StringUtil
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -49,6 +50,9 @@ class FileListTab(base.FalconTabBase):
 		self.hListCtrl.Focus(cursor)
 		if cursor>0:
 			self.hListCtrl.Select(cursor)
+
+		#タブの名前変更を通知
+		globalVars.app.hMainView.UpdateTabName()
 
 	def OnLabelEditEnd(self,evt):
 		self.isRenaming=False
@@ -366,3 +370,10 @@ class FileListTab(base.FalconTabBase):
 		self.UpdateFilelist(silence=True)
 	#end past
 
+
+	def GetTabName(self):
+		"""タブコントロールに表示する名前"""
+		word=self.listObject.rootDirectory.split("\\")
+		word=word[len(word)-1]
+		word=StringUtil.GetLimitedString(word,globalVars.app.config["view"]["header_title_length"])
+		return word

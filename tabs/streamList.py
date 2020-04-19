@@ -22,6 +22,8 @@ import workerThreads
 import workerThreadTasks
 import fileSystemManager
 from tabs.driveList import *
+import StringUtil
+
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -57,6 +59,9 @@ class StreamListTab(base.FalconTabBase):
 		self.hListCtrl.Focus(cursor)
 		if cursor>0:
 			self.hListCtrl.Select(cursor)
+
+		#タブの名前変更を通知
+		globalVars.app.hMainView.UpdateTabName()
 
 	def OnLabelEditEnd(self,evt):
 		self.isRenaming=False
@@ -274,3 +279,11 @@ class StreamListTab(base.FalconTabBase):
 	def ReadListInfo(self):
 		tmp=self.listObject.rootDirectory.split("\\")[-1]
 		globalVars.app.say(_("%(dir)sに含まれるストリームを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'dir': tmp, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
+
+	def GetTabName(self):
+		"""タブコントロールに表示する名前"""
+		word=self.listObject.rootDirectory.split("\\")
+		word=word[len(word)-1]
+		word=StringUtil.GetLimitedString(word,globalVars.app.config["view"]["header_title_length"])
+		return word
+

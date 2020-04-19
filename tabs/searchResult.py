@@ -12,15 +12,14 @@ import os
 import gettext
 import logging
 import wx
-import clipboard
 import errorCodes
 import lists
 import browsableObjects
 import globalVars
-import fileOperator
 import misc
 import workerThreads
 import workerThreadTasks
+import StringUtil
 
 from win32com.shell import shell, shellcon
 from . import fileList
@@ -45,6 +44,9 @@ class SearchResultTab(fileList.FileListTab):
 		self.listObject.Initialize(rootPath,searches,keyword, isRegularExpression)
 		self.SetListColumns(self.listObject)
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
+
+		#タブの名前変更を通知
+		globalVars.app.hMainView.UpdateTabName()
 
 	def _onSearchHitCallback(self,hits):
 		"""コールバックで、ヒットした browsableObject のリストが降ってくるので、それをリストビューに追加していく。"""
@@ -93,3 +95,9 @@ class SearchResultTab(fileList.FileListTab):
 		self.hListCtrl.DeleteAllItems()
 		self.listObject.RedoSearch()
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
+
+	def GetTabName(self):
+		"""タブコントロールに表示する名前"""
+		word=_("%(word)sの検索") % {"word":self.listObject.GetKeywordString()}
+		word=StringUtil.GetLimitedString(word,globalVars.app.config["view"]["header_title_length"])
+		return word
