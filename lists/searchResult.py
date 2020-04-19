@@ -60,7 +60,8 @@ class SearchResultList(FalconListBase):
 	def _initSearch(self):
 		"""検索する前に準備する。"""
 		self.finished=False
-		self.results=[]
+		self.folders=[]
+		self.files=[]
 		self.log.debug("Getting search results for %s..." % self.keyword)
 		self.searched_index=0#インデックスいくつまで検索したか
 
@@ -127,34 +128,42 @@ class SearchResultList(FalconListBase):
 	def GetItems(self):
 		"""リストの中身を文字列タプルで取得する。フォルダが上にくる。"""
 		lst=[]
-		for elem in self.results:
+		for elem in self.folders:
+			lst.append(elem.GetListTuple())
+		for elem in self.files:
 			lst.append(elem.GetListTuple())
 		return lst
 
 	def GetItemPaths(self):
 		"""リストの中身をパスのリストで取得する。"""
 		lst=[]
-		for elem in self.results:
+		for elem in self.folders:
+			lst.append(elem.fullpath)
+		for elem in self.files:
 			lst.append(elem.fullpath)
 		return lst
 
 	def GetItemNames(self):
 		"""リストの中身をファイル名のリストで取得する。"""
 		lst=[]
-		for elem in self.results:
+		for elem in self.folders:
+			lst.append(elem.basename)
+		for elem in self.files:
 			lst.append(elem.basename)
 		return lst
 
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		return self.results[index]
+		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
+		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
 
 	def _sort(self,attrib, descending):
 		"""指定した要素で、リストを並べ替える。"""
 		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
 		t=misc.Timer()
 		f=self._getSortFunction(attrib)
-		self.results.sort(key=f, reverse=(descending==1))
+		self.folders.sort(key=f, reverse=(descending==1))
+		self.files.sort(key=f, reverse=(descending==1))
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
 	def GetAttributeCheckState(self):
@@ -191,7 +200,8 @@ class SearchResultList(FalconListBase):
 		return self.finished
 
 	def __iter__(self):
-		return self.results.__iter__()
+		lst=self.folders+self.files
+		return lst.__iter__()
 
 	def __len__(self):
-		return len(self.results)
+		return len(self.folders)+len(self.files)
