@@ -1,4 +1,4 @@
-﻿https://wxpython.org/Phoenix/snapshot-builds/wxPython-4.1.0a1.dev4650+de25f309-cp37-cp37m-win32.whl
+﻿https://wxpython.org/Phoenix/snapshot-builds/wxPython-4.1.0a1.dev4685+8750ef29-cp37-cp37m-win32.whl
 pywin32
 winpaths
 pyinstaller
