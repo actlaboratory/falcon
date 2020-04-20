@@ -89,12 +89,12 @@ class SearchResultList(FalconListBase):
 				if os.path.isfile(fullpath):
 					f=browsableObjects.File()
 					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,stat.st_size,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
-					self.results.append(f)
+					self.files.append(f)
 					ret_list.append(f)
 				else:
 					f=browsableObjects.Folder()
 					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,-1,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
-					self.results.append(f)
+					self.folders.append(f)
 					ret_list.append(f)
 				#end ファイルかフォルダか
 				hit+=1
@@ -205,3 +205,6 @@ class SearchResultList(FalconListBase):
 
 	def __len__(self):
 		return len(self.folders)+len(self.files)
+
+	def GetFolderFileNumber(self):
+		return len(self.folders), len(self.files)

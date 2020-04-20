@@ -51,7 +51,16 @@ class SearchResultTab(fileList.FileListTab):
 		globalVars.app.PlaySound("click.ogg")
 		for elem in hits:
 			t=elem.GetListTuple()
-			self.hListCtrl.Append((t[0],t[1],elem.fullpath,t[2],t[3],t[4]))
+			if type(elem) is browsableObjects.File:
+				self.hListCtrl.Append((t[0],t[1],elem.fullpath,t[2],t[3],t[4]))
+			else:
+				idx=0
+				self.hListCtrl.InsertItem(idx,t[0])
+				self.hListCtrl.SetItem(idx,1,t[1])
+				self.hListCtrl.SetItem(idx,2,elem.fullpath)
+				self.hListCtrl.SetItem(idx,3,t[2])
+				self.hListCtrl.SetItem(idx,4,t[3])
+				self.hListCtrl.SetItem(idx,5,t[4])
 
 	#TODO:GoToTopFile(self):
 
