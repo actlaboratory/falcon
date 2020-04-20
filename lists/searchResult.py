@@ -208,3 +208,7 @@ class SearchResultList(FalconListBase):
 
 	def GetFolderFileNumber(self):
 		return len(self.folders), len(self.files)
+
+	def GetTopFileIndex(self):
+		"""先頭ファイルのインデックス番号を返す。"""
+		return len(self.folders)

@@ -31,7 +31,6 @@ class SearchResultTab(fileList.FileListTab):
 		"FILE_MKDIR",
 		"EDIT_PAST",
 		"EDIT_SEARCH",
-		"MOVE_TOPFILE",
 		"MOVE_BACKWARD",
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
