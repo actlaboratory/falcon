@@ -208,8 +208,6 @@ class SearchResultList(FalconListBase):
 		return self.finished
 
 	def __iter__(self):
-		print("ter")
-		print(self.folders)
 		lst=self.folders+self.files
 		return lst.__iter__()
 
