@@ -30,6 +30,8 @@ class SearchResultList(FalconListBase):
 		super().__init__()
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE,SORT_TYPE_SEARCHPATH,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
 		self.log=logging.getLogger("falcon.searchResultList")
+		self.folders=[]
+		self.files=[]
 
 	def Update(self):
 		return self.Initialize(self.rootDirectory,self.searches,self.keyword,True)
@@ -37,7 +39,13 @@ class SearchResultList(FalconListBase):
 	def Initialize(self,rootDirectory,searches="",keyword="",isRegularExpression=False,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
 		if isinstance(rootDirectory,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
-			self.results=rootDirectory
+			for elem in rootDirectory:
+				if type(elem) is browsableObjects.Folder:
+					self.folders.append(elem)
+				else:
+					self.files.append(elem)
+				#end ファイルかフォルダか
+			#end for
 			return errorCodes.OK
 		self.rootDirectory=rootDirectory
 		self.searches=searches
@@ -200,6 +208,8 @@ class SearchResultList(FalconListBase):
 		return self.finished
 
 	def __iter__(self):
+		print("ter")
+		print(self.folders)
 		lst=self.folders+self.files
 		return lst.__iter__()
 
