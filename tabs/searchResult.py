@@ -62,6 +62,11 @@ class SearchResultTab(fileList.FileListTab):
 				self.hListCtrl.SetItem(idx,3,t[2])
 				self.hListCtrl.SetItem(idx,4,t[3])
 				self.hListCtrl.SetItem(idx,5,t[4])
+		#end 追加
+		if self.listObject.GetFinishedStatus():
+			self.listObject.ApplySort()
+			self.hListCtrl.DeleteAllItems()
+			self.UpdateListContent(self.listObject.GetItems())
 
 	#TODO:GoToTopFile(self):
 
