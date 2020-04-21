@@ -14,6 +14,7 @@ import logging
 import wx
 import errorCodes
 import lists
+import browsableObjects
 import globalVars
 import fileOperator
 import misc
