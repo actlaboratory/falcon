@@ -184,6 +184,12 @@ class FileListTab(base.FalconTabBase):
 		#end error
 		failed=op.CheckFailed()
 		self.UpdateFilelist(silence=True)
+		focus_index=self._findFocusAfterDeletion(paths,focus_index)
+		self.hListCtrl.Focus(focus_index)
+		self.hListCtrl.Select(focus_index)
+
+	def _findFocusAfterDeletion(self,paths,focus_index):
+		"""ゴミ箱/削除しして、ファイルリストを更新した後に呼び出す。削除語のカーソル位置を見つける。"""
 		#カーソルをどこに動かすかを決定、まずはもともとフォーカスしてた項目があるかどうか
 		if os.path.exists(paths[focus_index]):
 			new_cursor_path=paths[focus_index]#フォーカスしてたファイル
@@ -212,9 +218,7 @@ class FileListTab(base.FalconTabBase):
 			if elem.fullpath==new_cursor_path: break
 			focus_index+=1
 		#end 検索
-		self.hListCtrl.Focus(focus_index)
-		self.hListCtrl.Select(focus_index)
-
+		
 	def Delete(self):
 		focus_index=self.GetFocusedItem()
 		paths=self.listObject.GetItemPaths()#パスのリストを取っておく
