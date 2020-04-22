@@ -216,6 +216,8 @@ class FileListTab(base.FalconTabBase):
 		self.hListCtrl.Select(focus_index)
 
 	def Delete(self):
+		focus_index=self.GetFocusedItem()
+		paths=self.listObject.GetItemPaths()#パスのリストを取っておく
 		target=[]
 		for elem in self.GetSelectedItems():
 			target.append(elem.fullpath)
