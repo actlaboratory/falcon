@@ -218,6 +218,7 @@ class FileListTab(base.FalconTabBase):
 			if elem.fullpath==new_cursor_path: break
 			focus_index+=1
 		#end 検索
+		return focus_index
 		
 	def Delete(self):
 		focus_index=self.GetFocusedItem()
@@ -241,6 +242,8 @@ class FileListTab(base.FalconTabBase):
 			return
 		#end error
 		self.UpdateFilelist(silence=True)
+		focus_index=self._findFocusAfterDeletion(paths,focus_index)
+		self.hListCtrl.Focus(focus_index)
 
 	def ShowProperties(self):
 		index=self.GetFocusedItem()
