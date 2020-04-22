@@ -296,6 +296,10 @@ class FalconTabBase(object):
 		self.ItemMarkProcess(range(len(self.listObject)),True)
 		globalVars.app.say(_("すべてチェック"), interrupt=True)
 
+	def UncheckAll(self):
+		self.ItemMarkProcess(range(len(self.listObject)),False)
+		globalVars.app.say(_("すべてチェック解除"), interrupt=True)
+
 	def CheckInverse(self):
 		self.ItemMarkProcess(range(len(self.listObject)))
 		globalVars.app.say(_("チェック反転"), interrupt=True)
