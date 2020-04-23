@@ -282,7 +282,7 @@ class FileListTab(base.FalconTabBase):
 		globalVars.app.say(_("%(prefix)s%(dir)sを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'prefix': prefix, 'dir': curdir, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
 	def Past(self):
-		#クリップボードから情報取得し、ユーザに確認表示
+		#クリップボードから情報取得し
 		c=clipboard.ClipboardFile()
 		target=c.GetFileList()
 		if not target:
@@ -290,8 +290,38 @@ class FileListTab(base.FalconTabBase):
 			return
 		#end 貼り付ける物がない
 		op=c.GetOperation()
+		self.PastOperation(target,self.listObject.rootDirectory,op)
+
+	def PastOperation(self,target,dest,op=clipboard.COPY):
 		op_str=_("複写") if op==clipboard.COPY else _("移動")
-		if len(target)==0: return
+
+		#重複を排除
+		#target=set(target)
+
+		#自身のサブフォルダへの貼り付けはできない
+		errors=[]
+		for i in target:
+			if i in dest:
+				errors.append(i)
+		if errors:
+			info=[
+				(_("項目"),_("パス")),
+				(_("%s先")%op_str,dest)
+			]
+			for i in errors:
+				target.remove(i)
+				info.append((os.path.basename(i),i))
+			d=views.OperationSelecter.Dialog(_("自身のサブディレクトリへの%sはできません。")%op_str,info,views.OperationSelecter.GetMethod("OWN_SUB_DIR"),False)
+			d.Initialize()
+			d.Show()
+			ret=d.GetValue()["response"]
+			if ret=="CANCEL":return
+		#TODO:同一ディレクトリなら別名を決めさせる
+
+		#この時点でtargetが0ならおわり
+		if len(target)==0:return
+
+		#ユーザに確認表示
 		if len(target)==1:
 			msg=_("%(file)s\nこのファイルを、 %(dest)s に%(op)sしますか？") % {'file': target[0], 'dest': self.listObject.rootDirectory, 'op': op_str}
 		else:
@@ -301,7 +331,7 @@ class FileListTab(base.FalconTabBase):
 		if dlg.ShowModal()==wx.ID_NO: return
 
 		#fileOperatorに処理依頼
-		inst={"operation": "past", "target": target, "to": self.listObject.rootDirectory, 'copy_move_flag': op}
+		inst={"operation": "past", "target": target, "to": dest, 'copy_move_flag': op}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
 
@@ -327,7 +357,7 @@ class FileListTab(base.FalconTabBase):
 				(_("サイズ"),misc.ConvertBytesTo(dest_stat.st_size,misc.UNIT_AUTO,True),"→",misc.ConvertBytesTo(from_stat.st_size,misc.UNIT_AUTO,True)),
 				(_("更新日時"),datetime.datetime.fromtimestamp(dest_stat.st_mtime),"→",datetime.datetime.fromtimestamp(from_stat.st_mtime))
 			]
-			d=views.OperationSelecter.Dialog(info,views.OperationSelecter.GetMethod("ALREADY_EXISTS"),False)
+			d=views.OperationSelecter.Dialog(_("上書きしますか？"),info,views.OperationSelecter.GetMethod("ALREADY_EXISTS"),False)
 			d.Initialize()
 			d.Show()
 			val=d.GetValue()

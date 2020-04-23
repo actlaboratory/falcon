@@ -16,7 +16,8 @@ import views.ViewCreator
 
 class Dialog(BaseDialog):
 
-	def __init__(self,info,choices,enableCancel=False):
+	def __init__(self,message,info,choices,enableCancel=False):
+		self.message=message
 		self.info=info
 		self.choices=choices
 		self.enableCancel=enableCancel
@@ -37,6 +38,8 @@ class Dialog(BaseDialog):
 
 		#情報の表示
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
+		if self.message:
+			self.creator.staticText(self.message)
 		self.hListCtrl=self.creator.ListCtrl(0,wx.ALL|wx.ALIGN_CENTER_HORIZONTAL,size=(600,300),style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_SINGLE_SEL,name=_("アイテム情報"))
 
 		i=0
@@ -79,10 +82,15 @@ class Dialog(BaseDialog):
 
 
 def GetMethod(request):
-	methods={}
-	methods["ALREADY_EXISTS"]={
-		_("上書きする"):"overwrite",
-		_("スキップ"):"skip"
+	methods={
+		"ALREADY_EXISTS":{
+			_("上書きする"):"overwrite",
+			_("スキップ"):"skip"
+		},
+		"OWN_SUB_DIR":{
+			_("スキップ"):"SKIP",
+			_("キャンセル"):"CANCEL"
+		}
 	}
 	return methods[request]
 

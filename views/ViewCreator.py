@@ -231,8 +231,16 @@ class ViewCreator():
 		self.sizer.Layout()
 		return htab
 
+	def staticText(self,text):
+		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
+		self.sizer.Add(hStaticText,0)
+		self.SetFace(hStaticText)
+		self.AddSpace(self.space)
+		return hStaticText
+
 	def inputbox(self,text,x=0,defaultValue="",style=0):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
+		self.SetFace(hStaticText)
 		self.sizer.Add(hStaticText,0)
 
 		hTextCtrl=TextCtrl(self.parent, -1,size=(x,-1),name=text,value=defaultValue,style=style)
