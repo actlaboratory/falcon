@@ -262,6 +262,9 @@ class FalconTabBase(object):
 	def MakeDirectory(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
+	def PastOperation(self,target,dest,op):
+		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
 	def Trash(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
@@ -790,7 +793,16 @@ class DropTarget(wx.DropTarget):
 
 	#データを受け入れ、結果を返す
 	def OnData(self,x,y,defResult):
+		index=-1
+		i,flg=self.parent.hListCtrl.HitTest((x,y))
+		if flg & wx.LIST_HITTEST_ONITEM !=0:
+			index=i
+		if index>=0 and type(self.parent.listObject.GetElement(index)) in (browsableObjects.Folder,browsableObjects.Drive):
+			#カーソルのあるオブジェクトの中に入れる
+			dest=self.parent.listObject.GetElement(index).fullpath
+		else:
+			dest=self.parent.listObject.rootDirectory
 		self.GetData()
-		print(self.DataObject.GetFilenames())
+		self.parent.PastOperation(self.DataObject.GetFilenames(),dest)
 		return defResult		#推奨されたとおりに返しておく
 
