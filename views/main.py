@@ -160,6 +160,7 @@ class View(BaseView):
 		self.menu.Block(newtab.blockMenuList)
 		self.menu.UnBlock(self.activeTab.blockMenuList)
 		self.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),newtab.IsMarked())
+		self.menu.hMenuBar.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),newtab.hasCheckedItem())
 
 		self.tabs[i]=newtab
 		self.activeTab=newtab

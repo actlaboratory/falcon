@@ -19,6 +19,7 @@ import errorCodes
 import globalVars
 import lists
 import misc
+import menuItemsStore
 from . import navigator
 
 class FalconTabBase(object):
@@ -239,6 +240,7 @@ class FalconTabBase(object):
 		self.hListCtrl.DeleteAllItems()
 		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってる場合があるため必要。
 		self.checkedItem=set()
+		globalVars.app.hMainView.menu.hMenuBar.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
 		self.hilightIndex=-1
 
 		t=misc.Timer()
@@ -336,6 +338,7 @@ class FalconTabBase(object):
 				self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_SELECTED)
 				self.hListCtrl.Focus(item+1)
 				self.hListCtrl.Select(item+1)
+		globalVars.app.hMainView.menu.hMenuBar.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.hasCheckedItem())
 
 	def BeginDrag(self,event):
 		data=wx.FileDataObject()
@@ -519,6 +522,9 @@ class FalconTabBase(object):
 	def IsMarked(self):
 		return self.environment["markedPlace"]!=None
 
+	def hasCheckedItem(self):
+		return len(self.checkedItem)>0
+
 	def ItemSelected(self,event=None):
 		"""リストビューのアイテムの選択時に呼ばれる"""
 
@@ -577,10 +583,10 @@ class FalconTabBase(object):
 			elem=self.listObject.GetElement(index)
 		try:
 			self.environment["selectingItemCount"][elem.__class__]-=1
+			if self.environment["selectingItemCount"][elem.__class__]==0:	#ブロック解除
+				globalVars.app.hMainView.menu.UnBlock(self.selectItemTypeMenuConditions[elem.__class__])
 		except KeyError:
 			self.environment["selectingItemCount"][elem.__class__]=0
-		if self.environment["selectingItemCount"][elem.__class__]==0:	#ブロック解除
-			globalVars.app.hMainView.menu.UnBlock(self.selectItemTypeMenuConditions[elem.__class__])
 
 	def _appendContextMenu(self,hMenu,elem):
 		if elem['type']=="separator": return
