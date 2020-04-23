@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #Falcon miscellaneous helper objects
-#Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 import ctypes
@@ -11,6 +12,7 @@ import hashlib
 import winreg
 import win32api
 import win32file
+import constants
 import globalVars
 from logging import getLogger
 from simpleDialog import dialog
@@ -239,3 +241,8 @@ def CommandLineToArgv(cmd):
 		raise AssertionError
 	#end error
 	return args
+
+#渡された拡張子がドキュメント形式であればTrue
+def isDocumentExt(ext):
+	return ext in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats
+

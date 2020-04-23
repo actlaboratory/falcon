@@ -642,14 +642,14 @@ class FalconTabBase(object):
 		if ext in constants.SUPPORTED_AUDIO_FORMATS:
 			if self.stopSoundHandle: globalVars.app.StopSound(self.stopSoundHandle)
 			self.stopSoundHandle=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
-		elif ext in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats:
+		elif misc.isDocumentExt(ext):
 			globalVars.app.say(misc.ExtractText(self.GetFocusedElement().fullpath), interrupt=True)
 		else:
 			globalVars.app.say(_("プレビューに対応していないファイル形式です。"), interrupt=True)
 
 	def ReadHeader(self):
 		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
-		if not ext in constants.SUPPORTED_DOCUMENT_FORMATS:
+		if not misc.isDocumentExt(ext):
 			globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
 			return
 		#end 非対応
@@ -661,7 +661,7 @@ class FalconTabBase(object):
 
 	def ReadFooter(self):
 		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
-		if not ext in constants.SUPPORTED_DOCUMENT_FORMATS:
+		if not ext in misc.isDocumentExt(ext):
 			globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
 			return
 		#end 非対応

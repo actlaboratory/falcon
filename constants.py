@@ -34,6 +34,9 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'mht',
 	'htm',
 	'html',
+	'xml',
+	'yaml',
+	'json',
 	'eml',
 	'sxw',
 	'sxc',
@@ -74,7 +77,7 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'rb',
 	'sql',
 	'as'
-	"manifest"
+	'manifest'
 }
 
 SUPPORTED_AUDIO_FORMATS={

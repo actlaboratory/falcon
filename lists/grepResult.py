@@ -80,7 +80,7 @@ class GrepResultList(FalconListBase):
 				break
 			#end EOL
 			ext=path.split(".")[-1].lower()
-			if ext in constants.SUPPORTED_DOCUMENT_FORMATS:
+			if misc.isDocumentExt(ext):
 				fullpath=os.path.join(self.rootDirectory,path)
 				content=misc.ExtractText(fullpath).split("\n")
 				fileobj=None#複数ヒットでファイルオブジェクトを生成し続けないようにキャッシュする
