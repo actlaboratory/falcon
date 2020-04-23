@@ -5,6 +5,10 @@
 
 ## 必須
 	def Update(self,cursor=""):
+	def ReadCurrentFolder
+	def def ReadListItemNumber
+	def def ReadListInfo
+	def getTabName
 
 ## 必須　基本機能系(対応していない場合に記載が必要)
 	def GoBackward(self):
