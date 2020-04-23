@@ -109,6 +109,9 @@ class BaseMenu(object):
 		else:
 			self.blockCount[ref]=2100000000
 
+	def IsEnable(self,ref):
+		return self.blockCount[menuItemsStore.getRef(ref)]<=0
+
 class BaseEvents(object):
 	"""イベント処理のデフォルトの動作をいくつか定義してあります。"""
 	def __init__(self,parent,identifier):

@@ -763,6 +763,9 @@ class DropTarget(wx.DropTarget):
 	#マウスオーバー時に呼ばれる
 	#まだマウスを放していない
 	def OnDragOver(self,x,y,defResult):
+		if not globalVars.app.hMainView.menu.IsEnable("EDIT_PAST"):
+			return wx.DragResult.DragNone	#現在のビューでは受け入れ不可
+
 		i,flg=self.parent.hListCtrl.HitTest((x,y))
 		if flg & wx.LIST_HITTEST_ONITEM !=0:
 			self.parent.Hilight(i)
@@ -780,6 +783,9 @@ class DropTarget(wx.DropTarget):
 	#現在データの受け入れが可能ならTrue
 	def OnDrop(self,x,y):
 		self.parent.Hilight(-1)
+
+		if not globalVars.app.hMainView.menu.IsEnable("EDIT_PAST"):
+			return wx.DragResult.DragNone	#現在のビューでは受け入れ不可
 		return not self.parent.isRenaming
 
 	#データを受け入れ、結果を返す
