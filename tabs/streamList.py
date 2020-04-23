@@ -206,8 +206,7 @@ class StreamListTab(base.FalconTabBase):
 			return
 		#end error
 		self.UpdateFilelist(silence=True)
-		self._findFocusAfterDelete(paths,focus_index)
-		print("found focus %d" % focus_index)
+		focus_index=self._findFocusAfterDeletion(paths,focus_index)
 		self.hListCtrl.Focus(focus_index)
 		self.hListCtrl.Select(focus_index)
 
