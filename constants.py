@@ -8,7 +8,7 @@ import wx
 
 APP_NAME="Falcon Test"
 APP_VERSION="0.01"
-APP_COPYRIGHT_YEAR="2019"
+APP_COPYRIGHT_YEAR="2019-2020"
 APP_DEVELOPERS="Yukio Nozawa and Yuki Kochi"
 
 SETTING_FILE_NAME="settings.ini"
