@@ -323,7 +323,7 @@ class FileListTab(base.FalconTabBase):
 
 		#ユーザに確認表示
 		if len(target)==1:
-			msg=_("%(file)s\nこのファイルを、 %(dest)s に%(op)sしますか？") % {'file': target[0], 'dest': self.listObject.rootDirectory, 'op': op_str}
+			msg=_("%(file)s\nこのファイルを、 %(dest)s に%(op)sしますか？") % {'file': target[0], 'dest': dest, 'op': op_str}
 		else:
 			msg=_("%(num)d 項目を、 %(dest)s に%(op)sしますか？") % {'num': len(target), 'dest': self.listObject.rootDirectory, 'op': op_str}
 		#end メッセージどっちにするか
