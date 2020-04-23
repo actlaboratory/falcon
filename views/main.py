@@ -288,6 +288,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM",_("チェック／チェック解除"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_ALL",_("すべてチェック"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UNMARKITEM_ALL",_("すべてチェック解除"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_INVERSE",_("チェック状態反転"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_OPENCONTEXTMENU",_("コンテキストメニューを開く"))
 
@@ -460,6 +461,9 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("EDIT_MARKITEM_ALL"):
 			self.parent.activeTab.CheckAll()
+			return
+		if selected==menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"):
+			self.parent.activeTab.UncheckAll()
 			return
 		if selected==menuItemsStore.getRef("EDIT_MARKITEM_INVERSE"):
 			self.parent.activeTab.CheckInverse()

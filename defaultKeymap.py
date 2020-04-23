@@ -27,6 +27,7 @@ defaultKeymap["mainView"]={
 	"EDIT_UPDATEFILELIST": "F5",
 	"EDIT_MARKITEM": "space",
 	"EDIT_MARKITEM_ALL": "shift+space",
+	"EDIT_UNMARKITEM_ALL": "escape",
 	"EDIT_MARKITEM_INVERSE": "ctrl+shift+space",
 	"EDIT_OPENCONTEXTMENU": "shift+f10/applications",
 	"MOVE_FORWARD": "return",
