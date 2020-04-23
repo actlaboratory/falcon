@@ -109,6 +109,7 @@ class FalconTabBase(object):
 		self.environment=environment		#このタブ特有の環境変数
 		self.stopSoundHandle=None
 		self.checkedItem=set()
+		self.hilightIndex=-1
 		if self.environment=={}:
 			self.environment["markedPlace"]=None		#マークフォルダ
 			self.environment["selectedItemCount"]=None	#選択中のアイテム数。0or1or2=2以上。
@@ -134,6 +135,10 @@ class FalconTabBase(object):
 		else:
 			self.hListCtrl=existing_listctrl
 		#end リストコントロールを再利用する
+
+		#D&Dの受け入れ
+		self.hListCtrl.SetDropTarget(DropTarget(self))
+
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_CLICK,self.col_click)
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
@@ -145,6 +150,7 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_DRAG,self.BeginDrag)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OpenContextMenu)
 		self.hListCtrl.Bind(wx.EVT_MENU, self.CloseContextMenu)
+		#self.hListCtrl.Bind(wx.EVT_MOUSE_EVENTS, self.mouseMove)
 
 	def GetListColumns(self):
 		return self.columns
@@ -230,8 +236,10 @@ class FalconTabBase(object):
 		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
 		self.log.debug("Updating list control...")
 		self._cancelBackgroundTasks()
+		self.hListCtrl.DeleteAllItems()
 		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってる場合があるため必要。
 		self.checkedItem=set()
+		self.hilightIndex=-1
 
 		t=misc.Timer()
 		for elem in content:
@@ -277,7 +285,6 @@ class FalconTabBase(object):
 			globalVars.app.StopSound(self.stopSoundHandle)
 			self.stopSoundHandle=None
 		#end 音を出した
-		#SpaceがEnterと同一視されるので対策する。
 		event.Skip()
 
 	def _IsItemChecked(self,index):
@@ -285,7 +292,6 @@ class FalconTabBase(object):
 			アイテムインデックスから、そのアイテムがチェック状態か否かを調べる
 			外からはSelectと合わせて調べる必要性以外にないはずなのでprivate
 		"""
-		#return self.hListCtrl.GetItemState(index,wx.LIST_STATE_DROPHILITED)==wx.LIST_STATE_DROPHILITED
 		return index in self.checkedItem
 
 	def OnSpaceKey(self):
@@ -308,14 +314,12 @@ class FalconTabBase(object):
 		for item in items:
 			if (not checkStrict) and self._IsItemChecked(item):
 				#チェック解除
-				#self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_DROPHILITED)
 				self.checkedItem.discard(item)
 				if len(items)==1:
 					globalVars.app.say(_("チェック解除"), interrupt=True)
 				self.hListCtrl.SetItemBackgroundColour(item,"#000000")
 				self.hListCtrl.Update()
 			else:				#チェック
-				#self.hListCtrl.SetItemState(item,wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
 				if len(items)==1:
 					globalVars.app.say(_("チェック"), interrupt=True)
 					if not checkStrict:
@@ -334,8 +338,19 @@ class FalconTabBase(object):
 		for f in self.GetSelectedItems():
 			data.AddFile(f.fullpath)
 
-		obj=wx.DropSource(data,globalVars.app.hMainView.hFrame)
+		itemImage=self.hListCtrl.GetImageList(wx.IMAGE_LIST_SMALL).GetBitmap(
+				self.hListCtrl.GetItem(self.GetSelectedItems(True)[0]).GetImage()
+			).ConvertToImage().Scale(128,128).ConvertToBitmap()
+
+		i=wx.DragImage(itemImage)
+		i.BeginDrag((16,16),globalVars.app.hMainView.hFrame,True,None)
+
+		obj=DropSource(data,globalVars.app.hMainView.hFrame)
+		obj.hImage=i
+		i.Show()
+		obj.GiveFeedback(None)		#座標の計算などをしてi.Moveが呼ばれる
 		obj.DoDragDrop()
+		i.EndDrag()
 
 	def SelectAll(self):
 		globalVars.app.say(_("全て選択"), interrupt=True)
@@ -376,7 +391,6 @@ class FalconTabBase(object):
 		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
 		self._updateConfig()
 		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
 	def SortSelect(self):
@@ -393,7 +407,6 @@ class FalconTabBase(object):
 		self.listObject.SetSortCursor(item)
 		self._updateConfig()
 		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
 	def _updateConfig(self):
@@ -414,14 +427,12 @@ class FalconTabBase(object):
 			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
 		self._updateConfig()
 		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 
 	def SortNext(self):
 		self.listObject.SetSortCursor()
 		self._updateConfig()
 		self.listObject.ApplySort()
-		self.hListCtrl.DeleteAllItems()
 		self.UpdateListContent(self.listObject.GetItems())
 	#end sortNext
 
@@ -680,3 +691,58 @@ class FalconTabBase(object):
 		if self.stopSoundHandle is not None:#音を鳴らしてたので止める
 			globalVars.app.StopSound(self.stopSoundHandle)
 			self.stopSoundHandle=None
+
+	#D&Dで使うアイテムハイライト
+	def Hilight(self,index):
+		if index==-1:
+			if self.hilightIndex>=0:
+				self.hListCtrl.SetItemState(index,0,wx.LIST_STATE_DROPHILITED)
+				self.hilightIndex=-1
+		elif self.hilightIndex != index:
+			self.hListCtrl.SetItemState(self.hilightIndex,0,wx.LIST_STATE_DROPHILITED)
+			if type(self.listObject.GetElement(index)) in (browsableObjects.Folder,browsableObjects.Drive):
+				self.hListCtrl.SetItemState(index,wx.LIST_STATE_DROPHILITED,wx.LIST_STATE_DROPHILITED)
+				self.hilightIndex=index
+			else:
+				self.hilightIndex=-1
+
+
+class DropSource(wx.DropSource):
+	def GiveFeedback(self,effect):
+		self.hImage.Move(globalVars.app.hMainView.hFrame.ScreenToClient(wx.GetMousePosition()))
+		return False
+
+
+class DropTarget(wx.DropTarget):
+	def __init__(self,parent):
+		super().__init__(wx.FileDataObject())
+		self.parent=parent			#tabが入る
+
+	#マウスオーバー時に呼ばれる
+	#まだマウスを放していない
+	def OnDragOver(self,x,y,defResult):
+		i,flg=self.parent.hListCtrl.HitTest((x,y))
+		if flg & wx.LIST_HITTEST_ONITEM !=0:
+			self.parent.Hilight(i)
+		else:
+			self.parent.Hilight(-1)
+		return defResult
+
+	#ドロップされずにマウスが外に出た
+	#戻り値不要
+	def OnLeave(self):
+		self.parent.Hilight(-1)
+		pass
+
+	#マウスが放されたら呼ばれる
+	#現在データの受け入れが可能ならTrue
+	def OnDrop(self,x,y):
+		self.parent.Hilight(-1)
+		return not self.parent.isRenaming
+
+	#データを受け入れ、結果を返す
+	def OnData(self,x,y,defResult):
+		self.GetData()
+		print(self.DataObject.GetFilenames())
+		return defResult		#推奨されたとおりに返しておく
+
