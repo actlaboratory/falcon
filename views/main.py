@@ -66,6 +66,7 @@ class View(BaseView):
 		)
 		self.menu=Menu()
 		self.menu.InitShortcut(self.identifier)
+		self.InstallMenuEvent(self.menu,self.events)
 
 		#お気に入りフォルダと「ここで開く」のショートカットキーを登録
 		for target in (globalVars.app.userCommandManagers):
@@ -83,8 +84,6 @@ class View(BaseView):
 			for v in errors:
 				tmp+=v+"\n"
 			dialog(_("エラー"),tmp)
-
-		self.InstallMenuEvent(self.menu,self.events)
 
 		self.tabs=[]
 		self.activeTab=None#最初なので空
@@ -159,8 +158,8 @@ class View(BaseView):
 		#メニューのブロック情報を変更
 		self.menu.Block(newtab.blockMenuList)
 		self.menu.UnBlock(self.activeTab.blockMenuList)
-		self.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),newtab.IsMarked())
-		self.menu.hMenuBar.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),newtab.hasCheckedItem())
+		self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),newtab.IsMarked())
+		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),newtab.hasCheckedItem())
 
 		self.tabs[i]=newtab
 		self.activeTab=newtab
@@ -177,7 +176,8 @@ class View(BaseView):
 		if self.activeTab:
 			self.menu.UnBlock(self.activeTab.blockMenuList)
 		self.menu.Block(self.tabs[pageNo].blockMenuList)
-		self.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),self.tabs[pageNo].IsMarked())
+		self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),self.tabs[pageNo].IsMarked())
+		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.tabs[pageNo].hasCheckedItem())
 
 		self.activeTab=self.tabs[pageNo]
 		self.hTabCtrl.SetSelection(pageNo)
@@ -345,7 +345,6 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hHelpMenu,"HELP_VERINFO",_("バージョン情報"))
 
 		#メニューバー
-		self.hMenuBar=wx.MenuBar()
 		self.hMenuBar.Append(self.hFileMenu,_("ファイル"))
 		self.hMenuBar.Append(self.hEditMenu,_("編集"))
 		self.hMenuBar.Append(self.hMoveMenu,_("移動"))
@@ -449,7 +448,7 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_MARKSET"):
 			self.parent.activeTab.MarkSet()
-			self.parent.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),True)
+			self.parent.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),True)
 			return
 		if selected==menuItemsStore.getRef("MOVE_MARK"):
 			self.parent.activeTab.GoToMark()

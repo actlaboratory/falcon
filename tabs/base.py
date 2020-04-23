@@ -240,7 +240,7 @@ class FalconTabBase(object):
 		self.hListCtrl.DeleteAllItems()
 		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってる場合があるため必要。
 		self.checkedItem=set()
-		globalVars.app.hMainView.menu.hMenuBar.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
+		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
 		self.hilightIndex=-1
 
 		t=misc.Timer()
@@ -312,23 +312,22 @@ class FalconTabBase(object):
 		self.ItemMarkProcess(range(len(self.listObject)))
 		globalVars.app.say(_("チェック反転"), interrupt=True)
 
-	def ItemMarkProcess(self,items,checkStrict=False):
+	def ItemMarkProcess(self,items,strict=None):
 		"""
 			itemsをチェック・チェック解除する。現在状態と比べて反転させる
-			checkStrictの時は、itemsを全部チェック状態にする
+			strict!=Noneの時は、全アイテムのチェック状態をstrictに合わせる
 		"""
 		for item in items:
-			if (not checkStrict) and self._IsItemChecked(item):
+			if strict==False or (strict==None and self._IsItemChecked(item)):
 				#チェック解除
 				self.checkedItem.discard(item)
-				if len(items)==1:
+				if len(items)==1 and strict==None:
 					globalVars.app.say(_("チェック解除"), interrupt=True)
 				self.hListCtrl.SetItemBackgroundColour(item,"#000000")
-				self.hListCtrl.Update()
 			else:				#チェック
 				if len(items)==1:
 					globalVars.app.say(_("チェック"), interrupt=True)
-					if not checkStrict:
+					if not strict:
 						globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
 				self.checkedItem.add(item)
 				self.hListCtrl.SetItemBackgroundColour(item,"#0000FF")
@@ -338,7 +337,8 @@ class FalconTabBase(object):
 				self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_SELECTED)
 				self.hListCtrl.Focus(item+1)
 				self.hListCtrl.Select(item+1)
-		globalVars.app.hMainView.menu.hMenuBar.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.hasCheckedItem())
+		self.hListCtrl.Update()
+		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.hasCheckedItem())
 
 	def BeginDrag(self,event):
 		data=wx.FileDataObject()

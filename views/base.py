@@ -50,6 +50,7 @@ class BaseView(object):
 class BaseMenu(object):
 	def __init__(self):
 		self.blockCount={}
+		self.hMenuBar=wx.MenuBar()
 
 	def InitShortcut(self,identifier):
 		self.keymap=keymap.KeymapHandler(defaultKeymap.defaultKeymap)
@@ -88,7 +89,7 @@ class BaseMenu(object):
 
 	def UnBlock(self,ref):
 		"""
-			メニュー項目のブロック自由が消滅したので、ブロックカウントを減らす。0になったら有効化する
+			メニュー項目のブロック事由が消滅したので、ブロックカウントを減らす。0になったら有効化する
 			refはリスト
 		"""
 		for i in ref:
@@ -100,6 +101,13 @@ class BaseMenu(object):
 			#ブロック解除
 			if self.blockCount[menuItemsStore.getRef(i)]==0:
 				self.hMenuBar.Enable(menuItemsStore.getRef(i),True)
+
+	def Enable(self,ref,enable):
+		self.hMenuBar.Enable(ref,enable)
+		if enable:
+			self.blockCount[ref]=0
+		else:
+			self.blockCount[ref]=2100000000
 
 class BaseEvents(object):
 	"""イベント処理のデフォルトの動作をいくつか定義してあります。"""
