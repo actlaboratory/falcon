@@ -391,6 +391,7 @@ class FalconTabBase(object):
 			cursor=self.listObject.Search(item.basename,0)
 		else:
 			cursor=self.listObject.Search(cursorTargetName,0)
+		#end ターゲットが指定されているかどうか
 		self.Update(self.listObject,cursor)
 
 	def SortCycleAd(self):
@@ -716,6 +717,38 @@ class FalconTabBase(object):
 			else:
 				self.hilightIndex=-1
 
+	def _findFocusAfterDeletion(self,paths,focus_index):
+		"""ゴミ箱/削除しして、ファイルリストを更新した後に呼び出す。削除語のカーソル位置を見つける。"""
+		#カーソルをどこに動かすかを決定、まずはもともとフォーカスしてた項目があるかどうか
+		if os.path.exists(paths[focus_index]):
+			new_cursor_path=paths[focus_index]#フォーカスしてたファイル
+		else:#あるファイルを上下に探索
+			if len(paths)==1: return -1#もともと1個しかファイルがなくて、そのファイルが消えている場合、フォーカスは-1で確定する
+			new_cursor_path=""
+			ln=len(paths)
+			i=1
+			while(True):
+				if i>focus_index and i>ln-focus_index-1: break#探索し尽くしたらやめる
+				tmp=focus_index-i
+				if tmp>=0 and os.path.exists(paths[tmp]):#あった
+					new_cursor_path=paths[tmp]
+					break
+				#end 上
+				tmp=focus_index+i
+				if tmp>=ln and os.path.exists(paths[tmp]):#あった
+					new_cursor_path=paths[tmp]
+					break
+				#end 下
+				i+=1
+			#end 探索
+		#end さっきフォーカスしてた項目がなくなってた
+		#カーソルをどの項目に動かすか分かった
+		focus_index=0
+		for elem in self.listObject:
+			if elem.fullpath==new_cursor_path: break
+			focus_index+=1
+		#end 検索
+		return focus_index
 
 class DropSource(wx.DropSource):
 	def GiveFeedback(self,effect):

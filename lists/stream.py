@@ -58,7 +58,7 @@ class StreamList(FalconListBase):
 		#end 追加ループ
 		self.log.debug("stream list created in %d milliseconds." % t.elapsed)
 		self.log.debug(str(len(self.streams))+" objects found.")
-		return True
+		return errorCodes.OK
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
