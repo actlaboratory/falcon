@@ -29,12 +29,14 @@ class GrepResultTab(fileList.FileListTab):
 	"""grepの検索結果が表示されているタブ。"""
 
 	blockMenuList=[
-		"FILE_CHANGEATTRIBUTE",
+		"FILE_MKDIR",
 		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_FORWARD_TAB",
 		"MOVE_TOPFILE",
 		"MOVE_BACKWARD",
+		"MOVE_MARKSET",
+		"MOVE_MARK",
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE",

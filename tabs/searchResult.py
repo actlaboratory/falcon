@@ -32,6 +32,8 @@ class SearchResultTab(fileList.FileListTab):
 		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_BACKWARD",
+		"MOVE_MARKSET",
+		"MOVE_MARK",
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE",
