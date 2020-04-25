@@ -54,7 +54,8 @@ def PerformSearch(taskState,param):
 	t=param['tabObject']
 	while(True):
 		if taskState.canceled: return False
-		finished,hits=l._performSearchStep()
+		finished,hits=l._performSearchStep(taskState)
+		if hits==-1: return False#検索処理からキャンセルで戻ってきた
 		if len(hits)>0: wx.CallAfter(t._onSearchHitCallback,hits)
 		if finished: break#全て検索した
 		time.sleep(0.1)
