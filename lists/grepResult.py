@@ -64,13 +64,14 @@ class GrepResultList(FalconListBase):
 		self.log.debug("Getting grep search results for %s..." % self.keyword)
 		self.searched_index=0#インデックスいくつまで検索したか
 
-	def _performSearchStep(self):
-		"""検索を1ステップ実行する。100県のヒットが出るまで検索するか、リストが終わるまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。"""
+	def _performSearchStep(self,taskState):
+		"""検索を1ステップ実行する。100県のヒットが出るまで検索するか、リストが終わるまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。スレッドからtaskStateを受け取っていて、キャンセルされたら hits を-1にセットして抜ける。"""
 		ret_list=[]
 		i=self.searched_index
 		eol=False
 		total_hits=0
 		while(True):
+			if taskState.canceled: return False, -1#途中でキャンセル
 			path=self.searches[i]
 			if path=="eol":#EOLで検索終了
 				eol=True
