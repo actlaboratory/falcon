@@ -116,6 +116,9 @@ def GetContextMenu(path):
 def ExecContextMenuItem(id):
 	falconHelper.execContextMenuItem(id)
 
+	def DestroyContextMenu():
+		falconHelper.destroyContextMenu()
+
 def disableWindowStyleFlag(hwnd,flag):
 	"""指定されたウィンドウハンドルの DWL_STYLE の値を撮って、指定されたフラグを折る。"""
 	value=win32api.GetWindowLong(hwnd,-16)#-16 が DWL_STYLE らしい

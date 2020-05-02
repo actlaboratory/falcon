@@ -530,7 +530,8 @@ class FalconTabBase(object):
 			targetPath=self.GetFocusedElement().fullpath
 		#end イベントあるか
 		cmd=misc.GetContextMenu(targetPath)
-		print("menu %d" % cmd)
+		evt=wx.MenuEvent(id=cmd)
+		self.CloseContextMenu(evt)
 
 	def CloseContextMenu(self,event):
 		selected=event.GetId()							#メニュー識別しの数値
@@ -539,6 +540,7 @@ class FalconTabBase(object):
 			event.Skip()
 		else:
 			misc.ExecContextMenuItem(selected)
+			misc.DestroyContextMenu()
 		#end exec context menu action
 
 	def ReadCurrentFolder(self):

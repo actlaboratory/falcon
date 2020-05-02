@@ -164,6 +164,7 @@ falcon_helper_funcdef int execContextMenuItem(int nId)
 
 picojson::object *makePicoJsonObject(HMENU menu, int index)
 {
+	//not used
 	MENUITEMINFO menuitem_info;
 	memset(&menuitem_info, 0, sizeof(MENUITEMINFO));
 	menuitem_info.cbSize = sizeof(MENUITEMINFO);
@@ -238,7 +239,6 @@ falcon_helper_funcdef int getContextMenu(LPCTSTR path)
 		w << L"menu handle=" << menu << L", window=" << hParent << L", Error code " << GetLastError();
 //		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
 	}
-	destroyContextMenu();
 	return cmd;
 }
 
