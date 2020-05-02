@@ -32,6 +32,7 @@ class falconAppMain(wx.App):
 		self.frozen=hasattr(sys,"frozen")
 		self.InitLogger()
 		self.LoadSettings()
+		wx.DisableAsserts()
 		locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
 		self.SetTimeZone()
 		self.InitTranslation()
