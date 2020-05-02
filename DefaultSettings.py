@@ -13,7 +13,7 @@ class DefaultSettings:
 		config["general"]={
 			"language": "ja-JP",
 			"fileVersion": "100",
-			"locale": "EN-US"
+			"locale": "JA-JP"
 		}
 		config["FileList"]={
 			"sorting": 0,
@@ -23,6 +23,18 @@ class DefaultSettings:
 			"column_width_2" : "320",
 			"column_width_3" : "70",
 			"column_width_4" : "240"
+		}
+		config["GrepResultList"]={
+			"sorting": 0,
+			"descending": 0,
+			"column_width_0" : 300,
+			"column_width_1" : 80,
+			"column_width_2" : 300,
+			"column_width_3" : 70,
+			"column_width_4" : 150,
+			"column_width_5" : 320,
+			"column_width_6" : 70,
+			"column_width_7" : 240
 		}
 		config["DriveList"]={
 			"sorting": 1,
@@ -45,7 +57,8 @@ class DefaultSettings:
 		}
 		config["view"]={
 			"font": "bold 'ＭＳ ゴシック' 22 windows-932",
-			"colorMode":"normal"
+			"colorMode":"normal",
+			"header_title_length":20
 		}
 		config["mainView"]={
 			"sizeX": "800",
@@ -69,17 +82,27 @@ class DefaultSettings:
 			"デスクトップ" : "alt+2"
 		}
 		config["open_here"]={
-			"Falcon(new window)" : "falcon.exe \"%%%%1\"",
 			"Explorer" : "%%%%windir%%%%\explorer.exe \"%%%%1\"",
 			"コマンド プロンプト" : "%%%%windir%%%%\system32\cmd.exe /K cd /d  \"%%%%1\"",
 			"Windows Power Shell" : "%%%%windir%%%%\System32\WindowsPowerShell\\v1.0\powershell.exe -NoExit -command cd \'%%%%1\'"
 		}
 		config["open_here_shortcut"]={
-			"Falcon(new window)" : "shift+return",
 			"Explorer" : "ctrl+e",
 			"コマンド プロンプト" : "ctrl+shift+o",
 			"Windows Power Shell" : "ctrl+shift+p"
 		}
-
+		config["preview"]={
+			"header_line_count": 10,
+			"footer_line_count": 10
+		}
+		config['on_list_moved']={
+			"read_directory_level": True,
+			"read_directory_name": True,
+			"read_item_count": True
+		}
+		config["originalAssociation"]={
+			"<default_file>": "C:\Program Files (x86)\KSD\MyEdit\MyEdit.exe",
+			"<default_dir>": "falcon.exe"
+		}
 		return config
 

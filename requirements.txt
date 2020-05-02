@@ -1,4 +1,4 @@
-﻿wxpython
+﻿https://www.nyanchangames.com/wxPython-4.1.0a1.dev4685+8750ef29-cp37-cp37m-win32.whl
 pywin32
 winpaths
 pyinstaller

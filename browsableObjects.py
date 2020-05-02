@@ -51,9 +51,9 @@ class FalconBrowsableBase():
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
-	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString"]
+	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString","hIcon"]
 
-	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None,shortName=""):
+	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None,shortName="",hIcon=-1):
 		"""必要な情報をセットする"""
 		self.directory=directory
 		self.basename=basename
@@ -65,6 +65,7 @@ class File(FalconBrowsableBase):
 		self.GetAttributesString()
 		self.typeString=typeString
 		self.shortName=shortName
+		self.hIcon=hIcon
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
@@ -85,6 +86,9 @@ class File(FalconBrowsableBase):
 		return attrib if self.attributes!=attrib else -1
 	#end GetNewAttributes
 
+	def GetRootDrivePath(self):
+		return self.fullpath[0]
+
 class Folder(File):
 	__slots__=[]
 
@@ -95,10 +99,38 @@ class Folder(File):
 		else:
 			return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
+class GrepItem(File):
+	def Initialize(self,ln,preview,fileobject):
+		"""grepの結果は、ファイルの情報に加えて、行数・プレビュー・ヒット数を含む。ヒット数は、後から設定する。ファイル名などは、与えられたファイルオブジェクトからとる。"""
+		self.basename=fileobject.basename
+		self.fullpath=fileobject.fullpath
+		self.size=fileobject.size
+		self.modDate=fileobject.modDate
+		self.creationDate=fileobject.creationDate
+		self.attributesString=fileobject.attributesString
+		self.longAttributesString=fileobject.longAttributesString
+		self.shortName=fileobject.shortName
+		self.typeString=fileobject.typeString
+		self.ln=ln
+		self.preview=preview
+		self.hits=0#とりあえず入れておく
+
+	def SetHitCount(self,h):
+		"""ヒット数を設定する。"""
+		self.hits=h
+
+	def GetListTuple(self):
+		"""表示に必要なタプルを返す。"""
+		return (self.basename, self.ln, self.preview, self.hits, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+
 class Drive(FalconBrowsableBase):
 	"""ドライブを表す。"""
-	def Initialize(self, letter, free, total, type, name=""):
-		"""必要な情報をセットする"""
+	def Initialize(self, letter, free, total, type, name="",hIcon=-1):
+		"""
+			必要な情報をセットする
+			変数名はNetworkResourceと互換しているため、変更した場合は両方に反映すること！
+
+		"""
 		self.letter=letter
 		self.free=free
 		self.total=total
@@ -106,6 +138,7 @@ class Drive(FalconBrowsableBase):
 		self.UpdateTypeString()
 		self.basename=name
 		self.fullpath=letter+":"
+		self.hIcon=hIcon
 
 	def UpdateTypeString(self):
 		"""タイプの数値を文字列に変換し、self.typeString にセットする。"""
@@ -130,8 +163,14 @@ class Drive(FalconBrowsableBase):
 
 
 	def GetListTuple(self):
-		"""表示に必要なタプルを返す。"""
+		"""
+			表示に必要なタプルを返す。
+			変更した場合はNetworkResourceの方にも反映すること！
+		"""
 		return (self.basename, self.letter, misc.ConvertBytesTo(self.free, misc.UNIT_AUTO, True), misc.ConvertBytesTo(self.total, misc.UNIT_AUTO, True), self.typeString)
+
+	def GetRootDrivePath(self):
+		return self.fullpath[0]
 
 class Stream(FalconBrowsableBase):
 	"""NTFS 副ストリームを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
@@ -141,19 +180,38 @@ class Stream(FalconBrowsableBase):
 		self.basename=basename
 		self.fullpath=fullpath
 		self.size=size
+		self.hIcon=-1			#ストリームにアイコンはない
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
 		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True))
 
+	def GetRootDrivePath(self):
+		return self.fullpath[0]
+
 class NetworkResource(FalconBrowsableBase):
 	"""ネットワーク上のディスクリソースを表す。このオブジェクトは情報を保持するだけで、指し示すリソースにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
-	def Initialize(self,basename="", fullpath="", address=""):
-		"""必要な情報をセットする"""
+	def Initialize(self,basename="", fullpath="", address="",hIcon=-1):
+		"""
+			必要な情報をセットする
+			ドライブリストに表示するため、変数名はDriveのものと互換
+		"""
 		self.basename=basename
 		self.fullpath=fullpath
-		self.size=-1
+		self.letter=""
+		self.free=-1
+		self.total=-1
+		self.type=-1
+		self.typeString=_("ネットワークリソース")
 		self.address=address
+		self.hIcon=hIcon
+
 	def GetListTuple(self):
-		"""表示に必要なタプルを返す。"""
-		return (self.basename, self.basename, address)
+		"""
+			表示に必要なタプルを返す。
+			ここもDriveと同じ内容に統一
+		"""
+		return (self.basename, self.letter,"", "", self.typeString)
+
+	def GetRootDrivePath(self):
+		return self.basename

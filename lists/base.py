@@ -36,19 +36,19 @@ class FalconListBase(object):
 		"""インデックスを指定すると、その位置へソートカーソルを移動。パラメータなしで、次のソートへ移動。実際にソートを適用するには、ApplySort を実行する。"""
 		if val==self.sortCursor: return
 		if len(self.supportedSorts)==0:
-			globalVars.app.say(_("このリストはソートできません。"))
+			globalVars.app.say(_("このリストはソートできません。"), interrupt=True)
 			return
 		#ソート非対応
 		self.sortCursor=self.sortCursor+1 if val==-1 else val
 		if self.sortCursor==len(self.supportedSorts): self.sortCursor=0
 		if self.sortCursor<0: self.sortCursor=0
-		globalVars.app.say(GetSortDescription(self.supportedSorts[self.sortCursor]))
+		globalVars.app.say(GetSortDescription(self.supportedSorts[self.sortCursor]), interrupt=True)
 
 	def SetSortDescending(self,d):
 		if d==self.sortDescending: return
 		self.sortDescending=d
 		s=_("昇順") if d==0 else _("降順")
-		globalVars.app.say(s)
+		globalVars.app.say(s, interrupt=True)
 
 	def GetSortDescending(self):
 		return self.sortDescending
@@ -72,9 +72,12 @@ class FalconListBase(object):
 		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename
 		if attrib==SORT_TYPE_FILESIZE: return lambda x: x.size
 		if attrib==SORT_TYPE_MODDATE: return lambda x: x.modDate
-		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributes
+		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributesString
 		if attrib==SORT_TYPE_TYPESTRING: return lambda x: x.typeString
 		if attrib==SORT_TYPE_VOLUMELABEL: return lambda x: x.basename
 		if attrib==SORT_TYPE_DRIVELETTER: return lambda x: x.letter
 		if attrib==SORT_TYPE_FREESPACE: return lambda x: x.free
 		if attrib==SORT_TYPE_TOTALSPACE: return lambda x: x.total
+		if attrib==SORT_TYPE_HITCOUNT: return lambda x: x.hits
+		if attrib==SORT_TYPE_HITLINE: return lambda x: x.ln
+		if attrib==SORT_TYPE_PREVIEW: return lambda x: x.preview

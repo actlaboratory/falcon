@@ -58,7 +58,7 @@ class StreamList(FalconListBase):
 		#end 追加ループ
 		self.log.debug("stream list created in %d milliseconds." % t.elapsed)
 		self.log.debug(str(len(self.streams))+" objects found.")
-		return True
+		return errorCodes.OK
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
@@ -89,14 +89,14 @@ class StreamList(FalconListBase):
 		return self.streams.__len__()
 
 	def GetItemPaths(self):
-		"""リストの中身をパスのリストで取得する。フォルダが上にくる。"""
+		"""リストの中身をパスのリストで取得する。"""
 		lst=[]
 		for elem in self.streams:
 			lst.append(elem.fullpath)
 		return lst
 
 	def GetItemNames(self):
-		"""リストの中身をファイル名のリストで取得する。フォルダが上にくる。"""
+		"""リストの中身をファイル名のリストで取得する。"""
 		lst=[]
 		for elem in self.streams:
 			lst.append(elem.basename)

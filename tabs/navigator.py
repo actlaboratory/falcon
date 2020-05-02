@@ -19,7 +19,7 @@ import globalVars
 import constants
 import misc
 import views.ViewCreator
-from . import fileList,driveList,streamList,searchResult
+from . import fileList,driveList,streamList,searchResult, grepResult
 from simpleDialog import dialog
 
 def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environment={}):
@@ -38,9 +38,15 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 		if target['action']=='search':
 			newtab=searchResult.SearchResultTab(environment)
 			newtab.Initialize(parent,creator)
-			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'])
+			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'], target['isRegularExpression'])
 			return newtab
 		#end 検索
+		if target['action']=='grep':
+			newtab=grepResult.GrepResultTab(environment)
+			newtab.Initialize(parent,creator)
+			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'], target['isRegularExpression'])
+			return newtab
+		#end grep検索
 	#end targetが辞書の時の特殊処理
 
 	if target=="":#ドライブリスト
@@ -51,6 +57,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 		newtab.Update(cursor)
+		if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
 		return newtab
 	#end ドライブリストへ行く
 	target=os.path.expandvars(target)
@@ -67,6 +74,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 		newtab.Update(lst)
+		if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
 		return newtab
 	else:
 		lst=lists.FileList()
@@ -79,7 +87,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			return result#アクセス負荷
 		if cursor!="":
 			targetItemIndex=lst.Search(cursor)
-		if isinstance(previous_tab,fileList.FileListTab):#再利用
+		if type(previous_tab)==fileList.FileListTab:#再利用
 			newtab=previous_tab
 		else:
 			newtab=fileList.FileListTab(environment)
@@ -89,5 +97,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 	if targetItemIndex>=0:
 		hListCtrl.Focus(targetItemIndex)
 		hListCtrl.Select(targetItemIndex)
+	#end ターゲットにフォーカス
+	if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
 	return newtab
 #end Navigate

@@ -7,6 +7,7 @@ import wx
 import _winxptheme
 import wx.adv
 import ctypes
+import win32api
 from . import fontManager
 
 falconHelper=ctypes.cdll.LoadLibrary("falconHelper.dll")
@@ -94,7 +95,7 @@ class ViewCreator():
 		hButton=wx.Button(self.parent, wx.ID_OK,label=text, name=text,style=wx.BORDER_SUNKEN)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton,mode=BUTTON_COLOUR)
-		self.sizer.Add(hButton,1,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
+		self.sizer.Add(hButton,1, wx.ALIGN_BOTTOM | wx.ALL,5)
 		hButton.SetDefault()
 		self.AddSpace(self.space)
 		return hButton
@@ -103,7 +104,7 @@ class ViewCreator():
 		hButton=wx.Button(self.parent, wx.ID_CANCEL,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton,mode=BUTTON_COLOUR)
-		self.sizer.Add(hButton,1,wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
+		self.sizer.Add(hButton,1,wx.ALIGN_BOTTOM | wx.ALL,5)
 		self.AddSpace(self.space)
 		return hButton
 
@@ -211,9 +212,14 @@ class ViewCreator():
 		return hRadioBox
 
 	def ListCtrl(self,proportion,sizerFlag,**settings):
-		hListCtrl=wx.ListCtrl(self.parent,wx.ID_ANY,**settings)
+		hListCtrl=wx.ListCtrl()
+		hListCtrl.EnableSystemTheme(False)
+		hListCtrl.SetHeaderAttr(wx.ItemAttr("888888","888888",self.font.GetFont()))
+		hListCtrl.Create(self.parent,wx.ID_ANY,**settings)
 		self.SetFace(hListCtrl)
+		self.SetFace(hListCtrl.GetMainWindow())
 		self.sizer.Add(hListCtrl,proportion,sizerFlag)
+		_winxptheme.SetWindowTheme(win32api.SendMessage(hListCtrl.GetHandle(),0x101F,0,0),"","")#ヘッダーのウィンドウテーマを引っぺがす
 		self.AddSpace(self.space)
 		return hListCtrl
 
@@ -225,11 +231,19 @@ class ViewCreator():
 		self.sizer.Layout()
 		return htab
 
-	def inputbox(self,text,x=0,defaultValue=""):
+	def staticText(self,text):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
 		self.sizer.Add(hStaticText,0)
+		self.SetFace(hStaticText)
+		self.AddSpace(self.space)
+		return hStaticText
 
-		hTextCtrl=wx.TextCtrl(self.parent, -1,size=(x,-1),name=text,value=defaultValue)
+	def inputbox(self,text,x=0,defaultValue="",style=0):
+		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
+		self.SetFace(hStaticText)
+		self.sizer.Add(hStaticText,0)
+
+		hTextCtrl=TextCtrl(self.parent, -1,size=(x,-1),name=text,value=defaultValue,style=style)
 		self.SetFace(hTextCtrl)
 		if x==-1:	#幅を拡張
 			self.sizer.Add(hTextCtrl,1)
@@ -302,6 +316,11 @@ def BoxSizer(parent,orient=wx.VERTICAL,flg=0,border=0):
 def makePanel(parent):
 	hPanel=wx.Panel(parent,wx.ID_ANY)
 	return hPanel
+
+
+class TextCtrl(wx.TextCtrl):
+	def AcceptsFocusFromKeyboard(self):
+		return True
 
 
 

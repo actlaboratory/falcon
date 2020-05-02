@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 #Falcon miscellaneous helper objects
-#Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 import ctypes
 import os
+import re
 import time
 import hashlib
 import winreg
 import win32api
 import win32file
+import constants
 import globalVars
 from logging import getLogger
 from simpleDialog import dialog
@@ -119,6 +122,15 @@ def ExecContextMenuItem(id):
 	def DestroyContextMenu():
 		falconHelper.destroyContextMenu()
 
+def ExtractText(path):
+	path_bytes=bytearray(path.encode('UTF-16LE'))
+	path_bytes.extend(b'\x00\x00')
+	ptr=falconHelper.extractText(bytes(path_bytes))
+	s=ctypes.c_char_p(ptr).value
+	falconHelper.releasePtr(ptr)
+	s2=s.decode('UTF-8')
+	return s2
+
 def disableWindowStyleFlag(hwnd,flag):
 	"""指定されたウィンドウハンドルの DWL_STYLE の値を撮って、指定されたフラグを折る。"""
 	value=win32api.GetWindowLong(hwnd,-16)#-16 が DWL_STYLE らしい
@@ -181,7 +193,7 @@ def addPath(paths):
 	except:
 		return False
 
-def RunFile(path, admin=False,prm=""):
+def RunFile(path, admin=False,prm="", workdir=""):
 	"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
 	path=os.path.expandvars(path)
 	msg="running %s as admin" % (path) if admin else "running %s" % (path)
@@ -200,7 +212,7 @@ def RunFile(path, admin=False,prm=""):
 		#end shellExecuteEx failure
 	else:
 		try:
-			win32api.ShellExecute(0,"open",path,prm,"",1)
+			win32api.ShellExecute(0,"open",path,prm,workdir,1)
 		except win32api.error as er:
 			error=str(er)
 		#end shellExecute failure
@@ -209,3 +221,26 @@ def RunFile(path, admin=False,prm=""):
 		dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": error})
 	#end ファイル開けなかった
 #end RunFile
+
+def ValidateRegularExpression(exp):
+	try:
+		test=re.compile(exp)
+	except Exception as e:
+		return str(e)
+	#end error
+	return "OK"
+
+def CommandLineToArgv(cmd):
+	nargs=ctypes.c_int()
+	ctypes.windll.shell32.CommandLineToArgvW.restype=ctypes.POINTER(ctypes.c_wchar_p)
+	lpargs=ctypes.windll.shell32.CommandLineToArgvW(cmd,ctypes.byref(nargs))
+	args = [lpargs[i] for i in range(nargs.value)]
+	if ctypes.windll.kernel32.LocalFree(lpargs):
+		raise AssertionError
+	#end error
+	return args
+
+#渡された拡張子がドキュメント形式であればTrue
+def isDocumentExt(ext):
+	return ext in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats
+

@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-#Falcon search results list object
+#Falcon grep results list object
 #Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
@@ -24,14 +24,12 @@ from .constants import *
 
 ESCAPE_PATTERN=re.compile(r"([\\\+\.\{\}\(\)\[\]\^\$\-\|\/])")
 
-class SearchResultList(FalconListBase):
-	"""ファイルとフォルダの一覧を扱うリスト。"""
+class GrepResultList(FalconListBase):
+	"""grep検索の結果を扱うリスト。"""
 	def __init__(self):
 		super().__init__()
-		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE,SORT_TYPE_SEARCHPATH,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
-		self.log=logging.getLogger("falcon.searchResultList")
-		self.folders=[]
-		self.files=[]
+		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_HITLINE,SORT_TYPE_PREVIEW,SORT_TYPE_HITCOUNT,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
+		self.log=logging.getLogger("falcon.grepResultList")
 
 	def Update(self):
 		return self.Initialize(self.rootDirectory,self.searches,self.keyword,True)
@@ -39,14 +37,8 @@ class SearchResultList(FalconListBase):
 	def Initialize(self,rootDirectory,searches="",keyword="",isRegularExpression=False,silent=False):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
 		if isinstance(rootDirectory,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
-			for elem in rootDirectory:
-				if type(elem) is browsableObjects.Folder:
-					self.folders.append(elem)
-				else:
-					self.files.append(elem)
-				#end ファイルかフォルダか
-			#end for
-			return errorCodes.OK
+			self.results=rootDirectory
+			return
 		self.rootDirectory=rootDirectory
 		self.searches=searches
 		self.keyword_string=keyword
@@ -68,18 +60,18 @@ class SearchResultList(FalconListBase):
 	def _initSearch(self):
 		"""検索する前に準備する。"""
 		self.finished=False
-		self.folders=[]
-		self.files=[]
-		self.log.debug("Getting search results for %s..." % self.keyword)
+		self.results=[]
+		self.log.debug("Getting grep search results for %s..." % self.keyword)
 		self.searched_index=0#インデックスいくつまで検索したか
 
-	def _performSearchStep(self):
-		"""検索を1ステップ実行する。100県のファイルがヒットするか、リストが終わるまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。"""
+	def _performSearchStep(self,taskState):
+		"""検索を1ステップ実行する。100県のヒットが出るまで検索するか、リストが終わるまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。スレッドからtaskStateを受け取っていて、キャンセルされたら hits を-1にセットして抜ける。"""
 		ret_list=[]
 		i=self.searched_index
 		eol=False
-		hit=0
+		total_hits=0
 		while(True):
+			if taskState.canceled: return False, -1#途中でキャンセル
 			path=self.searches[i]
 			if path=="eol":#EOLで検索終了
 				eol=True
@@ -88,29 +80,47 @@ class SearchResultList(FalconListBase):
 				globalVars.app.say(_("検索終了、%(item)d件ヒットしました。") % {'item': len(self)})
 				break
 			#end EOL
-			if re.search(self.keyword,path):
+			ext=path.split(".")[-1].lower()
+			if misc.isDocumentExt(ext):
 				fullpath=os.path.join(self.rootDirectory,path)
-				stat=os.stat(fullpath)
-				mod=datetime.datetime.fromtimestamp(stat.st_mtime)
-				creation=datetime.datetime.fromtimestamp(stat.st_ctime)
-				ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON|shellcon.SHGFI_TYPENAME)
-				if os.path.isfile(fullpath):
-					f=browsableObjects.File()
-					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,stat.st_size,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
-					self.files.append(f)
-					ret_list.append(f)
-				else:
-					f=browsableObjects.Folder()
-					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,-1,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
-					self.folders.append(f)
-					ret_list.append(f)
-				#end ファイルかフォルダか
-				hit+=1
-				if hit==100:
-					self.searched_index=i+1#次の位置をキャッシュ
-					break
-				#end 100県ヒット
-			#end 検索ヒットか
+				content=misc.ExtractText(fullpath).split("\n")
+				fileobj=None#複数ヒットでファイルオブジェクトを生成し続けないようにキャッシュする
+				ln=1
+				hitobjects=[]
+				for	 elem in content:
+					m=re.search(self.keyword,elem)
+					if m:
+						preview_start=m.start()-10
+						if preview_start<0: preview_start=0
+						preview=elem[preview_start:preview_start+20]
+						if not fileobj:
+							stat=os.stat(fullpath)
+							mod=datetime.datetime.fromtimestamp(stat.st_mtime)
+							creation=datetime.datetime.fromtimestamp(stat.st_ctime)
+							ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON|shellcon.SHGFI_TYPENAME)
+							fileobj=browsableObjects.File()
+							fileobj.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,stat.st_size,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
+						#end make fileobj
+						obj=browsableObjects.GrepItem()
+						obj.Initialize(ln,preview,fileobj)
+						hitobjects.append(obj)
+					#end ヒット
+					ln+=1
+				#end 行数ごとに検索
+				if len(hitobjects)>0:#このファイルの中でヒットがあった
+					total_hits+=len(hitobjects)
+					for elem in hitobjects:
+						hits=len(hitobjects)
+						elem.SetHitCount(hits)
+					#end 最終的なヒットカウントを設定
+					self.results.extend(hitobjects)
+					ret_list.extend(hitobjects)
+				#end このファイルでヒットがあった
+			#end 対応している拡張子
+			if total_hits>=100:
+				self.searched_index=i+1#次の位置をキャッシュ
+				break
+			#end 100県検索
 			i+=1
 			if i>=len(self.searches):#検索は終わってないが、ファイルリスト取得が追いついてない
 				self.searched_index=len(self.searches)
@@ -126,52 +136,46 @@ class SearchResultList(FalconListBase):
 		"""このリストのカラム情報を返す。"""
 		return {
 			_("ファイル名"):wx.LIST_FORMAT_LEFT,
+			_("行"): wx.LIST_FORMAT_RIGHT,
+			_("プレビュー"): wx.LIST_FORMAT_LEFT,
+			_("ヒット件数"): wx.LIST_FORMAT_RIGHT,
 			_("サイズ"):wx.LIST_FORMAT_RIGHT,
-			_("検索パス"):wx.LIST_FORMAT_LEFT,
 			_("更新"):wx.LIST_FORMAT_LEFT,
 			_("属性"):wx.LIST_FORMAT_LEFT,
 			_("種類"):wx.LIST_FORMAT_LEFT
 		}
 
 	def GetItems(self):
-		"""リストの中身を文字列タプルで取得する。フォルダが上にくる。"""
+		"""リストの中身を文字列タプルで取得する。"""
 		lst=[]
-		for elem in self.folders:
-			lst.append(elem.GetListTuple())
-		for elem in self.files:
+		for elem in self.results:
 			lst.append(elem.GetListTuple())
 		return lst
 
 	def GetItemPaths(self):
 		"""リストの中身をパスのリストで取得する。"""
 		lst=[]
-		for elem in self.folders:
-			lst.append(elem.fullpath)
-		for elem in self.files:
+		for elem in self.results:
 			lst.append(elem.fullpath)
 		return lst
 
 	def GetItemNames(self):
 		"""リストの中身をファイル名のリストで取得する。"""
 		lst=[]
-		for elem in self.folders:
-			lst.append(elem.basename)
-		for elem in self.files:
+		for elem in self.results:
 			lst.append(elem.basename)
 		return lst
 
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
+		return self.results[index]
 
 	def _sort(self,attrib, descending):
 		"""指定した要素で、リストを並べ替える。"""
 		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
 		t=misc.Timer()
 		f=self._getSortFunction(attrib)
-		self.folders.sort(key=f, reverse=(descending==1))
-		self.files.sort(key=f, reverse=(descending==1))
+		self.results.sort(key=f, reverse=(descending==1))
 		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
 	def GetAttributeCheckState(self):
@@ -208,15 +212,7 @@ class SearchResultList(FalconListBase):
 		return self.finished
 
 	def __iter__(self):
-		lst=self.folders+self.files
-		return lst.__iter__()
+		return self.results.__iter__()
 
 	def __len__(self):
-		return len(self.folders)+len(self.files)
-
-	def GetFolderFileNumber(self):
-		return len(self.folders), len(self.files)
-
-	def GetTopFileIndex(self):
-		"""先頭ファイルのインデックス番号を返す。"""
-		return len(self.folders)
+		return len(self.results)

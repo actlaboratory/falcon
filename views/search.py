@@ -33,7 +33,7 @@ class Dialog(BaseDialog):
 		self.keyword,tmp=self.creator.inputbox(_("キーワード")+"：",500,"")
 
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,"",wx.EXPAND)
-		self.type=self.creator.radiobox(_("検索方式"),(_("通常"),_("grep")),None,1,wx.HORIZONTAL)
+		self.type=self.creator.radiobox(_("検索方式"),(_("ファイル名"),_("ファイル内容")),None,1,wx.HORIZONTAL)
 		self.keywordType=self.creator.checkbox(_("正規表現を利用"),None,False)
 
 		#ボタンエリア

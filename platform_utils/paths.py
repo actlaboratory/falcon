@@ -4,7 +4,6 @@ import os
 import subprocess
 import sys
 import string
-import unicodedata
 
 plat = platform.system()
 is_windows = plat == 'Windows'

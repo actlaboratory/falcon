@@ -1,28 +1,33 @@
 # Falcon
-Falcon Python�ōăX�^�[�g�ł���΂����ȁB  
-## ����
-�V�F��:�R�}���h�v�����v�g
-python:python 3.7 (3.8�ɂ���Ɠ����Ȃ��̂ŁA3.7�Œ��)  
-python -m pip install -r requirements.txt  
-.exe�ł͂Ȃ�.py������s����ꍇ�A�ꕔ�@�\�𐳂������s����ɂ�.py�� *�ό������󂯓����`��* python.exe�Ɋ֘A�t�����Ă���K�v������B�ʏ�̊֘A�t���ł͂��܂����삵�Ȃ��̂Œ��ӁB
+Falcon Pythonで再スタートできればいいな。  
+## 準備
+シェル:コマンドプロンプト
 
-## ���s  
+python:python 3.7 (3.8にすると動かないので、3.7固定で)  
+
+python -m pip install -r requirements.txt  
+
+必ず、 requirements.txt を使って pip install してください。wxPython のスナップショット版を使っているので、手動で実行するとバージョンが合わなくて動かない可能性があります。
+
+.exeではなく.pyから実行する場合、一部機能を正しく実行するには.pyを *可変個引数を受け入れる形で* python.exeに関連付けしている必要がある。通常の関連付けではうまく動作しないので注意。
+
+## 実行  
 python falcon.py  
 
-## falconHelper�̃r���h  
-�l�C�e�B�u�R�[�h�œ������������̂́AC++�ŃM�����M���������Ă����āA falconHelper.dll �ɂȂ��Ă��܂��B������r���h����ɂ́A MSVC �����āA X86 �J���҃R�}���h�E�v�����v�g��ŁA�ȉ��̃R�}���h��ł��Ă��������B  
+## falconHelperのビルド  
+ネイティブコードで動かしたいものは、C++でギャンギャン書いてあって、 falconHelper.dll になっています。これをビルドするには、 MSVC を入れて、 X86 開発者コマンド・プロンプト上で、以下のコマンドを打ってください。  
 cd falconHelper  
-make  
+nmake  
 
-## exe�t�@�C���̃r���h  
+## exeファイルのビルド  
 python tools\build.py  
 
-## �R�[�f�B���O�K��  
-docs �t�H���_�̒��ɏ����Ă���܂��B  
+## コーディング規則  
+docs フォルダの中に書いてあります。  
 
-## �|�󎫏��t�@�C��(po)�̃A�b�v�f�[�g
+## 翻訳辞書ファイル(po)のアップデート
 python tools\updateTranslation.py  
-locale �t�H���_������ɒT���āApo�t�@�C����z�u���Ă���܂��B�Ȃ̂ŁA�����ǉ��������ꍇ�́Alocale �t�H���_�ɋ�t�H���_������Ă��������B�O��̖|�󕶂͎c�����܂܃}�[�W����܂��B�����񂪑������Ƃ��ł��A�C�ɂ��� updateTranslation ���Ă��������B  
+locale フォルダを勝手に探して、poファイルを配置してくれます。なので、言語を追加したい場合は、locale フォルダに空フォルダを作ってください。前回の翻訳文は残ったままマージされます。文字列が増えたときでも、気にせず updateTranslation してください。  
 
-## �|�󂵂���  
+## 翻訳したら  
 python tools\buildTranslation.py  

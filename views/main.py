@@ -30,6 +30,8 @@ import views.makeShortcut
 import views.objectDetail
 import views.search
 import views.makeHash
+import views.registOriginalAssociation
+import views.execProgram
 
 import workerThreads
 import workerThreadTasks
@@ -39,6 +41,9 @@ from simpleDialog import dialog
 from .base import *
 
 from simpleDialog import *
+
+EVENT_FROM_SELF=-1	#適当な数字。そのイベントは自分自身で投げたものであることを示している
+
 
 class View(BaseView):
 	def Initialize(self):
@@ -61,6 +66,7 @@ class View(BaseView):
 		)
 		self.menu=Menu()
 		self.menu.InitShortcut(self.identifier)
+		self.InstallMenuEvent(self.menu,self.events)
 
 		#お気に入りフォルダと「ここで開く」のショートカットキーを登録
 		for target in (globalVars.app.userCommandManagers):
@@ -69,6 +75,7 @@ class View(BaseView):
 					tabs.base.FalconTabBase.selectItemMenuConditions[0].append(target.refHead+v)
 					tabs.base.FalconTabBase.selectItemMenuConditions[2].append(target.refHead+v)
 					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File].append(target.refHead+v)
+					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.NetworkResource].append(target.refHead+v)
 					tabs.streamList.StreamListTab.blockMenuList.append(target.refHead+v)
 				self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
 		errors=self.menu.keymap.GetError(self.identifier)
@@ -78,17 +85,32 @@ class View(BaseView):
 				tmp+=v+"\n"
 			dialog(_("エラー"),tmp)
 
-		self.InstallMenuEvent(self.menu,self.events)
-
 		self.tabs=[]
 		self.activeTab=None#最初なので空
 		self.hTabCtrl=self.creator.tabCtrl(_("タブ選択"),self.ChangeTab,0,1,wx.EXPAND)
 		self.MakeFirstTab()
-
+		self.hFrame.Bind(wx.EVT_CLOSE, self.OnClose)
 		self.hFrame.Show()
 		self.app.SetTopWindow(self.hFrame)
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
+
+	def OnClose(self,event=None):
+		"""ウィンドウが閉じられる直前に呼ばれる。"""
+		if not event.CanVeto():#強制シャットダウン
+			self.hFrame.Destroy()
+			return
+		#end 強制終了
+		num=self.GetNumberOfTabs()
+		if num>1:
+			dlg=wx.MessageDialog(self.hFrame,_("%(tabs)d個のタブが開いています。これらのタブを全て閉じて、Falconを終了してもよろしいですか？") % {'tabs': num},_("終了確認"),wx.YES_NO|wx.ICON_QUESTION)
+			ret=dlg.ShowModal()
+			if ret==wx.ID_NO:
+				event.Veto()
+				return
+			#end no
+		#end 複数タブが開いている渓谷
+		self.hFrame.Destroy()
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
@@ -104,6 +126,7 @@ class View(BaseView):
 		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
 			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
 		#end エラー
+		self.activeTab.hListCtrl.SetFocus()
 	#end makeFirstTab
 
 	def Navigate(self,target,as_new_tab=False):
@@ -113,21 +136,21 @@ class View(BaseView):
 		else:
 			self.log.debug("Creating new tab %s..." % target)
 		#end log
+		s=_("新しいタブ") if len(self.tabs)>0 else _("falcon")
+		globalVars.app.say(s)
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		creator=views.ViewCreator.ViewCreator(1,hPanel,None)
 		newtab=tabs.navigator.Navigate(target,create_new_tab_info=(self,creator))
 		newtab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
 		self.tabs.append(newtab)
-		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
+		#self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
+		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,newtab.GetTabName(),False)
+
 		self.ActivateTab(len(self.tabs)-1)
 
 	def ReplaceCurrentTab(self,newtab):
 		"""現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""
-		i=0
-		for elem in self.tabs:
-			if elem is self.activeTab: break
-			i+=1
-		#end インデックス調べる
+		i=self.GetTabIndex(self.activeTab)
 
 		#environmentの内容を引き継ぐ
 		newtab.SetEnvironment(self.activeTab.environment)
@@ -135,11 +158,15 @@ class View(BaseView):
 		#メニューのブロック情報を変更
 		self.menu.Block(newtab.blockMenuList)
 		self.menu.UnBlock(self.activeTab.blockMenuList)
-		self.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),newtab.IsMarked())
+		self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),newtab.IsMarked())
+		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),newtab.hasCheckedItem())
 
 		self.tabs[i]=newtab
 		self.activeTab=newtab
 		newtab.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
+
+		#タブ名変更。activeTab書き換え後に呼ぶ必要がある
+		self.UpdateTabName()
 	#end ReplaceCurrentTab
 
 	def ActivateTab(self,pageNo):
@@ -149,11 +176,11 @@ class View(BaseView):
 		if self.activeTab:
 			self.menu.UnBlock(self.activeTab.blockMenuList)
 		self.menu.Block(self.tabs[pageNo].blockMenuList)
-		self.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),self.tabs[pageNo].IsMarked())
+		self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),self.tabs[pageNo].IsMarked())
+		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.tabs[pageNo].hasCheckedItem())
 
 		self.activeTab=self.tabs[pageNo]
 		self.hTabCtrl.SetSelection(pageNo)
-		self.activeTab.hListCtrl.SetFocus()
 
 		self.activeTab.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
 
@@ -184,11 +211,22 @@ class View(BaseView):
 			if new_pageNo>=len(self.tabs): new_pageNo=len(self.tabs)-1
 			self.ActivateTab(new_pageNo)
 		#end アクティブタブを閉じた場合に後ろのタブを持って来る
-
 	#end closeTab
+
+	def GetNumberOfTabs(self):
+		return len(self.tabs)
+
+	def GetTabIndex(self,target):
+		"""targetで指定されたtabObjectがtabsの中でインデックス何番か取得"""
+		i=0
+		for elem in self.tabs:
+			if elem is target: return i
+			i+=1
+		return -1
 
 	def ChangeTab(self,event):
 		"""タブ変更イベント"""
+		self.activeTab.OnBeforeChangeTab()
 		pageNo=event.GetSelection()
 		self.ActivateTab(pageNo)
 
@@ -203,6 +241,12 @@ class View(BaseView):
 			self.hFrame.SetMenuBar(self.menu.hDisableMenuBar)
 		#SetMenuBarの後に呼び出しが必要
 		self.creator.GetSizer().Layout()
+
+	def UpdateTabName(self):
+		"""タブ名変更の可能性があるときにtabsからたたかれる"""
+		index=self.GetTabIndex(self.activeTab)
+		if index>=0:
+			self.hTabCtrl.SetPageText(index,self.activeTab.GetTabName())
 
 
 class Menu(BaseMenu):
@@ -237,22 +281,26 @@ class Menu(BaseMenu):
 		#編集メニューの中身
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_COPY",_("コピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_CUT",_("切り取り"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_PAST",_("貼り付け"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_NAMECOPY",_("名前をコピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SELECTALL",_("全て選択"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTNEXT",_("次の並び順"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SEARCH",_("検索"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTSELECT",_("並び順を選択"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SORTCYCLEAD",_("昇順/降順切り替え"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM",_("チェック／チェック解除"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_ALL",_("すべてチェック"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UNMARKITEM_ALL",_("すべてチェック解除"))
+		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_INVERSE",_("チェック状態反転"))
 		self.RegisterMenuCommand(self.hEditMenu,"EDIT_OPENCONTEXTMENU",_("コンテキストメニューを開く"))
 
 		#移動メニューの中身
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD",_("開く"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_ADMIN",_("管理者として開く"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_EXEC_ORIGINAL_ASSOCIATION",_("独自関連付けで実行"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_TAB",_("別のタブで開く"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_STREAM",_("開く(ストリーム)"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
+		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_NEWTAB",_("新しいタブ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_CLOSECURRENTTAB",_("現在のタブを閉じる"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
 		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARKSET",_("表示中の場所をマーク"))
@@ -263,8 +311,6 @@ class Menu(BaseMenu):
 			for v in m.paramMap:
 				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
 			self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
-
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
 
 		#読みメニューの中身
 		subMenu=wx.Menu()
@@ -280,19 +326,25 @@ class Menu(BaseMenu):
 		#ツールメニューの中身
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_HASHCALC",_("ファイルハッシュの計算"))
+		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EXEC_PROGRAM",_("ファイル名を指定して実行"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_ADDPATH",_("環境変数PATHに追加"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DRIVE",_("ドライブの取り外し"))
 		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DEVICE",_("デバイスの取り外し"))
 
+		#表示メニューの中身
+		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORTNEXT",_("次の並び順"))
+		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORTSELECT",_("並び順を選択"))
+		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORTCYCLEAD",_("昇順/降順切り替え"))
+		self.RegisterMenuCommand(self.hViewMenu,"VIEW_DRIVE_INFO",_("ドライブ情報の表示"))
 
 		#環境メニューの中身
+		self.RegisterMenuCommand(self.hEnvMenu,"ENV_REGIST_ORIGINAL_ASSOCIATION",_("独自関連付けの管理"))
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_TESTDIALOG",_("テストダイアログを表示"))
 		self.RegisterMenuCommand(self.hEnvMenu,"ENV_FONTTEST",_("フォントテストダイアログを表示"))
 		#ヘルプメニューの中身
 		self.RegisterMenuCommand(self.hHelpMenu,"HELP_VERINFO",_("バージョン情報"))
 
 		#メニューバー
-		self.hMenuBar=wx.MenuBar()
 		self.hMenuBar.Append(self.hFileMenu,_("ファイル"))
 		self.hMenuBar.Append(self.hEditMenu,_("編集"))
 		self.hMenuBar.Append(self.hMoveMenu,_("移動"))
@@ -314,6 +366,7 @@ class Menu(BaseMenu):
 		self.hDisableMenuBar.Append(self.hDisableSubMenu,_("現在メニューは操作できません"))
 
 class Events(BaseEvents):
+
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
 		#ショートカットキーが無効状態のときは何もしない
@@ -323,14 +376,19 @@ class Events(BaseEvents):
 
 		selected=event.GetId()#メニュー識別しの数値が出る
 
+		#キー重複対応のためのIDの場合には、イベントを投げ直す
+		#複数投げられるが、有効状態の者は１つだけなはず
 		if globalVars.app.hMainView.menu.keymap.isRefHit(selected):
 			for ref in globalVars.app.hMainView.menu.keymap.GetOriginalRefs(selected):
 				newEvent=wx.CommandEvent(event.GetEventType(),ref)
+				newEvent.SetExtraLong(EVENT_FROM_SELF)		#キー操作無効を示す音を鳴らさない
 				wx.PostEvent(globalVars.app.hMainView.hFrame.GetEventHandler(),newEvent)
 			return
 
 		#選択された(ショートカットで押された)メニューが無効状態なら何もしない
 		if self.parent.menu.blockCount[selected]>0:
+			if not event.GetExtraLong()==EVENT_FROM_SELF:
+				globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
 			event.Skip()
 			return
 
@@ -339,6 +397,18 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD"):
 			self.GoForward(False)
+			return
+		if selected==menuItemsStore.getRef("MOVE_EXEC_ORIGINAL_ASSOCIATION"):
+			elem=self.parent.activeTab.GetFocusedElement()
+			if (not type(elem)==browsableObjects.Folder) and isinstance(elem,(browsableObjects.File,browsableObjects.Stream,browsableObjects.GrepItem)):
+				extention=os.path.splitext(elem.fullpath)[1][1:].lower()
+				if extention in globalVars.app.config["originalAssociation"]:
+					config=globalVars.app.config["originalAssociation"][extention]
+				else:
+					config=globalVars.app.config["originalAssociation"]["<default_file>"]
+			else:
+				config=globalVars.app.config["originalAssociation"]["<default_dir>"]
+			misc.RunFile(config,prm=elem.fullpath)
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_ADMIN"):
 			self.GoForward(False,admin=True)
@@ -352,11 +422,17 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("MOVE_CLOSECURRENTTAB"):
 			self.CloseTab()
 			return
+		if selected==menuItemsStore.getRef("MOVE_NEWTAB"):
+			self.NewTab()
+			return
 		if selected==menuItemsStore.getRef("EDIT_COPY"):
 			self.parent.activeTab.Copy()
 			return
 		if selected==menuItemsStore.getRef("EDIT_CUT"):
 			self.parent.activeTab.Cut()
+			return
+		if selected==menuItemsStore.getRef("EDIT_PAST"):
+			self.parent.activeTab.Past()
 			return
 		if selected==menuItemsStore.getRef("EDIT_NAMECOPY"):
 			self.parent.activeTab.NameCopy()
@@ -372,19 +448,31 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_MARKSET"):
 			self.parent.activeTab.MarkSet()
-			self.parent.menu.hMenuBar.Enable(menuItemsStore.getRef("MOVE_MARK"),True)
+			self.parent.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),True)
 			return
 		if selected==menuItemsStore.getRef("MOVE_MARK"):
 			self.parent.activeTab.GoToMark()
 			return
-		if selected==menuItemsStore.getRef("EDIT_SORTNEXT"):
-			self.SortNext()
+		if selected==menuItemsStore.getRef("VIEW_SORTNEXT"):
+			self.DelaiedCall(self.SortNext)
 			return
-		if selected==menuItemsStore.getRef("EDIT_SORTSELECT"):
+		if selected==menuItemsStore.getRef("EDIT_MARKITEM"):
+			self.parent.activeTab.OnSpaceKey()
+			return
+		if selected==menuItemsStore.getRef("EDIT_MARKITEM_ALL"):
+			self.parent.activeTab.CheckAll()
+			return
+		if selected==menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"):
+			self.parent.activeTab.UncheckAll()
+			return
+		if selected==menuItemsStore.getRef("EDIT_MARKITEM_INVERSE"):
+			self.parent.activeTab.CheckInverse()
+			return
+		if selected==menuItemsStore.getRef("VIEW_SORTSELECT"):
 			self.SortSelect()
 			return
-		if selected==menuItemsStore.getRef("EDIT_SORTCYCLEAD"):
-			self.SortCycleAd()
+		if selected==menuItemsStore.getRef("VIEW_SORTCYCLEAD"):
+			self.DelaiedCall(self.SortCycleAd)
 			return
 		if selected==menuItemsStore.getRef("EDIT_SEARCH"):
 			self.Search()
@@ -432,71 +520,31 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("FILE_VIEW_DETAIL"):
 			elem=self.parent.activeTab.listObject.GetElement(self.parent.activeTab.GetFocusedItem())
-			dic={}
-			dic[_("名前")]=elem.basename
-			dic[_("パス")]=elem.fullpath
-			if elem.__class__==browsableObjects.File or elem.__class__==browsableObjects.Stream:
-				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
-				dic[_("サイズ(バイト)")]=elem.size
-			if elem.__class__==browsableObjects.File:
-				dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-				dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-				dic[_("属性")]=elem.longAttributesString
-				dic[_("種類")]=elem.typeString
-				if not elem.shortName=="":
-					dic[_("短い名前")]=elem.shortName
-				else:
-					dic[_("短い名前")]=_("なし")
-			if elem.__class__==browsableObjects.Folder:
-				if elem.size>=0:
-					dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
-					dic[_("サイズ(バイト)")]=elem.size
-				else:
-					size=misc.GetDirectorySize(elem.fullpath)
-					if size>=0:
-						dic[_("サイズ")]=misc.ConvertBytesTo(size,misc.UNIT_AUTO,True)
-						dic[_("サイズ(バイト)")]=size
-					else:
-						dic[_("サイズ")]=_("不明")
-						dic[_("サイズ(バイト)")]=_("不明")
-				dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-				dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-				dic[_("属性")]=elem.longAttributesString
-				dic[_("種類")]=elem.typeString
-				if not elem.shortName=="":
-					dic[_("短い名前")]=elem.shortName
-				else:
-					dic[_("短い名前")]=_("なし")
-			if elem.__class__==browsableObjects.Drive:
-				if elem.free>=0:
-					dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
-					dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO,True)
-				else:
-					dic[_("フォーマット")]=_("未挿入")
-				if elem.total>0:
-					dic[_("空き容量")]+=" ("+str(elem.free*100//elem.total)+"%)"
-				if elem.free>=0:
-					dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
-				dic[_("種類")]=elem.typeString
-			d=views.objectDetail.Dialog()
-			d.Initialize(dic)
-			d.Show()
-			d.Destroy()
+			self.ShowDetail(elem)
 			return
 		if selected==menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
 			self.parent.activeTab.ShowProperties()
 			return
 		if selected==menuItemsStore.getRef("READ_CURRENTFOLDER"):
-			self.parent.activeTab.ReadCurrentFolder()
+			self.DelaiedCall(self.parent.activeTab.ReadCurrentFolder)
 			return
 		if selected==menuItemsStore.getRef("READ_LISTITEMNUMBER"):
-			self.parent.activeTab.ReadListItemNumber()
+			self.DelaiedCall(self.parent.activeTab.ReadListItemNumber)
 			return
 		if selected==menuItemsStore.getRef("READ_LISTINFO"):
-			self.parent.activeTab.ReadListInfo()
+			self.DelaiedCall(self.parent.activeTab.ReadListInfo)
 			return
 		if selected==menuItemsStore.getRef("READ_CONTENT_PREVIEW"):
-			self.parent.activeTab.PlaySound()
+			self.parent.activeTab.Preview()
+			return
+		if selected==menuItemsStore.getRef("READ_CONTENT_READHEADER"):
+			self.DelaiedCall(self.parent.activeTab.ReadHeader)
+			return
+		if selected==menuItemsStore.getRef("READ_CONTENT_READFOOTER"):
+			self.DelaiedCall(self.parent.activeTab.ReadFooter)
+			return
+		if selected==menuItemsStore.getRef("READ_SETMOVEMENTREAD"):
+			self.parent.activeTab.SetMovementRead()
 			return
 		if selected==menuItemsStore.getRef("TOOL_DIRCALC"):
 			self.parent.activeTab.DirCalc()
@@ -506,6 +554,9 @@ class Events(BaseEvents):
 			d.Initialize()
 			d.Show()
 			d.Destroy()
+			return
+		if selected==menuItemsStore.getRef("TOOL_EXEC_PROGRAM"):
+			self.ExecProgram()
 			return
 		if selected==menuItemsStore.getRef("TOOL_ADDPATH"):
 			t=self.parent.activeTab.GetSelectedItems()
@@ -532,14 +583,40 @@ class Events(BaseEvents):
 				dialog(_("エラー"),_("取り外しに失敗しました。")+_("このドライブは使用中の可能性があります。"))
 			return
 		if selected==menuItemsStore.getRef("TOOL_EJECT_DEVICE"):
-			if self.parent.activeTab.GetFocusedItem()<0:
-				return
 			ret=deviceCtrl.EjectDevice(self.parent.activeTab.GetFocusedElement().letter)
 			if ret==errorCodes.OK:
 				dialog(_("成功"),_("デバイスは安全に取り外せる状態になりました。"))
 				self.UpdateFilelist(False)
 			elif ret==errorCodes.UNKNOWN:
 				dialog(_("エラー"),_("デバイスの取り外しに失敗しました。"))
+			return
+		if selected==menuItemsStore.getRef("VIEW_DRIVE_INFO"):
+			rootPath=self.parent.activeTab.GetFocusedElement().GetRootDrivePath()
+			elem=None
+			if len(rootPath)==1:
+				elem=lists.drive.GetDriveObject(int(ord(rootPath)-65))
+			else:	#ネットワークリソース
+				lst=lists.drive.DriveList()
+				lst.Initialize(None,True)
+				for d in lst:
+					if d.basename==rootPath:
+						elem=d
+			if elem==None:
+				dialog(_("エラー"),_("ドライブ情報の取得に失敗しました。"))
+				return
+			self.ShowDetail(elem)
+			return
+		if selected==menuItemsStore.getRef("ENV_REGIST_ORIGINAL_ASSOCIATION"):
+			config=globalVars.app.config["originalAssociation"]
+			d=views.registOriginalAssociation.Dialog(dict(config.items()))
+			d.Initialize()
+			if d.Show()==wx.ID_CANCEL:
+				d.Destroy()
+				return
+			result={}
+			result["originalAssociation"]=d.GetValue()
+			globalVars.app.config.remove_section("originalAssociation")
+			globalVars.app.config.read_dict(result)
 			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):
 			self.testdialog=views.test.View()
@@ -582,9 +659,27 @@ class Events(BaseEvents):
 		self.parent.activeTab.StartRename()
 	#end StartRename
 
+	def DelaiedCall(self,callable):
+		"""メニューから、すぐに何かを読み上げる機能を実行すると、メニューが閉じてリストに戻った読み上げにかき消されてしまう。なので、エンターが押されているかどうかを判定して、その場合にcallableの実行時間を遅らせる。"""
+		if not wx.GetKeyState(wx.WXK_RETURN):
+			callable()
+			return
+		else:
+			later=wx.CallLater(200,callable)
+	#end delaiedCall
+
 	def ShowVersionInfo(self):
 		"""バージョン情報を表示する。"""
 		dialog(_("バージョン情報"),_("%(app)s Version %(ver)s.\nCopyright (C) %(year)s %(names)s") % {"app":constants.APP_NAME, "ver":constants.APP_VERSION, "year":constants.APP_COPYRIGHT_YEAR, "names":constants.APP_DEVELOPERS})
+
+
+	def ExecProgram(self):
+		d=views.execProgram.Dialog()
+		d.Initialize()
+		d.Show()
+		val=d.GetValue()
+		d.Destroy()
+		self.parent.activeTab.ExecProgram(val)
 
 	def GoBackward(self):
 		"""back アクションを実行"""
@@ -604,20 +699,40 @@ class Events(BaseEvents):
 	def CloseTab(self):
 		self.parent.CloseTab(self.parent.activeTab)
 
+	def NewTab(self):
+		if os.path.isdir(os.path.expandvars(globalVars.app.config["browse"]["startPath"])):
+			self.parent.Navigate(os.path.expandvars(globalVars.app.config["browse"]["startPath"]),as_new_tab=True)
+		else:
+			self.parent.Navigate("",as_new_tab=True)
+
 	def Search(self):
 		basePath=self.parent.activeTab.listObject.rootDirectory
 		out_lst=[]#入力画面が出てるときに、もうファイルリスト取得を開始してしまう
 		task=workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList,{'path': basePath, 'out_lst': out_lst,'eol':True})
 		d=views.search.Dialog(basePath)
 		d.Initialize()
-		ret=d.Show()
-		if ret==wx.ID_CANCEL:
-			task.Cancel()
-			return
-		#end 途中でやめた
-		val=d.GetValue()
+		canceled=False
+		while(True):
+			ret=d.Show()
+			if ret==wx.ID_CANCEL:
+				task.Cancel()
+				canceled=True
+				break
+			#end キャンセルして抜ける
+			val=d.GetValue()
+			if val['isRegularExpression']:
+				ret=misc.ValidateRegularExpression(val['keyword'])
+				if ret!="OK":
+					dialog(_("エラー"), _("正規表現の文法が間違っています。\nエラー内容: %(error)s") % {'error': ret})
+					continue
+				#end 正規表現違う
+			#end 正規表現モードがオンかどうか
+			break
+		#end 入力が正しくなるまで
 		d.Destroy()
-		target={'action': 'search', 'basePath': basePath, 'out_lst': out_lst, 'keyword': val['keyword']}
+		if canceled: return
+		actionstr="search" if val['type']==0 else "grep"
+		target={'action': actionstr, 'basePath': basePath, 'out_lst': out_lst, 'keyword': val['keyword'], 'isRegularExpression': val['isRegularExpression']}
 		self.parent.Navigate(target,as_new_tab=True)
 
 	def GoForward(self,stream=False,admin=False):
@@ -647,8 +762,55 @@ class Events(BaseEvents):
 		t=self.parent.activeTab
 		t.SortCycleAd()
 
-	def UpdateFilelist(self,silence=True):
+	def UpdateFilelist(self,silence=False):
 		ret=self.parent.activeTab.UpdateFilelist(silence=silence)
 
 	def OpenContextMenu(self,silence=True):
 		self.parent.activeTab.OpenContextMenu(event=None)
+
+	def ShowDetail(self,elem):
+		dic={}
+		dic[_("名前")]=elem.basename
+		dic[_("パス")]=elem.fullpath
+		if elem.__class__==browsableObjects.File or elem.__class__==browsableObjects.Stream:
+			dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
+			dic[_("サイズ(バイト)")]=elem.size
+		elif elem.__class__==browsableObjects.Folder:
+			if elem.size>=0:
+				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
+				dic[_("サイズ(バイト)")]=elem.size
+			else:
+				size=misc.GetDirectorySize(elem.fullpath)
+				if size>=0:
+					dic[_("サイズ")]=misc.ConvertBytesTo(size,misc.UNIT_AUTO,True)
+					dic[_("サイズ(バイト)")]=size
+				else:
+					dic[_("サイズ")]=_("不明")
+					dic[_("サイズ(バイト)")]=_("不明")
+		if isinstance(elem,browsableObjects.File):
+			dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
+			dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
+			dic[_("属性")]=elem.longAttributesString
+			dic[_("種類")]=elem.typeString
+			if not elem.shortName=="":
+				dic[_("短い名前")]=elem.shortName
+			else:
+				dic[_("短い名前")]=_("なし")
+		if elem.__class__==browsableObjects.Drive:
+			if elem.free>=0:
+				dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
+				dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO,True)
+			else:
+				dic[_("フォーマット")]=_("未挿入")
+			if elem.total>0:
+				dic[_("空き容量")]+=" ("+str(elem.free*100//elem.total)+"%)"
+			if elem.free>=0:
+				dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
+			dic[_("種類")]=elem.typeString
+		if elem.__class__==browsableObjects.NetworkResource:
+			dic[_("IPアドレス")]=elem.address
+		d=views.objectDetail.Dialog()
+		d.Initialize(dic)
+		d.Show()
+		d.Destroy()
+		return

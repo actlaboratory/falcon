@@ -35,13 +35,17 @@ class DriveListTab(base.FalconTabBase):
 		"FILE_DELETE",
 		"FILE_MKDIR",
 		"EDIT_CUT",
+		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_BACKWARD",
+		"MOVE_FORWARD_TAB",
 		"MOVE_TOPFILE",
 		"TOOL_DIRCALC",
 		"TOOL_HASHCALC",
 		"TOOL_ADDPATH",
-		"READ_CONTENT_PREVIEW"
+		"READ_CONTENT_PREVIEW",
+		"VIEW_DRIVE_INFO",
+		"TOOL_EXEC_PROGRAM"
 	]
 
 	def Update(self,cursor=""):
@@ -58,6 +62,10 @@ class DriveListTab(base.FalconTabBase):
 			self.hListCtrl.Select(c)
 			self.hListCtrl.Focus(c)
 		#end カーソル初期位置を設定
+
+		#タブの名前変更を通知
+		globalVars.app.hMainView.UpdateTabName()
+
 	#end Update
 
 	def GoBackward(self):
@@ -129,11 +137,17 @@ class DriveListTab(base.FalconTabBase):
 		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
 
 	def ReadCurrentFolder(self):
-		globalVars.app.say("現在は、ドライブ洗濯")
+		globalVars.app.say(_("現在は、ドライブ洗濯"), interrupt=True)
 
-	def ReadListItemNumber(self):
-		globalVars.app.say(_("ドライブ %(drives)d個") % {'drives': len(self.listObject)})
+	def ReadListItemNumber(self,short=False):
+		if short:
+			globalVars.app.say(_("ドライブ数 %(drives)d") % {'drives': len(self.listObject)})
+		else:
+			globalVars.app.say(_("ドライブ %(drives)d個") % {'drives': len(self.listObject)}, interrupt=True)
 
 	def ReadListInfo(self):
-		globalVars.app.say(_("ドライブ一覧を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1})
+		globalVars.app.say(_("ドライブ一覧を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
+	def GetTabName(self):
+		"""タブコントロールに表示する名前"""
+		return _("ドライブ一覧")

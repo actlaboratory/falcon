@@ -1,0 +1,20 @@
+# メニューバー管理のための確認リスト
+
+メニューバー関係の管理の為、tab・browsableObject・メニューバー内の項目を追加した場合にはそれぞれ以下の手順に従う必要がある。
+
+## タブを追加した時
+- 各タブにはblockMenuListという名前でリストを宣言する
+- blockMenuListには、そのタブ内で利用できないメニューがあれば、そのrefNameを指定する
+
+## browsableObjectを追加するとき
+- tabs/baseのselectItemTypeMenuConditionsの中に、作成したbrowsableObjectを追加する
+- selectItemTypeMenuConditionsには、そのアイテムに対して利用できないメニューがあれば、selectItemTypeMenuConditions[browsableObject]の中にそのrefNameを指定する
+
+## メニューに項目を追加した時
+- 上記２つの項を読み、それぞれのリストに追加する必要があれば対処する
+- tabs/baseに、selectItemMenuConditionsというリストがある。このリスト内には、0～2の3つのキーがある。以下のようにして登録されているので、必要に応じて各項目にrefNameを追加する
+	- 0には、何のアイテムも選択されていない場合に利用できないメニュー
+	- 1には、アイテムが１つだけ選択されている場合に利用できないメニュー
+	- 2には、アイテムが２つ以上選択されている場合に利用できないメニュー
+
+

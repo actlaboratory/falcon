@@ -31,12 +31,14 @@ class falconAppMain(wx.App):
 		t=misc.Timer()
 		self.frozen=hasattr(sys,"frozen")
 		self.InitLogger()
+		self.error_sound_handle=None
 		self.LoadSettings()
 		wx.DisableAsserts()
 		locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
 		self.SetTimeZone()
 		self.InitTranslation()
 		self.LoadUserCommandSettings()
+		self.LoadUserExtentionSettings()
 		self.InitSound()
 		self.InitCaches()
 		workerThreads.Start()
@@ -118,6 +120,25 @@ class falconAppMain(wx.App):
 				self.openHereCommand : _("ここで開く")
 			}
 
+	def LoadUserExtentionSettings(self):
+		#サポートするドキュメント形式の追加設定
+		self.documentFormats=set()
+		documentFormats=self.config["extentions"]["document"].split("/")
+		err_audio=[]
+		err_format=[]
+		for ext in documentFormats:
+			ext=ext.lower()
+			if ext in constants.SUPPORTED_AUDIO_FORMATS:
+				err_audio.append(ext)
+			if "." in ext:
+				err_format.append(ext)
+			else:
+				self.documentFormats.add(ext)
+		if err_format:
+			dialog(_("エラー"),_("以下の拡張子は、利用できない文字を含んでいるため登録できません。\n\n")+str(err_format))
+		if err_audio:
+			dialog(_("エラー"),_("以下の拡張子は、既に音声データの拡張子として登録されているため、テキスト形式として登録できません。\n\n")+str(err_audio))
+
 	def InitTranslation(self):
 		"""翻訳を初期化する。"""
 		self.translator=gettext.translation("messages","locale", languages=[self.config["general"]["language"]], fallback=True)
@@ -136,9 +157,9 @@ class falconAppMain(wx.App):
 		"""コンパイル済みのexeで実行されている場合はTrue、インタプリタで実行されている場合はFalseを帰す。"""
 		return self.frozen
 
-	def say(self,s):
+	def say(self,s,interrupt=False):
 		"""スクリーンリーダーでしゃべらせる。"""
-		self.speech.speak(s)
+		self.speech.speak(s, interrupt=interrupt)
 
 	def PlaySound(self,path,custom_location=False):
 		"""サウンドファイルを再生する。"""
@@ -169,3 +190,9 @@ class falconAppMain(wx.App):
 		minutes=bias%60
 		self.timezone=datetime.timezone(datetime.timedelta(hours=hours,minutes=minutes))
 
+	def PlayErrorSound(self):
+		"""例外が発生したときに音を鳴らす。"""
+		if not self.error_sound_handle:
+			self.error_sound_handle=pybass.BASS_StreamCreateFile(False,"fx\\internal_error.ogg",0,0,pybass.BASS_STREAM_AUTOFREE|pybass.BASS_UNICODE)
+		#end load
+		pybass.BASS_ChannelPlay(self.error_sound_handle,True)

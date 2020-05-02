@@ -14,22 +14,11 @@ using namespace std;
 //context menu manager
 
 IContextMenu *contextMenu = NULL;
-IContextMenu2 *g_pcm2=NULL;
-IContextMenu3 *g_pcm3=NULL;
+IContextMenu2 *g_pcm2 = NULL;
+IContextMenu3 *g_pcm3 = NULL;
 HMENU contextMenuHandle = NULL;
-HWND hParent=NULL;
+HWND hParent = NULL;
 WNDPROC parentWindowProc;
-
-string wide2sjis(const wchar_t *str)
-{
-	char *buf = NULL;
-	int chars = WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, str, -1, buf, 0, NULL, NULL);
-	buf = (char *)malloc(chars * sizeof(char));
-	WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, str, -1, buf, chars, NULL, NULL);
-	string ret = buf;
-	free(buf);
-	return ret;
-}
 
 wstring rtrimBackSlash(wstring in)
 {
@@ -69,7 +58,6 @@ LRESULT CALLBACK contextMenuWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
 	return parentWindowProc(hwnd, uMsg, wParam, lParam);
 }
-
 
 int _getContextMenu(LPCTSTR in, HMENU *out)
 {
@@ -137,11 +125,13 @@ falcon_helper_funcdef int destroyContextMenu()
 		return 0;
 	DestroyMenu(contextMenuHandle);
 	contextMenu->Release();
-	contextMenu=NULL;
-	if(g_pcm2) g_pcm2->Release();
-	if(g_pcm3) g_pcm3->Release();
-	g_pcm2=NULL;
-	g_pcm3=NULL;
+	contextMenu = NULL;
+	if (g_pcm2)
+		g_pcm2->Release();
+	if (g_pcm3)
+		g_pcm3->Release();
+	g_pcm2 = NULL;
+	g_pcm3 = NULL;
 	CoUninitialize();
 	return 1;
 }
@@ -215,9 +205,6 @@ string processMenu(HMENU menu)
 	int numItems = GetMenuItemCount(menu);
 	picojson::object menu_object;
 	picojson::array datalist;
-	bool has_submenu;
-	UINT cch;
-	int ret;
 	for (int i = 0; i < numItems; ++i)
 	{
 		picojson::object *obj = makePicoJsonObject(menu, i);
@@ -233,18 +220,19 @@ falcon_helper_funcdef int getContextMenu(LPCTSTR path)
 {
 	HMENU menu;
 	int ret = _getContextMenu(path, &menu);
-	int cmd=static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD|TPM_NONOTIFY, 0, 0, hParent, NULL));
-	if(cmd==0){
+	int cmd = static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_NONOTIFY, 0, 0, hParent, NULL));
+	if (cmd == 0)
+	{
 		wstringstream w;
 		w << L"menu handle=" << menu << L", window=" << hParent << L", Error code " << GetLastError();
-//		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
+		//		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
 	}
 	return cmd;
 }
 
 falcon_helper_funcdef void initContextMenu(HWND parent)
 {
-hParent=parent;
-parentWindowProc = (WNDPROC)GetWindowLongPtr(parent, GWLP_WNDPROC);
-SetWindowLongPtr(parent, GWLP_WNDPROC, (LONG)contextMenuWindowProc);
+	hParent = parent;
+	parentWindowProc = (WNDPROC)GetWindowLongPtr(parent, GWLP_WNDPROC);
+	SetWindowLongPtr(parent, GWLP_WNDPROC, (LONG)contextMenuWindowProc);
 }

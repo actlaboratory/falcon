@@ -57,7 +57,7 @@ class Clipboard(object):
 		size = GlobalSize(handle)
 		if handle == c_void_p(0) and get_last_error() != 0:
 			raise WindowsError()
-		data = create_string_buffer(size)  # '\0'•ª‚ðˆø‚¢‚Ä‚¨‚­
+		data = create_string_buffer(size)  # '\0'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½
 		GlobalLock = kernel32.GlobalLock
 		GlobalLock.restype = c_void_p
 		GlobalUnlock = kernel32.GlobalUnlock
@@ -86,7 +86,7 @@ class Clipboard(object):
 		size = GlobalSize(handle)
 		if handle == c_void_p(0) and get_last_error() != 0:
 			raise WindowsError()
-		data = create_string_buffer(size)  # '\0'•ª‚ðˆø‚¢‚Ä‚¨‚­
+		data = create_string_buffer(size)  # '\0'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½
 		GlobalLock = kernel32.GlobalLock
 		GlobalLock.restype = c_void_p
 		GlobalUnlock = kernel32.GlobalUnlock

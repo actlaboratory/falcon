@@ -1,11 +1,11 @@
 ﻿# -*- coding: utf-8 -*-
-#Falcon search result tab
+#Falcon grep result tab
 #Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 """
-検索結果が格納されていきます。一通りのファイル操作を行うことができます。
+grep検索の結果が格納されます。同じファイルで複数のヒットがあった場合、エントリの数が増えていきます。
 """
 
 import os
@@ -16,6 +16,7 @@ import errorCodes
 import lists
 import browsableObjects
 import globalVars
+import fileOperator
 import misc
 import workerThreads
 import workerThreadTasks
@@ -24,13 +25,15 @@ import StringUtil
 from win32com.shell import shell, shellcon
 from . import fileList
 
-class SearchResultTab(fileList.FileListTab):
-	"""検索結果が表示されているタブ。"""
+class GrepResultTab(fileList.FileListTab):
+	"""grepの検索結果が表示されているタブ。"""
 
 	blockMenuList=[
 		"FILE_MKDIR",
 		"EDIT_PAST",
 		"EDIT_SEARCH",
+		"MOVE_FORWARD_TAB",
+		"MOVE_TOPFILE",
 		"MOVE_BACKWARD",
 		"MOVE_MARKSET",
 		"MOVE_MARK",
@@ -42,7 +45,7 @@ class SearchResultTab(fileList.FileListTab):
 	]
 
 	def StartSearch(self,rootPath,searches,keyword, isRegularExpression):
-		self.listObject=lists.SearchResultList()
+		self.listObject=lists.GrepResultList()
 		self.listObject.Initialize(rootPath,searches,keyword, isRegularExpression)
 		self.SetListColumns(self.listObject)
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
@@ -51,40 +54,13 @@ class SearchResultTab(fileList.FileListTab):
 		globalVars.app.hMainView.UpdateTabName()
 
 	def _onSearchHitCallback(self,hits):
-		"""コールバックで、ヒットした browsableObject のリストが降ってくるので、それをリストビューに追加していく。"""
+		"""コールバックで、ヒットしたオブジェクトのリストが降ってくるので、それをリストビューに追加していく。"""
 		globalVars.app.PlaySound("click.ogg")
 		for elem in hits:
-			t=elem.GetListTuple()
-			if type(elem) is browsableObjects.File:
-				self.hListCtrl.Append((t[0],t[1],elem.fullpath,t[2],t[3],t[4]))
-			else:
-				idx=0
-				self.hListCtrl.InsertItem(idx,t[0])
-				self.hListCtrl.SetItem(idx,1,t[1])
-				self.hListCtrl.SetItem(idx,2,elem.fullpath)
-				self.hListCtrl.SetItem(idx,3,t[2])
-				self.hListCtrl.SetItem(idx,4,t[3])
-				self.hListCtrl.SetItem(idx,5,t[4])
-		#end 追加
-		if self.listObject.GetFinishedStatus():
-			self.listObject.ApplySort()
-			self.hListCtrl.DeleteAllItems()
-			self.UpdateListContent(self.listObject.GetItems())
-
-	#TODO:GoToTopFile(self):
+			self.hListCtrl.Append(elem.GetListTuple())
 
 	def GoBackward(self):
 		return errorCodes.BOUNDARY
-
-	def ReadCurrentFolder(self):
-		state=_("検索完了") if self.listObject.GetFinishedStatus() is True else _("検索中")
-		globalVars.app.say(_("キーワード %(keyword)s で ディレクトリ %(dir)s を%(state)s") % {'keyword': self.listObject.GetKeywordString(), 'dir': self.listObject.rootDirectory, 'state': state}, interrupt=True)
-
-	def ReadListItemNumber(self,short=False):
-		globalVars.app.say(_("検索結果 %(results)d件") % {'results': len(self.listObject)}, interrupt=True)
-
-	def ReadListInfo(self):
-		globalVars.app.say(_("%(keyword)sの検索結果を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'keyword': self.listObject.GetKeywordString(), 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
 	def GoForward(self,stream,admin=False):
 		"""検索結果表示では、フォルダを開くときに別タブを生成する。"""
@@ -98,6 +74,16 @@ class SearchResultTab(fileList.FileListTab):
 			globalVars.app.hMainView.Navigate(elem.fullpath,as_new_tab=True)
 		#end ファイルを開くか移動するか
 	#end GoForward
+
+	def ReadCurrentFolder(self):
+		state=_("grep検索完了") if self.listObject.GetFinishedStatus() is True else _("grep検索中")
+		globalVars.app.say(_("キーワード %(keyword)s で ディレクトリ %(dir)s を%(state)s") % {'keyword': self.listObject.GetKeywordString(), 'dir': self.listObject.rootDirectory, 'state': state}, interrupt=True)
+
+	def ReadListItemNumber(self,short=False):
+		globalVars.app.say(_("検索結果 %(results)d件") % {'results': len(self.listObject)}, interrupt=True)
+
+	def ReadListInfo(self):
+		globalVars.app.say(_("%(keyword)sのgrep検索結果を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'keyword': self.listObject.GetKeywordString(), 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
 	def UpdateFilelist(self,silence=False,cursorTargetName=""):
 		"""検索をやり直す。ファイルは非同期処理で増えるので、cursorTargetNameは使用されない。"""
@@ -114,6 +100,7 @@ class SearchResultTab(fileList.FileListTab):
 
 	def GetTabName(self):
 		"""タブコントロールに表示する名前"""
-		word=_("%(word)sの検索") % {"word":self.listObject.GetKeywordString()}
+		word=self.listObject.GetKeywordString()
 		word=StringUtil.GetLimitedString(word,globalVars.app.config["view"]["header_title_length"])
-		return word
+		return _("%(word)sの検索") % {"word":word}
+
