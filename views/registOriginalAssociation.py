@@ -38,8 +38,8 @@ class Dialog(BaseDialog):
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
 		self.hListCtrl=self.creator.ListCtrl(0,wx.ALL|wx.ALIGN_CENTER_HORIZONTAL,size=(600,300),style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_SINGLE_SEL,name=_("現在の登録内容"))
 
-		self.hListCtrl.InsertColumn(0,"種類",format=wx.LIST_FORMAT_LEFT,width=250)
-		self.hListCtrl.InsertColumn(1,"実行ファイル名",format=wx.LIST_FORMAT_LEFT,width=350)
+		self.hListCtrl.InsertColumn(0,_("種類"),format=wx.LIST_FORMAT_LEFT,width=250)
+		self.hListCtrl.InsertColumn(1,_("実行ファイル名"),format=wx.LIST_FORMAT_LEFT,width=350)
 
 		for i in self.config.items():
 			self.hListCtrl.Append((i[0],os.path.basename(os.path.dirname(i[1]))+"\\"+os.path.basename(i[1])))
