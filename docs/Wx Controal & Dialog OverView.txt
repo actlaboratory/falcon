@@ -54,7 +54,7 @@ wx.SpinCtrl
 wx.SpinCtrlDouble
 
 #webView
-wx.webkit.WebKitCtrl
+wx.webkit.WebKitCtrl	#MacŒÀ’è
 wx.html2.WebView
 
 #text
