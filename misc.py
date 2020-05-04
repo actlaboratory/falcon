@@ -119,8 +119,8 @@ def GetContextMenu(path):
 def ExecContextMenuItem(id):
 	falconHelper.execContextMenuItem(id)
 
-	def DestroyContextMenu():
-		falconHelper.destroyContextMenu()
+def DestroyContextMenu():
+	falconHelper.destroyContextMenu()
 
 def ExtractText(path):
 	path_bytes=bytearray(path.encode('UTF-16LE'))
