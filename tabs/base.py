@@ -110,6 +110,7 @@ class FalconTabBase(object):
 		self.stopSoundHandle=None
 		self.checkedItem=set()
 		self.hilightIndex=-1
+		self.sortTargetColumnNo=None		#並び替え対象としてアイコン表示中のカラム番号
 		if self.environment=={}:
 			self.environment["markedPlace"]=None		#マークフォルダ
 			self.environment["selectedItemCount"]=None	#選択中のアイテム数。0or1or2=2以上。
@@ -233,7 +234,10 @@ class FalconTabBase(object):
 	#end SetListColumns
 
 	def UpdateListContent(self,content):
-		"""リストコントロールの中身を更新する。カラム設定は含まない。"""
+		"""
+			リストコントロールの中身を更新し、並び替え状況を示すアイコンを再配置する。
+			カラムの数やテキストは変更しない。
+		"""
 		self.log.debug("Updating list control...")
 		self._cancelBackgroundTasks()
 		self.hListCtrl.DeleteAllItems()
@@ -257,7 +261,21 @@ class FalconTabBase(object):
 			if elem.hIcon>=0:
 				icon.CreateFromHICON(elem.hIcon)
 				index=self.hIconList.Add(icon)
-				self.hListCtrl.SetItemImage(index,index,index)
+				if index>=0:
+					self.hListCtrl.SetItemImage(index,index,index)
+
+		#カラム用アイコンを登録
+		self.hIconList.Add(wx.Icon("fx/dummy.ico"))
+		self.hIconList.Add(wx.Icon("fx/ascending.ico"))
+		self.hIconList.Add(wx.Icon("fx/descending.ico"))
+
+		#アイコンを設定済みならいったん削除
+		if self.sortTargetColumnNo!=None:
+			self.hListCtrl.SetColumnImage(self.sortTargetColumnNo,self.hIconList.GetImageCount()-3)
+
+		#並び替え状況に応じてアイコン設定
+		self.hListCtrl.SetColumnImage(self.listObject.sortCursor,self.hIconList.GetImageCount()-2+self.listObject.sortDescending)
+		self.sortTargetColumnNo=self.listObject.sortCursor
 
 	def MakeDirectory(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
@@ -432,9 +450,10 @@ class FalconTabBase(object):
 
 	def col_click(self,event):
 		no=event.GetColumn()
-		self.listObject.SetSortCursor(no)
 		if self.listObject.GetSortCursor()==no:
 			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
+		else:
+			self.listObject.SetSortCursor(no)
 		self._updateConfig()
 		self.listObject.ApplySort()
 		self.UpdateListContent(self.listObject.GetItems())
