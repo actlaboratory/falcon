@@ -10,7 +10,7 @@ if platform.system() == 'Windows':
 	from . import dolphin
 	from . import pc_talker
 	#import sapi4
-
+	from . import clipboard
 if platform.system() == 'Darwin':
 	from . import nsSpeechSynth
 	from . import voiceover
