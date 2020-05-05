@@ -24,7 +24,6 @@ import views.OperationSelecter
 import workerThreads
 import workerThreadTasks
 import fileSystemManager
-import tabs.driveList
 import tabs.streamList
 import StringUtil
 

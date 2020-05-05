@@ -48,19 +48,16 @@ class DriveListTab(base.FalconTabBase):
 		"TOOL_EXEC_PROGRAM"
 	]
 
-	def Update(self,cursor=""):
+	def Update(self,lst,cursor=-1):
 		"""指定された要素をタブに適用する。"""
 		self._cancelBackgroundTasks()
-		lst=lists.DriveList()
-		lst.Initialize(None)
 		self.hListCtrl.DeleteAllItems()
 		self.SetListColumns(lst)
 		self.listObject=lst
 		self.UpdateListContent(self.listObject.GetItems())
-		if cursor!="":
-			c=lst.Search(cursor,1)
-			self.hListCtrl.Select(c)
-			self.hListCtrl.Focus(c)
+		self.hListCtrl.Focus(cursor)
+		if cursor>=0:
+			self.hListCtrl.Select(cursor)
 		#end カーソル初期位置を設定
 
 		#タブの名前変更を通知

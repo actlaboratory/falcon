@@ -33,7 +33,7 @@ class DriveList(FalconListBase):
 	def Update(self):
 		return self.Initialize(None,True)
 
-	def Initialize(self,lst,silent=False):
+	def Initialize(self,lst=None,silent=False):
 		"""ドライブ情報を取得し、リストを初期化する。"""
 		self.sortCursor=int(globalVars.app.config["DriveList"]["sorting"])
 		self.sortDescending=int(globalVars.app.config["DriveList"]["descending"])

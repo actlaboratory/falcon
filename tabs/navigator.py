@@ -50,13 +50,18 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 	#end targetが辞書の時の特殊処理
 
 	if target=="":#ドライブリスト
+		lst=lists.DriveList()
+		lst.Initialize()
 		if isinstance(previous_tab,driveList.DriveListTab):#再利用
 			newtab=previous_tab
 		else:
 			newtab=driveList.DriveListTab(environment)
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
-		newtab.Update(cursor)
+		targetItemIndex=lst.Search(cursor,1)
+		if targetItemIndex==-1:
+			targetItemIndex=lst.Search(cursor,0)
+		newtab.Update(lst,targetItemIndex)
 		if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
 		return newtab
 	#end ドライブリストへ行く
@@ -93,10 +98,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab=fileList.FileListTab(environment)
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
-	newtab.Update(lst)
-	if targetItemIndex>=0:
-		hListCtrl.Focus(targetItemIndex)
-		hListCtrl.Select(targetItemIndex)
+	newtab.Update(lst,targetItemIndex)
 	#end ターゲットにフォーカス
 	if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
 	return newtab
