@@ -114,7 +114,11 @@ def InitContextMenu(wnd):
 def GetContextMenu(path):
 	path_bytes=bytearray(path.encode('UTF-16LE'))
 	path_bytes.extend(b'\x00\x00')
-	return falconHelper.getContextMenu(bytes(path_bytes),globalVars.app.hMainView.hFrame.GetHandle())
+	ret=falconHelper.getContextMenu(bytes(path_bytes))
+	return ret==1
+
+def ShowContextMenu(x,y):
+	return falconHelper.showContextMenu(x,y)
 
 def ExecContextMenuItem(id):
 	falconHelper.execContextMenuItem(id)

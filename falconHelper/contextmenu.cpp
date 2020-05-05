@@ -219,14 +219,12 @@ string processMenu(HMENU menu)
 falcon_helper_funcdef int getContextMenu(LPCTSTR path)
 {
 	HMENU menu;
-	int ret = _getContextMenu(path, &menu);
-	int cmd = static_cast<int>(TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_NONOTIFY, 0, 0, hParent, NULL));
-	if (cmd == 0)
-	{
-		wstringstream w;
-		w << L"menu handle=" << menu << L", window=" << hParent << L", Error code " << GetLastError();
-		//		MessageBox(NULL,w.str().c_str(),L"test",MB_OK);
-	}
+	return _getContextMenu(path, &menu);
+}
+
+falcon_helper_funcdef int showContextMenu(int x, int y)
+{
+	int cmd = static_cast<int>(TrackPopupMenuEx(contextMenuHandle, TPM_RETURNCMD | TPM_NONOTIFY, 0, 0, hParent, NULL));
 	return cmd;
 }
 
