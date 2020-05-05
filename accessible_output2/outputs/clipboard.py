@@ -1,6 +1,7 @@
 from .base import Output
-import pyperclip
+import clipboardHelper
 
 class Clipboard(Output):
 	def speak(self, text, **options):
-		pyperclip.copy(text)
+		with clipboardHelper.Clipboard() as c:
+			c.set_unicode_text(text)
