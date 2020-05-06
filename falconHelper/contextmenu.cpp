@@ -224,7 +224,7 @@ falcon_helper_funcdef int getContextMenu(LPCTSTR path)
 
 falcon_helper_funcdef int showContextMenu(int x, int y)
 {
-	int cmd = static_cast<int>(TrackPopupMenuEx(contextMenuHandle, TPM_RETURNCMD | TPM_NONOTIFY, 0, 0, hParent, NULL));
+	int cmd = static_cast<int>(TrackPopupMenuEx(contextMenuHandle, TPM_RETURNCMD | TPM_NONOTIFY, x, y, hParent, NULL));
 	return cmd;
 }
 
