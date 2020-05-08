@@ -613,7 +613,8 @@ class FalconTabBase(object):
 		#end イベントあるか
 		can_show_menu=misc.GetContextMenu(targetPath)
 		if not can_show_menu: return#コンテキストメニュー生成できなかった
-		cmd=misc.ShowContextMenu(0,0)#todo: x y 座標をここに入れる
+		x,y=wx.GetMousePosition()
+		cmd=misc.ShowContextMenu(x,y)
 		evt=wx.MenuEvent(id=cmd)
 		self.CloseContextMenu(evt)
 
