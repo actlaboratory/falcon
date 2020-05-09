@@ -30,6 +30,8 @@ class GrepResultList(FalconListBase):
 		super().__init__()
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_HITLINE,SORT_TYPE_PREVIEW,SORT_TYPE_HITCOUNT,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
 		self.log=logging.getLogger("falcon.grepResultList")
+		self.results=[]
+		self.lists=[self.results]
 
 	def Update(self):
 		return self.Initialize(self.rootDirectory,self.searches,self.keyword,True)
@@ -60,7 +62,6 @@ class GrepResultList(FalconListBase):
 	def _initSearch(self):
 		"""検索する前に準備する。"""
 		self.finished=False
-		self.results=[]
 		self.log.debug("Getting grep search results for %s..." % self.keyword)
 		self.searched_index=0#インデックスいくつまで検索したか
 

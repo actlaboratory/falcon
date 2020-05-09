@@ -13,6 +13,7 @@ class FalconListBase(object):
 		self.supportedSorts=[]
 		self.sortCursor=0
 		self.sortDescending=0
+		self.lists=[]		#内部のアイテムを保持するリストを表示順に格納
 
 	#indexで指定した列が文字列searchに一致する行の行インデックスを返す
 	def Search(self,search,index=0):
@@ -67,6 +68,25 @@ class FalconListBase(object):
 	def GetSupportedSorts(self):
 		"""サポートされているソートのタイプを取得する。"""
 		return self.supportedSorts
+
+	def GetItemIndex(self,item):
+		"""指定されたbrowsableObjectのインデックスを調べる"""
+		beforeListCount=0	#前のリストのアイテム数
+		for l in self.lists:
+			if ret<0:
+				try:
+					ret=l.index(item)+beforeListCount
+				except ValueError:
+					ret=-1
+				beforeListCount+=len(l)
+		return ret
+
+	def GetItemList(self):
+		"""browsableObjectのListを取得"""
+		lst=[]
+		for l in self.lists:
+			lst+=l
+		return lst
 
 	def _getSortFunction(self,attrib):
 		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename

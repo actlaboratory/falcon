@@ -29,6 +29,10 @@ class DriveList(FalconListBase):
 		super().__init__()
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_DRIVELETTER,SORT_TYPE_FREESPACE,SORT_TYPE_TOTALSPACE, SORT_TYPE_TYPESTRING]
 		self.log=logging.getLogger("falcon.driveList")
+		self.drives=[]
+		self.unusableDrives=[]
+		self.networkResources=[]
+		self.lists=[self.drives,self.unusableDrives,self.networkResources]
 
 	def Update(self):
 		return self.Initialize(None,True)
@@ -40,9 +44,6 @@ class DriveList(FalconListBase):
 		self.log.debug("Getting drives list...")
 		self.rootDirectory=""
 		t=misc.Timer()
-		self.drives=[]
-		self.unusableDrives=[]
-		self.networkResources=[]
 		if isinstance(lst,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			self._copyFromList(lst)
 			return errorCodes.OK

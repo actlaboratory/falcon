@@ -24,6 +24,8 @@ class StreamList(FalconListBase):
 		super().__init__()
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE]
 		self.log=logging.getLogger("falcon.streamList")
+		self.streams=[]
+		self.lists=[self.streams]
 
 	def Update(self):
 		return self.Initialize(self.rootDirectory,True)
@@ -31,8 +33,6 @@ class StreamList(FalconListBase):
 	def Initialize(self,file,silent=False):
 		"""ファイル名から副ストリーム情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、errorCodes.OK以外が返る。。"""
 		t=misc.Timer()
-		self.streams=[]
-
 		if isinstance(file,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			self.streams=file
 			return

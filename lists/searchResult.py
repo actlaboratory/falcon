@@ -32,6 +32,7 @@ class SearchResultList(FalconListBase):
 		self.log=logging.getLogger("falcon.searchResultList")
 		self.folders=[]
 		self.files=[]
+		self.lists=[self.folders,self.files]
 
 	def Update(self):
 		return self.Initialize(self.rootDirectory,self.searches,self.keyword,True)

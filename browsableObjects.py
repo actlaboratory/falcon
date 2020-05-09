@@ -49,6 +49,12 @@ class FalconBrowsableBase():
 			self.longAttributesString="なし"
 		return
 
+	def __str__(self):
+		return "<"+self.__class__.__name__+" "+self.basename+">"
+
+	def __repr__(self):
+		return "<"+self.__class__.__name__+" "+self.basename+">"
+
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
 	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString","hIcon"]

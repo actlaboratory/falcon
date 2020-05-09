@@ -417,9 +417,7 @@ class FalconTabBase(object):
 	def SortCycleAd(self):
 		"""昇順と降順を交互に切り替える。"""
 		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-		self._updateConfig()
-		self.listObject.ApplySort()
-		self.UpdateListContent(self.listObject.GetItems())
+		self.ApplySort
 
 	def SortSelect(self):
 		"""並び順を指定する。"""
@@ -433,9 +431,7 @@ class FalconTabBase(object):
 		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
 		m.Destroy()
 		self.listObject.SetSortCursor(item)
-		self._updateConfig()
-		self.listObject.ApplySort()
-		self.UpdateListContent(self.listObject.GetItems())
+		self.ApplySort()
 
 	def _updateConfig(self):
 		"""ソートの設定をconfigに反映する。"""
@@ -454,16 +450,29 @@ class FalconTabBase(object):
 			self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
 		else:
 			self.listObject.SetSortCursor(no)
-		self._updateConfig()
-		self.listObject.ApplySort()
-		self.UpdateListContent(self.listObject.GetItems())
+		self.ApplySort()
 
 	def SortNext(self):
 		self.listObject.SetSortCursor()
-		self._updateConfig()
-		self.listObject.ApplySort()
-		self.UpdateListContent(self.listObject.GetItems())
+		self.ApplySort()
 	#end sortNext
+
+	def ApplySort(self):
+		self._updateConfig()				#設定の保存
+		old=self.listObject.GetItemList()	#ソート前の並び順のリスト
+		self.listObject.ApplySort()			#リストオブジェクト側をソート
+		new=self.listObject.GetItemList()	#ソート後の並び順のリスト
+
+		#オブジェクトにソート後のインデックスの番号を付ける
+		for i in range(self.hListCtrl.GetItemCount()):
+			self.hListCtrl.SetItemData(i,new.index(old[i]))
+
+		#リストをソートする
+		self.hListCtrl.SortItems(self._compare)
+
+	def _compare(self, item1, item2):
+		"""リストのソートでlistObjectから呼ばれる"""
+		return item1>item2
 
 	def _cancelBackgroundTasks(self):
 		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
@@ -824,4 +833,3 @@ class DropTarget(wx.DropTarget):
 		self.GetData()
 		self.parent.PastOperation(self.DataObject.GetFilenames(),dest)
 		return defResult		#推奨されたとおりに返しておく
-
