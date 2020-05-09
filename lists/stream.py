@@ -38,6 +38,7 @@ class StreamList(FalconListBase):
 			return
 		#end copy
 
+		self.streams.clear()
 		file_spl=file.split("\\")
 		self.rootDirectory=file
 		level=len(file_spl)

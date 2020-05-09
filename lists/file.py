@@ -48,6 +48,8 @@ class FileList(FalconListBase):
 			self._copyFromList(dir)
 			return errorCodes.OK
 		#end copy
+		self.files.clear()
+		self.folders.clear()
 		dir=dir.rstrip("\\")
 		dir_spl=dir.split("\\")
 		level=len(dir_spl)

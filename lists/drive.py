@@ -53,7 +53,9 @@ class DriveList(FalconListBase):
 			self._copyFromList(lst)
 			return errorCodes.OK
 		#end copy
-
+		self.drives.clear()
+		self.unusableDrives.clear()
+		self.networkResources.clear()
 		if not silent:
 			globalVars.app.say(_("ドライブ洗濯"))
 		drv=win32api.GetLogicalDrives()

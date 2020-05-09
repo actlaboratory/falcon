@@ -406,7 +406,7 @@ class FalconTabBase(object):
 			item=self.listObject.GetElement(self.GetFocusedItem())
 		result=self.listObject.Update()
 		if result != errorCodes.OK:
-			return errorCodes.FILE_NOT_FOUND			#アクセス負荷など
+			return result			#アクセス負荷など
 		if cursorTargetName=="":
 			cursor=self.listObject.Search(item.basename,0)
 		else:

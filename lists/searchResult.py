@@ -53,6 +53,8 @@ class SearchResultList(FalconListBase):
 				#end ファイルかフォルダか
 			#end for
 			return errorCodes.OK
+		self.folders.clear()
+		self.files.clear()
 		self.rootDirectory=rootDirectory
 		self.searches=searches
 		self.keyword_string=keyword

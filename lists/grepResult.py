@@ -49,6 +49,7 @@ class GrepResultList(FalconListBase):
 			self.results=rootDirectory
 			self.lists=[self.results]
 			return
+		self.results.clear()
 		self.rootDirectory=rootDirectory
 		self.searches=searches
 		self.keyword_string=keyword
