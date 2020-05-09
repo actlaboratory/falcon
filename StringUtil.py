@@ -69,3 +69,16 @@ def GetLimitedString(s,l):
 		cursor+=1
 	return bytes.decode()
 
+def GetWidthCount(s):
+	"""
+		文字列sの幅を半角=1・全角=2で計算して返す。
+		計算方法は_GetWidth()に準じる
+	"""
+	result=0
+	cursor=0
+	bytes=bytearray(s.encode())
+	while(cursor<len(bytes)):
+		clen,width=_GetWidth(bytes,cursor)
+		cursor+=clen
+		result+=width
+	return result
