@@ -4,16 +4,22 @@
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
+import logging
+
 import globalVars
+import misc
 
 from .constants import *
+
 class FalconListBase(object):
 	"""全てのリストに共通する基本クラス。"""
 	def __init__(self):
+		self.log=logging.getLogger("falcon."+self.__class__.__name__)
 		self.supportedSorts=[]
 		self.sortCursor=0
 		self.sortDescending=0
 		self.lists=[]		#内部のアイテムを保持するリストを表示順に格納
+		self.columns={}
 
 	#indexで指定した列が文字列searchに一致する行の行インデックスを返す
 	def Search(self,search,index=0):
@@ -65,9 +71,34 @@ class FalconListBase(object):
 		if len(self.supportedSorts)==0: return
 		self._sort(self.supportedSorts[self.sortCursor],self.sortDescending)
 
+	def _sort(self,attrib, descending):
+		"""指定した要素で、リストを並べ替える。"""
+		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
+		t=misc.Timer()
+		f=self._getSortFunction(attrib)
+		for l in self.lists:
+			l.sort(key=f, reverse=(descending==1))
+		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
+
 	def GetSupportedSorts(self):
 		"""サポートされているソートのタイプを取得する。"""
 		return self.supportedSorts
+
+	def GetElement(self,index):
+		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
+		for l in self.lists:
+			if len(l)>index:
+				return l[index]
+			index-=len(l)
+		return None
+
+	def GetItems(self):
+		"""リストの中身を文字列タプルで取得する。フォルダが上にくる。"""
+		lst=[]
+		for l in self.lists:
+			for elem in l:
+				lst.append(elem.GetListTuple())
+		return lst
 
 	def GetItemIndex(self,item):
 		"""指定されたbrowsableObjectのインデックスを調べる"""
@@ -81,11 +112,27 @@ class FalconListBase(object):
 				beforeListCount+=len(l)
 		return ret
 
+	def GetItemNames(self):
+		"""リストの中身をファイル名のリストで取得する。"""
+		lst=[]
+		for l in self.lists:
+			for i in l:
+				lst.append(i.basename)
+		return lst
+
 	def GetItemList(self):
 		"""browsableObjectのListを取得"""
 		lst=[]
 		for l in self.lists:
 			lst+=l
+		return lst
+
+	def GetItemPaths(self):
+		"""リストの中身をパスのリストで取得する。"""
+		lst=[]
+		for l in self.lists:
+			for i in l:
+				lst.append(i.fullpath)
 		return lst
 
 	def _getSortFunction(self,attrib):
@@ -101,3 +148,16 @@ class FalconListBase(object):
 		if attrib==SORT_TYPE_HITCOUNT: return lambda x: x.hits
 		if attrib==SORT_TYPE_HITLINE: return lambda x: x.ln
 		if attrib==SORT_TYPE_PREVIEW: return lambda x: x.preview
+
+	def GetColumns(self):
+		"""このリストのカラム情報を返す。"""
+		return self.columns
+
+	def __iter__(self):
+		return self.GetItemList().__iter__()
+
+	def __len__(self):
+		ret=0
+		for l in self.lists:
+			ret+=len(l)
+		return ret

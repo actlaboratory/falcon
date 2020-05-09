@@ -6,7 +6,6 @@
 
 import os
 import wx
-import logging
 import win32api
 import win32file
 import pywintypes
@@ -17,6 +16,8 @@ import globalVars
 import errorCodes
 from win32com.shell import shell, shellcon
 
+from simpleDialog import *
+
 from .base import *
 from .constants import *
 
@@ -25,7 +26,13 @@ class FileList(FalconListBase):
 	def __init__(self):
 		super().__init__()
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
-		self.log=logging.getLogger("falcon.fileList")
+		self.columns={
+			_("ファイル名"):wx.LIST_FORMAT_LEFT,
+			_("サイズ"):wx.LIST_FORMAT_RIGHT,
+			_("更新"):wx.LIST_FORMAT_LEFT,
+			_("属性"):wx.LIST_FORMAT_LEFT,
+			_("種類"):wx.LIST_FORMAT_LEFT
+		}
 		self.files=[]
 		self.folders=[]
 		self.lists=[self.folders,self.files]
@@ -83,7 +90,7 @@ class FileList(FalconListBase):
 		#end 追加ループ
 		self.log.debug("File list created in %f seconds." % t.elapsed)
 		self.log.debug(str(len(self.folders))+" directories and "+str(len(self.files))+" files found.")
-		if self.sortCursor!=0:
+		if self.sortCursor!=0 or self.sortDescending!=0:
 			self.log.debug("Triggering sorting")
 			self.ApplySort()
 		#end ソートが必要ならソート
@@ -100,59 +107,9 @@ class FileList(FalconListBase):
 		#end for
 	#end _copyFromList
 
-	def GetColumns(self):
-		"""このリストのカラム情報を返す。"""
-		return {
-			_("ファイル名"):wx.LIST_FORMAT_LEFT,
-			_("サイズ"):wx.LIST_FORMAT_RIGHT,
-			_("更新"):wx.LIST_FORMAT_LEFT,
-			_("属性"):wx.LIST_FORMAT_LEFT,
-			_("種類"):wx.LIST_FORMAT_LEFT
-		}
-
-	def GetItems(self):
-		"""リストの中身を文字列タプルで取得する。フォルダが上にくる。"""
-		lst=[]
-		for elem in self.folders:
-			lst.append(elem.GetListTuple())
-		for elem in self.files:
-			lst.append(elem.GetListTuple())
-		return lst
-
-	def GetItemPaths(self):
-		"""リストの中身をパスのリストで取得する。フォルダが上にくる。"""
-		lst=[]
-		for elem in self.folders:
-			lst.append(elem.fullpath)
-		for elem in self.files:
-			lst.append(elem.fullpath)
-		return lst
-
-	def GetItemNames(self):
-		"""リストの中身をファイル名のリストで取得する。フォルダが上にくる。"""
-		lst=[]
-		for elem in self.folders:
-			lst.append(elem.basename)
-		for elem in self.files:
-			lst.append(elem.basename)
-		return lst
-
-	def GetElement(self,index):
-		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		return self.folders[index] if index<len(self.folders) else self.files[index-len(self.folders)]
-
 	def GetTopFileIndex(self):
 		"""先頭ファイルのインデックス番号を返す。"""
 		return len(self.folders)
-
-	def _sort(self,attrib, descending):
-		"""指定した要素で、リストを並べ替える。"""
-		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
-		t=misc.Timer()
-		f=self._getSortFunction(attrib)
-		self.files.sort(key=f, reverse=(descending==1))
-		self.folders.sort(key=f, reverse=(descending==1))
-		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
 
 	def GetAttributeCheckState(self):
 		"""このリストに入っているファイルを1個ずつとって、対応するファイルの属性値を取得していく。各属性に対して、リスト内の全てのファイルが持っていれば ATTRIB_FULL_CHECKED を帰す。一部のファイルが持っていれば、 ATTRIB_HALF_CHECKED を帰す。どのファイルも持っていなければ、 ATTRIB_NOT_CHECKED を帰す。このデータを、リストにして帰す。"""
@@ -183,13 +140,6 @@ class FileList(FalconListBase):
 		if found[SYSTEM]==l: ret[SYSTEM]=constants.FULL_CHECKED
 		if found[ARCHIVE]==l: ret[ARCHIVE]=constants.FULL_CHECKED
 		return ret
-
-	def __iter__(self):
-		lst=self.folders+self.files
-		return lst.__iter__()
-
-	def __len__(self):
-		return len(self.folders)+len(self.files)
 
 	def GetFolderFileNumber(self):
 		return len(self.folders), len(self.files)

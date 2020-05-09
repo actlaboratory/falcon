@@ -5,25 +5,24 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
-import logging
-import win32api
 import win32file
-import pywintypes
-import constants
 import misc
 import browsableObjects
 import globalVars
 import errorCodes
 
+from simpleDialog import *
+
 from .base import *
 from .constants import *
+
 
 class StreamList(FalconListBase):
 	"""NTFS 副ストリームを扱うリスト。"""
 	def __init__(self):
 		super().__init__()
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_FILESIZE]
-		self.log=logging.getLogger("falcon.streamList")
+		self.columns={_("ストリーム名"):wx.LIST_FORMAT_LEFT,_("サイズ"):wx.LIST_FORMAT_RIGHT}
 		self.streams=[]
 		self.lists=[self.streams]
 
@@ -35,6 +34,7 @@ class StreamList(FalconListBase):
 		t=misc.Timer()
 		if isinstance(file,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			self.streams=file
+			self.lists=[self.streams]
 			return
 		#end copy
 
@@ -59,53 +59,3 @@ class StreamList(FalconListBase):
 		self.log.debug("stream list created in %d milliseconds." % t.elapsed)
 		self.log.debug(str(len(self.streams))+" objects found.")
 		return errorCodes.OK
-
-	def GetColumns(self):
-		"""このリストのカラム情報を返す。"""
-		return {_("ストリーム名"):wx.LIST_FORMAT_LEFT,_("サイズ"):wx.LIST_FORMAT_RIGHT}
-
-	def GetItems(self):
-		"""リストの中身を文字列タプルで取得する。"""
-		lst=[]
-		for elem in self.streams:
-			lst.append(elem.GetListTuple())
-		return lst
-
-	def GetItemPaths(self):
-		"""リストの中身をフルパスのリストで取得する。"""
-		lst=[]
-		for elem in self.streams:
-			lst.append(elem.fullpath)
-		return lst
-
-	def GetElement(self,index):
-		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		return self.streams[index]
-
-	def __iter__(self):
-		return self.streams.__iter__()
-
-	def __len__(self):
-		return self.streams.__len__()
-
-	def GetItemPaths(self):
-		"""リストの中身をパスのリストで取得する。"""
-		lst=[]
-		for elem in self.streams:
-			lst.append(elem.fullpath)
-		return lst
-
-	def GetItemNames(self):
-		"""リストの中身をファイル名のリストで取得する。"""
-		lst=[]
-		for elem in self.streams:
-			lst.append(elem.basename)
-		return lst
-
-	def _sort(self,attrib, descending):
-		"""指定した要素で、リストを並べ替える。"""
-		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
-		t=misc.Timer()
-		f=self._getSortFunction(attrib)
-		self.streams.sort(key=f, reverse=(descending==1))
-		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)

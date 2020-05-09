@@ -8,10 +8,8 @@ import datetime
 import os
 import re
 import wx
-import logging
 import win32api
 import win32file
-import pywintypes
 import constants
 import misc
 import browsableObjects
@@ -29,7 +27,16 @@ class GrepResultList(FalconListBase):
 	def __init__(self):
 		super().__init__()
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_HITLINE,SORT_TYPE_PREVIEW,SORT_TYPE_HITCOUNT,SORT_TYPE_FILESIZE,SORT_TYPE_MODDATE,SORT_TYPE_ATTRIBUTES,SORT_TYPE_TYPESTRING]
-		self.log=logging.getLogger("falcon.grepResultList")
+		self.columns={
+			_("ファイル名"):wx.LIST_FORMAT_LEFT,
+			_("行"): wx.LIST_FORMAT_RIGHT,
+			_("プレビュー"): wx.LIST_FORMAT_LEFT,
+			_("ヒット件数"): wx.LIST_FORMAT_RIGHT,
+			_("サイズ"):wx.LIST_FORMAT_RIGHT,
+			_("更新"):wx.LIST_FORMAT_LEFT,
+			_("属性"):wx.LIST_FORMAT_LEFT,
+			_("種類"):wx.LIST_FORMAT_LEFT
+		}
 		self.results=[]
 		self.lists=[self.results]
 
@@ -40,6 +47,7 @@ class GrepResultList(FalconListBase):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
 		if isinstance(rootDirectory,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			self.results=rootDirectory
+			self.lists=[self.results]
 			return
 		self.rootDirectory=rootDirectory
 		self.searches=searches
@@ -133,52 +141,6 @@ class GrepResultList(FalconListBase):
 	def GetKeywordString(self):
 		return self.keyword_string
 
-	def GetColumns(self):
-		"""このリストのカラム情報を返す。"""
-		return {
-			_("ファイル名"):wx.LIST_FORMAT_LEFT,
-			_("行"): wx.LIST_FORMAT_RIGHT,
-			_("プレビュー"): wx.LIST_FORMAT_LEFT,
-			_("ヒット件数"): wx.LIST_FORMAT_RIGHT,
-			_("サイズ"):wx.LIST_FORMAT_RIGHT,
-			_("更新"):wx.LIST_FORMAT_LEFT,
-			_("属性"):wx.LIST_FORMAT_LEFT,
-			_("種類"):wx.LIST_FORMAT_LEFT
-		}
-
-	def GetItems(self):
-		"""リストの中身を文字列タプルで取得する。"""
-		lst=[]
-		for elem in self.results:
-			lst.append(elem.GetListTuple())
-		return lst
-
-	def GetItemPaths(self):
-		"""リストの中身をパスのリストで取得する。"""
-		lst=[]
-		for elem in self.results:
-			lst.append(elem.fullpath)
-		return lst
-
-	def GetItemNames(self):
-		"""リストの中身をファイル名のリストで取得する。"""
-		lst=[]
-		for elem in self.results:
-			lst.append(elem.basename)
-		return lst
-
-	def GetElement(self,index):
-		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		return self.results[index]
-
-	def _sort(self,attrib, descending):
-		"""指定した要素で、リストを並べ替える。"""
-		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
-		t=misc.Timer()
-		f=self._getSortFunction(attrib)
-		self.results.sort(key=f, reverse=(descending==1))
-		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
-
 	def GetAttributeCheckState(self):
 		"""このリストに入っているファイルを1個ずつとって、対応するファイルの属性値を取得していく。各属性に対して、リスト内の全てのファイルが持っていれば ATTRIB_FULL_CHECKED を帰す。一部のファイルが持っていれば、 ATTRIB_HALF_CHECKED を帰す。どのファイルも持っていなければ、 ATTRIB_NOT_CHECKED を帰す。このデータを、リストにして帰す。"""
 		found=[0,0,0,0]#各属性を見つけた個数
@@ -212,8 +174,3 @@ class GrepResultList(FalconListBase):
 	def GetFinishedStatus(self):
 		return self.finished
 
-	def __iter__(self):
-		return self.results.__iter__()
-
-	def __len__(self):
-		return len(self.results)

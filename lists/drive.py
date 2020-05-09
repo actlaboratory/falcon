@@ -5,7 +5,6 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
-import logging
 import win32api
 import win32file
 import win32wnet
@@ -28,7 +27,13 @@ class DriveList(FalconListBase):
 	def __init__(self):
 		super().__init__()
 		self.supportedSorts=[SORT_TYPE_BASENAME,SORT_TYPE_DRIVELETTER,SORT_TYPE_FREESPACE,SORT_TYPE_TOTALSPACE, SORT_TYPE_TYPESTRING]
-		self.log=logging.getLogger("falcon.driveList")
+		self.columns={
+			_("ラベル"):wx.LIST_FORMAT_LEFT,
+			_("レター"):wx.LIST_FORMAT_LEFT,
+			_("空き"):wx.LIST_FORMAT_RIGHT,
+			_("合計"):wx.LIST_FORMAT_RIGHT,
+			_("種類"):wx.LIST_FORMAT_LEFT
+		}
 		self.drives=[]
 		self.unusableDrives=[]
 		self.networkResources=[]
@@ -99,16 +104,6 @@ class DriveList(FalconListBase):
 			self.networkResources.append(s)
 		#end 追加ループ
 
-	def GetColumns(self):
-		"""このリストのカラム情報を返す。"""
-		return {
-			_("ラベル"):wx.LIST_FORMAT_LEFT,
-			_("レター"):wx.LIST_FORMAT_LEFT,
-			_("空き"):wx.LIST_FORMAT_RIGHT,
-			_("合計"):wx.LIST_FORMAT_RIGHT,
-			_("種類"):wx.LIST_FORMAT_LEFT
-		}
-
 	def Append(self,index):
 		d=GetDriveObject(index)
 		if d.total==-1:
@@ -116,62 +111,6 @@ class DriveList(FalconListBase):
 		else:
 			self.drives.append(d)
 		#end どっちに追加するか？
-
-	def GetItems(self):
-		"""リストの中身を取得する。"""
-		lst=[]
-		for elem in self.drives:
-			lst.append(elem.GetListTuple())
-		for elem in self.unusableDrives:
-			lst.append(elem.GetListTuple())
-		for elem in self.networkResources:
-			lst.append(elem.GetListTuple())
-		return lst
-
-	def GetItemPaths(self):
-		"""リスト内のドライブのパス一覧を取得する。"""
-		lst=[]
-		for elem in self.drives:
-			lst.append(elem.fullpath)
-		for elem in self.unusableDrives:
-			lst.append(elem.fullpath)
-		for elem in self.networkResources:
-			lst.append(elem.fullpath)
-		return lst
-
-	def GetElement(self,index):
-		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		if index<len(self.drives):
-			return self.drives[index]
-		elif index<len(self.drives)+len(self.unusableDrives):
-			return self.unusableDrives[index-len(self.drives)]
-		else:
-			return self.networkResources[index-len(self.drives)-len(self.unusableDrives)]
-
-	def GetItemNames(self):
-		"""リストの中身をボリュームラベルのリストで取得する。"""
-		lst=[]
-		for elem in self.drives:
-			lst.append(elem.basename)
-		for elem in self.unusableDrives:
-			lst.append(elem.basename)
-		for elem in self.networkResources:
-			lst.append(elem.basename)
-		return lst
-
-	def _sort(self,attrib, descending):
-		"""指定した要素で、リストを並べ替える。"""
-		self.log.debug("Begin sorting (attrib %s, descending %s)" % (attrib, descending))
-		t=misc.Timer()
-		f=self._getSortFunction(attrib)
-		self.drives.sort(key=f, reverse=(descending==1))
-		self.log.debug("Finished sorting (%f seconds)" % t.elapsed)
-
-	def __iter__(self):
-		return (self.drives+self.unusableDrives+self.networkResources).__iter__()
-
-	def __len__(self):
-		return len(self.drives)+len(self.unusableDrives)+len(self.networkResources)
 
 def GetDriveObject(index):
 	"""ドライブ情報を調べて、browsableObjectsで返す。Aドライブが0、Zドライブが25。"""
