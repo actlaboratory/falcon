@@ -33,6 +33,7 @@ class falconAppMain(wx.App):
 		self.InitLogger()
 		self.error_sound_handle=None
 		self.LoadSettings()
+		wx.DisableAsserts()
 		locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
 		self.SetTimeZone()
 		self.InitTranslation()
@@ -81,6 +82,7 @@ class falconAppMain(wx.App):
 		# メインビューを表示
 		self.hMainView=main.View()
 		self.hMainView.Initialize()
+		misc.InitContextMenu(self.hMainView.hFrame.GetHandle())
 		self.log.debug("Finished mainView setup (%f seconds from start)" % t.elapsed)
 		return True
 
