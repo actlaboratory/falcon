@@ -108,20 +108,23 @@ def getDiscDriveTypes():
 	return ret
 #end getDiscDriveTypes
 
+def InitContextMenu(wnd):
+	falconHelper.initContextMenu(wnd)
+
 def GetContextMenu(path):
 	path_bytes=bytearray(path.encode('UTF-16LE'))
 	path_bytes.extend(b'\x00\x00')
-	ptr=falconHelper.getContextMenu(bytes(path_bytes))
-	s=ctypes.c_char_p(ptr).value
-	falconHelper.releasePtr(ptr)
-	s2=s.decode('UTF-8')
-	return s2
+	ret=falconHelper.getContextMenu(bytes(path_bytes))
+	return ret==1
 
-def DestroyContextMenu():
-	falconHelper.destroyContextMenu()
+def ShowContextMenu(x,y):
+	return falconHelper.showContextMenu(x,y)
 
 def ExecContextMenuItem(id):
 	falconHelper.execContextMenuItem(id)
+
+def DestroyContextMenu():
+	falconHelper.destroyContextMenu()
 
 def ExtractText(path):
 	path_bytes=bytearray(path.encode('UTF-16LE'))
@@ -131,7 +134,6 @@ def ExtractText(path):
 	falconHelper.releasePtr(ptr)
 	s2=s.decode('UTF-8')
 	return s2
-
 
 def disableWindowStyleFlag(hwnd,flag):
 	"""指定されたウィンドウハンドルの DWL_STYLE の値を撮って、指定されたフラグを折る。"""

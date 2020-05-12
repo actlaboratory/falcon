@@ -4,15 +4,21 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include "picojson.h"
 #include "defs.h"
 using namespace std;
 
-//--------------------------------------------------
+//-------------------------------------------------
+//context menu manager
 
-IContextMenu *contextMenu;
-HMENU contextMenuHandle;
+IContextMenu *contextMenu = NULL;
+IContextMenu2 *g_pcm2 = NULL;
+IContextMenu3 *g_pcm3 = NULL;
+HMENU contextMenuHandle = NULL;
+HWND hParent = NULL;
+WNDPROC parentWindowProc;
 
 wstring rtrimBackSlash(wstring in)
 {
@@ -30,6 +36,27 @@ wstring ltrimBackSlash(wstring in)
 		return TEXT("");
 	wstring w2 = in.substr(bs + 1);
 	return w2;
+}
+
+LRESULT CALLBACK contextMenuWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (g_pcm3)
+	{
+		LRESULT lres;
+		if (SUCCEEDED(g_pcm3->HandleMenuMsg2(uMsg, wParam, lParam, &lres)))
+		{
+			return lres;
+		}
+	}
+	else if (g_pcm2)
+	{
+		if (SUCCEEDED(g_pcm2->HandleMenuMsg(uMsg, wParam, lParam)))
+		{
+			return 0;
+		}
+	}
+
+	return parentWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 int _getContextMenu(LPCTSTR in, HMENU *out)
@@ -82,6 +109,9 @@ int _getContextMenu(LPCTSTR in, HMENU *out)
 	}
 	contextMenuHandle = CreatePopupMenu();
 	contextMenu->QueryContextMenu(contextMenuHandle, 0, 101, 0x7fff, CMF_NORMAL);
+	contextMenu->QueryInterface(IID_IContextMenu2, (void **)&g_pcm2);
+	contextMenu->QueryInterface(IID_IContextMenu3, (void **)&g_pcm3);
+
 	fld->Release();
 	desktop->Release();
 	CoTaskMemFree(pidl);
@@ -95,7 +125,13 @@ falcon_helper_funcdef int destroyContextMenu()
 		return 0;
 	DestroyMenu(contextMenuHandle);
 	contextMenu->Release();
-	contextMenu=NULL;
+	contextMenu = NULL;
+	if (g_pcm2)
+		g_pcm2->Release();
+	if (g_pcm3)
+		g_pcm3->Release();
+	g_pcm2 = NULL;
+	g_pcm3 = NULL;
 	CoUninitialize();
 	return 1;
 }
@@ -118,6 +154,7 @@ falcon_helper_funcdef int execContextMenuItem(int nId)
 
 picojson::object *makePicoJsonObject(HMENU menu, int index)
 {
+	//not used
 	MENUITEMINFO menuitem_info;
 	memset(&menuitem_info, 0, sizeof(MENUITEMINFO));
 	menuitem_info.cbSize = sizeof(MENUITEMINFO);
@@ -179,16 +216,21 @@ string processMenu(HMENU menu)
 	return v.serialize();
 }
 
-falcon_helper_funcdef char *getContextMenu(LPCTSTR path)
+falcon_helper_funcdef int getContextMenu(LPCTSTR path)
 {
 	HMENU menu;
-	int ret = _getContextMenu(path, &menu);
+	return _getContextMenu(path, &menu);
+}
 
-	string menu_json = processMenu(menu);
-	contextMenuHandle = menu;
-	int sz = menu_json.size() + 1;
-	char *ptr = (char *)malloc(sz);
-	memset(ptr, 0, sz);
-	strcpy(ptr, menu_json.c_str());
-	return ptr;
+falcon_helper_funcdef int showContextMenu(int x, int y)
+{
+	int cmd = static_cast<int>(TrackPopupMenuEx(contextMenuHandle, TPM_RETURNCMD | TPM_NONOTIFY, x, y, hParent, NULL));
+	return cmd;
+}
+
+falcon_helper_funcdef void initContextMenu(HWND parent)
+{
+	hParent = parent;
+	parentWindowProc = (WNDPROC)GetWindowLongPtr(parent, GWLP_WNDPROC);
+	SetWindowLongPtr(parent, GWLP_WNDPROC, (LONG)contextMenuWindowProc);
 }
