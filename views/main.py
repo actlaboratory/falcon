@@ -676,7 +676,7 @@ class Events(BaseEvents):
 	def ExecProgram(self):
 		d=views.execProgram.Dialog()
 		d.Initialize()
-		d.Show()
+		if d.Show()==wx.ID_CANCEL:return
 		val=d.GetValue()
 		d.Destroy()
 		self.parent.activeTab.ExecProgram(val)
