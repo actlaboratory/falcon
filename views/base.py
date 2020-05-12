@@ -63,7 +63,14 @@ class BaseMenu(object):
 				tmp+=v+"\n"
 			dialog(_("エラー"),tmp)
 
-	def RegisterMenuCommand(self,menu_handle,ref_id,title):
+	def RegisterMenuCommand(self,menu_handle,ref_id,title=""):
+		if type(ref_id)==dict:
+			for k,v in ref_id.items():
+				self._RegisterMenuCommand(menu_handle,k,v)
+		else:
+			return self._RegisterMenuCommand(menu_handle,ref_id,title)
+
+	def _RegisterMenuCommand(self,menu_handle,ref_id,title):
 		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
 		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
 		menu_handle.Append(menuItemsStore.getRef(ref_id),s)

@@ -267,44 +267,50 @@ class Menu(BaseMenu):
 		self.hHelpMenu=wx.Menu()
 
 		#ファイルメニューの中身
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_RENAME",_("名前を変更"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_CHANGEATTRIBUTE",_("属性を変更"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_MAKESHORTCUT",_("ショートカットを作成"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_TRASH",_("ゴミ箱へ移動"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_DELETE",_("完全削除"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_VIEW_DETAIL",_("詳細情報を表示"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_SHOWPROPERTIES",_("プロパティを表示"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_MKDIR",_("新規ディレクトリ作成"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_FILEOPTEST",_("テスト中のファイルオペレーションを実行"))
-		self.RegisterMenuCommand(self.hFileMenu,"FILE_EXIT",_("終了"))
+		self.RegisterMenuCommand(self.hFileMenu,{
+			"FILE_RENAME":_("名前を変更"),
+			"FILE_CHANGEATTRIBUTE":_("属性を変更"),
+			"FILE_MAKESHORTCUT":_("ショートカットを作成"),
+			"FILE_TRASH":_("ゴミ箱へ移動"),
+			"FILE_DELETE":_("完全削除"),
+			"FILE_VIEW_DETAIL":_("詳細情報を表示"),
+			"FILE_SHOWPROPERTIES":_("プロパティを表示"),
+			"FILE_MKDIR":_("新規ディレクトリ作成"),
+			"FILE_FILEOPTEST":_("テスト中のファイルオペレーションを実行"),
+			"FILE_EXIT":_("終了")
+		})
 
 		#編集メニューの中身
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_COPY",_("コピー"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_CUT",_("切り取り"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_PAST",_("貼り付け"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_NAMECOPY",_("名前をコピー"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_FULLPATHCOPY",_("フルパスをコピー"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SELECTALL",_("全て選択"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_SEARCH",_("検索"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UPDATEFILELIST",_("最新の情報に更新"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM",_("チェック／チェック解除"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_ALL",_("すべてチェック"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_UNMARKITEM_ALL",_("すべてチェック解除"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_MARKITEM_INVERSE",_("チェック状態反転"))
-		self.RegisterMenuCommand(self.hEditMenu,"EDIT_OPENCONTEXTMENU",_("コンテキストメニューを開く"))
+		self.RegisterMenuCommand(self.hEditMenu,{
+			"EDIT_COPY":_("コピー"),
+			"EDIT_CUT":_("切り取り"),
+			"EDIT_PAST":_("貼り付け"),
+			"EDIT_NAMECOPY":_("名前をコピー"),
+			"EDIT_FULLPATHCOPY":_("フルパスをコピー"),
+			"EDIT_SELECTALL":_("全て選択"),
+			"EDIT_SEARCH":_("検索"),
+			"EDIT_UPDATEFILELIST":_("最新の情報に更新"),
+			"EDIT_MARKITEM":_("チェック／チェック解除"),
+			"EDIT_MARKITEM_ALL":_("すべてチェック"),
+			"EDIT_UNMARKITEM_ALL":_("すべてチェック解除"),
+			"EDIT_MARKITEM_INVERSE":_("チェック状態反転"),
+			"EDIT_OPENCONTEXTMENU":_("コンテキストメニューを開く"),
+		})
 
 		#移動メニューの中身
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD",_("開く"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_ADMIN",_("管理者として開く"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_EXEC_ORIGINAL_ASSOCIATION",_("独自関連付けで実行"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_TAB",_("別のタブで開く"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_FORWARD_STREAM",_("開く(ストリーム)"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_BACKWARD",_("上の階層へ"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_NEWTAB",_("新しいタブ"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_CLOSECURRENTTAB",_("現在のタブを閉じる"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_TOPFILE",_("先頭ファイルへ"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARKSET",_("表示中の場所をマーク"))
-		self.RegisterMenuCommand(self.hMoveMenu,"MOVE_MARK",_("マークした場所へ移動"))
+		self.RegisterMenuCommand(self.hMoveMenu,{
+			"MOVE_FORWARD":_("開く"),
+			"MOVE_FORWARD_ADMIN":_("管理者として開く"),
+			"MOVE_EXEC_ORIGINAL_ASSOCIATION":_("独自関連付けで実行"),
+			"MOVE_FORWARD_TAB":_("別のタブで開く"),
+			"MOVE_FORWARD_STREAM":_("開く(ストリーム)"),
+			"MOVE_BACKWARD":_("上の階層へ"),
+			"MOVE_NEWTAB":_("新しいタブ"),
+			"MOVE_CLOSECURRENTTAB":_("現在のタブを閉じる"),
+			"MOVE_TOPFILE":_("先頭ファイルへ"),
+			"MOVE_MARKSET":_("表示中の場所をマーク"),
+			"MOVE_MARK":_("マークした場所へ移動")
+		})
 
 		for m in globalVars.app.userCommandManagers:
 			subMenu=wx.Menu()
@@ -314,35 +320,48 @@ class Menu(BaseMenu):
 
 		#読みメニューの中身
 		subMenu=wx.Menu()
-		self.RegisterMenuCommand(subMenu,"READ_CONTENT_PREVIEW",_("ファイルをプレビュー"))
-		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READHEADER",_("テキストヘッダー読み"))
-		self.RegisterMenuCommand(subMenu,"READ_CONTENT_READFOOTER",_("テキストフッター読み"))
+		self.RegisterMenuCommand(subMenu,{
+			"READ_CONTENT_PREVIEW":_("ファイルをプレビュー"),
+			"READ_CONTENT_READHEADER":_("テキストヘッダー読み"),
+			"READ_CONTENT_READFOOTER":_("テキストフッター読み")
+		}),
 		self.hReadMenu.AppendSubMenu(subMenu,_("プレビュー"))
-		self.RegisterMenuCommand(self.hReadMenu,"READ_CURRENTFOLDER",_("現在のフォルダ名を読み上げ"))
-		self.RegisterMenuCommand(self.hReadMenu,"READ_LISTITEMNUMBER",_("リスト項目数を読み上げ"))
-		self.RegisterMenuCommand(self.hReadMenu,"READ_LISTINFO",_("一覧情報を読み上げ"))
-		self.RegisterMenuCommand(self.hReadMenu,"READ_SETMOVEMENTREAD",_("移動先の読み方を設定"))
+		self.RegisterMenuCommand(self.hReadMenu,{
+			"READ_CURRENTFOLDER":_("現在のフォルダ名を読み上げ"),
+			"READ_LISTITEMNUMBER":_("リスト項目数を読み上げ"),
+			"READ_LISTINFO":_("一覧情報を読み上げ"),
+			"READ_SETMOVEMENTREAD":_("移動先の読み方を設定")
+		})
 
 		#ツールメニューの中身
-		self.RegisterMenuCommand(self.hToolMenu,"TOOL_DIRCALC",_("フォルダ容量計算"))
-		self.RegisterMenuCommand(self.hToolMenu,"TOOL_HASHCALC",_("ファイルハッシュの計算"))
-		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EXEC_PROGRAM",_("ファイル名を指定して実行"))
-		self.RegisterMenuCommand(self.hToolMenu,"TOOL_ADDPATH",_("環境変数PATHに追加"))
-		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DRIVE",_("ドライブの取り外し"))
-		self.RegisterMenuCommand(self.hToolMenu,"TOOL_EJECT_DEVICE",_("デバイスの取り外し"))
+		self.RegisterMenuCommand(self.hToolMenu,{
+			"TOOL_DIRCALC":_("フォルダ容量計算"),
+			"TOOL_HASHCALC":_("ファイルハッシュの計算"),
+			"TOOL_EXEC_PROGRAM":_("ファイル名を指定して実行"),
+			"TOOL_ADDPATH":_("環境変数PATHに追加"),
+			"TOOL_EJECT_DRIVE":_("ドライブの取り外し"),
+			"TOOL_EJECT_DEVICE":_("デバイスの取り外し"),
+		})
 
 		#表示メニューの中身
-		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORTNEXT",_("次の並び順"))
-		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORTSELECT",_("並び順を選択"))
-		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORTCYCLEAD",_("昇順/降順切り替え"))
-		self.RegisterMenuCommand(self.hViewMenu,"VIEW_DRIVE_INFO",_("ドライブ情報の表示"))
+		self.RegisterMenuCommand(self.hViewMenu,{
+			"VIEW_SORTNEXT":_("次の並び順"),
+			"VIEW_SORTSELECT":_("並び順を選択"),
+			"VIEW_SORTCYCLEAD":_("昇順/降順切り替え"),
+			"VIEW_DRIVE_INFO":_("ドライブ情報の表示"),
+		})
 
 		#環境メニューの中身
-		self.RegisterMenuCommand(self.hEnvMenu,"ENV_REGIST_ORIGINAL_ASSOCIATION",_("独自関連付けの管理"))
-		self.RegisterMenuCommand(self.hEnvMenu,"ENV_TESTDIALOG",_("テストダイアログを表示"))
-		self.RegisterMenuCommand(self.hEnvMenu,"ENV_FONTTEST",_("フォントテストダイアログを表示"))
+		self.RegisterMenuCommand(self.hEnvMenu,{
+			"ENV_REGIST_ORIGINAL_ASSOCIATION":_("独自関連付けの管理"),
+			"ENV_TESTDIALOG":_("テストダイアログを表示"),
+			"ENV_FONTTEST":_("フォントテストダイアログを表示")
+		})
+
 		#ヘルプメニューの中身
-		self.RegisterMenuCommand(self.hHelpMenu,"HELP_VERINFO",_("バージョン情報"))
+		self.RegisterMenuCommand(self.hHelpMenu,{
+			"HELP_VERINFO":_("バージョン情報")
+		})
 
 		#メニューバー
 		self.hMenuBar.Append(self.hFileMenu,_("ファイル"))
