@@ -82,13 +82,14 @@ class SearchResultList(FalconListBase):
 		self.log.debug("Getting search results for %s..." % self.keyword)
 		self.searched_index=0#インデックスいくつまで検索したか
 
-	def _performSearchStep(self):
+	def _performSearchStep(self,taskState):
 		"""検索を1ステップ実行する。100県のファイルがヒットするか、リストが終わるまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。"""
 		ret_list=[]
 		i=self.searched_index
 		eol=False
 		hit=0
 		while(True):
+			if taskState.canceled: return False, -1#途中でキャンセル
 			path=self.searches[i]
 			if path=="eol":#EOLで検索終了
 				eol=True
