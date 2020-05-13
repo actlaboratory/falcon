@@ -136,7 +136,7 @@ class FalconListBase(object):
 		return lst
 
 	def _getSortFunction(self,attrib):
-		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename
+		if attrib==SORT_TYPE_BASENAME: return lambda x: x.basename.lower()
 		if attrib==SORT_TYPE_FILESIZE: return lambda x: x.size
 		if attrib==SORT_TYPE_MODDATE: return lambda x: x.modDate
 		if attrib==SORT_TYPE_ATTRIBUTES: return lambda x: x.attributesString
@@ -147,7 +147,7 @@ class FalconListBase(object):
 		if attrib==SORT_TYPE_TOTALSPACE: return lambda x: x.total
 		if attrib==SORT_TYPE_HITCOUNT: return lambda x: x.hits
 		if attrib==SORT_TYPE_HITLINE: return lambda x: x.ln
-		if attrib==SORT_TYPE_PREVIEW: return lambda x: x.preview
+		if attrib==SORT_TYPE_PREVIEW: return lambda x: x.preview.lower()
 
 	def GetColumns(self):
 		"""このリストのカラム情報を返す。"""
