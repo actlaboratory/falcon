@@ -148,10 +148,11 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED,self.ItemDeSelected)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
 		self.hListCtrl.Bind(wx.EVT_KEY_DOWN,self.KeyDown)
+		self.hListCtrl.Bind(wx.EVT_MOUSE_EVENTS,self._MouseEvent)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_DRAG,self.BeginDrag)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OpenContextMenu)
 		self.hListCtrl.Bind(wx.EVT_MENU, self.CloseContextMenu)
-		#self.hListCtrl.Bind(wx.EVT_MOUSE_EVENTS, self.mouseMove)
+		self.hListCtrl.Bind(wx.EVT_KILL_FOCUS, self._LostFocus)
 
 	def GetListColumns(self):
 		return self.columns
@@ -303,10 +304,7 @@ class FalconTabBase(object):
 
 	def KeyDown(self,event):
 		"""キーが押されたらここにくる。"""
-		if self.stopSoundHandle is not None:#音を鳴らしてたので止める
-			globalVars.app.StopSound(self.stopSoundHandle)
-			self.stopSoundHandle=None
-		#end 音を出した
+		self.StopSound()
 		event.Skip()
 
 	def _IsItemChecked(self,index):
@@ -505,7 +503,7 @@ class FalconTabBase(object):
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
-		if self.stopSoundHandle is not None: globalVars.app.StopSound(self.stopSoundHandle)#キーイベントが発火する前にここに来ちゃうので
+		self.StopSound()
 		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
 			target=""
 			cursorTarget=self.listObject.rootDirectory[0]
@@ -662,7 +660,7 @@ class FalconTabBase(object):
 	def Preview(self):
 		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
 		if ext in constants.SUPPORTED_AUDIO_FORMATS:
-			if self.stopSoundHandle: globalVars.app.StopSound(self.stopSoundHandle)
+			self.StopSound()
 			self.stopSoundHandle=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
 		elif misc.isDocumentExt(ext):
 			globalVars.app.say(misc.ExtractText(self.GetFocusedElement().fullpath), interrupt=True)
@@ -720,6 +718,18 @@ class FalconTabBase(object):
 
 	def OnBeforeChangeTab(self):
 		"""タブ切り替えが起きる前に呼ばれる。"""
+		self.StopSound()
+
+	def _LostFocus(self,event=None):
+		self.StopSound()
+
+	def _MouseEvent(self,event):
+		if event.GetEventType() not in (wx.wxEVT_MOTION,wx.wxEVT_ENTER_WINDOW,wx.wxEVT_LEAVE_WINDOW,wx.wxEVT_MOUSEWHEEL):
+			self.StopSound()
+		event.Skip()
+
+
+	def StopSound(self):
 		if self.stopSoundHandle is not None:#音を鳴らしてたので止める
 			globalVars.app.StopSound(self.stopSoundHandle)
 			self.stopSoundHandle=None
@@ -770,6 +780,7 @@ class FalconTabBase(object):
 			focus_index+=1
 		#end 検索
 		return focus_index
+
 
 class DropSource(wx.DropSource):
 	def GiveFeedback(self,effect):
