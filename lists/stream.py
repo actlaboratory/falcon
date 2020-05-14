@@ -59,4 +59,8 @@ class StreamList(FalconListBase):
 		#end 追加ループ
 		self.log.debug("stream list created in %d milliseconds." % t.elapsed)
 		self.log.debug(str(len(self.streams))+" objects found.")
+		if self.sortCursor!=0 or self.sortDescending!=0:
+			self.log.debug("Triggering sorting")
+			self.ApplySort()
+		#end ソートが必要ならソート
 		return errorCodes.OK

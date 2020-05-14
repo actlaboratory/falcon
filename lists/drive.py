@@ -44,8 +44,6 @@ class DriveList(FalconListBase):
 
 	def Initialize(self,lst=None,silent=False):
 		"""ドライブ情報を取得し、リストを初期化する。"""
-		self.sortCursor=int(globalVars.app.config["DriveList"]["sorting"])
-		self.sortDescending=int(globalVars.app.config["DriveList"]["descending"])
 		self.log.debug("Getting drives list...")
 		self.rootDirectory=""
 		t=misc.Timer()
@@ -70,6 +68,7 @@ class DriveList(FalconListBase):
 
 		self.log.debug("Drives list created in %d seconds." % t.elapsed)
 		self.log.debug(str(len(self.drives))+" drives,"+str(len(self.unusableDrives))+" unusableDrives and "+str(len(self.networkResources))+" networkResources found.")
+		self.log.debug("Triggering sorting")
 		self.ApplySort()
 		return errorCodes.OK
 
@@ -102,6 +101,7 @@ class DriveList(FalconListBase):
 		for l in lst:
 			ret, shfileinfo=shell.SHGetFileInfo(l.lpRemoteName,0,shellcon.SHGFI_ICON)
 			s=browsableObjects.NetworkResource()
+			self.log.debug("network resource found and check IP address:"+l.lpRemoteName[2:])
 			s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,socket.getaddrinfo(l.lpRemoteName[2:],None)[0][4][0],shfileinfo[0])
 			self.networkResources.append(s)
 		#end 追加ループ
