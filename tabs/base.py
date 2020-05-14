@@ -53,6 +53,8 @@ class FalconTabBase(object):
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE",
 		"READ_CONTENT_PREVIEW",
+		"READ_CONTENT_READHEADER",
+		"READ_CONTENT_READFOOTER",
 	])
 	selectItemMenuConditions.append([])
 	selectItemMenuConditions.append([])
@@ -69,7 +71,9 @@ class FalconTabBase(object):
 		"TOOL_HASHCALC",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE",
-		"READ_CONTENT_PREVIEW"
+		"READ_CONTENT_PREVIEW",
+		"READ_CONTENT_READHEADER",
+		"READ_CONTENT_READFOOTER",
 	])
 
 	selectItemTypeMenuConditions={}
@@ -85,7 +89,9 @@ class FalconTabBase(object):
 	selectItemTypeMenuConditions[browsableObjects.Folder].extend([
 		"TOOL_HASHCALC",
 		"TOOL_ADDPATH",
-		"READ_CONTENT_PREVIEW"
+		"READ_CONTENT_PREVIEW",
+		"READ_CONTENT_READHEADER",
+		"READ_CONTENT_READFOOTER",
 	])
 	selectItemTypeMenuConditions[browsableObjects.NetworkResource]=[]
 	selectItemTypeMenuConditions[browsableObjects.NetworkResource].extend([

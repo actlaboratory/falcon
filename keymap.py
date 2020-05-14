@@ -357,6 +357,7 @@ class KeymapHandler():
 				iFlag+=4
 			if i not in tabs.driveList.DriveListTab.blockMenuList:
 				iFlag+=8
+			#print(i+":"+str(iFlag))
 			if iFlag&flg==0:
 				flg+=iFlag
 			else:
