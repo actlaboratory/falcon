@@ -5,6 +5,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import ctypes
+import pywintypes
 import os
 import re
 import time
