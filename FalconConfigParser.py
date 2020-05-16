@@ -45,14 +45,14 @@ class FalconConfigParser(configparser.ConfigParser):
 			return self.__getitem__(key)
 
 	def getboolean(self,section,key,default=True):
-		if type(default)!=boolean:
+		if type(default)!=bool:
 			raise ValueError("default value must be boolean")
 		try:
-			ret = super().getboolean(section,key)
+			return super().getboolean(section,key)
 		except ValueError:
 			self.log.debug("value is not boolean.  return default "+str(default)+" at section "+section+", key "+key)
 			self[section][key]=str(default)
-			return int(default)
+			return default
 		except configparser.NoOptionError as e:
 			self.log.debug("add new boolval "+str(default)+" at section "+section+", key "+key)
 			self[section][key]=default

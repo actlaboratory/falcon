@@ -34,7 +34,14 @@ class falconAppMain(wx.App):
 		self.error_sound_handle=None
 		self.LoadSettings()
 		wx.DisableAsserts()
-		locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
+		try:
+			if self.config["general"]["locale"]!=None:
+				locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
+			else:
+				locale.setlocale(locale.LC_TIME)
+		except:
+			locale.setlocale(locale.LC_TIME)
+			self.config["general"]["locale"]=""
 		self.SetTimeZone()
 		self.InitTranslation()
 		self.LoadUserCommandSettings()
