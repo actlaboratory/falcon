@@ -59,10 +59,10 @@ class View(BaseView):
 		title+=constants.APP_NAME
 		super().Initialize(
 			title,
-			self.app.config.getint(self.identifier,"sizeX",800),
-			self.app.config.getint(self.identifier,"sizeY",600),
-			self.app.config.getint(self.identifier,"positionX"),
-			self.app.config.getint(self.identifier,"positionY")
+			self.app.config.getint(self.identifier,"sizeX",800,400),
+			self.app.config.getint(self.identifier,"sizeY",600,300),
+			self.app.config.getint(self.identifier,"positionX",50,0),
+			self.app.config.getint(self.identifier,"positionY",50,0)
 		)
 		self.menu=Menu()
 		self.menu.InitShortcut(self.identifier)

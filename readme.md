@@ -30,4 +30,5 @@ python tools\updateTranslation.py
 locale フォルダを勝手に探して、poファイルを配置してくれます。なので、言語を追加したい場合は、locale フォルダに空フォルダを作ってください。前回の翻訳文は残ったままマージされます。文字列が増えたときでも、気にせず updateTranslation してください。  
 
 ## 翻訳したら  
-python tools\buildTranslation.py  
+python tools\buildTranslation.py
+新規言語の場合は、constants.SUPPORTING_LANGUAGEに言語コードを追加

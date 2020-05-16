@@ -232,7 +232,7 @@ class FalconTabBase(object):
 		i=0
 		for elem,format in col.items():
 			#カラム幅の設定を取得
-			w=globalVars.app.config.getint(lst.__class__.__name__,"column_width_"+str(i),100)
+			w=globalVars.app.config.getint(lst.__class__.__name__,"column_width_"+str(i),100,0,1500)
 
 			#カラムを作成
 			self.hListCtrl.InsertColumn(i,elem,format=format,width=w)
@@ -718,7 +718,7 @@ class FalconTabBase(object):
 			globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
 			return
 		#end 非対応
-		ln=int(globalVars.app.config["preview"]["header_line_count"])
+		ln=int(globalVars.app.config["preview"]["header_line_count"],10,1,100)
 		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
 		if len(s)>ln: s=s[0:ln]
 		prefix=_("先頭%(ln)d行") % {'ln': ln}
@@ -730,7 +730,7 @@ class FalconTabBase(object):
 			globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
 			return
 		#end 非対応
-		ln=int(globalVars.app.config['preview']['footer_line_count'])
+		ln=int(globalVars.app.config['preview']['footer_line_count'],10,1,50)
 		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
 		if len(s)>10: s=s[-10:]
 		prefix=_("末尾%(ln)d行") % {'ln': ln}
@@ -747,9 +747,9 @@ class FalconTabBase(object):
 		m.AppendCheckItem(0,_("フォルダ階層を読み上げ"))
 		m.AppendCheckItem(1,_("フォルダ名を読み上げ"))
 		m.AppendCheckItem(2,_("項目数を読み上げ"))
-		m.Check(0,globalVars.app.config['on_list_moved']['read_directory_level']=='True')
-		m.Check(1,globalVars.app.config['on_list_moved']['read_directory_name']=='True')
-		m.Check(2,globalVars.app.config['on_list_moved']['read_item_count']=='True')
+		m.Check(0,globalVars.app.config.getboolean('on_list_moved','read_directory_level',True))
+		m.Check(1,globalVars.app.config.getboolean('on_list_moved','read_directory_name',True))
+		m.Check(2,globalVars.app.config.getboolean('on_list_moved','read_item_count',True))
 		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
 		globalVars.app.config['on_list_moved']['read_directory_level']=m.IsChecked(0)
 		globalVars.app.config['on_list_moved']['read_directory_name']=m.IsChecked(1)

@@ -44,9 +44,35 @@ class FalconConfigParser(configparser.ConfigParser):
 			self.add_section(key)
 			return self.__getitem__(key)
 
-	def getint(self,section,key,default=0):
+	def getboolean(self,section,key,default=True):
+		if type(default)!=boolean:
+			raise ValueError("default value must be boolean")
 		try:
-			return super().getint(section,key)
+			ret = super().getboolean(section,key)
+		except ValueError:
+			self.log.debug("value is not boolean.  return default "+str(default)+" at section "+section+", key "+key)
+			self[section][key]=str(default)
+			return int(default)
+		except configparser.NoOptionError as e:
+			self.log.debug("add new boolval "+str(default)+" at section "+section+", key "+key)
+			self[section][key]=default
+			return default
+		except configparser.NoSectionError as e:
+			self.log.debug("add new section and boolval "+str(default)+" at section "+section+", key "+key)
+			self.add_section(section)
+			self.__getitem__(section).__setitem__(key,default)
+			return default
+
+	def getint(self,section,key,default=0,min=None,max=None):
+		if type(default)!=int:
+			raise ValueError("default value must be int")
+		try:
+			ret = super().getint(section,key)
+			if (min!=None and ret<min) or (max!=None and ret>max):
+				self.log.debug("intvalue "+str(ret)+" out of range.  at section "+section+", key "+key)
+				self[section][key]=str(default)
+				return int(default)
+			return ret
 		except configparser.NoOptionError as e:
 			self.log.debug("add new intval "+str(default)+" at section "+section+", key "+key)
 			self[section][key]=str(default)
@@ -56,6 +82,22 @@ class FalconConfigParser(configparser.ConfigParser):
 			self.add_section(section)
 			self.__getitem__(section).__setitem__(key,str(default))
 			return int(default)
+
+	def getstring(self,section,key,default="",selection=None,*, raw=False, vars=None,fallback=None):
+		if type(selection) not in (set,tuple):
+			raise TypeError("selection must be set or tuple")
+		ret=self.__getitem__(section)[key]
+		if ret=="" and default!="":
+			self.log.debug("add default value.  at section "+section+", key "+key)
+			self[section][key]=default
+			ret=default
+
+		if selection==None:return ret
+		if ret not in selection:
+			self.log.debug("value "+ret+" not in selection.  at section "+section+", key "+key)
+			self[section][key]=default
+			ret=default
+		return ret
 
 	def add_section(self,name):
 		if not self.has_section(name):

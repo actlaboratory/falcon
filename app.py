@@ -146,7 +146,7 @@ class falconAppMain(wx.App):
 
 	def InitTranslation(self):
 		"""翻訳を初期化する。"""
-		self.translator=gettext.translation("messages","locale", languages=[self.config["general"]["language"]], fallback=True)
+		self.translator=gettext.translation("messages","locale", languages=[self.config.getstring("general","language","ja-JP",constants.SUPPORTING_LANGUAGE)], fallback=True)
 		self.translator.install()
 
 	def InitSound(self):

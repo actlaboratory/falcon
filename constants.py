@@ -11,6 +11,9 @@ APP_VERSION="0.01"
 APP_COPYRIGHT_YEAR="2019-2020"
 APP_DEVELOPERS="Yukio Nozawa and Yuki Kochi"
 
+SUPPORTING_LANGUAGE=("ja-JP","en-US")
+
+
 SETTING_FILE_NAME="settings.ini"
 KEYMAP_FILE_NAME="keymap.ini"
 

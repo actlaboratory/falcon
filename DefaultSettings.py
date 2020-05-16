@@ -13,7 +13,7 @@ class DefaultSettings:
 		config["general"]={
 			"language": "ja-JP",
 			"fileVersion": "100",
-			"locale": "JA-JP"
+			"locale": "ja-JP"
 		}
 		config["FileList"]={
 			"sorting": 0,
