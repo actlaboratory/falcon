@@ -66,7 +66,6 @@ class View(BaseView):
 		)
 		self.menu=Menu()
 		self.menu.InitShortcut(self.identifier)
-		self.InstallMenuEvent(self.menu,self.events)
 
 		#お気に入りフォルダと「ここで開く」のショートカットキーを登録
 		for target in (globalVars.app.userCommandManagers):
@@ -84,6 +83,8 @@ class View(BaseView):
 			for v in errors:
 				tmp+=v+"\n"
 			dialog(_("エラー"),tmp)
+
+		self.InstallMenuEvent(self.menu,self.events)
 
 		self.tabs=[]
 		self.activeTab=None#最初なので空
