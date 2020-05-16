@@ -51,20 +51,6 @@ class StreamListTab(base.FalconTabBase):
 		"READ_CONTENT_READFOOTER",
 	]
 
-	def Update(self,lst,cursor=-1):
-		"""指定された要素をタブに適用する。"""
-		self._cancelBackgroundTasks()
-		self.hListCtrl.DeleteAllItems()
-		self.SetListColumns(lst)
-		self.listObject=lst
-		self.UpdateListContent(self.listObject.GetItems())
-		self.hListCtrl.Focus(cursor)
-		if cursor>0:
-			self.hListCtrl.Select(cursor)
-
-		#タブの名前変更を通知
-		globalVars.app.hMainView.UpdateTabName()
-
 	def OnLabelEditEnd(self,evt):
 		self.isRenaming=False
 		self.parent.SetShortcutEnabled(True)

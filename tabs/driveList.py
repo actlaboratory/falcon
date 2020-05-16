@@ -50,21 +50,6 @@ class DriveListTab(base.FalconTabBase):
 		"VIEW_DRIVE_INFO",
 	]
 
-	def Update(self,lst,cursor=-1):
-		"""指定された要素をタブに適用する。"""
-		self._cancelBackgroundTasks()
-		self.hListCtrl.DeleteAllItems()
-		self.SetListColumns(lst)
-		self.listObject=lst
-		self.UpdateListContent(self.listObject.GetItems())
-		self.hListCtrl.Focus(cursor)
-		if cursor>=0:
-			self.hListCtrl.Select(cursor)
-		#end カーソル初期位置を設定
-
-		#タブの名前変更を通知
-		globalVars.app.hMainView.UpdateTabName()
-
 	#end Update
 
 	def GoBackward(self):

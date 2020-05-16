@@ -162,6 +162,7 @@ class View(BaseView):
 		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),newtab.hasCheckedItem())
 
 		self.tabs[i]=newtab
+		self.activeTab.OnBeforeChangeTab()
 		self.activeTab=newtab
 		newtab.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
 

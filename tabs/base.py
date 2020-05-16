@@ -121,6 +121,7 @@ class FalconTabBase(object):
 			self.environment["markedPlace"]=None		#マークフォルダ
 			self.environment["selectedItemCount"]=None	#選択中のアイテム数。0or1or2=2以上。
 			self.environment["selectingItemCount"]={}	#選択中アイテムの種類(browsableObjects)毎の個数
+			self.environment["listType"]=None			#表示中のリストタイプ(listObject)
 
 	def SetEnvironment(self,newEnv):
 		"""タブの引継ぎなどの際にenvironmentの内容をコピーするために利用"""
@@ -222,23 +223,46 @@ class FalconTabBase(object):
 
 	def SetListColumns(self,lst):
 		"""リストコントロールにカラムを設定する。"""
-		col=lst.GetColumns()
+		#カラム幅を保存し、いったん全ての列を削除
+		self._updateColumnConfig()
 		self.hListCtrl.DeleteAllColumns()
+
+		col=lst.GetColumns()
 		i=0
 		for elem,format in col.items():
-			self.hListCtrl.InsertColumn(i,elem,format=format,width=wx.LIST_AUTOSIZE)
+			#カラム幅の設定を取得
+			w=globalVars.app.config.getint(lst.__class__.__name__,"column_width_"+str(i),100)
+
+			#カラムを作成
+			self.hListCtrl.InsertColumn(i,elem,format=format,width=w)
 			#column=self.hListCtrl.GetColumn(i)
 			#column.SetBackgroundColour("ff0000")
 			#self.hListCtrl.SetColumn(i,column)
 			i+=1
 		#end カラムを作る
-		#カラム幅を設定
-		for i in range(0,len(col)):
-			w=globalVars.app.config[lst.__class__.__name__]["column_width_"+str(i)]
-			w=100 if w=="" else int(w)
-			self.hListCtrl.SetColumnWidth(i,w)
-		#end カラム幅を設定
+
+		#カラムの並び替え設定を反映
+		try:
+			self.hListCtrl.SetColumnsOrder(json.loads(globalVars.app.config[lst.__class__.__name__]["columns_order"]))
+		except (json.decoder.JSONDecodeError,TypeError):
+			self._updateColumnConfig(type(lst))		#configが壊れているので初期値リセット
 	#end SetListColumns
+
+	def Update(self,lst,cursor=-1):
+		"""指定された要素をタブに適用する。"""
+		self._cancelBackgroundTasks()
+		self.hListCtrl.DeleteAllItems()
+		if type(lst)!=type(self.listObject):
+			self.SetListColumns(lst)
+		self.listObject=lst
+		self.environment["listType"]=type(lst)
+		self.UpdateListContent(self.listObject.GetItems())
+		self.hListCtrl.Focus(cursor)
+		if cursor>0:
+			self.hListCtrl.Select(cursor)
+
+		#タブの名前変更を通知
+		globalVars.app.hMainView.UpdateTabName()
 
 	def UpdateListContent(self,content):
 		"""
@@ -442,6 +466,15 @@ class FalconTabBase(object):
 		s=self.listObject.__class__.__name__
 		globalVars.app.config[s]["sorting"]=self.listObject.GetSortCursor()
 		globalVars.app.config[s]["descending"]=int(self.listObject.GetSortDescending())
+
+	def _updateColumnConfig(self,listType=None):
+		"""カラムのソート状態をconfigに保存する。"""
+		if listType==None:
+			listType=self.environment["listType"]
+		value=self.hListCtrl.GetColumnsOrder()
+		if value==[]:return		#起動直後で、まだカラム生成前
+		key=listType.__name__
+		globalVars.app.config[key]["columns_order"]=str(value)
 
 	def col_resize(self,event):
 		no=event.GetColumn()
@@ -725,6 +758,7 @@ class FalconTabBase(object):
 	def OnBeforeChangeTab(self):
 		"""タブ切り替えが起きる前に呼ばれる。"""
 		self.StopSound()
+		self._updateColumnConfig()
 
 	def _LostFocus(self,event=None):
 		self.StopSound()
