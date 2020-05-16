@@ -60,8 +60,6 @@ class GrepResultList(FalconListBase):
 			keyword=keyword.replace("?",".")
 		#end ワイルドカード置き換え
 		self.keyword=re.compile(keyword)
-		self.sortCursor=int(globalVars.app.config["SearchResultList"]["sorting"])
-		self.sortDescending=int(globalVars.app.config["SearchResultList"]["descending"])
 		if not silent: globalVars.app.say("%sの検索結果 %s から" % (keyword,rootDirectory,))
 		self._initSearch()
 

@@ -226,6 +226,7 @@ class FalconTabBase(object):
 		#カラム幅を保存し、いったん全ての列を削除
 		self._updateColumnConfig()
 		self.hListCtrl.DeleteAllColumns()
+		self.sortTargetColumnNo=None
 
 		col=lst.GetColumns()
 		i=0
@@ -299,7 +300,9 @@ class FalconTabBase(object):
 		self.hIconList.Add(wx.Icon("fx/dummy.ico"))
 		self.hIconList.Add(wx.Icon("fx/ascending.ico"))
 		self.hIconList.Add(wx.Icon("fx/descending.ico"))
+		self._SetSortIcon()
 
+	def _SetSortIcon(self):
 		#アイコンを設定済みならいったん削除
 		if self.sortTargetColumnNo!=None:
 			self.hListCtrl.SetColumnImage(self.sortTargetColumnNo,self.hIconList.GetImageCount()-3)
@@ -506,6 +509,9 @@ class FalconTabBase(object):
 
 		#リストをソートする
 		self.hListCtrl.SortItems(self._compare)
+
+		#画面上のソートアイコンを設定
+		self._SetSortIcon()
 
 	def _compare(self, item1, item2):
 		"""リストのソートでlistObjectから呼ばれる"""

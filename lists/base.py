@@ -16,8 +16,8 @@ class FalconListBase(object):
 	def __init__(self):
 		self.log=logging.getLogger("falcon."+self.__class__.__name__)
 		self.supportedSorts=[]
-		self.sortCursor=0
-		self.sortDescending=0
+		self.sortCursor=globalVars.app.config.getint(self.__class__.__name__,"sorting",0)
+		self.sortDescending=globalVars.app.config.getint(self.__class__.__name__,"descending",0)
 		self.lists=[]		#内部のアイテムを保持するリストを表示順に格納
 		self.columns={}
 
