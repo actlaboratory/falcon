@@ -240,3 +240,16 @@ falcon_helper_funcdef void initContextMenu(HWND parent)
 	parentWindowProc = (WNDPROC)GetWindowLongPtr(parent, GWLP_WNDPROC);
 	SetWindowLongPtr(parent, GWLP_WNDPROC, (LONG)contextMenuWindowProc);
 }
+
+falcon_helper_funcdef int addCustomContextMenuItem(LPTSTR itemName, int id)
+{
+	if (!contextMenuHandle)
+		return 0;
+	MENUITEMINFO mi = {0};
+	mi.cbSize = sizeof(MENUITEMINFO);
+	mi.fMask = MIIM_STRING;
+	mi.fType = MFT_STRING;
+	mi.dwTypeData = itemName;
+	mi.cch = lstrlen(itemName);
+	return InsertMenuItem(contextMenuHandle, id, false, &mi);
+}
