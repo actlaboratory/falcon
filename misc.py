@@ -111,10 +111,13 @@ def getDiscDriveTypes():
 def InitContextMenu(wnd):
 	falconHelper.initContextMenu(wnd)
 
-def GetContextMenu(path):
+def GetContextMenu():
+	falconHelper.getContextMenu()
+
+def AddContextMenuItemsFromWindows(path):
 	path_bytes=bytearray(path.encode('UTF-16LE'))
 	path_bytes.extend(b'\x00\x00')
-	ret=falconHelper.getContextMenu(bytes(path_bytes))
+	ret=falconHelper.addContextMenuItemsFromWindows(bytes(path_bytes))
 	return ret==1
 
 def ShowContextMenu(x,y):

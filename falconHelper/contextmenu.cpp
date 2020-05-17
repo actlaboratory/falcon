@@ -107,7 +107,6 @@ int _getContextMenu(LPCTSTR in, HMENU *out)
 		fld->Release();
 		return 0;
 	}
-	contextMenuHandle = CreatePopupMenu();
 	contextMenu->QueryContextMenu(contextMenuHandle, 0, 101, 0x7fff, CMF_NORMAL);
 	contextMenu->QueryInterface(IID_IContextMenu2, (void **)&g_pcm2);
 	contextMenu->QueryInterface(IID_IContextMenu3, (void **)&g_pcm3);
@@ -216,7 +215,14 @@ string processMenu(HMENU menu)
 	return v.serialize();
 }
 
-falcon_helper_funcdef int getContextMenu(LPCTSTR path)
+falcon_helper_funcdef void getContextMenu()
+{
+	if (contextMenuHandle)
+		destroyContextMenu();
+	contextMenuHandle = CreatePopupMenu();
+}
+
+falcon_helper_funcdef int addContextMenuItemsFromWindows(LPCTSTR path)
 {
 	HMENU menu;
 	return _getContextMenu(path, &menu);
