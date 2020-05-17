@@ -640,6 +640,7 @@ class FalconTabBase(object):
 			targetPath=self.GetFocusedElement().fullpath
 		#end イベントあるか
 		misc.GetContextMenu()
+		misc.AddCustomContextMenuItem("テスト",5001)
 		can_show_menu=misc.AddContextMenuItemsFromWindows(targetPath)
 		if not can_show_menu:
 			misc.DestroyContextMenu()

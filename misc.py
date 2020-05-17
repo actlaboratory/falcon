@@ -108,16 +108,23 @@ def getDiscDriveTypes():
 	return ret
 #end getDiscDriveTypes
 
+def makeStringForFalconHelper(string):
+	tmp=bytearray(string.encode('UTF-16LE'))
+	tmp.extend(b'\x00\x00')
+	return bytes(tmp)
+
 def InitContextMenu(wnd):
 	falconHelper.initContextMenu(wnd)
 
 def GetContextMenu():
 	falconHelper.getContextMenu()
 
+def AddCustomContextMenuItem(name,identifier):
+	falconHelper.addCustomContextMenuItem(makeStringForFalconHelper(name),identifier)
+
 def AddContextMenuItemsFromWindows(path):
-	path_bytes=bytearray(path.encode('UTF-16LE'))
-	path_bytes.extend(b'\x00\x00')
-	ret=falconHelper.addContextMenuItemsFromWindows(bytes(path_bytes))
+	path_bytes=makeStringForFalconHelper(path)
+	ret=falconHelper.addContextMenuItemsFromWindows(path_bytes)
 	return ret==1
 
 def ShowContextMenu(x,y):
@@ -130,9 +137,8 @@ def DestroyContextMenu():
 	falconHelper.destroyContextMenu()
 
 def ExtractText(path):
-	path_bytes=bytearray(path.encode('UTF-16LE'))
-	path_bytes.extend(b'\x00\x00')
-	ptr=falconHelper.extractText(bytes(path_bytes))
+	path_bytes=makeStringForFalconHelper(path)
+	ptr=falconHelper.extractText(path_bytes)
 	s=ctypes.c_char_p(ptr).value
 	falconHelper.releasePtr(ptr)
 	s2=s.decode('UTF-8')
