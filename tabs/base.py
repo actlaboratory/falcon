@@ -682,8 +682,13 @@ class FalconTabBase(object):
 		else:
 			targetPath=self.GetFocusedElement().fullpath
 		#end イベントあるか
-		can_show_menu=misc.GetContextMenu(targetPath)
-		if not can_show_menu: return#コンテキストメニュー生成できなかった
+		misc.GetContextMenu()
+		misc.AddCustomContextMenuItem("テスト",5001)
+		can_show_menu=misc.AddContextMenuItemsFromWindows(targetPath)
+		if not can_show_menu:
+			misc.DestroyContextMenu()
+			return#コンテキストメニュー生成できなかった
+		#end メニュー生成できない
 		x,y=wx.GetMousePosition()
 		cmd=misc.ShowContextMenu(x,y)
 		evt=wx.MenuEvent(id=cmd)
