@@ -13,10 +13,12 @@ class BaseDialog(object):
 	def __init__(self):
 		pass
 
-	def Initialize(self, parent,ttl,style=0):
-		"""タイトルを指定して、ウィンドウを初期化し、親の中央に配置するように設定。"""
-		self.wnd=wx.Dialog(parent,-1, ttl,style=wx.DEFAULT_DIALOG_STYLE | wx.BORDER_DEFAULT | style)
+	def Initialize(self, parent,ttl,style=wx.DEFAULT_DIALOG_STYLE):
+		"""タイトルを指定してウィンドウを初期化"""
+		self.wnd=wx.Dialog(parent,-1, ttl,style= wx.CAPTION | wx.SYSTEM_MENU | wx.BORDER_DEFAULT | style)
 		_winxptheme.SetWindowTheme(self.wnd.GetHandle(),"","")
+
+		self.wnd.Bind(wx.EVT_CLOSE,self.OnClose)
 
 		self.panel = wx.Panel(self.wnd,wx.ID_ANY)
 		self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -28,3 +30,11 @@ class BaseDialog(object):
 		self.sizer.Fit(self.wnd)
 		self.wnd.Centre()
 		return self.wnd.ShowModal()
+
+	#closeイベントで呼ばれる。Alt+F4対策
+	def OnClose(self,event):
+		if self.wnd.GetWindowStyleFlag() | wx.CLOSE_BOX==wx.CLOSE_BOX:
+			self.wnd.Destroy()
+		else:
+			event.Veto()
+

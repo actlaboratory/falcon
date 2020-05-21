@@ -28,7 +28,10 @@ class Dialog(BaseDialog):
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
 		self.app=globalVars.app
-		super().Initialize(self.app.hMainView.hFrame,_("ファイル操作確認"))
+		if self.enableCancel:
+			super().Initialize(self.app.hMainView.hFrame,_("ファイル操作確認"))
+		else:
+			super().Initialize(self.app.hMainView.hFrame,_("ファイル操作確認"),0)
 		self.InstallControls()
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True

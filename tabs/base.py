@@ -434,12 +434,14 @@ class FalconTabBase(object):
 		if silence==False:
 			globalVars.app.say(_("更新"), interrupt=True)
 		if cursorTargetName=="":
-			item=self.listObject.GetElement(self.GetFocusedItem())
+			item=self.GetFocusedElement()
 		result=self.listObject.Update()
 		if result != errorCodes.OK:
 			return result			#アクセス負荷など
+		cursor=-1
 		if cursorTargetName=="":
-			cursor=self.listObject.Search(item.basename,0)
+			if item!=None:
+				cursor=self.listObject.Search(item.basename,0)
 		else:
 			cursor=self.listObject.Search(cursorTargetName,0)
 		#end ターゲットが指定されているかどうか
