@@ -47,11 +47,12 @@ class UserCommandManager:
 		"""指定されたrefに対応するparamを返す"""
 		return self.paramMap[self.refMap[ref]]
 
-	def add(self,name,param,key):
+	def add(self,name,param,key=None):
 		"""指定した要素を追加"""
 		name=name.upper()
 		self.paramMap[name]=param
-		self.keyMap[name]=key
+		if key!=None:
+			self.keyMap[name]=key
 		self.refMap[name]=menuItemsStore.getRef(self.refHead+name)
 
 	def len(self):
