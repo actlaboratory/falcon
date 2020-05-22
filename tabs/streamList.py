@@ -195,8 +195,7 @@ class StreamListTab(base.FalconTabBase):
 		#end error
 		self.UpdateFilelist(silence=True)
 		focus_index=self._findFocusAfterDeletion(paths,focus_index)
-		self.hListCtrl.Focus(focus_index)
-		self.hListCtrl.Select(focus_index)
+		self.Focus(focus_index)
 
 	def ShowProperties(self):
 		index=self.GetFocusedItem()

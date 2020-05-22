@@ -172,6 +172,13 @@ class FalconTabBase(object):
 		"""現在フォーカスが当たっているアイテムのインデックス番号を取得する。"""
 		return self.hListCtrl.GetFocusedItem()
 
+	def Focus(self,index,refresh=True):
+		if refresh:
+			self.hListCtrl.Select(-1,0)
+		self.hListCtrl.Focus(index)
+		if index!=-1:
+			self.hListCtrl.Select(index)
+
 	def GetFocusedElement(self):
 		"""現在フォーカスが当たっているアイテムをbrowsableObjectsで返す"""
 		if self.GetFocusedItem()<0:
@@ -258,9 +265,7 @@ class FalconTabBase(object):
 		self.listObject=lst
 		self.environment["listType"]=type(lst)
 		self.UpdateListContent(self.listObject.GetItems())
-		self.hListCtrl.Focus(cursor)
-		if cursor>0:
-			self.hListCtrl.Select(cursor)
+		self.Focus(cursor)
 
 		#タブの名前変更を通知
 		globalVars.app.hMainView.UpdateTabName()
@@ -386,8 +391,7 @@ class FalconTabBase(object):
 			#カーソルを１つ下へ移動
 			if len(items)==1 and item!=len(self.listObject)-1:		#カーソルが一番下以外にある時
 				self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_SELECTED)
-				self.hListCtrl.Focus(item+1)
-				self.hListCtrl.Select(item+1)
+				self.Focus(item+1)
 		self.hListCtrl.Update()
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.hasCheckedItem())
 

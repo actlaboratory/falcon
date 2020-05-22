@@ -170,8 +170,7 @@ class FileListTab(base.FalconTabBase):
 		failed=op.CheckFailed()
 		self.UpdateFilelist(silence=True)
 		focus_index=self._findFocusAfterDeletion(paths,focus_index)
-		self.hListCtrl.Focus(focus_index)
-		self.hListCtrl.Select(focus_index)
+		self.Focus(focus_index)
 
 	def Delete(self):
 		focus_index=self.GetFocusedItem()
@@ -196,7 +195,7 @@ class FileListTab(base.FalconTabBase):
 		#end error
 		self.UpdateFilelist(silence=True)
 		focus_index=self._findFocusAfterDeletion(paths,focus_index)
-		self.hListCtrl.Focus(focus_index)
+		self.Focus(focus_index)
 
 	def ShowProperties(self):
 		index=self.GetFocusedItem()
@@ -217,9 +216,7 @@ class FileListTab(base.FalconTabBase):
 
 	def GoToTopFile(self):
 		#end ファイルリストのときしか通さない
-		self.hListCtrl.Focus(self.listObject.GetTopFileIndex())
-		self.hListCtrl.Select(-1,0)
-		self.hListCtrl.Select(self.listObject.GetTopFileIndex())
+		self.Focus(self.listObject.GetTopFileIndex())
 		globalVars.app.say(_("先頭ファイル"))
 
 	def DirCalc(self):
