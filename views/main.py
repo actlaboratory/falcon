@@ -156,16 +156,10 @@ class View(BaseView):
 		#environmentの内容を引き継ぐ
 		newtab.SetEnvironment(self.activeTab.environment)
 
-		#メニューのブロック情報を変更
-		self.menu.Block(newtab.blockMenuList)
-		self.menu.UnBlock(self.activeTab.blockMenuList)
-		self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),newtab.IsMarked())
-		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),newtab.hasCheckedItem())
-
+		self.UpdateMenuState(self.activeTab,newtab)
 		self.tabs[i]=newtab
 		self.activeTab.OnBeforeChangeTab()
 		self.activeTab=newtab
-		newtab.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
 
 		#タブ名変更。activeTab書き換え後に呼ぶ必要がある
 		self.UpdateTabName()
@@ -174,18 +168,9 @@ class View(BaseView):
 	def ActivateTab(self,pageNo):
 		"""指定されたインデックスのタブをアクティブにする。"""
 
-		#メニューのブロック状態を変更
-		if self.activeTab:
-			self.menu.UnBlock(self.activeTab.blockMenuList)
-		self.menu.Block(self.tabs[pageNo].blockMenuList)
-		self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),self.tabs[pageNo].IsMarked())
-		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.tabs[pageNo].hasCheckedItem())
-
+		self.UpdateMenuState(self.activeTab,self.tabs[pageNo])
 		self.activeTab=self.tabs[pageNo]
 		self.hTabCtrl.SetSelection(pageNo)
-
-		self.activeTab.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
-
 
 	def CloseTab(self,pageNo):
 		"""指定されたインデックスのタブを閉じる。閉じたタブがアクティブだった場合は、別のタブをアクティブ状態にする。全てのタブが閉じられた場合は、終了イベントを投げる。"""
@@ -243,6 +228,15 @@ class View(BaseView):
 			self.hFrame.SetMenuBar(self.menu.hDisableMenuBar)
 		#SetMenuBarの後に呼び出しが必要
 		self.creator.GetSizer().Layout()
+
+	def UpdateMenuState(self,old,new):
+		#メニューのブロック状態を変更
+		if old:
+			self.menu.UnBlock(old.blockMenuList)
+		self.menu.Block(new.blockMenuList)
+		self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),new.IsMarked())
+		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),new.hasCheckedItem())
+		new.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
 
 	def UpdateTabName(self):
 		"""タブ名変更の可能性があるときにtabsからたたかれる"""
