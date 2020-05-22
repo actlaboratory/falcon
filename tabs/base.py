@@ -806,7 +806,10 @@ class FalconTabBase(object):
 				self.hilightIndex=-1
 
 	def _findFocusAfterDeletion(self,paths,focus_index):
-		"""ゴミ箱/削除しして、ファイルリストを更新した後に呼び出す。削除語のカーソル位置を見つける。"""
+		"""
+			ゴミ箱/削除して、ファイルリストを更新した後に呼び出す。
+			削除語のカーソル位置を見つける。
+		"""
 		#カーソルをどこに動かすかを決定、まずはもともとフォーカスしてた項目があるかどうか
 		if os.path.exists(paths[focus_index]):
 			new_cursor_path=paths[focus_index]#フォーカスしてたファイル
@@ -823,7 +826,7 @@ class FalconTabBase(object):
 					break
 				#end 上
 				tmp=focus_index+i
-				if tmp>=ln and os.path.exists(paths[tmp]):#あった
+				if tmp<ln and os.path.exists(paths[tmp]):#あった
 					new_cursor_path=paths[tmp]
 					break
 				#end 下
