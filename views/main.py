@@ -321,7 +321,7 @@ class Menu(BaseMenu):
 			"READ_CONTENT_READHEADER":_("テキストヘッダー読み"),
 			"READ_CONTENT_READFOOTER":_("テキストフッター読み")
 		}),
-		self.hReadMenu.AppendSubMenu(subMenu,_("プレビュー"))
+		self.RegisterMenuCommand(self.hReadMenu,"READ_PREVIEW",_("プレビュー"),subMenu)
 		self.RegisterMenuCommand(self.hReadMenu,{
 			"READ_CURRENTFOLDER":_("現在のフォルダ名を読み上げ"),
 			"READ_LISTITEMNUMBER":_("リスト項目数を読み上げ"),
@@ -346,6 +346,8 @@ class Menu(BaseMenu):
 			"VIEW_SORTCYCLEAD":_("昇順/降順切り替え"),
 			"VIEW_DRIVE_INFO":_("ドライブ情報の表示"),
 		})
+		subMenu=wx.Menu()
+		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORT_COLUMN",_("カラムの並び替え"),subMenu)
 
 		#環境メニューの中身
 		self.RegisterMenuCommand(self.hEnvMenu,{

@@ -63,17 +63,20 @@ class BaseMenu(object):
 				tmp+=v+"\n"
 			dialog(_("エラー"),tmp)
 
-	def RegisterMenuCommand(self,menu_handle,ref_id,title=""):
+	def RegisterMenuCommand(self,menu_handle,ref_id,title="",subMenu=None):
 		if type(ref_id)==dict:
 			for k,v in ref_id.items():
-				self._RegisterMenuCommand(menu_handle,k,v)
+				self._RegisterMenuCommand(menu_handle,k,v,None)
 		else:
-			return self._RegisterMenuCommand(menu_handle,ref_id,title)
+			return self._RegisterMenuCommand(menu_handle,ref_id,title,subMenu)
 
-	def _RegisterMenuCommand(self,menu_handle,ref_id,title):
+	def _RegisterMenuCommand(self,menu_handle,ref_id,title,subMenu):
 		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
 		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
-		menu_handle.Append(menuItemsStore.getRef(ref_id),s)
+		if subMenu==None:
+			menu_handle.Append(menuItemsStore.getRef(ref_id),s)
+		else:
+			menu_handle.Append(menuItemsStore.getRef(ref_id),s,subMenu)
 		self.blockCount[menuItemsStore.getRef(ref_id)]=0
 
 	def ApplyShortcut(self,hFrame):
