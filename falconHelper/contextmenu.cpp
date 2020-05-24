@@ -147,6 +147,12 @@ falcon_helper_funcdef int execContextMenuItem(int nId)
 	info.lpParameters = NULL;
 	info.lpDirectory = NULL;
 	info.nShow = SW_SHOW;
+	if (GetKeyState(VK_CONTROL) < 0) {
+		info.fMask |= CMIC_MASK_CONTROL_DOWN;
+	}
+	if (GetKeyState(VK_SHIFT) < 0) {
+		info.fMask |= CMIC_MASK_SHIFT_DOWN;
+	}
 	contextMenu->InvokeCommand(&info);
 	return 1;
 }
