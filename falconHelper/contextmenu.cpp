@@ -107,7 +107,8 @@ int _getContextMenu(LPCTSTR in, HMENU *out)
 		fld->Release();
 		return 0;
 	}
-	contextMenu->QueryContextMenu(contextMenuHandle, 0, 101, 0x7fff, CMF_NORMAL);
+	UINT uFlags = GetKeyState(VK_SHIFT) < 0 ? CMF_EXTENDEDVERBS : CMF_NORMAL;
+	contextMenu->QueryContextMenu(contextMenuHandle, 0, 101, 0x7fff, uFlags);
 	contextMenu->QueryInterface(IID_IContextMenu2, (void **)&g_pcm2);
 	contextMenu->QueryInterface(IID_IContextMenu3, (void **)&g_pcm3);
 
@@ -147,6 +148,12 @@ falcon_helper_funcdef int execContextMenuItem(int nId)
 	info.lpParameters = NULL;
 	info.lpDirectory = NULL;
 	info.nShow = SW_SHOW;
+	if (GetKeyState(VK_CONTROL) < 0) {
+		info.fMask |= CMIC_MASK_CONTROL_DOWN;
+	}
+	if (GetKeyState(VK_SHIFT) < 0) {
+		info.fMask |= CMIC_MASK_SHIFT_DOWN;
+	}
 	contextMenu->InvokeCommand(&info);
 	return 1;
 }

@@ -29,7 +29,7 @@ defaultKeymap["mainView"]={
 	"EDIT_MARKITEM_ALL": "shift+space",
 	"EDIT_UNMARKITEM_ALL": "escape",
 	"EDIT_MARKITEM_INVERSE": "ctrl+shift+space",
-	"EDIT_OPENCONTEXTMENU": "shift+f10/applications",
+	"EDIT_OPENCONTEXTMENU": "shift+f10/applications/shift+applications",
 	"MOVE_FORWARD": "return",
 	"MOVE_EXEC_ORIGINAL_ASSOCIATION":"ctrl+return",
 	"MOVE_BACKWARD": "BACK/LEFTARROW",
