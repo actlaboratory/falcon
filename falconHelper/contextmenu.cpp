@@ -107,7 +107,8 @@ int _getContextMenu(LPCTSTR in, HMENU *out)
 		fld->Release();
 		return 0;
 	}
-	contextMenu->QueryContextMenu(contextMenuHandle, 0, 101, 0x7fff, CMF_NORMAL);
+	uint uFlags = GetKeyState(VK_SHIFT) < 0 ? CMF_EXTENDEDVERBS : CMF_NORMAL;
+	contextMenu->QueryContextMenu(contextMenuHandle, 0, 101, 0x7fff, uFlags);
 	contextMenu->QueryInterface(IID_IContextMenu2, (void **)&g_pcm2);
 	contextMenu->QueryInterface(IID_IContextMenu3, (void **)&g_pcm3);
 
