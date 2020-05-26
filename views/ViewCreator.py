@@ -95,7 +95,7 @@ class ViewCreator():
 		hButton=wx.Button(self.parent, wx.ID_OK,label=text, name=text,style=wx.BORDER_SUNKEN)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton,mode=BUTTON_COLOUR)
-		self.sizer.Add(hButton,1, wx.ALIGN_BOTTOM | wx.ALL,5)
+		Add(self.sizer,hButton,1, wx.ALIGN_BOTTOM | wx.ALL,5)
 		hButton.SetDefault()
 		self.AddSpace(self.space)
 		return hButton
@@ -104,13 +104,13 @@ class ViewCreator():
 		hButton=wx.Button(self.parent, wx.ID_CANCEL,label=text, name=text)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton,mode=BUTTON_COLOUR)
-		self.sizer.Add(hButton,1,wx.ALIGN_BOTTOM | wx.ALL,5)
+		Add(self.sizer,hButton,1,wx.ALIGN_BOTTOM | wx.ALL,5)
 		self.AddSpace(self.space)
 		return hButton
 
 	def combobox(self,text,selection,event,state=-1):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
-		self.sizer.Add(hStaticText,0,wx.ALIGN_CENTER_VERTICAL)
+		Add(self.sizer,hStaticText,0,wx.ALIGN_CENTER_VERTICAL)
 
 		v=""
 		if state>=0:
@@ -118,7 +118,7 @@ class ViewCreator():
 		hCombo=wx.ComboBox(self.parent,wx.ID_ANY,value=v,choices=selection,style=wx.CB_READONLY,name=text)
 		hCombo.Bind(wx.EVT_TEXT,event)
 		self.SetFace(hCombo)
-		self.sizer.Add(hCombo,0,wx.ALL,5)
+		Add(self.sizer,hCombo,0,wx.ALL,5)
 		self.AddSpace(self.space)
 		return hCombo
 
@@ -132,7 +132,7 @@ class ViewCreator():
 			hCheckBox.Bind(wx.EVT_CHECKBOX,event)
 			self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 			hSizer.Add(hCheckBox)
-			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
+			Add(self.sizer,hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
 			falconHelper.ScCheckbox(hPanel.GetHandle())
 			return hCheckBox
 		elif (isinstance(text,list)):	#複数同時作成
@@ -144,7 +144,7 @@ class ViewCreator():
 				self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 				hSizer.Add(hCheckBox)
 				hCheckBoxes.append(hCheckBox)
-			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
+			Add(self.sizer,hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
 			falconHelper.ScCheckbox(hPanel.GetHandle())
 			return hCheckBoxes
 		else:
@@ -166,7 +166,7 @@ class ViewCreator():
 			self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 			hSizer.Add(hCheckBox)
 			self.AddSpace(self.space)
-			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
+			Add(self.sizer,hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
 			falconHelper.ScCheckbox(hPanel.GetHandle())
 			return hCheckBox
 		elif (isinstance(text,list)):	#複数同時作成
@@ -184,7 +184,7 @@ class ViewCreator():
 				self.SetFace(hCheckBox,mode=SKIP_COLOUR)
 				hSizer.Add(hCheckBox)
 				hCheckBoxes.append(hCheckBox)
-			self.sizer.Add(hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
+			Add(self.sizer,hPanel,0,wx.BOTTOM | wx.LEFT | wx.RIGHT,self.space)
 			falconHelper.ScCheckbox(hPanel.GetHandle())
 			self.AddSpace()
 			return hCheckBoxes
@@ -207,7 +207,7 @@ class ViewCreator():
 			_winxptheme.SetWindowTheme(int(elem),"","")
 		falconHelper.releasePtr(ptr)
 
-		self.sizer.Add(hRadioBox)
+		Add(self.sizer,hRadioBox)
 		self.AddSpace(self.space)
 		return hRadioBox
 
@@ -218,7 +218,7 @@ class ViewCreator():
 		hListCtrl.Create(self.parent,wx.ID_ANY,**settings)
 		self.SetFace(hListCtrl)
 		self.SetFace(hListCtrl.GetMainWindow())
-		self.sizer.Add(hListCtrl,proportion,sizerFlag)
+		Add(self.sizer,hListCtrl,proportion,sizerFlag)
 		_winxptheme.SetWindowTheme(win32api.SendMessage(hListCtrl.GetHandle(),0x101F,0,0),"","")#ヘッダーのウィンドウテーマを引っぺがす
 		self.AddSpace(self.space)
 		return hListCtrl
@@ -227,13 +227,13 @@ class ViewCreator():
 		htab=wx.Notebook(self.parent, wx.ID_ANY,name=title,style=style)
 		htab.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED,event)
 		self.SetFace(htab)
-		self.sizer.Add(htab,proportion,sizerFlag)
+		Add(self.sizer,htab,proportion,sizerFlag)
 		self.sizer.Layout()
 		return htab
 
 	def staticText(self,text):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
-		self.sizer.Add(hStaticText,0)
+		Add(self.sizer,hStaticText,0)
 		self.SetFace(hStaticText)
 		self.AddSpace(self.space)
 		return hStaticText
@@ -241,14 +241,14 @@ class ViewCreator():
 	def inputbox(self,text,x=0,defaultValue="",style=0):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
 		self.SetFace(hStaticText)
-		self.sizer.Add(hStaticText,0)
+		Add(self.sizer,hStaticText,0)
 
 		hTextCtrl=TextCtrl(self.parent, -1,size=(x,-1),name=text,value=defaultValue,style=style)
 		self.SetFace(hTextCtrl)
 		if x==-1:	#幅を拡張
-			self.sizer.Add(hTextCtrl,1)
+			Add(self.sizer,hTextCtrl,1)
 		else:
-			self.sizer.Add(hTextCtrl)
+			Add(self.sizer,hTextCtrl)
 		self.AddSpace(self.space)
 		return hTextCtrl,hStaticText
 
@@ -256,7 +256,7 @@ class ViewCreator():
 		hTimePicker=wx.adv.TimePickerCtrl(self.parent,-1)
 		hTimePicker.SetValue(defaultValue)
 		#self.SetFace(hTimePicker)
-		self.sizer.Add(hTimePicker)
+		Add(self.sizer,hTimePicker)
 		self.AddSpace(self.space)
 		return hTimePicker
 
@@ -265,7 +265,7 @@ class ViewCreator():
 		hDatePicker=wx.adv.DatePickerCtrl(self.parent,-1)
 		hDatePicker.SetValue(defaultValue)
 		self.SetFace(hDatePicker)
-		self.sizer.Add(hDatePicker)
+		Add(self.sizer,hDatePicker)
 		self.AddSpace(self.space)
 		return hDatePicker
 
@@ -273,7 +273,7 @@ class ViewCreator():
 	def calendar(self,defaultValue=wx.DateTime.Now()):
 		hCalendar=wx.adv.CalendarCtrl(self.parent,-1,defaultValue)
 		self.SetFace(hCalendar)
-		self.sizer.Add(hCalendar)
+		Add(self.sizer,hCalendar)
 		self.AddSpace(self.space)
 		return hCalendar
 
@@ -309,6 +309,17 @@ def BoxSizer(parent,orient=wx.VERTICAL,flg=0,border=0):
 	if (parent!=None):
 		parent.Add(sizer,0,flg,border)
 	return sizer
+
+#wxPython4.1以降でのAssersionError対策
+def Add(sizer, window, proportion=0, flag=0, border=0, userData=None):
+	if  isinstance(sizer,wx.BoxSizer):
+		if sizer.Orientation==wx.VERTICAL:
+			for i in (wx.ALIGN_TOP , wx.ALIGN_BOTTOM , wx.ALIGN_CENTER_VERTICAL):
+				if flag&i==i:flag-=i
+		else:
+			for i in (wx.ALIGN_LEFT , wx.ALIGN_RIGHT , wx.ALIGN_CENTER_HORIZONTAL , wx.ALIGN_CENTER):
+				if flag&i==i:flag-=i
+	sizer.Add(window,proportion,flag,border,userData)
 
 
 # parentで指定されたフレームにパネルを設置する
