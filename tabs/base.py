@@ -161,8 +161,20 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_MENU, self.CloseContextMenu)
 		self.hListCtrl.Bind(wx.EVT_KILL_FOCUS, self._LostFocus)
 
+	#表示されている順序でカラムの名前のリストを返す
 	def GetListColumns(self):
-		return self.columns
+		columnNames=list(self.listObject.columns.keys())
+		ret=[]
+		for i in self.hListCtrl.GetColumnsOrder():
+			ret.append(columnNames[i])
+		return ret
+
+	def GetColumnOrderList(self):
+		return self.hListCtrl.GetColumnsOrder()
+
+	def SetColumnOrderList(self,l):
+		self.hListCtrl.SetColumnsOrder(l)
+		self.hListCtrl.Refresh()		#表示を更新する必要がある
 
 	def GetItems(self):
 		"""タブのリストの中身を取得する。"""

@@ -374,6 +374,7 @@ class Menu(BaseMenu):
 
 		#イベントとショートカットキーの登録
 		target.Bind(wx.EVT_MENU,event.OnMenuSelect)
+		target.Bind(wx.EVT_MENU_OPEN,event.OnMenuOpen)
 		self.ApplyShortcut(target)
 
 		#名前の変更中に出しておくダミーのメニューバー
@@ -392,6 +393,11 @@ class Events(BaseEvents):
 			return
 
 		selected=event.GetId()#メニュー識別しの数値が出る
+
+		#カラムソートは特別対応
+		if selected>=constants.MENU_ID_SORT_COLUMN:
+			self.ColumnSort(selected)
+			return
 
 		#キー重複対応のためのIDの場合には、イベントを投げ直す
 		#複数投げられるが、有効状態の者は１つだけなはず
@@ -670,6 +676,40 @@ class Events(BaseEvents):
 
 		dialog(_("エラー"),_("操作が定義されていないメニューです。"))
 		return
+
+	def OnMenuOpen(self,event):
+		#カラムソートメニューの場合のみ
+		if event.GetMenu()==self.parent.menu.hMenuBar.FindItemById(menuItemsStore.getRef("VIEW_SORT_COLUMN")).GetSubMenu():
+			menu=self.parent.menu.hMenuBar.FindItemById(menuItemsStore.getRef("VIEW_SORT_COLUMN")).GetSubMenu()
+			#一旦全て削除
+			for i in range(menu.GetMenuItemCount()):
+				menu.DestroyItem(menu.FindItemByPosition(0))
+
+			#カラム数分登録
+			i=0
+			for title in self.parent.activeTab.GetListColumns():
+				subMenu=wx.Menu()
+				subMenu.Append(constants.MENU_ID_SORT_COLUMN+2*i,"前へ")
+				subMenu.Append(constants.MENU_ID_SORT_COLUMN+2*i+1,"後ろへ")
+				menu.AppendSubMenu(subMenu,title)
+				i+=1
+			menu.Enable(constants.MENU_ID_SORT_COLUMN,False)
+			menu.Enable(constants.MENU_ID_SORT_COLUMN+2*(i-1)+1,False)
+		event.Skip()
+
+	def ColumnSort(self,menuId):
+		order=self.parent.activeTab.GetColumnOrderList()
+		if menuId%2==0:	#前へ
+			target=int((menuId-constants.MENU_ID_SORT_COLUMN)/2)
+			tmp=order[target]
+			order[target]=order[target-1]
+			order[target-1]=tmp
+		else:	#後ろへ
+			target=int((menuId-constants.MENU_ID_SORT_COLUMN-1)/2)
+			tmp=order[target]
+			order[target]=order[target+1]
+			order[target+1]=tmp
+		self.parent.activeTab.SetColumnOrderList(order)
 
 	def StartRename(self):
 		"""リネームを開始する。"""
