@@ -174,7 +174,7 @@ class falconAppMain(wx.App):
 		self.speech.speak(s, interrupt=interrupt)
 		self.speech.braille(s)
 
-	def PlaySound(self,path,custom_location=False):
+	def PlaySound(self,path,custom_location=False,volume=-1):
 		"""サウンドファイルを再生する。"""
 		if not custom_location: path="fx/"+path 
 		if not os.path.isfile(path):
@@ -184,8 +184,11 @@ class falconAppMain(wx.App):
 		handle=pybass.BASS_StreamCreateFile(False,path,0,0,pybass.BASS_STREAM_AUTOFREE|pybass.BASS_UNICODE)
 		if handle==0:
 			self.log.error("Cannot load sound file %s. Error code: %d" % (path, pybass.BASS_ErrorGetCode()))
-			return
+			return -1
 		#end error
+		if volume==-1:
+			volume=self.config.getint("speech","fx_volume",100,0,300)
+		pybass.BASS_ChannelSetAttribute(handle, pybass.BASS_ATTRIB_VOL, volume/100)
 		pybass.BASS_ChannelPlay(handle,True)
 		return handle
 

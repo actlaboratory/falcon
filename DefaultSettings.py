@@ -15,6 +15,10 @@ class DefaultSettings:
 			"fileVersion": "100",
 			"locale": "ja-JP"
 		}
+		config["speech"]={
+			"reader": "AUTO",
+			"fx_volume": 100
+		}
 		config["FileList"]={
 			"sorting": 0,
 			"descending": 0,
@@ -93,7 +97,8 @@ class DefaultSettings:
 		}
 		config["preview"]={
 			"header_line_count": 10,
-			"footer_line_count": 10
+			"footer_line_count": 10,
+			"audio_volume": 100
 		}
 		config['on_list_moved']={
 			"read_directory_level": True,
@@ -103,6 +108,11 @@ class DefaultSettings:
 		config["originalAssociation"]={
 			"<default_file>": "C:\Program Files (x86)\KSD\MyEdit\MyEdit.exe",
 			"<default_dir>": "falcon.exe"
+		}
+		config["on_list_moved"]={
+			"read_directory_level": True,
+			"read_directory_name": True,
+			"read_item_count": True
 		}
 		return config
 

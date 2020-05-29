@@ -762,8 +762,8 @@ class FalconTabBase(object):
 		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
 		if ext in constants.SUPPORTED_AUDIO_FORMATS:
 			self.StopSound()
-			ret=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True)
-			if ret=-1:
+			ret=globalVars.app.PlaySound(self.GetFocusedElement().fullpath,custom_location=True,volume=globalVars.app.config.getint("preview","audio_volume",1,300,100))
+			if ret==-1:
 				dialog(_("エラー"),_("再生に失敗しました。ファイルにアクセスができないか、ファイルが壊れている可能性があります。"))
 				return errorCodes.FILE_NOT_FOUND
 			self.stopSoundHandle=ret
