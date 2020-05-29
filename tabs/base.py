@@ -151,6 +151,7 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG,self.col_resize)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT,self.OnLabelEditStart)
 		self.hListCtrl.Bind(wx.EVT_LIST_END_LABEL_EDIT,self.OnLabelEditEnd)
+		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_FOCUSED,self.ItemFocused)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED,self.ItemSelected)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED,self.ItemDeSelected)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
@@ -207,34 +208,50 @@ class FalconTabBase(object):
 	def GetSelectedItemCount(self):
 		return len(self.GetSelectedItems(True))
 
-	def GetSelectedItems(self,index_mode=False):
-		"""選択中のアイテムを、 ListObject で帰す。index_mode が true の場合、 リスト上での index のリストを返す。"""
+	def _GetSelectedItems(self,index_mode=False):
+		"""
+			チェックを加味せず、リストで選択されているアイテムを取得
+		"""
 		lst=[]
 		next=self.hListCtrl.GetFirstSelected()
-		if next>=0:
-			while(next>=0):
-				if index_mode:
-					if not next in lst:
-						lst.append(next)
-				else:
-					elem=self.listObject.GetElement(next)
-					if not elem in lst:
-						lst.append(elem)
-				next=self.hListCtrl.GetNextSelected(next)
-			#end while
+		while(next>=0):
+			if index_mode:
+				lst.append(next)
+			else:
+				elem=self.listObject.GetElement(next)
+				lst.append(elem)
+			next=self.hListCtrl.GetNextSelected(next)
+		#end while
 		if index_mode:
-			lst=list(set(lst)|self.checkedItem)
-			lst.sort()
 			return lst
-		else:
-			for i in self.checkedItem:
-				lst.append(self.listObject.GetElement(i))
-				lst=list(dict.fromkeys(lst))
 
 		#リストを作る
 		r=type(self.listObject)()
 		r.Initialize(lst)
 		return r
+
+	def GetSelectedItems(self,index_mode=False):
+		"""
+			選択中のアイテムを、 ListObject で帰す
+			index_mode が true の場合、 リスト上での index のリストを返す
+			チェックされているアイテムがあればチェック中のアイテム、なければ選択状態の項目を取得
+		"""
+		if self.hasCheckedItem():	#選択は加味されず、チェックのみ
+			lst=[]
+			if index_mode:
+				lst=list(self.checkedItem)
+				lst.sort()
+				return lst
+			for i in self.checkedItem:
+				lst.append(self.listObject.GetElement(i))
+				lst=list(dict.fromkeys(lst))
+
+			#リストを作る
+			r=type(self.listObject)()
+			r.Initialize(lst)
+			return r
+		else:
+			return self._GetSelectedItems(index_mode)
 		#end GetSelectedItems
 
 	def GetListCtrl(self):
@@ -402,8 +419,8 @@ class FalconTabBase(object):
 				self.hListCtrl.RefreshItem(item)
 			#カーソルを１つ下へ移動
 			if len(items)==1 and item!=len(self.listObject)-1:		#カーソルが一番下以外にある時
-				self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_SELECTED)
-				self.Focus(item+1)
+				#self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_SELECTED)
+				self.Focus(item+1,True)
 		self.hListCtrl.Update()
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.hasCheckedItem())
 
@@ -427,9 +444,13 @@ class FalconTabBase(object):
 		i.EndDrag()
 
 	def SelectAll(self):
+		if self.hasCheckedItem():	#チェックアイテムがある場合は実行不可
+			globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
+			return errorCodes.BOUNDARY
 		globalVars.app.say(_("全て選択"), interrupt=True)
 		for i in range(self.hListCtrl.GetItemCount()):
 			self.hListCtrl.Select(i)
+		return True
 
 	def NameCopy(self):
 		globalVars.app.say(_("ファイル名をコピー"), interrupt=True)
@@ -617,13 +638,25 @@ class FalconTabBase(object):
 	def hasCheckedItem(self):
 		return len(self.checkedItem)>0
 
+	def ItemFocused(self,event):
+		#チェック機能仕様中の複数選択は不可
+		if self.hasCheckedItem() and self.hListCtrl.GetSelectedItemCount()>1:
+			selectedItems=self._GetSelectedItems(True)
+			for i in selectedItems:
+				if i!=event.GetIndex():
+					#print("--------")
+					#print(event.GetIndex())
+					#print(self._GetSelectedItems(True))
+					self.hListCtrl.Select(i,0)
+					#print(self._GetSelectedItems(True))
+					#print("--------")
+		#チェック状態のアイテムなら音を鳴らす
+		if self._IsItemChecked(event.GetIndex()):
+			globalVars.app.PlaySound(globalVars.app.config["sounds"]["checked"])
+		event.Skip()
+
 	def ItemSelected(self,event=None):
 		"""リストビューのアイテムの選択時に呼ばれる"""
-
-		#チェック状態のアイテムなら音を鳴らす
-		if event:
-			if self._IsItemChecked(event.GetIndex()):
-				globalVars.app.PlaySound(globalVars.app.config["sounds"]["checked"])
 
 		#個数ベースでのメニューのロック・アンロック
 		c=self.GetSelectedItemCount()
@@ -741,7 +774,7 @@ class FalconTabBase(object):
 			globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
 			return
 		#end 非対応
-		ln=int(globalVars.app.config["preview"]["header_line_count"],10,1,100)
+		ln=globalVars.app.config.getint("preview","header_line_count",10,1,100)
 		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
 		if len(s)>ln: s=s[0:ln]
 		prefix=_("先頭%(ln)d行") % {'ln': ln}
@@ -749,11 +782,11 @@ class FalconTabBase(object):
 
 	def ReadFooter(self):
 		ext=self.GetFocusedElement().fullpath.split(".")[-1].lower()
-		if not ext in misc.isDocumentExt(ext):
+		if not misc.isDocumentExt(ext):
 			globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
 			return
 		#end 非対応
-		ln=int(globalVars.app.config['preview']['footer_line_count'],10,1,50)
+		ln=globalVars.app.config.getint("preview","footer_line_count",10,1,100)
 		s=misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
 		if len(s)>10: s=s[-10:]
 		prefix=_("末尾%(ln)d行") % {'ln': ln}
