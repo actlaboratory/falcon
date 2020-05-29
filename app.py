@@ -180,7 +180,7 @@ class falconAppMain(wx.App):
 		if not os.path.isfile(path):
 			if path!="":
 				self.log.error("Sound file '"+path+"' not found.")
-			return
+			return -1
 		handle=pybass.BASS_StreamCreateFile(False,path,0,0,pybass.BASS_STREAM_AUTOFREE|pybass.BASS_UNICODE)
 		if handle==0:
 			self.log.error("Cannot load sound file %s. Error code: %d" % (path, pybass.BASS_ErrorGetCode()))
