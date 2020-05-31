@@ -60,20 +60,23 @@ LRESULT CALLBACK contextMenuWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 	return parentWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-int _getContextMenu(const picojson::value::object &in, HMENU *out)
+int _getContextMenu(const picojson::value::array &in, HMENU *out)
 {
 	CoInitialize(NULL);
 	IShellFolder *desktop;
 	HRESULT ret = SHGetDesktopFolder(&desktop);
 
-	const _ITEMIDLIST *children = (_ITEMIDLIST *)malloc(sizeof(LPITEMIDLIST) * in.size());
+	vector<const _ITEMIDLIST *> children;
 	vector<LPITEMIDLIST> pidles;
 	vector<IShellFolder *> flds;
 	int count = 0;
-	for (picojson::value::array::const_iterator i = in.begin(); i != in.end(); ++i)
+	for (auto i = in.begin(); i != in.end(); ++i)
 	{
-		wstring path = rtrimBackSlash(i);
-		wstring file = ltrimBackSlash(i);
+		string s=(*i).get<string>();
+		wchar_t *s2=utf82wide(s.c_str());
+		wstring path = rtrimBackSlash(s2);
+		wstring file = ltrimBackSlash(s2);
+		free(s2);
 		DWORD chEaten;
 		DWORD dwAttributes;
 		LPITEMIDLIST pidl;
@@ -83,14 +86,15 @@ int _getContextMenu(const picojson::value::object &in, HMENU *out)
 		ret = desktop->BindToObject(pidl, NULL, IID_IShellFolder, (void **)&fld);
 		ret = fld->ParseDisplayName(NULL, NULL, const_cast<wchar_t *>(file.c_str()), &chEaten, &pidl, &dwAttributes);
 		const _ITEMIDLIST *child = ILFindLastID(pidl);
-		children[count] = child;
+		children.push_back(child);
 		pidles.push_back(pidl);
 		flds.push_back(fld);
 		count++;
 	}
 	
 	int ok;
-	ret = fld->GetUIObjectOf(NULL, in.size(), &children, IID_IContextMenu, NULL, (void **)&contextMenu);
+	//todo: 渡されたファイルの親ディレクトリが1個でも違うと動かない
+	ret = flds[0]->GetUIObjectOf(NULL, in.size(), children.data(), IID_IContextMenu, NULL, (void **)&contextMenu);
 	if (ret == S_OK)
 	{
 		UINT uFlags = GetKeyState(VK_SHIFT) < 0 ? CMF_EXTENDEDVERBS : CMF_NORMAL;
@@ -106,11 +110,11 @@ int _getContextMenu(const picojson::value::object &in, HMENU *out)
 	}
 	for (auto itr = pidles.begin(); itr != pidles.end(); ++itr)
 	{
-		CoTaskMemFree(itr);
+		CoTaskMemFree(*itr);
 	}
 	for (auto itr = flds.begin(); itr != flds.end(); ++itr)
 	{
-		itr->Release();
+		(*itr)->Release();
 	}
 	desktop->Release();
 	return ok;
@@ -230,16 +234,17 @@ falcon_helper_funcdef void getContextMenu()
 
 falcon_helper_funcdef int addContextMenuItemsFromWindows(LPCTSTR pathsJson)
 {
-	string utf8 = static_cast<string>(wide2utf8(pathsJson));
+	char *utf8 = wide2utf8(pathsJson);
 	picojson::value v;
 	picojson::parse(v, utf8);
+	free(utf8);
 	if (!v.is<picojson::array>())
 	{
 		MessageBox(NULL, L"Type checking failed.", L"error", MB_OK);
 	}
 	const picojson::value::array &lst = v.get<picojson::array>();
 	HMENU menu;
-	return _getContextMenu(array, &menu);
+	return _getContextMenu(lst, &menu);
 }
 
 falcon_helper_funcdef int showContextMenu(int x, int y)
