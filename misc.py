@@ -5,6 +5,7 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import ctypes
+import json
 import pywintypes
 import os
 import re
@@ -124,7 +125,8 @@ def AddCustomContextMenuItem(name,identifier):
 	falconHelper.addCustomContextMenuItem(makeStringForFalconHelper(name),identifier)
 
 def AddContextMenuItemsFromWindows(path):
-	path_bytes=makeStringForFalconHelper(path)
+	path_bytes=makeStringForFalconHelper(json.dumps(path))
+	print(path_bytes)
 	ret=falconHelper.addContextMenuItemsFromWindows(path_bytes)
 	return ret==1
 

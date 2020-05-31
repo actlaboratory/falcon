@@ -735,7 +735,7 @@ class FalconTabBase(object):
 		#end イベントあるか
 		misc.GetContextMenu()
 		misc.AddCustomContextMenuItem("テスト",5001)
-		can_show_menu=misc.AddContextMenuItemsFromWindows(targetPath)
+		can_show_menu=misc.AddContextMenuItemsFromWindows([targetPath])
 		if not can_show_menu:
 			misc.DestroyContextMenu()
 			return#コンテキストメニュー生成できなかった
