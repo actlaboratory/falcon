@@ -73,7 +73,7 @@ class FalconConfigParser(configparser.ConfigParser):
 				self[section][key]=str(default)
 				return int(default)
 			return ret
-		except configparser.NoOptionError as e:
+		except (configparser.NoOptionError,ValueError) as e:
 			self.log.debug("add new intval "+str(default)+" at section "+section+", key "+key)
 			self[section][key]=str(default)
 			return int(default)
