@@ -14,7 +14,7 @@ char *wide2utf8(const wchar_t *wide)
 wchar_t *utf82wide(const char *utf8)
 {
     int bufsize = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, (wchar_t *)NULL, 0);
-    wchar_t *wide = (wchar_t *)malloc(bufsize + 2);
+    wchar_t *wide = (wchar_t *)malloc((bufsize * 2) + 2);
     memset(wide, 0, bufsize + 2);
     MultiByteToWideChar(CP_UTF8, 0, utf8, -1, wide, bufsize + 2);
     return wide;
