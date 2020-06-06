@@ -728,14 +728,16 @@ class FalconTabBase(object):
 	def OpenContextMenu(self,event):
 		RegisterMenuCommand=globalVars.app.hMainView.menu.RegisterMenuCommand
 
+		# TODO: 処理を整理
 		if event:
 			targetPath=self.listObject.GetElement(self.hListCtrl.HitTest(event.GetPoint())[0]).fullpath
 		else:
 			targetPath=self.GetFocusedElement().fullpath
 		#end イベントあるか
+		targetPaths=self.GetSelectedItems().GetItemPaths()
 		misc.GetContextMenu()
 		misc.AddCustomContextMenuItem("テスト",5001)
-		can_show_menu=misc.AddContextMenuItemsFromWindows([targetPath])
+		can_show_menu=misc.AddContextMenuItemsFromWindows(targetPaths)
 		if not can_show_menu:
 			misc.DestroyContextMenu()
 			return#コンテキストメニュー生成できなかった

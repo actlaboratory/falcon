@@ -125,8 +125,8 @@ def AddCustomContextMenuItem(name,identifier):
 	falconHelper.addCustomContextMenuItem(makeStringForFalconHelper(name),identifier)
 
 def AddContextMenuItemsFromWindows(path):
+	print("len %d" % len(path))
 	path_bytes=makeStringForFalconHelper(json.dumps(path))
-	print(path_bytes)
 	ret=falconHelper.addContextMenuItemsFromWindows(path_bytes)
 	return ret==1
 
