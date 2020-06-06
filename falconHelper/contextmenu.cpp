@@ -72,8 +72,8 @@ int _getContextMenu(const picojson::value::array &in, HMENU *out)
 	int count = 0;
 	for (auto i = in.begin(); i != in.end(); ++i)
 	{
-		string s=(*i).get<string>();
-		wchar_t *s2=utf82wide(s.c_str());
+		string s = (*i).get<string>();
+		wchar_t *s2 = utf82wide(s.c_str());
 		wstring path = rtrimBackSlash(s2);
 		wstring file = ltrimBackSlash(s2);
 		free(s2);
@@ -91,7 +91,6 @@ int _getContextMenu(const picojson::value::array &in, HMENU *out)
 		flds.push_back(fld);
 		count++;
 	}
-	
 	int ok;
 	//todo: 渡されたファイルの親ディレクトリが1個でも違うと動かない
 	ret = flds[0]->GetUIObjectOf(NULL, in.size(), children.data(), IID_IContextMenu, NULL, (void **)&contextMenu);
@@ -234,6 +233,8 @@ falcon_helper_funcdef void getContextMenu()
 
 falcon_helper_funcdef int addContextMenuItemsFromWindows(LPCTSTR pathsJson)
 {
+	wstringstream s;
+	s << pathsJson;
 	char *utf8 = wide2utf8(pathsJson);
 	picojson::value v;
 	picojson::parse(v, utf8);
