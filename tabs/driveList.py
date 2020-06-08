@@ -135,3 +135,12 @@ class DriveListTab(base.FalconTabBase):
 	def GetTabName(self):
 		"""タブコントロールに表示する名前"""
 		return _("ドライブ一覧")
+
+	def OpenContextMenu(self,event):
+		menu=wx.Menu()
+		globalVars.app.hMainView.menu.RegisterMenuCommand(menu,{
+			"TOOL_EJECT_DRIVE":_("ドライブの取り外し"),
+			"TOOL_EJECT_DEVICE":_("デバイスの取り外し"),
+			"FILE_SHOWPROPERTIES":_("プロパティを表示")
+		})
+		globalVars.app.hMainView.PopupMenu(menu)
