@@ -11,6 +11,7 @@ import logging
 import os
 import wx
 import locale
+import _locale
 import win32api
 import datetime
 import UserCommandManager
@@ -30,19 +31,12 @@ class falconAppMain(wx.App):
 		"""アプリを初期化する。"""
 		t=misc.Timer()
 		self.frozen=hasattr(sys,"frozen")
+		self.SetDefaultEncoding()
 		self.InitLogger()
 		self.error_sound_handle=None
 		self.LoadSettings()
 		wx.DisableAsserts()
-		try:
-			if self.config["general"]["locale"]!=None:
-				locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
-			else:
-				locale.setlocale(locale.LC_TIME)
-		except:
-			locale.setlocale(locale.LC_TIME)
-			self.config["general"]["locale"]=""
-		self.SetTimeZone()
+		self.SetLocale()
 		self.InitTranslation()
 		self.LoadUserCommandSettings()
 		self.LoadUserExtentionSettings()
@@ -195,12 +189,26 @@ class falconAppMain(wx.App):
 	def StopSound(self,handle):
 		pybass.BASS_ChannelStop(handle)
 
-
 	def OnExit(self):
 		workerThreads.Stop()
 		return wx.App.OnExit(self)
 
-	def SetTimeZone(self):
+	#windows標準のコードページではなくUTF-8を強制するHack
+	def SetDefaultEncoding(self):
+		country=_locale._getdefaultlocale()[0]
+		_locale._getdefaultlocale = (lambda *args: ([country,'utf8']))
+
+	#ユーザのlocale情報を設定。いまのところタイムゾーンのみ
+	def SetLocale(self):
+		try:
+			if self.config["general"]["locale"]!=None:
+				locale.setlocale(locale.LC_TIME,self.config["general"]["locale"])
+			else:
+				locale.setlocale(locale.LC_TIME)
+		except:
+			locale.setlocale(locale.LC_TIME)
+			self.config["general"]["locale"]=""
+
 		bias=win32api.GetTimeZoneInformation(True)[1][0]*-1
 		hours=bias//60
 		minutes=bias%60
