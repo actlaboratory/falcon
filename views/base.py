@@ -47,6 +47,9 @@ class BaseView(object):
 		self.SetShortcutEnable=en
 	#end SetShortcutEnabled
 
+	def PopupMenu(self,hMenu):
+		self.hFrame.PopupMenu(hMenu)
+
 class BaseMenu(object):
 	def __init__(self):
 		self.blockCount={}
