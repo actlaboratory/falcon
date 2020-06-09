@@ -105,6 +105,23 @@ class Folder(File):
 		else:
 			return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
+class SearchedFile(File):
+	__slots__=[]
+
+	def GetListTuple(self):
+		"""表示に必要なタプルを返す。"""
+		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), self.fullpath, misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+
+class SearchedFolder(Folder):
+	__slots__=[]
+
+	def GetListTuple(self):
+		"""表示に必要なタプルを返す。フォルダなのでサイズ不明(-1)の場合があり、この場合は <dir> にする。"""
+		if self.size<0:
+			return (self.basename, "<dir>", self.fullpath, misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+		else:
+			return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), self.fullpath, misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+
 class GrepItem(File):
 	def Initialize(self,ln,preview,fileobject):
 		"""grepの結果は、ファイルの情報に加えて、行数・プレビュー・ヒット数を含む。ヒット数は、後から設定する。ファイル名などは、与えられたファイルオブジェクトからとる。"""
@@ -120,6 +137,7 @@ class GrepItem(File):
 		self.ln=ln
 		self.preview=preview
 		self.hits=0#とりあえず入れておく
+		self.hIcon=fileobject.hIcon
 
 	def SetHitCount(self,h):
 		"""ヒット数を設定する。"""
