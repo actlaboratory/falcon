@@ -84,15 +84,19 @@ class FalconConfigParser(configparser.ConfigParser):
 			return int(default)
 
 	def getstring(self,section,key,default="",selection=None,*, raw=False, vars=None,fallback=None):
-		if type(selection) not in (set,tuple):
-			raise TypeError("selection must be set or tuple")
+		if type(selection) not in (set,tuple,list):
+			raise TypeError("selection must be set, list or tuple")
 		ret=self.__getitem__(section)[key]
-		if ret=="" and default!="":
-			self.log.debug("add default value.  at section "+section+", key "+key)
-			self[section][key]=default
-			ret=default
+		if ret=="":
+			if default=="":
+				self[section][key]=""
+				return ""
+			else:
+				self.log.debug("add default value.  at section "+section+", key "+key)
+				self[section][key]=default
+				ret=default
+				if selection==None:return ret
 
-		if selection==None:return ret
 		if ret not in selection:
 			self.log.debug("value "+ret+" not in selection.  at section "+section+", key "+key)
 			self[section][key]=default
