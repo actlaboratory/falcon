@@ -369,6 +369,11 @@ class FalconTabBase(object):
 	def GoToTopFile(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
+	def Jump(self,direction):
+		cursor=self.listObject.Jump(self.GetFocusedItem(),direction)
+		if cursor!=-1:
+			self.Focus(cursor,True)
+
 	def KeyDown(self,event):
 		"""キーが押されたらここにくる。"""
 		self.StopSound()

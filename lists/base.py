@@ -4,8 +4,10 @@
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
+import math
 import logging
 
+import constants
 import globalVars
 import misc
 
@@ -83,6 +85,48 @@ class FalconListBase(object):
 	def GetSupportedSorts(self):
 		"""サポートされているソートのタイプを取得する。"""
 		return self.supportedSorts
+
+	def Jump(self,base,direction):
+		target=base
+		while True:
+			if direction==constants.ARROW_UP:
+				target-=1
+			else:
+				target+=1
+			if target<0 or target>=len(self):
+				break
+			if self._GetJumpKey(base)!=self._GetJumpKey(target):
+				return target
+		return -1		#条件に合うものがない
+
+	def _GetJumpKey(self,index):
+		sortType=self.supportedSorts[self.sortCursor]
+		if sortType == SORT_TYPE_BASENAME:
+			try:
+				return self.GetElement(index).basename[0].lower()		#最初の1文字
+			except IndexError:			#ドライブ一覧でレターが空欄の場合
+				return ""
+		elif sortType == SORT_TYPE_FILESIZE:
+			try:
+				return int(math.log10(self.GetElement(index).size))		#サイズの桁数
+			except ValueError:	#ディレクトリなどでサイズが未定義の場合に発生
+				return -1
+		elif sortType == SORT_TYPE_FREESPACE:
+			try:
+				return int(math.log10(self.GetElement(index).free))		#サイズの桁数
+			except ValueError:	#ネットワークリソースなどサイズが未定義の場合に発生
+				return -1
+		elif sortType == SORT_TYPE_TOTALSPACE:
+			try:
+				return int(math.log10(self.GetElement(index).total))	#サイズの桁数
+			except ValueError:	#ネットワークリソースなどサイズが未定義の場合に発生
+				return -1
+		elif sortType == SORT_TYPE_SEARCHPATH:
+			#return self.GetElement(index).searchPath				#最初の1文字
+			return ""
+		else:
+			print (self._getSortFunction(sortType)(self.GetElement(index)))
+			return self._getSortFunction(sortType)(self.GetElement(index))
 
 	def GetElement(self,index):
 		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""

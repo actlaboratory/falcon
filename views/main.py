@@ -304,6 +304,8 @@ class Menu(BaseMenu):
 			"MOVE_NEWTAB":_("新しいタブ"),
 			"MOVE_CLOSECURRENTTAB":_("現在のタブを閉じる"),
 			"MOVE_TOPFILE":_("先頭ファイルへ"),
+			"MOVE_SPECIAL_UP":_("上にジャンプ"),
+			"MOVE_SPECIAL_DOWN":_("下にジャンプ"),
 			"MOVE_MARKSET":_("表示中の場所をマーク"),
 			"MOVE_MARK":_("マークした場所へ移動")
 		})
@@ -468,6 +470,12 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_TOPFILE"):
 			self.parent.activeTab.GoToTopFile()
+			return
+		if selected==menuItemsStore.getRef("MOVE_SPECIAL_UP"):
+			self.parent.activeTab.Jump(constants.ARROW_UP)
+			return
+		if selected==menuItemsStore.getRef("MOVE_SPECIAL_DOWN"):
+			self.parent.activeTab.Jump(constants.ARROW_DOWN)
 			return
 		if selected==menuItemsStore.getRef("MOVE_MARKSET"):
 			self.parent.activeTab.MarkSet()

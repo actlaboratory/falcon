@@ -38,6 +38,8 @@ defaultKeymap["mainView"]={
 	"MOVE_NEWTAB": "ctrl+t",
 	"MOVE_CLOSECURRENTTAB": "ctrl+w",
 	"MOVE_TOPFILE": "alt+downarrow",
+	"MOVE_SPECIAL_UP": "ctrl+uparrow",
+	"MOVE_SPECIAL_DOWN": "ctrl+downarrow",
 	"MOVE_MARKSET": "INSERT",
 	"MOVE_MARK": "shift+BACK",
 	"READ_CURRENTFOLDER": "alt+f5",
