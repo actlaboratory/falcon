@@ -497,7 +497,7 @@ class FalconTabBase(object):
 	def SortCycleAd(self):
 		"""昇順と降順を交互に切り替える。"""
 		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-		self.ApplySort
+		self.ApplySort()
 
 	def SortSelect(self):
 		"""並び順を指定する。"""
@@ -544,7 +544,6 @@ class FalconTabBase(object):
 	def SortNext(self):
 		self.listObject.SetSortCursor()
 		self.ApplySort()
-	#end sortNext
 
 	def ApplySort(self):
 		self._updateConfig()				#設定の保存
