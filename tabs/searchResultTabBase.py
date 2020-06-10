@@ -49,9 +49,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 			self.hListCtrl.Append(elem.GetListTuple())
 		#end 追加
 		if self.listObject.GetFinishedStatus():
-			self.listObject.ApplySort()
-			self.hListCtrl.DeleteAllItems()
-			self.UpdateListContent(self.listObject.GetItems())
+			self.ApplySort()
 
 	def UpdateFilelist(self,silence=False,cursorTargetName=""):
 		"""検索をやり直す。ファイルは非同期処理で増えるので、cursorTargetNameは使用されない。"""
