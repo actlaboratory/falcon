@@ -46,7 +46,7 @@ class SearchResultList(FalconListBase):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
 		if isinstance(rootDirectory,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			for elem in rootDirectory:
-				if type(elem) is browsableObjects.Folder:
+				if type(elem) is browsableObjects.SearchedFolder:
 					self.folders.append(elem)
 				else:
 					self.files.append(elem)
@@ -103,12 +103,12 @@ class SearchResultList(FalconListBase):
 				creation=datetime.datetime.fromtimestamp(stat.st_ctime)
 				ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON|shellcon.SHGFI_TYPENAME)
 				if os.path.isfile(fullpath):
-					f=browsableObjects.File()
+					f=browsableObjects.SearchedFile()
 					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,stat.st_size,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
 					self.files.append(f)
 					ret_list.append(f)
 				else:
-					f=browsableObjects.Folder()
+					f=browsableObjects.SearchedFolder()
 					f.Initialize(os.path.dirname(fullpath),os.path.basename(fullpath),fullpath,-1,mod,win32file.GetFileAttributes(fullpath),shfileinfo[4],creation,win32api.GetShortPathName(fullpath))
 					self.folders.append(f)
 					ret_list.append(f)

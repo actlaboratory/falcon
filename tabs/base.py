@@ -100,6 +100,11 @@ class FalconTabBase(object):
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE"
 	])
+
+	#それぞれFile・Folderと同期
+	selectItemTypeMenuConditions[browsableObjects.SearchedFile]=selectItemTypeMenuConditions[browsableObjects.File]
+	selectItemTypeMenuConditions[browsableObjects.SearchedFolder]=selectItemTypeMenuConditions[browsableObjects.Folder]
+
 	#以下３つは専用のタブになってるのでこの機能でやる必要はない。KeyErrorにならないようにしとくだけ。
 	selectItemTypeMenuConditions[browsableObjects.GrepItem]=[]
 	selectItemTypeMenuConditions[browsableObjects.Drive]=[]
@@ -581,7 +586,7 @@ class FalconTabBase(object):
 		"""選択中のフォルダやドライブに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
 		index=self.GetFocusedItem()
 		elem=self.listObject.GetElement(index)
-		if (not stream) and (type(elem)==browsableObjects.File or type(elem)==browsableObjects.GrepItem) :#このファイルを開く
+		if (not stream) and (type(elem)==browsableObjects.File):	#このファイルを開く
 			misc.RunFile(elem.fullpath,admin)
 			return
 		else:
@@ -855,7 +860,7 @@ class FalconTabBase(object):
 				self.hilightIndex=-1
 		elif self.hilightIndex != index:
 			self.hListCtrl.SetItemState(self.hilightIndex,0,wx.LIST_STATE_DROPHILITED)
-			if type(self.listObject.GetElement(index)) in (browsableObjects.Folder,browsableObjects.Drive):
+			if isinstance(self.listObject.GetElement(index),(browsableObjects.Folder,browsableObjects.Drive)):
 				self.hListCtrl.SetItemState(index,wx.LIST_STATE_DROPHILITED,wx.LIST_STATE_DROPHILITED)
 				self.hilightIndex=index
 			else:
@@ -943,7 +948,7 @@ class DropTarget(wx.DropTarget):
 		i,flg=self.parent.hListCtrl.HitTest((x,y))
 		if flg & wx.LIST_HITTEST_ONITEM !=0:
 			index=i
-		if index>=0 and type(self.parent.listObject.GetElement(index)) in (browsableObjects.Folder,browsableObjects.Drive):
+		if index>=0 and isinstance(self.parent.listObject.GetElement(index),(browsableObjects.Folder,browsableObjects.Drive)):
 			#カーソルのあるオブジェクトの中に入れる
 			dest=self.parent.listObject.GetElement(index).fullpath
 		else:

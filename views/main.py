@@ -425,7 +425,7 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_EXEC_ORIGINAL_ASSOCIATION"):
 			elem=self.parent.activeTab.GetFocusedElement()
-			if (not type(elem)==browsableObjects.Folder) and isinstance(elem,(browsableObjects.File,browsableObjects.Stream,browsableObjects.GrepItem)):
+			if (not isinstance(elem,browsableObjects.Folder)) and isinstance(elem,(browsableObjects.File,browsableObjects.Stream,browsableObjects.GrepItem)):
 				extention=os.path.splitext(elem.fullpath)[1][1:].lower()
 				if extention in globalVars.app.config["originalAssociation"]:
 					config=globalVars.app.config["originalAssociation"][extention]

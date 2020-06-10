@@ -121,9 +121,6 @@ class FalconListBase(object):
 				return int(math.log10(self.GetElement(index).total))	#サイズの桁数
 			except ValueError:	#ネットワークリソースなどサイズが未定義の場合に発生
 				return -1
-		elif sortType == SORT_TYPE_SEARCHPATH:
-			#return self.GetElement(index).searchPath				#最初の1文字
-			return ""
 		else:
 			print (self._getSortFunction(sortType)(self.GetElement(index)))
 			return self._getSortFunction(sortType)(self.GetElement(index))
@@ -189,6 +186,7 @@ class FalconListBase(object):
 		if attrib==SORT_TYPE_DRIVELETTER: return lambda x: x.letter
 		if attrib==SORT_TYPE_FREESPACE: return lambda x: x.free
 		if attrib==SORT_TYPE_TOTALSPACE: return lambda x: x.total
+		if attrib==SORT_TYPE_SEARCHPATH: return lambda x: x.fullpath.lower()
 		if attrib==SORT_TYPE_HITCOUNT: return lambda x: x.hits
 		if attrib==SORT_TYPE_HITLINE: return lambda x: x.ln
 		if attrib==SORT_TYPE_PREVIEW: return lambda x: x.preview.lower()
