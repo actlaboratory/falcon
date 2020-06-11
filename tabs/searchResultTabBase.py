@@ -37,7 +37,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		self.listObject=self.listType()
 		self.listObject.Initialize(rootPath,searches,keyword, isRegularExpression)
 		self.SetListColumns(self.listObject)
-		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
+		self.taskState=workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
 
 		#タブの名前変更を通知
 		globalVars.app.hMainView.UpdateTabName()
@@ -95,3 +95,10 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		word=StringUtil.GetLimitedString(word,globalVars.app.config["view"]["header_title_length"])
 		word=_("%(word)sの検索") % {"word":word}
 		return word
+
+	def OnClose(self):
+		"""検索の非同期処理が実行中であればキャンセルして、終了を待機する。"""
+		if self.taskState.GetFinishState() is not True:
+			self.taskState.Cancel(wait=True)
+		#end 待つ
+	#end OnClose
