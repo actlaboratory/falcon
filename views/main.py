@@ -159,6 +159,7 @@ class View(BaseView):
 		self.UpdateMenuState(self.activeTab,newtab)
 		self.tabs[i]=newtab
 		self.activeTab.OnBeforeChangeTab()
+		self.activeTab.OnClose()
 		self.activeTab=newtab
 
 		#タブ名変更。activeTab書き換え後に呼ぶ必要がある

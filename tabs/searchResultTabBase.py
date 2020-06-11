@@ -113,6 +113,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 
 	def OnClose(self):
 		"""検索の非同期処理が実行中であればキャンセルして、終了を待機する。"""
+		super().OnClose()
 		if self.taskState.GetFinishState() is not True:
 			self.taskState.Cancel(wait=True)
 		#end 待つ
