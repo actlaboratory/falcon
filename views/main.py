@@ -591,9 +591,6 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("TOOL_ADDPATH"):
 			t=self.parent.activeTab.GetSelectedItems()
-			if item in t:
-				if item.__class__!=browsableObjects.Folder:
-					return
 			t=t.GetItemPaths()
 			if misc.addPath(t):
 				dialog(_("パスの追加"),_("ユーザ環境変数PATHに追加しました。"))
@@ -849,7 +846,7 @@ class Events(BaseEvents):
 				else:
 					dic[_("サイズ")]=_("不明")
 					dic[_("サイズ(バイト)")]=_("不明")
-		elif isinstance(elem,browsableObjects.File) or elem.__class__==browsableObjects.Stream:
+		elif isinstance(elem,browsableObjects.File) or type(elem)==browsableObjects.Stream:
 			dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
 			dic[_("サイズ(バイト)")]=elem.size
 		if isinstance(elem,browsableObjects.File):
@@ -861,7 +858,7 @@ class Events(BaseEvents):
 				dic[_("短い名前")]=elem.shortName
 			else:
 				dic[_("短い名前")]=_("なし")
-		if elem.__class__==browsableObjects.Drive:
+		if type(elem)==browsableObjects.Drive:
 			if elem.free>=0:
 				dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
 				dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO,True)
@@ -872,7 +869,7 @@ class Events(BaseEvents):
 			if elem.free>=0:
 				dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
 			dic[_("種類")]=elem.typeString
-		if elem.__class__==browsableObjects.NetworkResource:
+		if type(elem)==browsableObjects.NetworkResource:
 			dic[_("IPアドレス")]=elem.address
 		d=views.objectDetail.Dialog()
 		d.Initialize(dic)
