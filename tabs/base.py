@@ -292,13 +292,13 @@ class FalconTabBase(object):
 
 	def Update(self,lst,cursor=-1):
 		"""指定された要素をタブに適用する。"""
-		self._cancelBackgroundTasks()
-		self.hListCtrl.DeleteAllItems()
+		self.DeleteAllItems()		#先に消しておかないとカラム数が合わない画面がユーザに見えてしまう
 		if type(lst)!=type(self.listObject):
 			self.SetListColumns(lst)
 		self.listObject=lst
 		self.environment["listType"]=type(lst)
 		self.UpdateListContent(self.listObject.GetItemList())
+
 		self.Focus(cursor)
 
 		#タブの名前変更を通知
@@ -310,14 +310,7 @@ class FalconTabBase(object):
 			カラムの数やテキストは変更しない。
 		"""
 		self.log.debug("Updating list control...")
-		self._cancelBackgroundTasks()
-		self.hListCtrl.DeleteAllItems()
-		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってる場合があるため必要。
-		self.checkedItem=set()
-		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
-		self.hilightIndex=-1
-
-		self._InitIconList()
+		self.DeleteAllItems()
 
 		t=misc.Timer()
 		for elem in content:
@@ -672,6 +665,18 @@ class FalconTabBase(object):
 
 	def hasCheckedItem(self):
 		return len(self.checkedItem)>0
+
+	def DeleteAllItems(self):
+		"""
+			必用な調整を経て、リストビューを空にする
+			別途listObjectについては処理が必要
+		"""
+		self._cancelBackgroundTasks()
+		self.hListCtrl.DeleteAllItems()
+		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってるため必要		self.checkedItem=set()
+		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
+		self.hilightIndex=-1
+		self._InitIconList()
 
 	def ItemFocused(self,event):
 		#チェック機能仕様中の複数選択は不可

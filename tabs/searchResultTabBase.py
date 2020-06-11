@@ -75,9 +75,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		if silence==False:
 			globalVars.app.say(_("再建策"), interrupt=True)
 		#end not silence
-		self.hListCtrl.DeleteAllItems()
-		self.folderCount=0
-		self._InitIconList()
+		self.DeleteAllItems()
 		self.listObject.RedoSearch()
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
 
@@ -110,3 +108,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		word=StringUtil.GetLimitedString(word,globalVars.app.config["view"]["header_title_length"])
 		word=_("%(word)sの検索") % {"word":word}
 		return word
+
+	def DeleteAllItems(self):
+		super().DeleteAllItems()
+		self.folderCount=0
