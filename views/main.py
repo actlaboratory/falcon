@@ -187,6 +187,7 @@ class View(BaseView):
 		#end ページ番号じゃなかったときの検索
 
 		popped_tab=self.tabs.pop(pageNo)
+		popped_tab.OnClose()
 		if len(self.tabs)==0:#タブがなくなった
 			self.events.Exit()
 			return
@@ -619,7 +620,7 @@ class Events(BaseEvents):
 				dialog(_("エラー"),_("デバイスの取り外しに失敗しました。"))
 			return
 		if selected==menuItemsStore.getRef("VIEW_DRIVE_INFO"):
-			rootPath=self.parent.activeTab.GetFocusedElement().GetRootDrivePath()
+			rootPath=self.parent.activeTab.listObject.rootDirectory[0]
 			elem=None
 			if len(rootPath)==1:
 				elem=lists.drive.GetDriveObject(int(ord(rootPath)-65))

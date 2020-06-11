@@ -29,7 +29,6 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		"MOVE_BACKWARD",
 		"MOVE_MARKSET",
 		"MOVE_MARK",
-		"VIEW_DRIVE_INFO",
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE",
@@ -42,8 +41,12 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		self.tempListObject=self.listType()
 		self.tempListObject.Initialize(rootPath,searches,keyword, isRegularExpression)
 		self.SetListColumns(self.listObject)
+<<<<<<< HEAD
 		self._InitIconList()
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.tempListObject, 'tabObject': self})
+=======
+		self.taskState=workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
+>>>>>>> master
 
 		#タブの名前変更を通知
 		globalVars.app.hMainView.UpdateTabName()
@@ -108,6 +111,15 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		word=_("%(word)sの検索") % {"word":word}
 		return word
 
+<<<<<<< HEAD
 	def DeleteAllItems(self):
 		super().DeleteAllItems()
 		self.folderCount=0
+=======
+	def OnClose(self):
+		"""検索の非同期処理が実行中であればキャンセルして、終了を待機する。"""
+		if self.taskState.GetFinishState() is not True:
+			self.taskState.Cancel(wait=True)
+		#end 待つ
+	#end OnClose
+>>>>>>> master

@@ -25,7 +25,7 @@ class FalconConfigParser(configparser.ConfigParser):
 		if os.path.exists(fileName):
 			self.log.info("read configFile:"+fileName)
 			try:
-				return super().read(fileName)
+				return super().read(fileName, encoding='UTF-8')
 			except configparser.ParsingError:
 				return {}
 		else:
@@ -34,7 +34,7 @@ class FalconConfigParser(configparser.ConfigParser):
 
 	def write(self):
 		self.log.info("write configFile:"+self.fileName)
-		with open(self.fileName,"w") as f: return super().write(f)
+		with open(self.fileName,"w", encoding='UTF-8') as f: return super().write(f)
 
 	def __getitem__(self,key):
 		try:
