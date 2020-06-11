@@ -33,6 +33,7 @@ class TaskState(object):
 
 	def Cancel(self,wait=False):
 		"""タスクの実行を中断する。wait=Trueの場合、キャンセル処理がタスクに伝わり、実際に処理が終了するまでブロックする。"""
+		if self.finished: return False#すでに終わっている
 		if not self.cancelable: return False
 		self.canceled=True
 		if self.working and wait:
@@ -42,6 +43,14 @@ class TaskState(object):
 	def CancelCallback(self):
 		"""ワーカースレッドからのコールバック。キャンセル処理が正常に完了し、スレッドが終了したことを通知する。"""
 		self.cancel_callback_done=True
+
+	def FinishCallback(self):
+		"""タスクの終了を通知する。"""
+		self.finished=True
+
+	def GetFinishState(self):
+		"""タスクが完了していればTrue、完了していなければFalseを帰す。キャンセル済みタスクもFalseとなる。"""
+		return self.finished
 
 	def setWorkingState(self,w):
 		"""スレッドがタスクキューからこのタスクを拾って、実行を開始したときに呼び出すことで、状態が作業中になったことを知らせる。cancel(wait=True)メソッドで実行を待機する際、working=Trueかどうかで、実際に待つ処理をするかどうかを切り替えている。"""
@@ -73,7 +82,11 @@ class _workerThreadBody(threading.Thread):
 			t=misc.Timer()
 			item.setWorkingState(True)
 			ret=func(item,params)
-			if ret is False: item.CancelCallback()
+			if ret is True:
+				item.FinishCallback()
+			else:
+				item.CancelCallback()
+			#end どっちのcallbackを呼ぶか
 			tasks.task_done()
 			self.log.debug("task finished in %f seconds." % (t.elapsed) if ret else "Task canceled.")
 			item.setWorkingState(False)
