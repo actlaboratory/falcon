@@ -187,6 +187,7 @@ class View(BaseView):
 		#end ページ番号じゃなかったときの検索
 
 		popped_tab=self.tabs.pop(pageNo)
+		popped_tab.OnClose()
 		if len(self.tabs)==0:#タブがなくなった
 			self.events.Exit()
 			return

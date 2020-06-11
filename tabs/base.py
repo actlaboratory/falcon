@@ -838,6 +838,10 @@ class FalconTabBase(object):
 		self.StopSound()
 		self._updateColumnConfig()
 
+	def OnClose(self):
+		"""タブが閉じられる前に呼び出される。検索結果タブでは、検索中にタブが閉じられたとき、検索のための非同期処理のキャンセルを待機しなければならない。"""
+		pass
+
 	def _LostFocus(self,event=None):
 		self.StopSound()
 
