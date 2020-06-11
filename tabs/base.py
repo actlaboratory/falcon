@@ -350,6 +350,8 @@ class FalconTabBase(object):
 
 	def _InitIconList(self):
 		"""listCtrlにアイコン設定する準備"""
+		if self.listObject==None:
+			return
 		self.hIconList=wx.ImageList(32,32,False,len(self.listObject))
 		self.hListCtrl.AssignImageList(self.hIconList,wx.IMAGE_LIST_SMALL)
 		self.iconNumbers={}

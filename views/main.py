@@ -550,7 +550,7 @@ class Events(BaseEvents):
 			self.parent.activeTab.Delete()
 			return
 		if selected==menuItemsStore.getRef("FILE_VIEW_DETAIL"):
-			elem=self.parent.activeTab.listObject.GetElement(self.parent.activeTab.GetFocusedItem())
+			elem=self.parent.activeTab.GetFocusedElement()
 			self.ShowDetail(elem)
 			return
 		if selected==menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
@@ -837,10 +837,7 @@ class Events(BaseEvents):
 		dic={}
 		dic[_("名前")]=elem.basename
 		dic[_("パス")]=elem.fullpath
-		if elem.__class__==browsableObjects.File or elem.__class__==browsableObjects.Stream:
-			dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
-			dic[_("サイズ(バイト)")]=elem.size
-		elif elem.__class__==browsableObjects.Folder:
+		if isinstance(elem,browsableObjects.Folder):
 			if elem.size>=0:
 				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
 				dic[_("サイズ(バイト)")]=elem.size
@@ -852,6 +849,9 @@ class Events(BaseEvents):
 				else:
 					dic[_("サイズ")]=_("不明")
 					dic[_("サイズ(バイト)")]=_("不明")
+		elif isinstance(elem,browsableObjects.File) or elem.__class__==browsableObjects.Stream:
+			dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
+			dic[_("サイズ(バイト)")]=elem.size
 		if isinstance(elem,browsableObjects.File):
 			dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
 			dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
