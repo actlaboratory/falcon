@@ -215,7 +215,6 @@ class FileListTab(base.FalconTabBase):
 		c.SendToClipboard()
 
 	def GoToTopFile(self):
-		#end ファイルリストのときしか通さない
 		self.Focus(self.listObject.GetTopFileIndex())
 		globalVars.app.say(_("先頭ファイル"))
 
