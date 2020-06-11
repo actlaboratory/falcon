@@ -298,7 +298,7 @@ class FalconTabBase(object):
 			self.SetListColumns(lst)
 		self.listObject=lst
 		self.environment["listType"]=type(lst)
-		self.UpdateListContent(self.listObject.GetItems())
+		self.UpdateListContent(self.listObject.GetItemList())
 		self.Focus(cursor)
 
 		#タブの名前変更を通知
@@ -317,23 +317,49 @@ class FalconTabBase(object):
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
 		self.hilightIndex=-1
 
+		self._InitIconList()
+
 		t=misc.Timer()
 		for elem in content:
-			self.hListCtrl.Append(elem)
+			self._AppendElement(elem)
 		#end 追加
 		self.log.debug("List control updated in %f seconds." % t.elapsed)
 
-		#アイコン設定
+	def _AppendElement(self,elem,index=-1):
+		"""
+			browsableObjectを指定して、リストに追加する
+			indexは検索結果一覧でフォルダを正しい位置に挿入するために利用
+		"""
+		if index>=0:
+			index=self.hListCtrl.InsertItem(index,"")
+			i=0
+			for text in elem.GetListTuple():
+				self.hListCtrl.SetItem(index,i,text)
+				i+=1
+		else:
+			index=self.hListCtrl.Append(elem.GetListTuple())
+		if elem.hIcon>=0:
+			iconIndex=self.GetIconIndex(elem.hIcon)
+			if iconIndex>=0:
+				self.hListCtrl.SetItemImage(index,iconIndex,iconIndex)
+
+	def GetIconIndex(self,hIcon):
+		"""同じhIconから作ったアイコンをImageListに複数追加しようとするとエラーとなるので対策。"""
+		if hIcon in self.iconNumbers:
+			return self.iconNumbers[hIcon]
+		else:
+			icon=wx.Icon()
+			if icon.CreateFromHICON(hIcon):
+				iconIndex=self.hIconList.Add(icon)
+				self.iconNumbers[hIcon]=iconIndex
+				return iconIndex
+			return -1
+
+	def _InitIconList(self):
+		"""listCtrlにアイコン設定する準備"""
 		self.hIconList=wx.ImageList(32,32,False,len(self.listObject))
 		self.hListCtrl.AssignImageList(self.hIconList,wx.IMAGE_LIST_SMALL)
-
-		for elem in self.listObject:
-			icon=wx.Icon()
-			if elem.hIcon>=0:
-				icon.CreateFromHICON(elem.hIcon)
-				index=self.hIconList.Add(icon)
-				if index>=0:
-					self.hListCtrl.SetItemImage(index,index,index)
+		self.iconNumbers={}
 
 		#カラム用アイコンを登録
 		self.hIconList.Add(wx.Icon("fx/dummy.ico"))
@@ -344,10 +370,10 @@ class FalconTabBase(object):
 	def _SetSortIcon(self):
 		#アイコンを設定済みならいったん削除
 		if self.sortTargetColumnNo!=None:
-			self.hListCtrl.SetColumnImage(self.sortTargetColumnNo,self.hIconList.GetImageCount()-3)
+			self.hListCtrl.SetColumnImage(self.sortTargetColumnNo,0)
 
 		#並び替え状況に応じてアイコン設定
-		self.hListCtrl.SetColumnImage(self.listObject.sortCursor,self.hIconList.GetImageCount()-2+self.listObject.sortDescending)
+		self.hListCtrl.SetColumnImage(self.listObject.sortCursor,1+self.listObject.sortDescending)
 		self.sortTargetColumnNo=self.listObject.sortCursor
 
 	def MakeDirectory(self):
