@@ -18,6 +18,9 @@ import workerThreads
 import workerThreadTasks
 
 class SearchResultTabBase(tabs.fileList.FileListTab):
+	def __init__(self,environment):
+		super().__init__(environment)
+		self.folderCount=0
 
 	blockMenuList=[
 		"FILE_MKDIR",
@@ -35,8 +38,15 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 	def StartSearch(self,rootPath,searches,keyword, isRegularExpression):
 		self.listObject=self.listType()
 		self.listObject.Initialize(rootPath,searches,keyword, isRegularExpression)
+		self.tempListObject=self.listType()
+		self.tempListObject.Initialize(rootPath,searches,keyword, isRegularExpression)
 		self.SetListColumns(self.listObject)
+<<<<<<< HEAD
+		self._InitIconList()
+		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.tempListObject, 'tabObject': self})
+=======
 		self.taskState=workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
+>>>>>>> master
 
 		#タブの名前変更を通知
 		globalVars.app.hMainView.UpdateTabName()
@@ -45,23 +55,29 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		"""コールバックで、ヒットしたオブジェクトのリストが降ってくるので、それをリストビューに追加していく。"""
 		globalVars.app.PlaySound("click.ogg")
 		for elem in hits:
-			self.hListCtrl.Append(elem.GetListTuple())
+			if isinstance(elem,browsableObjects.Folder):
+				self._AppendElement(elem,self.folderCount)
+				self.folderCount+=1
+				self.listObject.folders.append(elem)
+			else:
+				self._AppendElement(elem)
+				self.listObject.lists[-1].append(elem)
 		#end 追加
-		if self.listObject.GetFinishedStatus():
-			self.listObject.ApplySort()
-			self.hListCtrl.DeleteAllItems()
-			self.UpdateListContent(self.listObject.GetItems())
+		if self.tempListObject.GetFinishedStatus() and self.hListCtrl.GetItemCount()==len(self.tempListObject):
+			#ここはcallAfterで実行されるため、検索修了時点でCallAfterのキューに２つ以上のこの関数が貯まってるとソートが２回発生して画面とリストがずれるので条件を二重にして対策した
+			self.ApplySort()
+
 
 	def UpdateFilelist(self,silence=False,cursorTargetName=""):
 		"""検索をやり直す。ファイルは非同期処理で増えるので、cursorTargetNameは使用されない。"""
-		if not self.listObject.GetFinishedStatus():
+		if not self.tempListObject.GetFinishedStatus():
 			globalVars.app.say(_("現在検索中です。再建策はできません。"), interrupt=True)
 			return
 		#end まだ検索終わってない
 		if silence==False:
 			globalVars.app.say(_("再建策"), interrupt=True)
 		#end not silence
-		self.hListCtrl.DeleteAllItems()
+		self.DeleteAllItems()
 		self.listObject.RedoSearch()
 		workerThreads.RegisterTask(workerThreadTasks.PerformSearch,{'listObject': self.listObject, 'tabObject': self})
 
@@ -82,7 +98,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		return errorCodes.BOUNDARY
 
 	def ReadCurrentFolder(self):
-		state=_("検索完了") if self.listObject.GetFinishedStatus() is True else _("検索中")
+		state=_("検索完了") if self.tempListObject.GetFinishedStatus() is True else _("検索中")
 		globalVars.app.say(_("キーワード %(keyword)s で ディレクトリ %(dir)s を%(state)s") % {'keyword': self.listObject.GetKeywordString(), 'dir': self.listObject.rootDirectory, 'state': state}, interrupt=True)
 
 	def ReadListItemNumber(self,short=False):
@@ -95,9 +111,15 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		word=_("%(word)sの検索") % {"word":word}
 		return word
 
+<<<<<<< HEAD
+	def DeleteAllItems(self):
+		super().DeleteAllItems()
+		self.folderCount=0
+=======
 	def OnClose(self):
 		"""検索の非同期処理が実行中であればキャンセルして、終了を待機する。"""
 		if self.taskState.GetFinishState() is not True:
 			self.taskState.Cancel(wait=True)
 		#end 待つ
 	#end OnClose
+>>>>>>> master

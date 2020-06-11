@@ -292,13 +292,13 @@ class FalconTabBase(object):
 
 	def Update(self,lst,cursor=-1):
 		"""指定された要素をタブに適用する。"""
-		self._cancelBackgroundTasks()
-		self.hListCtrl.DeleteAllItems()
+		self.DeleteAllItems()		#先に消しておかないとカラム数が合わない画面がユーザに見えてしまう
 		if type(lst)!=type(self.listObject):
 			self.SetListColumns(lst)
 		self.listObject=lst
 		self.environment["listType"]=type(lst)
-		self.UpdateListContent(self.listObject.GetItems())
+		self.UpdateListContent(self.listObject.GetItemList())
+
 		self.Focus(cursor)
 
 		#タブの名前変更を通知
@@ -310,30 +310,51 @@ class FalconTabBase(object):
 			カラムの数やテキストは変更しない。
 		"""
 		self.log.debug("Updating list control...")
-		self._cancelBackgroundTasks()
-		self.hListCtrl.DeleteAllItems()
-		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってる場合があるため必要。
-		self.checkedItem=set()
-		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
-		self.hilightIndex=-1
+		self.DeleteAllItems()
 
 		t=misc.Timer()
 		for elem in content:
-			self.hListCtrl.Append(elem)
+			self._AppendElement(elem)
 		#end 追加
 		self.log.debug("List control updated in %f seconds." % t.elapsed)
 
-		#アイコン設定
+	def _AppendElement(self,elem,index=-1):
+		"""
+			browsableObjectを指定して、リストに追加する
+			indexは検索結果一覧でフォルダを正しい位置に挿入するために利用
+		"""
+		if index>=0:
+			index=self.hListCtrl.InsertItem(index,"")
+			i=0
+			for text in elem.GetListTuple():
+				self.hListCtrl.SetItem(index,i,text)
+				i+=1
+		else:
+			index=self.hListCtrl.Append(elem.GetListTuple())
+		if elem.hIcon>=0:
+			iconIndex=self.GetIconIndex(elem.hIcon)
+			if iconIndex>=0:
+				self.hListCtrl.SetItemImage(index,iconIndex,iconIndex)
+
+	def GetIconIndex(self,hIcon):
+		"""同じhIconから作ったアイコンをImageListに複数追加しようとするとエラーとなるので対策。"""
+		if hIcon in self.iconNumbers:
+			return self.iconNumbers[hIcon]
+		else:
+			icon=wx.Icon()
+			if icon.CreateFromHICON(hIcon):
+				iconIndex=self.hIconList.Add(icon)
+				self.iconNumbers[hIcon]=iconIndex
+				return iconIndex
+			return -1
+
+	def _InitIconList(self):
+		"""listCtrlにアイコン設定する準備"""
+		if self.listObject==None:
+			return
 		self.hIconList=wx.ImageList(32,32,False,len(self.listObject))
 		self.hListCtrl.AssignImageList(self.hIconList,wx.IMAGE_LIST_SMALL)
-
-		for elem in self.listObject:
-			icon=wx.Icon()
-			if elem.hIcon>=0:
-				icon.CreateFromHICON(elem.hIcon)
-				index=self.hIconList.Add(icon)
-				if index>=0:
-					self.hListCtrl.SetItemImage(index,index,index)
+		self.iconNumbers={}
 
 		#カラム用アイコンを登録
 		self.hIconList.Add(wx.Icon("fx/dummy.ico"))
@@ -344,10 +365,10 @@ class FalconTabBase(object):
 	def _SetSortIcon(self):
 		#アイコンを設定済みならいったん削除
 		if self.sortTargetColumnNo!=None:
-			self.hListCtrl.SetColumnImage(self.sortTargetColumnNo,self.hIconList.GetImageCount()-3)
+			self.hListCtrl.SetColumnImage(self.sortTargetColumnNo,0)
 
 		#並び替え状況に応じてアイコン設定
-		self.hListCtrl.SetColumnImage(self.listObject.sortCursor,self.hIconList.GetImageCount()-2+self.listObject.sortDescending)
+		self.hListCtrl.SetColumnImage(self.listObject.sortCursor,1+self.listObject.sortDescending)
 		self.sortTargetColumnNo=self.listObject.sortCursor
 
 	def MakeDirectory(self):
@@ -497,7 +518,7 @@ class FalconTabBase(object):
 	def SortCycleAd(self):
 		"""昇順と降順を交互に切り替える。"""
 		self.listObject.SetSortDescending(self.listObject.GetSortDescending()==0)
-		self.ApplySort
+		self.ApplySort()
 
 	def SortSelect(self):
 		"""並び順を指定する。"""
@@ -544,7 +565,6 @@ class FalconTabBase(object):
 	def SortNext(self):
 		self.listObject.SetSortCursor()
 		self.ApplySort()
-	#end sortNext
 
 	def ApplySort(self):
 		self._updateConfig()				#設定の保存
@@ -647,6 +667,18 @@ class FalconTabBase(object):
 
 	def hasCheckedItem(self):
 		return len(self.checkedItem)>0
+
+	def DeleteAllItems(self):
+		"""
+			必用な調整を経て、リストビューを空にする
+			別途listObjectについては処理が必要
+		"""
+		self._cancelBackgroundTasks()
+		self.hListCtrl.DeleteAllItems()
+		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってるため必要		self.checkedItem=set()
+		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
+		self.hilightIndex=-1
+		self._InitIconList()
 
 	def ItemFocused(self,event):
 		#チェック機能仕様中の複数選択は不可

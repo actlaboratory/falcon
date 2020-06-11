@@ -258,5 +258,5 @@ def CommandLineToArgv(cmd):
 
 #渡された拡張子がドキュメント形式であればTrue
 def isDocumentExt(ext):
-	return ext in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats
+	return ext.lower() in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats
 
