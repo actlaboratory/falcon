@@ -26,7 +26,6 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		"MOVE_BACKWARD",
 		"MOVE_MARKSET",
 		"MOVE_MARK",
-		"VIEW_DRIVE_INFO",
 		"TOOL_ADDPATH",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE",
