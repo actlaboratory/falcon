@@ -62,7 +62,6 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		#end 追加
 		if self.tempListObject.GetFinishedStatus() and self.hListCtrl.GetItemCount()==len(self.tempListObject):
 			#ここはcallAfterで実行されるため、検索修了時点でCallAfterのキューに２つ以上のこの関数が貯まってるとソートが２回発生して画面とリストがずれるので条件を二重にして対策した
-			print("sort")
 			self.ApplySort()
 
 
