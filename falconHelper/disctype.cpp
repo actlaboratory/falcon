@@ -273,7 +273,7 @@ falcon_helper_funcdef char *getDiscDriveTypes()
         }
         tmp = (VARIANT *)(profiles->pvData);
         std::vector<int> profile_values;
-        for (int i = 0; i < profiles->rgsabound[0].cElements; i++)
+        for (unsigned int i = 0; i < profiles->rgsabound[0].cElements; i++)
         {
             //????R?????g?A?E?g??????A?T?|?[?g???????v???t?@?C????????o??
             //std::cout << "    profile " << tmp[i].lVal << std::endl;
