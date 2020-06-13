@@ -9,6 +9,7 @@
 	def def ReadListItemNumber
 	def def ReadListInfo
 	def getTabName
+	def GetRootObject(self):
 
 ## 必須　基本機能系(対応していない場合に記載が必要)
 	def GoBackward(self):

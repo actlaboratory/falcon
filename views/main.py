@@ -621,16 +621,7 @@ class Events(BaseEvents):
 				dialog(_("エラー"),_("デバイスの取り外しに失敗しました。"))
 			return
 		if selected==menuItemsStore.getRef("VIEW_DRIVE_INFO"):
-			rootPath=self.parent.activeTab.listObject.rootDirectory[0]
-			elem=None
-			if len(rootPath)==1:
-				elem=lists.drive.GetDriveObject(int(ord(rootPath)-65))
-			else:	#ネットワークリソース
-				lst=lists.drive.DriveList()
-				lst.Initialize(None,True)
-				for d in lst:
-					if d.basename==rootPath:
-						elem=d
+			elem=self.parent.activeTab.GetRootObject()
 			if elem==None:
 				dialog(_("エラー"),_("ドライブ情報の取得に失敗しました。"))
 				return

@@ -247,3 +247,13 @@ class StreamListTab(base.FalconTabBase):
 		word=StringUtil.GetLimitedString(word,globalVars.app.config["view"]["header_title_length"])
 		return word
 
+	def GetRootObject(self):
+		"""ドライブ詳細情報表示で用いる"""
+		rootPath=self.listObject.rootDirectory[0]
+		elem=None
+		if len(rootPath)==1:
+			try:
+				elem=lists.drive.GetDriveObject(int(ord(rootPath)-65))
+			except:
+				pass
+		return elem

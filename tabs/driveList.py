@@ -47,7 +47,6 @@ class DriveListTab(base.FalconTabBase):
 		"READ_CONTENT_PREVIEW",
 		"READ_CONTENT_READHEADER",
 		"READ_CONTENT_READFOOTER",
-		"VIEW_DRIVE_INFO",
 	]
 
 	#end Update
@@ -144,3 +143,7 @@ class DriveListTab(base.FalconTabBase):
 			"FILE_SHOWPROPERTIES":_("プロパティを表示")
 		})
 		globalVars.app.hMainView.PopupMenu(menu)
+
+	def GetRootObject(self):
+		"""ドライブ詳細情報表示で用いる"""
+		return self.GetFocusedElement()

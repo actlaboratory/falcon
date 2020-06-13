@@ -210,6 +210,11 @@ class FalconTabBase(object):
 			# 選択されているアイテムが１つ以上存在するか否か
 			return self.GetSelectedItemCount()>0
 
+	def GetRootObject(self):
+		"""ドライブ詳細情報表示で用いる"""
+		return None
+
+
 	def GetSelectedItemCount(self):
 		return len(self.GetSelectedItems(True))
 
