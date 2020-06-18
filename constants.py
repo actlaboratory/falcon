@@ -34,35 +34,44 @@ MENU_ID_FROM_FALCON=5000
 MENU_ID_SORT_COLUMN=6000
 
 SUPPORTED_DOCUMENT_FORMATS={
+	#document
 	'txt',
 	'pdf',
 	'rtf',
+	'tex',
+
+	#Microsoft Office
 	'docx',
-	'csv',
-	'tsv',
 	'xlsx',
 	'pptx',
 	'doc',
 	'xls',
 	'ppt',
-	'url',
+
+	#datafile
+	'csv',
+	'tsv',
+
+	#data markup languages
 	'mht',
 	'htm',
 	'html',
 	'xml',
 	'yaml',
-	'json',
+	'md',
+
+	#email and adressbook
 	'vmg',
 	'vcf',
 	'eml',
-	'sxw',
-	'sxc',
-	'sxi',
-	'sxd',
-	'odt',
-	'ods',
-	'odp',
-	'odg',
+
+	#open Office document
+	'odt',	#open document
+	'ods',	#open document spreadSheet
+	'odp',	#open document presentation
+	'odg',	#open document graphick
+
+	#Ichitaro
 	'jaw',
 	'jtw',
 	'jbw',
@@ -71,6 +80,8 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'jvw',
 	'jtd',
 	'jtt',
+
+	#others
 	'oas',
 	'oa2',
 	'oa3',
@@ -81,24 +92,40 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'wk4',
 	'123',
 	'wri',
-	'ini',
-	'conf',
-	'md',
-	'py',
+	'sxw',
+	'sxc',
+	'sxi',
+	'sxd',
+
+
+	#programing languages
 	'c',
 	'h',
 	'cpp',
 	'cs',
 	'java',
+	'py',
 	'hsp',
+	'as',
 	'js',
 	'rb',
+	'cgi',
 	'sql',
-	'as',
 	'manifest',
-	'tex',
+
+	#configuration and logs
+	'ini',
+	'conf',
+	'url',
 	'log',
+	'json',
+
+	#shell script
 	'bat',
+	"ps1",
+	"sh",
+
+	#git
 	'gitconfig',
 	'gitignore',
 }
@@ -110,5 +137,7 @@ SUPPORTED_AUDIO_FORMATS={
 	'wma',
 	'flac',
 	'aac',
-	'm4a'
+	'm4a',
+	'm4r',
+	"mp4"
 }
