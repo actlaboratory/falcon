@@ -773,14 +773,15 @@ class FalconTabBase(object):
 		hMenu.Append(elem['id'],elem['name'])
 
 	def OpenContextMenu(self,event):
+		if event:	#マウス操作
+				x,y=wx.GetMousePosition()
+		else:
+				rect=self.hListCtrl.GetItemRect(self.GetFocusedItem(),wx.LIST_RECT_LABEL)
+				x,y=self.hListCtrl.ClientToScreen(rect.GetBottomRight())
+		#end 表示位置判定
+
 		RegisterMenuCommand=globalVars.app.hMainView.menu.RegisterMenuCommand
 
-		# TODO: 処理を整理
-		if event:
-			targetPath=self.listObject.GetElement(self.hListCtrl.HitTest(event.GetPoint())[0]).fullpath
-		else:
-			targetPath=self.GetFocusedElement().fullpath
-		#end イベントあるか
 		targetPaths=self.GetSelectedItems().GetItemPaths()
 		misc.GetContextMenu()
 		misc.AddCustomContextMenuItem("テスト",5001)
@@ -789,7 +790,6 @@ class FalconTabBase(object):
 			misc.DestroyContextMenu()
 			return#コンテキストメニュー生成できなかった
 		#end メニュー生成できない
-		x,y=wx.GetMousePosition()
 		cmd=misc.ShowContextMenu(x,y)
 		evt=wx.MenuEvent(id=cmd)
 		self.CloseContextMenu(evt)
