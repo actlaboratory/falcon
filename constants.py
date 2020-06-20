@@ -110,6 +110,7 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'js',
 	'rb',
 	'cgi',
+	'php',
 	'sql',
 	'manifest',
 
