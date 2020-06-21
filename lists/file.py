@@ -109,7 +109,10 @@ class FileList(FileListBase):
 
 	def GetTopFileIndex(self):
 		"""先頭ファイルのインデックス番号を返す。"""
-		return len(self.folders)
+		if len(self.files)>0:
+			return len(self.folders)
+		else:
+			return -1
 
 	def GetFolderFileNumber(self):
 		return len(self.folders), len(self.files)

@@ -215,8 +215,13 @@ class FileListTab(base.FalconTabBase):
 		c.SendToClipboard()
 
 	def GoToTopFile(self):
-		self.Focus(self.listObject.GetTopFileIndex())
-		globalVars.app.say(_("先頭ファイル"))
+		target=self.listObject.GetTopFileIndex()
+		if target>=0:
+			self.Focus(target)
+			globalVars.app.say(_("先頭ファイル"))
+		else:
+			self.Focus(self.hListCtrl.GetItemCount()-1)
+			globalVars.app.say(_("ファイルなし"))
 
 	def DirCalc(self):
 		lst=[]
