@@ -145,13 +145,11 @@ class FalconListBase(object):
 		"""指定されたbrowsableObjectのインデックスを調べる"""
 		beforeListCount=0	#前のリストのアイテム数
 		for l in self.lists:
-			if ret<0:
-				try:
-					ret=l.index(item)+beforeListCount
-				except ValueError:
-					ret=-1
+			try:
+				return l.index(item)+beforeListCount
+			except ValueError:
 				beforeListCount+=len(l)
-		return ret
+		return -1
 
 	def GetItemNames(self):
 		"""リストの中身をファイル名のリストで取得する。"""

@@ -249,16 +249,17 @@ class FalconTabBase(object):
 		if self.hasCheckedItem():	#選択は加味されず、チェックのみ
 			lst=[]
 			if index_mode:
-				lst=list(self.checkedItem)
+				for item in self.checkedItem:
+					lst.append(self.listObject.GetItemIndex(item))
 				lst.sort()
 				return lst
-			for i in self.checkedItem:
-				lst.append(self.listObject.GetElement(i))
-				lst=list(dict.fromkeys(lst))
+			lst=list(self.checkedItem)
+			#lst=list(dict.fromkeys(lst))
 
 			#リストを作る
 			r=type(self.listObject)()
 			r.Initialize(lst)
+			r.ApplySort()		#元がsetなので順不同。必ず必要。
 			return r
 		else:
 			return self._GetSelectedItems(index_mode)
@@ -410,27 +411,27 @@ class FalconTabBase(object):
 		self.StopSound()
 		event.Skip()
 
-	def _IsItemChecked(self,index):
+	def _IsItemChecked(self,elem):
 		"""
-			アイテムインデックスから、そのアイテムがチェック状態か否かを調べる
+			browsableObjectsから、そのアイテムがチェック状態か否かを調べる
 			外からはSelectと合わせて調べる必要性以外にないはずなのでprivate
 		"""
-		return index in self.checkedItem
+		return elem in self.checkedItem
 
 	def OnSpaceKey(self):
 		"""spaceキー押下時、アイテムをチェック/チェック解除する"""
-		self.ItemMarkProcess([self.GetFocusedItem()])
+		self.ItemMarkProcess([self.GetFocusedElement()])
 
 	def CheckAll(self):
-		self.ItemMarkProcess(range(len(self.listObject)),True)
+		self.ItemMarkProcess(self.listObject.GetItemList(),True)
 		globalVars.app.say(_("すべてチェック"), interrupt=True)
 
 	def UncheckAll(self):
-		self.ItemMarkProcess(range(len(self.listObject)),False)
+		self.ItemMarkProcess(self.listObject.GetItemList(),False)
 		globalVars.app.say(_("すべてチェック解除"), interrupt=True)
 
 	def CheckInverse(self):
-		self.ItemMarkProcess(range(len(self.listObject)))
+		self.ItemMarkProcess(self.listObject.GetItemList())
 		globalVars.app.say(_("チェック反転"), interrupt=True)
 
 	def ItemMarkProcess(self,items,strict=None):
@@ -439,24 +440,25 @@ class FalconTabBase(object):
 			strict!=Noneの時は、全アイテムのチェック状態をstrictに合わせる
 		"""
 		for item in items:
+			index=self.listObject.GetItemIndex(item)
 			if strict==False or (strict==None and self._IsItemChecked(item)):
 				#チェック解除
 				self.checkedItem.discard(item)
 				if len(items)==1 and strict==None:
 					globalVars.app.say(_("チェック解除"), interrupt=True)
-				self.hListCtrl.SetItemBackgroundColour(item,"#000000")
+				self.hListCtrl.SetItemBackgroundColour(index,"#000000")
 			else:				#チェック
 				if len(items)==1:
 					globalVars.app.say(_("チェック"), interrupt=True)
 					if not strict:
 						globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
 				self.checkedItem.add(item)
-				self.hListCtrl.SetItemBackgroundColour(item,"#0000FF")
-				self.hListCtrl.RefreshItem(item)
+				self.hListCtrl.SetItemBackgroundColour(index,"#0000FF")
+				self.hListCtrl.RefreshItem(index)
 			#カーソルを１つ下へ移動
-			if len(items)==1 and item!=len(self.listObject)-1:		#カーソルが一番下以外にある時
+			if len(items)==1 and index!=len(self.listObject)-1:		#カーソルが一番下以外にある時
 				#self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_SELECTED)
-				self.Focus(item+1,True)
+				self.Focus(index+1,True)
 		self.hListCtrl.Update()
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.hasCheckedItem())
 
@@ -680,7 +682,7 @@ class FalconTabBase(object):
 		"""
 		self._cancelBackgroundTasks()
 		self.hListCtrl.DeleteAllItems()
-		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってるため必要		self.checkedItem=set()
+		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってるため必要
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
 		self.hilightIndex=-1
 		self._InitIconList()
@@ -698,7 +700,7 @@ class FalconTabBase(object):
 					#print(self._GetSelectedItems(True))
 					#print("--------")
 		#チェック状態のアイテムなら音を鳴らす
-		if self._IsItemChecked(event.GetIndex()):
+		if self._IsItemChecked(self.listObject.GetElement(event.GetIndex())):
 			globalVars.app.PlaySound(globalVars.app.config["sounds"]["checked"])
 		event.Skip()
 
@@ -718,7 +720,7 @@ class FalconTabBase(object):
 		#種類ベースでのメニューのロック
 		if event:		#アイテムが選択された
 			#チェック済みアイテムなら何もしない
-			if self._IsItemChecked(event.GetIndex()):
+			if self._IsItemChecked(self.listObject.GetElement(event.GetIndex())):
 				return
 			elem=self.listObject.GetElement(event.GetIndex())
 			try:
