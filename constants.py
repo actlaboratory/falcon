@@ -120,11 +120,12 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'url',
 	'log',
 	'json',
+	"css",
 
 	#shell script
-	'bat',
-	"ps1",
-	"sh",
+	'bat',		#windows commandPrompt
+	"ps1",		#windows PowerShell
+	"sh",		#Shell Script
 
 	#git
 	'gitconfig',
