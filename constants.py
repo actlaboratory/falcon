@@ -121,6 +121,7 @@ SUPPORTED_DOCUMENT_FORMATS={
 	'log',
 	'json',
 	"css",
+	"htaccess",	#apache directory configuration
 
 	#shell script
 	'bat',		#windows commandPrompt
