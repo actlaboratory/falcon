@@ -8,6 +8,8 @@
 	通常検索・ファイル内容検索共通の関数群
 """
 
+import wx
+
 import browsableObjects
 import errorCodes
 import globalVars
@@ -92,6 +94,24 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 
 	def GoBackward(self):
 		return errorCodes.BOUNDARY
+
+	def OpenContextMenu(self,event):
+		menu=wx.Menu()
+		globalVars.app.hMainView.menu.RegisterMenuCommand(menu,{
+			"MOVE_FORWARD":_("開く"),
+			"EDIT_FULLPATHCOPY":_("フルパスをコピー"),
+			"EDIT_CUT":_("切り取り"),
+			"EDIT_COPY":_("コピー"),
+			"FILE_RENAME":_("名前を変更"),
+			"FILE_CHANGEATTRIBUTE":_("属性を変更"),
+			"FILE_MAKESHORTCUT":_("ショートカットを作成"),
+			"FILE_TRASH":_("ゴミ箱へ移動"),
+			"FILE_DELETE":_("完全削除"),
+			"FILE_VIEW_DETAIL":_("詳細情報を表示"),
+			"FILE_SHOWPROPERTIES":_("プロパティを表示")
+		})
+		globalVars.app.hMainView.PopupMenu(menu)
+
 
 	def ReadCurrentFolder(self):
 		state=_("検索完了") if self.tempListObject.GetFinishedStatus() is True else _("検索中")
