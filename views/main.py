@@ -238,6 +238,7 @@ class View(BaseView):
 		self.menu.Block(new.blockMenuList)
 		self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),new.IsMarked())
 		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),new.hasCheckedItem())
+		self.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"),len(new.checkedItem)!=len(new.listObject))
 		new.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
 
 	def UpdateTabName(self):

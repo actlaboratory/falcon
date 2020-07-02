@@ -461,6 +461,7 @@ class FalconTabBase(object):
 				self.Focus(index+1,True)
 		self.hListCtrl.Update()
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),self.hasCheckedItem())
+		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"),len(self.checkedItem)!=len(self.listObject))
 
 	def BeginDrag(self,event):
 		data=wx.FileDataObject()
@@ -684,6 +685,7 @@ class FalconTabBase(object):
 		self.hListCtrl.DeleteAllItems()
 		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってるため必要
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
+		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"),True)
 		self.hilightIndex=-1
 		self._InitIconList()
 
