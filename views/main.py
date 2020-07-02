@@ -524,7 +524,6 @@ class Events(BaseEvents):
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
 			self.parent.activeTab.MakeShortcut(d.GetValue())
-			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
 			d=views.changeAttribute.Dialog(self.parent.activeTab.GetSelectedItems().GetAttributeCheckState())
@@ -532,7 +531,6 @@ class Events(BaseEvents):
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
 			val=d.GetValue()
-			d.Destroy()
 			self.parent.activeTab.ChangeAttribute(val)
 			return
 		if selected==menuItemsStore.getRef("FILE_MKDIR"):
@@ -541,7 +539,6 @@ class Events(BaseEvents):
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
 			self.parent.activeTab.MakeDirectory(d.GetValue())
-			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("FILE_FILEOPTEST"):
 			self.parent.activeTab.FileOperationTest()
@@ -587,7 +584,6 @@ class Events(BaseEvents):
 			d=views.makeHash.Dialog(self.parent.activeTab.GetFocusedElement().fullpath)
 			d.Initialize()
 			d.Show()
-			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("TOOL_EXEC_PROGRAM"):
 			self.ExecProgram()
@@ -633,7 +629,6 @@ class Events(BaseEvents):
 			d=views.registOriginalAssociation.Dialog(dict(config.items()))
 			d.Initialize()
 			if d.Show()==wx.ID_CANCEL:
-				d.Destroy()
 				return
 			result={}
 			result["originalAssociation"]=d.GetValue()
@@ -734,7 +729,6 @@ class Events(BaseEvents):
 		d.Initialize()
 		if d.Show()==wx.ID_CANCEL:return
 		val=d.GetValue()
-		d.Destroy()
 		self.parent.activeTab.ExecProgram(val)
 
 	def GoBackward(self):
@@ -785,7 +779,6 @@ class Events(BaseEvents):
 			#end 正規表現モードがオンかどうか
 			break
 		#end 入力が正しくなるまで
-		d.Destroy()
 		if canceled: return
 		actionstr="search" if val['type']==0 else "grep"
 		target={'action': actionstr, 'basePath': basePath, 'out_lst': out_lst, 'keyword': val['keyword'], 'isRegularExpression': val['isRegularExpression']}
@@ -868,5 +861,4 @@ class Events(BaseEvents):
 		d=views.objectDetail.Dialog()
 		d.Initialize(dic)
 		d.Show()
-		d.Destroy()
 		return

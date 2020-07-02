@@ -1,22 +1,11 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon make Shortcut view
-#Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-import ctypes
-import gettext
-import logging
-import os
-import sys
 import wx
-import win32con
-import win32gui
 from logging import getLogger, FileHandler, Formatter
 from .baseDialog import *
-import constants
-import errorCodes
-import globalVars
-import keymap
 import misc
 from simpleDialog import *
 import views.ViewCreator
@@ -37,6 +26,7 @@ class Dialog(BaseDialog):
 
 	#作成先初期値を決めるためのターゲットの名前とタイプ
 	def __init__(self,targetName):
+		super().__init__()
 		#対象オブジェクトの拡張子を除く名前
 		self.targetName=targetName
 
@@ -45,7 +35,6 @@ class Dialog(BaseDialog):
 		self.identifier="MakeShortcutDialog"#このビューを表す文字列
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
-		self.app=globalVars.app
 		super().Initialize(self.app.hMainView.hFrame,_("ショートカットの作成"))
 		self.InstallControls()
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
@@ -76,16 +65,7 @@ class Dialog(BaseDialog):
 		self.bOk=self.creator.okbutton(_("ＯＫ"),None)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
-	def Show(self):
-		result=self.ShowModal()
-		self.Destroy()
-		return result
-
-	def Destroy(self):
-		self.log.debug("destroy")
-		self.wnd.Destroy()
-
-	def GetValue(self):
+	def GetData(self):
 		v={}
 		v["type"]=self.typeStrings[self.type.GetSelection()]
 		v["destination"]=self.destination.GetLineText(0)

@@ -4,7 +4,6 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
-import globalVars
 import misc
 import views.ViewCreator
 from logging import getLogger
@@ -27,6 +26,7 @@ hashTypes=[
 
 class Dialog(BaseDialog):
 	def __init__(self,fname):
+		super().__init__()
 		self.fileName=fname
 
 	def Initialize(self):
@@ -34,7 +34,6 @@ class Dialog(BaseDialog):
 		self.identifier="FileHashDialog"#このビューを表す文字列
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
-		self.app=globalVars.app
 		super().Initialize(self.app.hMainView.hFrame,_("ファイルハッシュの計算"))
 		self.InstallControls()
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
@@ -54,21 +53,6 @@ class Dialog(BaseDialog):
 		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_RIGHT)
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)
 		self.bOk=self.creator.okbutton(_("閉じる"),None)
-
-		self.sizer.Fit(self.wnd)
-
-
-	def Show(self):
-		result=self.wnd.ShowModal()
-		self.Destroy()
-		return result
-
-	def Destroy(self):
-		self.log.debug("destroy")
-		self.wnd.Destroy()
-
-	def GetValue(self):
-		return None
 
 	def calcStart(self,event):
 		hash=misc.calcHash(self.fileName,self.combo.GetStringSelection())

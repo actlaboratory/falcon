@@ -8,15 +8,13 @@ import gettext
 from logging import getLogger
 
 from .baseDialog import *
-import constants
-import errorCodes
-import globalVars
 import misc
 import views.ViewCreator
 
 class Dialog(BaseDialog):
 
 	def __init__(self,message,info,choices,enableCancel=False):
+		super().__init__()
 		self.message=message
 		self.info=info
 		self.choices=choices
@@ -27,7 +25,6 @@ class Dialog(BaseDialog):
 		self.identifier="OperationSelecterDialog"#このビューを表す文字列
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
-		self.app=globalVars.app
 		if self.enableCancel:
 			super().Initialize(self.app.hMainView.hFrame,_("ファイル操作確認"))
 		else:
@@ -68,16 +65,7 @@ class Dialog(BaseDialog):
 		if self.enableCancel:
 			self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
-	def Show(self):
-		result=self.ShowModal()
-		self.Destroy()
-		return result
-
-	def Destroy(self):
-		self.log.debug("destroy")
-		self.wnd.Destroy()
-
-	def GetValue(self):
+	def GetData(self):
 		return {
 			"response" : self.choices[self.select.GetStringSelection()],
 			"all" : self.check.IsChecked()

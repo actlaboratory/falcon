@@ -1,10 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
 #Falcon run program view
-#Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
-import globalVars
 import misc
 import views.ViewCreator
 from logging import getLogger
@@ -16,7 +15,6 @@ class Dialog(BaseDialog):
 		self.identifier="execProgramDialog"#このビューを表す文字列
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
-		self.app=globalVars.app
 		super().Initialize(self.app.hMainView.hFrame,_("ファイル名を指定して実行"))
 		self.InstallControls()
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
@@ -32,14 +30,5 @@ class Dialog(BaseDialog):
 		self.bOk=self.creator.okbutton(_("ＯＫ"),None)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
-	def Show(self):
-		result=self.ShowModal()
-		self.Destroy()
-		return result
-
-	def Destroy(self):
-		self.log.debug("destroy")
-		self.wnd.Destroy()
-
-	def GetValue(self):
+	def GetData(self):
 		return self.iName.GetLineText(0)
