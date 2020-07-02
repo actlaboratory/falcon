@@ -9,6 +9,7 @@ import win32file
 import constants
 
 from .base import FalconListBase
+from .constants import *
 
 class FileListBase(FalconListBase):
 	def __init__(self):
