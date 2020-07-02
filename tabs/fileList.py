@@ -120,7 +120,7 @@ class FileListTab(base.FalconTabBase):
 		if option["type"]=="shortcut":
 			prm=option["parameter"]
 			dir=option["directory"]
-		target=self.parent.activeTab.GetSelectedItems().GetElement(0).fullpath
+		target=self.GetFocusedElement().fullpath
 		dest=option["destination"]
 		if not os.path.isabs(dest):	#早退の場合は絶対に直す
 			dest=os.path.normpath(os.path.join(os.path.dirname(target),dest))
