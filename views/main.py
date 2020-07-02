@@ -527,7 +527,7 @@ class Events(BaseEvents):
 			d.Destroy()
 			return
 		if selected==menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
-			d=views.changeAttribute.Dialog()
+			d=views.changeAttribute.Dialog(self.parent.activeTab.GetSelectedItems().GetAttributeCheckState())
 			d.Initialize()
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return

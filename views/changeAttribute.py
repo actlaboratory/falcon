@@ -2,18 +2,10 @@
 #Falcon change file attribute view
 #Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
-import gettext
-import logging
-import os
-import sys
+
 import wx
-import win32con
-import win32gui
 from logging import getLogger, FileHandler, Formatter
 from .baseDialog import *
-import constants
-import DefaultSettings
-import errorCodes
 import globalVars
 import keymap
 import misc
@@ -22,6 +14,11 @@ import views.ViewCreator
 
 
 class Dialog(BaseDialog):
+	def __init__(self,defaultAttributes):
+		super().__init__()
+		#現在の属性を初期値としてセット
+		self.defaultAttributes=defaultAttributes
+
 	def Initialize(self):
 		t=misc.Timer()
 		self.identifier="changeAttributeDialog"#このビューを表す文字列
@@ -37,12 +34,9 @@ class Dialog(BaseDialog):
 		"""いろんなwidgetを設置する。"""
 		self.mainArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_CENTER)
 
-		#現在の属性を初期値としてセット
-		defaultAttributes=globalVars.app.hMainView.activeTab.GetSelectedItems().GetAttributeCheckState()
-
 		#属性の変更
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("属性の変更"))
-		self.checks=self.creator.checkbox3([_("読み取り専用"),_("隠し"),_("システム"),_("アーカイブ")],None,defaultAttributes)
+		self.checks=self.creator.checkbox3([_("読み取り専用"),_("隠し"),_("システム"),_("アーカイブ")],None,self.defaultAttributes)
 
 		#タイムスタンプの変更
 		#self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("タイムスタンプの変更"))
@@ -54,11 +48,8 @@ class Dialog(BaseDialog):
 		self.bOk=self.creator.okbutton(_("ＯＫ"),None)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
-		self.sizer.Fit(self.wnd)
-
-
 	def Show(self):
-		result=self.wnd.ShowModal()
+		result=self.ShowModal()
 		self.Destroy()
 		return result
 
@@ -73,5 +64,3 @@ class Dialog(BaseDialog):
 		v.append(self.checks[2].Get3StateValue())
 		v.append(self.checks[3].Get3StateValue())
 		return v
-
-
