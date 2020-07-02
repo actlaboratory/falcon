@@ -40,6 +40,10 @@ class FileListTab(base.FalconTabBase):
 	]
 
 	def OnLabelEditEnd(self,evt):
+		"""
+			ファイル名変更の入力終了イベント
+			入力中にリストが並び替えされると自動でキャンセル扱いになるのでインデックスによる処理でよい
+		"""
 		self.isRenaming=False
 		self.parent.SetShortcutEnabled(True)
 		if evt.IsEditCancelled():		#ユーザによる編集キャンセル
