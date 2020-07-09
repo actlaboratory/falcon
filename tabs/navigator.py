@@ -19,7 +19,7 @@ import globalVars
 import constants
 import misc
 import views.ViewCreator
-from . import fileList,driveList,streamList,searchResult, grepResult
+from . import fileList,driveList,streamList,searchResult,grepResult,NetworkResourceList
 from simpleDialog import dialog
 
 def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environment={}):
@@ -66,7 +66,14 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 		return newtab
 	#end ドライブリストへ行く
 	target=os.path.expandvars(target)
-	if not os.path.exists(target):
+	if target[0:2]=="\\\\" and "\\" not in target[2:]:
+		lst=lists.NetworkResourceList()
+		result=lst.Initialize(target)
+		if result != errorCodes.OK:
+			return result	#アクセス不可
+		newtab=NetworkResourceList.NetworkResourceListTab(environment)
+		newtab.Initialize(parent,creator,hListCtrl)
+	elif not os.path.exists(target):
 		dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
 		return errorCodes.FILE_NOT_FOUND
 	elif os.path.isfile(target):	#副ストリームへ移動
@@ -89,7 +96,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 				dlg=wx.MessageDialog(None,_("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),_("確認"),wx.YES_NO|wx.ICON_QUESTION)
 				if dlg.ShowModal()==wx.ID_YES:
 					misc.RunFile(sys.argv[0],True,target)
-			return result#アクセス負荷
+			return result#アクセス不可
 		if cursor!="":
 			targetItemIndex=lst.Search(cursor)
 		if type(previous_tab)==fileList.FileListTab:#再利用

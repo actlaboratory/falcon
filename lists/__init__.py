@@ -9,4 +9,5 @@ from lists.drive import *
 from lists.stream import *
 from lists.searchResult import *
 from lists.grepResult import *
+from lists.networkResource import *
 from lists.constants import *
