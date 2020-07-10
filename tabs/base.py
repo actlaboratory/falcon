@@ -97,7 +97,6 @@ class FalconTabBase(object):
 	selectItemTypeMenuConditions[browsableObjects.NetworkResource]=[]
 	selectItemTypeMenuConditions[browsableObjects.NetworkResource].extend([
 		"FILE_RENAME",
-		"EDIT_COPY",
 		"TOOL_EJECT_DRIVE",
 		"TOOL_EJECT_DEVICE"
 	])

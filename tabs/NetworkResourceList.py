@@ -29,6 +29,7 @@ class NetworkResourceListTab(base.FalconTabBase):
 	"""ネットワークリソースリストが表示されているタブ。"""
 
 	blockMenuList=[
+		"FILE_RENAME",
 		"FILE_CHANGEATTRIBUTE",
 		"FILE_TRASH",
 		"FILE_DELETE",
@@ -36,12 +37,14 @@ class NetworkResourceListTab(base.FalconTabBase):
 		"EDIT_CUT",
 		"EDIT_PAST",
 		"EDIT_SEARCH",
-		"MOVE_FORWARD_TAB",
+		"MOVE_FORWARD_STREAM",
 		"MOVE_TOPFILE",
 		"TOOL_DIRCALC",
 		"TOOL_HASHCALC",
 		"TOOL_ADDPATH",
 		"TOOL_EXEC_PROGRAM",
+		"TOOL_EJECT_DRIVE",
+		"TOOL_EJECT_DEVICE",
 		"READ_CONTENT_PREVIEW",
 		"READ_CONTENT_READHEADER",
 		"READ_CONTENT_READFOOTER",
