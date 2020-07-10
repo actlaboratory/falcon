@@ -10,6 +10,7 @@
 import json
 import logging
 import os
+import re
 
 import wx
 import browsableObjects
@@ -626,20 +627,30 @@ class FalconTabBase(object):
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
 		self.StopSound()
-		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
+		if len(self.listObject.rootDirectory)<3:		#ドライブリストへ
 			target=""
 			cursorTarget=self.listObject.rootDirectory[0]
 		else:
 			root=self.listObject.rootDirectory
 			while(True):
-				if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
+				if len(self.listObject.rootDirectory)<3:		#ドライブリストへ
 					target=""
 					cursorTarget=self.listObject.rootDirectory[0]
 					break
 				#end 下がっていってドライブリスト
 				spl=os.path.split(root)
 				target=spl[0]
-				if os.path.isdir(target):
+				if(target==root and root[0:2]=="\\\\"):
+					#\\hoge\\fuga　の階層のみ、os.path.split()しても結果が変わらない
+					target=re.sub("(\\\\\\\\[^\\\\]+).+","\\1",target)
+					cursorTarget=re.sub("\\\\\\\\[^\\\\]+(.+)","\\1",target)
+					result=self.Move(target,cursorTarget)
+					if(type(result)!=int):
+						return result
+					else:
+						cursorTarget=target
+						target=""
+				elif os.path.isdir(target):
 					cursorTarget=spl[1]
 					break
 				#end 移動先が存在するので抜ける
