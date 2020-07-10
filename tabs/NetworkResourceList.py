@@ -85,5 +85,6 @@ class NetworkResourceListTab(base.FalconTabBase):
 
 	def GetRootObject(self):
 		"""ドライブ詳細情報表示で用いる"""
-		#TODO:IPアドレス入れる
-		return browsableObjects.NetworkResource(self.listObject.rootDirectory[2:],self.listObject.rootDirectory,None)
+		obj=browsableObjects.NetworkResource()
+		obj.Initialize(self.listObject.rootDirectory[2:],self.listObject.rootDirectory,"")
+		return obj
