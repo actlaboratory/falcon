@@ -33,8 +33,7 @@ class StreamList(FalconListBase):
 		"""ファイル名から副ストリーム情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、errorCodes.OK以外が返る。。"""
 		t=misc.Timer()
 		if isinstance(file,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
-			self.streams=file
-			self.lists=[self.streams]
+			self.streams+=file
 			return
 		#end copy
 

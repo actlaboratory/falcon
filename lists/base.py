@@ -122,7 +122,6 @@ class FalconListBase(object):
 			except ValueError:	#ネットワークリソースなどサイズが未定義の場合に発生
 				return -1
 		else:
-			print (self._getSortFunction(sortType)(self.GetElement(index)))
 			return self._getSortFunction(sortType)(self.GetElement(index))
 
 	def GetElement(self,index):

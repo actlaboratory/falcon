@@ -36,7 +36,7 @@ class NetworkResourceList(FalconListBase):
 		self.rootDirectory=path
 		t=misc.Timer()
 		if isinstance(path,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
-			self.resources=path
+			self.resources+=path
 			return errorCodes.OK
 		#end copy
 		self.resources.clear()
