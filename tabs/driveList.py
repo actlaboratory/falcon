@@ -9,18 +9,14 @@
 """
 
 import os
-import gettext
 import wx
 import errorCodes
-import lists
-import browsableObjects
 import globalVars
 import fileOperator
 import misc
 import workerThreads
 import workerThreadTasks
 import fileSystemManager
-import tabs.fileList
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon

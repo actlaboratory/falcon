@@ -7,19 +7,11 @@
 ネットワークリソースリストです。ファイル操作関連は一切できません。
 """
 
-import os
-import gettext
 import wx
-import errorCodes
-import lists
 import browsableObjects
 import globalVars
 import fileOperator
 import misc
-import workerThreads
-import workerThreadTasks
-import fileSystemManager
-import tabs.fileList
 
 from simpleDialog import *
 from win32com.shell import shell, shellcon
@@ -58,7 +50,6 @@ class NetworkResourceListTab(base.FalconTabBase):
 		cursorTarget=self.listObject.rootDirectory[0]
 		return self.Move(target,cursorTarget)
 
-	#TODO:リネームを拒否
 	def OnLabelEditEnd(self,event):
 		evt.Veto()
 		return
@@ -80,8 +71,6 @@ class NetworkResourceListTab(base.FalconTabBase):
 	def GetTabName(self):
 		"""タブコントロールに表示する名前"""
 		return self.listObject.rootDirectory
-
-	#TODO: def OpenContextMenu(self,event):
 
 	def GetRootObject(self):
 		"""ドライブ詳細情報表示で用いる"""

@@ -9,7 +9,6 @@
 """
 
 import os
-import gettext
 import wx
 import clipboard
 import errorCodes
