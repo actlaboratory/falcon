@@ -70,7 +70,7 @@ class DriveListTab(base.FalconTabBase):
 		if number==-1:
 			dialog(_("エラー"), _("ネットワークリソース一覧が取得できませんでした。"))
 		#end error
-		globalVars.app.say(_("ネットワークドライブ数: %d" % number))
+		self.log.debug("scanned network drives: %d" % number)
 		self.networkTask=None
 
 	def GoBackward(self):
@@ -173,9 +173,6 @@ class DriveListTab(base.FalconTabBase):
 	def GetRootObject(self):
 		"""ドライブ詳細情報表示で用いる"""
 		return self.GetFocusedElement()
-
-	def OnNetworkListRetrieved(self,elem):
-		self._AppendElement(elem)
 
 	def OnClose(self):
 		"""ネットワークリソース一覧をキャンセルして大気"""

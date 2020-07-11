@@ -265,3 +265,12 @@ def CommandLineToArgv(cmd):
 def isDocumentExt(ext):
 	return ext.lower() in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats
 
+def ResolveLocalIpAddress(name):
+	addr=""
+	try:
+		addr=socket.getaddrinfo(name,None)[0][4][0]
+	except Exception:
+		pass
+	#end error
+	return addr
+

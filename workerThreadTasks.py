@@ -93,11 +93,7 @@ def GetNetworkResources(taskState,param):
 	for l in lst:
 		ret, shfileinfo=shell.SHGetFileInfo(l.lpRemoteName,0,shellcon.SHGFI_ICON)
 		if taskState.canceled: return False
-		try:
-			addr=socket.getaddrinfo(l.lpRemoteName[2:],None)[0][4][0]
-		except Exception:
-			addr=""
-		#end except
+		addr=misc.ResolveLocalIpAddress(l.lpRemoteName[2:])
 		s=browsableObjects.NetworkResource()
 		s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,addr,shfileinfo[0])
 		if taskState.canceled: return False

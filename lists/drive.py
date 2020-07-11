@@ -62,7 +62,7 @@ class DriveList(FalconListBase):
 		#end ドライブ25個分調べる
 		# ネットワークリソースの追加はタブ側から来ることになった
 		self.log.debug("Drives list created in %d seconds." % t.elapsed)
-		self.log.debug(str(len(self.drives))+" drives,"+str(len(self.unusableDrives))+" unusableDrives and "+str(len(self.networkResources))+" networkResources found.")
+		self.log.debug("%d drives and %d unusableDrives found." % (len(self.drives), len(self.unusableDrives)))
 		self.log.debug("Triggering sorting")
 		self.ApplySort()
 		return errorCodes.OK
@@ -112,6 +112,3 @@ def GetDriveObject(index):
 	ret, shfileinfo=shell.SHGetFileInfo(letter+":\\",0,shellcon.SHGFI_ICON)
 	d.Initialize(letter,f,t,type,n,shfileinfo[0])
 	return d
-
-	def SetNetworkListCallback(self,clbk):
-		self.networkListCallback=clbk
