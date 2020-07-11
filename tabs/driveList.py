@@ -52,6 +52,26 @@ class DriveListTab(base.FalconTabBase):
 		self.selectItemMenuConditions[2].extend([
 			"EDIT_OPENCONTEXTMENU"
 		])
+		self.networkListTask=None
+		self._getNetworkList()
+
+	def _getNetworkList(self):
+		if self.networkListTask is not None:
+			self.networkListTask.Cancel()
+			self.networkListTask=None
+		#end cancel previous
+		self.networkListTask=workerThreads.RegisterTask(workerThreadTasks.GetNetworkResources, {"onAppend": self.OnAppendNetworkResource, "onFinish": self.OnFinishNetworkResource})
+
+	def OnAppendNetworkResource(self,resource):
+		self.listObject.AppendNetworkResource(resource)
+		self._AppendElement(resource)
+
+	def OnFinishNetworkResource(self,number):
+		if number==-1:
+			dialog(_("エラー"), _("ネットワークリソース一覧が取得できませんでした。"))
+		#end error
+		self.log.debug("scanned network drives: %d" % number)
+		self.networkTask=None
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
@@ -153,3 +173,7 @@ class DriveListTab(base.FalconTabBase):
 	def GetRootObject(self):
 		"""ドライブ詳細情報表示で用いる"""
 		return self.GetFocusedElement()
+
+	def OnClose(self):
+		"""ネットワークリソース一覧をキャンセルして大気"""
+		if self.networkListTask: self.networkListTask.Cancel()

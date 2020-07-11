@@ -7,8 +7,6 @@
 import wx
 import win32api
 import win32file
-import win32wnet
-import socket
 
 import pywintypes
 import constants
@@ -62,12 +60,9 @@ class DriveList(FalconListBase):
 			if drv&check: self.Append(i)#ドライブ検出
 			check<<=1
 		#end ドライブ25個分調べる
-
-		#ネットワークリソースの追加
-		self._GetNetworkResources()
-
+		# ネットワークリソースの追加はタブ側から来ることになった
 		self.log.debug("Drives list created in %d seconds." % t.elapsed)
-		self.log.debug(str(len(self.drives))+" drives,"+str(len(self.unusableDrives))+" unusableDrives and "+str(len(self.networkResources))+" networkResources found.")
+		self.log.debug("%d drives and %d unusableDrives found." % (len(self.drives), len(self.unusableDrives)))
 		self.log.debug("Triggering sorting")
 		self.ApplySort()
 		return errorCodes.OK
@@ -85,26 +80,8 @@ class DriveList(FalconListBase):
 		#end for
 	#end _copyFromList
 
-	def _GetNetworkResources(self):
-		self.log.debug("Getting networkResource list...")
-		try:
-			h=win32wnet.WNetOpenEnum(5,1,0,None)
-				#5=RESOURCE_CONTEXT
-				#1=RESOURCETYPE_DISK
-			lst=win32wnet.WNetEnumResource(h,64)	#65以上の指定不可
-			win32wnet.WNetCloseEnum(h);
-		except win32net.error as er:
-			dialog(_("エラー"), _("ネットワーク上のリソース一覧を取得できませんでした(%(error)s)") % {"error": str(er)})
-			return
-		#end 情報取得失敗
-		lst.pop(0)	#先頭はドライブではない者が入るので省く
-		for l in lst:
-			ret, shfileinfo=shell.SHGetFileInfo(l.lpRemoteName,0,shellcon.SHGFI_ICON)
-			s=browsableObjects.NetworkResource()
-			self.log.debug("network resource found and check IP address:"+l.lpRemoteName[2:])
-			s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,socket.getaddrinfo(l.lpRemoteName[2:],None)[0][4][0],shfileinfo[0])
-			self.networkResources.append(s)
-		#end 追加ループ
+	def AppendNetworkResource(self,resource):
+		self.networkResources.append(resource)
 
 	def Append(self,index):
 		d=GetDriveObject(index)

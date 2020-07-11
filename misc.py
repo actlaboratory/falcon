@@ -6,6 +6,7 @@
 
 import ctypes
 import json
+import socket
 import pywintypes
 import os
 import re
@@ -264,4 +265,13 @@ def CommandLineToArgv(cmd):
 #渡された拡張子がドキュメント形式であればTrue
 def isDocumentExt(ext):
 	return ext.lower() in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats
+
+def ResolveLocalIpAddress(name):
+	addr=""
+	try:
+		addr=socket.getaddrinfo(name,None)[0][4][0]
+	except Exception:
+		pass
+	#end error
+	return addr
 
