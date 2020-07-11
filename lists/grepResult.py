@@ -61,8 +61,8 @@ class GrepResultList(SearchResultBase):
 			for	 elem in content:
 				m=re.search(self.keyword,elem)
 				if m:
-					preview_start=min(0,m.start()-10)
-					preview=elem[preview_start:preview_start+20]
+					preview_start=max(0,m.start()-10)
+					preview=elem[preview_start:preview_start+25]
 					if not fileobj:
 						fileobj=self._MakeObject(browsableObjects.File,fullpath)
 					obj=browsableObjects.GrepItem()
