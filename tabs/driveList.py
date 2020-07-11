@@ -45,7 +45,11 @@ class DriveListTab(base.FalconTabBase):
 		"READ_CONTENT_READFOOTER",
 	]
 
-	#end Update
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.selectItemMenuConditions[2].extend([
+			"EDIT_OPENCONTEXTMENU"
+		])
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
