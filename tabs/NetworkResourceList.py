@@ -31,6 +31,7 @@ class NetworkResourceListTab(base.FalconTabBase):
 		"EDIT_SEARCH",
 		"MOVE_FORWARD_STREAM",
 		"MOVE_TOPFILE",
+		"MOVE_OPEN_HERE_",
 		"TOOL_DIRCALC",
 		"TOOL_HASHCALC",
 		"TOOL_ADDPATH",

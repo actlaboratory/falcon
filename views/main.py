@@ -70,12 +70,6 @@ class View(BaseView):
 		#お気に入りフォルダと「ここで開く」のショートカットキーを登録
 		for target in (globalVars.app.userCommandManagers):
 			for v in target.keyMap:
-				if target==globalVars.app.openHereCommand:
-					tabs.base.FalconTabBase.selectItemMenuConditions[0].append(target.refHead+v)
-					tabs.base.FalconTabBase.selectItemMenuConditions[2].append(target.refHead+v)
-					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File].append(target.refHead+v)
-					tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.NetworkResource].append(target.refHead+v)
-					tabs.streamList.StreamListTab.blockMenuList.append(target.refHead+v)
 				self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
 		errors=self.menu.keymap.GetError(self.identifier)
 		if errors:
@@ -317,7 +311,11 @@ class Menu(BaseMenu):
 			subMenu=wx.Menu()
 			for v in m.paramMap:
 				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
-			self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
+			#@@@@@@
+			#self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
+			title=globalVars.app.userCommandManagers[m]
+			self.RegisterMenuCommand(self.hMoveMenu,m.refHead,title,subMenu)
+
 
 		#読みメニューの中身
 		subMenu=wx.Menu()

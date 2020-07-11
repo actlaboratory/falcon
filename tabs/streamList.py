@@ -39,6 +39,7 @@ class StreamListTab(base.FalconTabBase):
 		"MOVE_FORWARD_TAB",
 		"MOVE_FORWARD_STREAM",
 		"MOVE_TOPFILE",
+		"MOVE_OPEN_HERE_",
 		"TOOL_DIRCALC",
 		"TOOL_HASHCALC",
 		"TOOL_ADDPATH",
