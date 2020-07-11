@@ -6,6 +6,7 @@
 
 import ctypes
 import json
+import socket
 import pywintypes
 import os
 import re
