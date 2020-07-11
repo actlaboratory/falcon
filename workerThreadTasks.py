@@ -10,10 +10,13 @@
 """
 
 import pathlib
+import socket
 import wx
+import win32wnet
 import globalVars
 import misc
 import time
+import browsableObjects
 
 def DirCalc(taskState,param):
 	"""
@@ -72,3 +75,25 @@ def DebugBeep(taskState,param):
 		time.sleep(1)
 	#end for
 	return True
+
+def GetNetworkResources(taskState,param):
+	try:
+		h=win32wnet.WNetOpenEnum(5,1,0,None)
+		#5=RESOURCE_CONTEXT
+		#1=RESOURCETYPE_DISK
+		lst=win32wnet.WNetEnumResource(h,64)	#65以上の指定不可
+		win32wnet.WNetCloseEnum(h);
+	except win32net.error as er:
+		param["onFinish"](-1)#コールバックに通知
+		return True
+	#end 情報取得失敗
+	if taskState.canceled: return False
+	lst.pop(0)	#先頭はドライブではない者が入るので省く
+	for l in lst:
+		ret, shfileinfo=shell.SHGetFileInfo(l.lpRemoteName,0,shellcon.SHGFI_ICON)
+		if taskState.canceled: return False
+		s=browsableObjects.NetworkResource()
+		s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,socket.getaddrinfo(l.lpRemoteName[2:],None)[0][4][0],shfileinfo[0])
+		param["onAppend"](s)
+	#end 追加ループ
+	param["onFinish"](len(lst))

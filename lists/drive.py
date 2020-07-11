@@ -7,8 +7,6 @@
 import wx
 import win32api
 import win32file
-import win32wnet
-import socket
 
 import pywintypes
 import constants
@@ -16,6 +14,8 @@ import misc
 import browsableObjects
 import globalVars
 import errorCodes
+import workerThreads
+import workerThreadTasks
 
 from simpleDialog import dialog
 from .base import *
@@ -37,6 +37,7 @@ class DriveList(FalconListBase):
 		self.drives=[]
 		self.unusableDrives=[]
 		self.networkResources=[]
+		self.networkTask=None
 		self.lists=[self.drives,self.unusableDrives,self.networkResources]
 
 	def Update(self):
@@ -86,25 +87,22 @@ class DriveList(FalconListBase):
 	#end _copyFromList
 
 	def _GetNetworkResources(self):
-		self.log.debug("Getting networkResource list...")
-		try:
-			h=win32wnet.WNetOpenEnum(5,1,0,None)
-				#5=RESOURCE_CONTEXT
-				#1=RESOURCETYPE_DISK
-			lst=win32wnet.WNetEnumResource(h,64)	#65以上の指定不可
-			win32wnet.WNetCloseEnum(h);
-		except win32net.error as er:
-			dialog(_("エラー"), _("ネットワーク上のリソース一覧を取得できませんでした(%(error)s)") % {"error": str(er)})
-			return
-		#end 情報取得失敗
-		lst.pop(0)	#先頭はドライブではない者が入るので省く
-		for l in lst:
-			ret, shfileinfo=shell.SHGetFileInfo(l.lpRemoteName,0,shellcon.SHGFI_ICON)
-			s=browsableObjects.NetworkResource()
-			self.log.debug("network resource found and check IP address:"+l.lpRemoteName[2:])
-			s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,socket.getaddrinfo(l.lpRemoteName[2:],None)[0][4][0],shfileinfo[0])
-			self.networkResources.append(s)
-		#end 追加ループ
+		if self.networkTask is not None:
+			self.networkTask.Cancel()
+			self.networkTask=None
+		#end cancel previous
+		self.networkTask=workerThreads.RegisterTask(workerThreadTasks.GetNetworkResources, {"onAppend": self.OnAppendNetworkResource, "onFinish": self.OnFinishNetworkResource})
+		self.log.debug("Requested networkResource list")
+
+	def OnAppendNetworkResource(self,resource):
+		self.networkResources.append(resource)
+
+	def OnFinishNetworkResource(self,number):
+		if number==-1:
+			print("error when getting network resources")
+		#end error
+		print("network resource retrieved, found %d" % number)
+		self.networkTask=None
 
 	def Append(self,index):
 		d=GetDriveObject(index)
