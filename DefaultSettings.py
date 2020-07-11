@@ -59,6 +59,11 @@ class DefaultSettings:
 			"column_width_4" : "70",
 			"column_width_5" : "240"
 		}
+		config["NetworkResourceList"]={
+			"sorting" : "0",
+			"descending" : "0",
+			"column_width_0" : "620"
+		}
 		config["view"]={
 			"font": "bold 'ＭＳ ゴシック' 22 windows-932",
 			"colorMode":"normal",
