@@ -10,7 +10,6 @@
 """
 
 import pathlib
-import socket
 import wx
 import win32wnet
 from win32com.shell import shell, shellcon
