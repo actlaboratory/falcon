@@ -13,6 +13,7 @@ import pathlib
 import socket
 import wx
 import win32wnet
+from win32com.shell import shell, shellcon
 import globalVars
 import misc
 import time
@@ -92,8 +93,15 @@ def GetNetworkResources(taskState,param):
 	for l in lst:
 		ret, shfileinfo=shell.SHGetFileInfo(l.lpRemoteName,0,shellcon.SHGFI_ICON)
 		if taskState.canceled: return False
+		try:
+			addr=socket.getaddrinfo(l.lpRemoteName[2:],None)[0][4][0]
+		except Exception:
+			addr=""
+		#end except
 		s=browsableObjects.NetworkResource()
-		s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,socket.getaddrinfo(l.lpRemoteName[2:],None)[0][4][0],shfileinfo[0])
-		param["onAppend"](s)
+		s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,addr,shfileinfo[0])
+		if taskState.canceled: return False
+		wx.CallAfter(param["onAppend"],s)
 	#end 追加ループ
-	param["onFinish"](len(lst))
+	if taskState.canceled: return False
+	wx.CallAfter(param["onFinish"],len(lst))

@@ -14,8 +14,6 @@ import misc
 import browsableObjects
 import globalVars
 import errorCodes
-import workerThreads
-import workerThreadTasks
 
 from simpleDialog import dialog
 from .base import *
@@ -37,7 +35,6 @@ class DriveList(FalconListBase):
 		self.drives=[]
 		self.unusableDrives=[]
 		self.networkResources=[]
-		self.networkTask=None
 		self.lists=[self.drives,self.unusableDrives,self.networkResources]
 
 	def Update(self):
@@ -63,10 +60,7 @@ class DriveList(FalconListBase):
 			if drv&check: self.Append(i)#ドライブ検出
 			check<<=1
 		#end ドライブ25個分調べる
-
-		#ネットワークリソースの追加
-		self._GetNetworkResources()
-
+		# ネットワークリソースの追加はタブ側から来ることになった
 		self.log.debug("Drives list created in %d seconds." % t.elapsed)
 		self.log.debug(str(len(self.drives))+" drives,"+str(len(self.unusableDrives))+" unusableDrives and "+str(len(self.networkResources))+" networkResources found.")
 		self.log.debug("Triggering sorting")
@@ -86,23 +80,8 @@ class DriveList(FalconListBase):
 		#end for
 	#end _copyFromList
 
-	def _GetNetworkResources(self):
-		if self.networkTask is not None:
-			self.networkTask.Cancel()
-			self.networkTask=None
-		#end cancel previous
-		self.networkTask=workerThreads.RegisterTask(workerThreadTasks.GetNetworkResources, {"onAppend": self.OnAppendNetworkResource, "onFinish": self.OnFinishNetworkResource})
-		self.log.debug("Requested networkResource list")
-
-	def OnAppendNetworkResource(self,resource):
+	def AppendNetworkResource(self,resource):
 		self.networkResources.append(resource)
-
-	def OnFinishNetworkResource(self,number):
-		if number==-1:
-			print("error when getting network resources")
-		#end error
-		print("network resource retrieved, found %d" % number)
-		self.networkTask=None
 
 	def Append(self,index):
 		d=GetDriveObject(index)
@@ -133,3 +112,6 @@ def GetDriveObject(index):
 	ret, shfileinfo=shell.SHGetFileInfo(letter+":\\",0,shellcon.SHGFI_ICON)
 	d.Initialize(letter,f,t,type,n,shfileinfo[0])
 	return d
+
+	def SetNetworkListCallback(self,clbk):
+		self.networkListCallback=clbk
