@@ -17,12 +17,15 @@ import browsableObjects
 import clipboardHelper
 import constants
 import errorCodes
+import fileOperator
 import globalVars
 import history
 import lists
 import misc
 import menuItemsStore
+
 from . import navigator
+from simpleDialog import *
 
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
@@ -380,6 +383,36 @@ class FalconTabBase(object):
 		#並び替え状況に応じてアイコン設定
 		self.hListCtrl.SetColumnImage(self.listObject.sortCursor,1+self.listObject.sortDescending)
 		self.sortTargetColumnNo=self.listObject.sortCursor
+
+	def MakeShortcut(self,option):
+		prm=""
+		dir=""
+		if option["type"]=="shortcut":
+			prm=option["parameter"]
+			dir=option["directory"]
+		target=self.GetFocusedElement().fullpath
+		dest=option["destination"]
+		if not os.path.isabs(dest):	#早退の場合は絶対に直す
+			dest=os.path.normpath(os.path.join(os.path.dirname(target),dest))
+
+		#TODO:
+		#相対パスでの作成に後日対応する必要がある
+		#ハードリンクはドライブをまたげないのでバリデーションする
+		#ファイルシステムを確認し、対応してない種類のものは作れないようにバリデーションする
+		#作業フォルダの指定に対応する(ファイルオペレータ側の修正も必用)
+
+		if option["type"]=="shortcut":
+			inst={"operation":option["type"], "target": [(dest,target,prm)]}
+		else:
+			inst={"operation":option["type"], "from": [target], "to": [dest]}
+		#end ショートカットかそれ以外
+		op=fileOperator.FileOperator(inst)
+		ret=op.Execute()
+		if op.CheckSucceeded()==0:
+			dialog(_("エラー"),_("ショートカットの作成に失敗しました。"))
+			return
+		#end error
+		self.UpdateFilelist(silence=True)
 
 	def MakeDirectory(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
