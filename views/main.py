@@ -233,6 +233,9 @@ class View(BaseView):
 		self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"),new.IsMarked())
 		self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),new.hasCheckedItem())
 		self.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"),len(new.checkedItem)!=len(new.listObject))
+		self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"),new.environment["history"].hasNext())
+		self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"),new.environment["history"].hasPrevious())
+
 		new.ItemSelected()		#メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
 
 	def UpdateTabName(self):
@@ -303,6 +306,8 @@ class Menu(BaseMenu):
 			"MOVE_TOPFILE":_("先頭ファイルへ"),
 			"MOVE_SPECIAL_UP":_("上にジャンプ"),
 			"MOVE_SPECIAL_DOWN":_("下にジャンプ"),
+			"MOVE_HIST_NEXT":_("次の履歴位置へ"),
+			"MOVE_HIST_PREV":_("前の履歴位置へ"),
 			"MOVE_MARKSET":_("表示中の場所をマーク"),
 			"MOVE_MARK":_("マークした場所へ移動")
 		})
@@ -477,6 +482,12 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("MOVE_SPECIAL_DOWN"):
 			self.parent.activeTab.Jump(constants.ARROW_DOWN)
+			return
+		if selected==menuItemsStore.getRef("MOVE_HIST_PREV"):
+			self.parent.activeTab.GoHistPrevious()
+			return
+		if selected==menuItemsStore.getRef("MOVE_HIST_NEXT"):
+			self.parent.activeTab.GoHistNext()
 			return
 		if selected==menuItemsStore.getRef("MOVE_MARKSET"):
 			self.parent.activeTab.MarkSet()

@@ -2,3 +2,4 @@
 pywin32
 winpaths
 pyinstaller
+https://github.com/actlaboratory/history/archive/v1.0.0.zip

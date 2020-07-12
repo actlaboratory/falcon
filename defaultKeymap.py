@@ -40,6 +40,8 @@ defaultKeymap["mainView"]={
 	"MOVE_TOPFILE": "alt+downarrow",
 	"MOVE_SPECIAL_UP": "ctrl+uparrow",
 	"MOVE_SPECIAL_DOWN": "ctrl+downarrow",
+	"MOVE_HIST_PREV":"alt+leftarrow",
+	"MOVE_HIST_NEXT":"alt+rightarrow",
 	"MOVE_MARKSET": "INSERT",
 	"MOVE_MARK": "shift+BACK",
 	"READ_CURRENTFOLDER": "alt+f5",

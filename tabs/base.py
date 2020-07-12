@@ -18,6 +18,7 @@ import clipboardHelper
 import constants
 import errorCodes
 import globalVars
+import history
 import lists
 import misc
 import menuItemsStore
@@ -127,6 +128,7 @@ class FalconTabBase(object):
 			self.environment["selectedItemCount"]=None	#選択中のアイテム数。0or1or2=2以上。
 			self.environment["selectingItemCount"]={}	#選択中アイテムの種類(browsableObjects)毎の個数
 			self.environment["listType"]=None			#表示中のリストタイプ(listObject)
+			self.environment["history"]=history.History()#ディレクトリ移動の履歴
 
 	def SetEnvironment(self,newEnv):
 		"""タブの引継ぎなどの際にenvironmentの内容をコピーするために利用"""
@@ -301,6 +303,8 @@ class FalconTabBase(object):
 		self.DeleteAllItems()		#先に消しておかないとカラム数が合わない画面がユーザに見えてしまう
 		if type(lst)!=type(self.listObject):
 			self.SetListColumns(lst)
+		if self.environment["history"].isEmpty():			#タブ作成時のみ
+			self.environment["history"].add(lst.rootDirectory)
 		self.listObject=lst
 		self.environment["listType"]=type(lst)
 		self.UpdateListContent(self.listObject.GetItemList())
@@ -405,6 +409,22 @@ class FalconTabBase(object):
 		cursor=self.listObject.Jump(self.GetFocusedItem(),direction)
 		if cursor!=-1:
 			self.Focus(cursor,True)
+
+	def GoHistNext(self):
+		if not self.environment["history"].hasNext():
+			return errorCodes.BOUNDARY
+		ret=self.Move(self.environment["history"].getNext(),addHistory=False)
+		self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"),self.environment["history"].hasNext())
+		self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"),self.environment["history"].hasPrevious())
+		return ret
+
+	def GoHistPrevious(self):
+		if not self.environment["history"].hasPrevious():
+			return errorCodes.BOUNDARY
+		ret=self.Move(self.environment["history"].getPrevious(),addHistory=False)
+		self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"),self.environment["history"].hasNext())
+		self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PReV"),self.environment["history"].hasPrevious())
+		return ret
 
 	def KeyDown(self,event):
 		"""キーが押されたらここにくる。"""
@@ -605,8 +625,12 @@ class FalconTabBase(object):
 		"""forward アクションを実行する。"""
 		globalVars.app.hMainView.events.GoForward()
 
-	def Move(self,path,cursor=""):
+	def Move(self,path,cursor="",addHistory=True):
 		"""指定の場所へ移動する。"""
+		if addHistory:
+			self.environment["history"].add(path)
+			self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"),self.environment["history"].hasNext())
+			self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"),self.environment["history"].hasPrevious())
 		r=navigator.Navigate(path,cursor,previous_tab=self,environment=self.environment)
 		return errorCodes.OK if r is self else r
 
