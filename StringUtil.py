@@ -48,19 +48,22 @@ def GetLimitedString(s,l):
 	#残りの文字が半角3文字以内ならそのままでよい
 	exCount=0
 	exCursor=cursor
-	while(exCount+resultCount<=l and exCursor+cursor<len(bytes)):
-		clen,width=_GetWidth(bytes,cursor+exCursor)
+	while(exCount+resultCount<l and exCursor<len(bytes)):
+		clen,width=_GetWidth(bytes,exCursor)
 		if exCount+width+resultCount<=l:	#カーソルを進め、resultCountを加算
 			exCursor+=clen
 			exCount+=width
 		else:						#文字数オーバーする
 			break
-	if exCursor==len(bytes):
+	if exCursor>=len(bytes):
 		return s					#入力のまま
 
 	#"..."を入れる
 	for i in range(3):
-		bytes[cursor]=46	#.のASCIIコード46
+		if cursor<len(bytes):
+			bytes[cursor]=46	#.のASCIIコード46
+		else:
+			bytes.append(46)
 		cursor+=1
 
 	#cursor以下の文字をカットして返す
