@@ -4,8 +4,10 @@
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
+import history
 import logging
 import os
+import pickle
 import sys
 import wx
 import re
@@ -768,7 +770,19 @@ class Events(BaseEvents):
 		basePath=self.parent.activeTab.listObject.rootDirectory
 		out_lst=[]#入力画面が出てるときに、もうファイルリスト取得を開始してしまう
 		task=workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList,{'path': basePath, 'out_lst': out_lst,'eol':True})
-		d=views.search.Dialog(basePath)
+
+		searchHistory=history.History(globalVars.app.config.getint("search","histry_count",0,0,100),False)
+		grepHistory=history.History(globalVars.app.config.getint("search","histry_count",0,0,100),False)
+		hist={}
+		try:
+			with open(constants.HISTORY_FILE_NAME, 'rb') as f:
+				hist=pickle.load(f)
+				searchHistory.lst=hist["search"]
+				grepHistory.lst=hist["grep"]
+		except:
+			pass
+
+		d=views.search.Dialog(basePath,searchHistory.getList(),grepHistory.getList())
 		d.Initialize()
 		canceled=False
 		while(True):
@@ -792,6 +806,19 @@ class Events(BaseEvents):
 		actionstr="search" if val['type']==0 else "grep"
 		target={'action': actionstr, 'basePath': basePath, 'out_lst': out_lst, 'keyword': val['keyword'], 'isRegularExpression': val['isRegularExpression']}
 		self.parent.Navigate(target,as_new_tab=True)
+
+		if val['type']==0:
+			searchHistory.add(val['keyword'])
+		else:
+			grepHistory.add(val['keyword'])
+		hist["search"]=searchHistory.getList()
+		hist["grep"]=grepHistory.getList()
+
+		try:
+			with open(constants.HISTORY_FILE_NAME, 'wb') as f:
+				pickle.dump(hist,f)
+		except:
+			pass
 
 	def GoForward(self,stream=False,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""

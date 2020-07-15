@@ -76,6 +76,9 @@ class DefaultSettings:
 		config["browse"]={
 			"startPath": "%%HOMEDRIVE%%"
 		}
+		config["search"]={
+			"history_count": 20,
+		}
 		config["sounds"]={
 			"startup" : "tip.ogg",
 			"boundary" : "tip.ogg",

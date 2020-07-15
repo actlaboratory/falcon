@@ -16,3 +16,4 @@ dist/
 *.lib
 help.lnk
 *.spec
+hist.dat
