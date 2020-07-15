@@ -29,7 +29,7 @@ class Dialog(BaseDialog):
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,"",wx.EXPAND)
-		self.keyword,tmp=self.creator.inputbox(_("キーワード")+"：",500,"")
+		self.keyword,tmp=self.creator.comboEdit(_("キーワード")+"：",[],500,None,"あああ")
 
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,"",wx.EXPAND)
 		self.type=self.creator.radiobox(_("検索方式"),(_("ファイル名"),_("ファイル内容")),None,1,wx.HORIZONTAL)

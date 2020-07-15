@@ -108,6 +108,22 @@ class ViewCreator():
 		self.AddSpace(self.space)
 		return hButton
 
+	def comboEdit(self,text,selection,x=-1,event=None,defaultValue=""):
+		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
+		Add(self.sizer,hStaticText,0,wx.ALIGN_CENTER_VERTICAL)
+
+		hCombo=wx.ComboBox(self.parent,wx.ID_ANY,value=defaultValue,choices=selection,style=wx.CB_DROPDOWN,name=text,size=(x,-1))
+		hCombo.Bind(wx.EVT_TEXT,event)
+		if defaultValue in selection:
+			hCombo.SetSelection(selection.index(defaultValue))
+		self.SetFace(hCombo)
+		if x==-1:	#幅を拡張
+			Add(self.sizer,hCombo,1)
+		else:
+			Add(self.sizer,hCombo)
+		self.AddSpace(self.space)
+		return hCombo,hStaticText
+
 	def combobox(self,text,selection,event,state=-1):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
 		Add(self.sizer,hStaticText,0,wx.ALIGN_CENTER_VERTICAL)
