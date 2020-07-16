@@ -133,8 +133,7 @@ class View(BaseView):
 		else:
 			self.log.debug("Creating new tab %s..." % target)
 		#end log
-		s=_("新しいタブ") if len(self.tabs)>0 else _("falcon")
-		globalVars.app.say(s)
+		wx.CallLater(200,self._sayNewTab)
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		creator=views.ViewCreator.ViewCreator(1,hPanel,None)
 		newtab=tabs.navigator.Navigate(target,create_new_tab_info=(self,creator))
@@ -144,6 +143,10 @@ class View(BaseView):
 		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,newtab.GetTabName(),False)
 
 		self.ActivateTab(len(self.tabs)-1)
+
+	def _sayNewTab(self):
+		s=_("新しいタブ") if len(self.tabs)>1 else _("falcon")
+		globalVars.app.say(s,interrupt=True)
 
 	def ReplaceCurrentTab(self,newtab):
 		"""現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""
