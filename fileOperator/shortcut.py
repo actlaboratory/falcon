@@ -25,6 +25,10 @@ def Execute(op):
 	op.output["retry"]["target"]=[]
 	retry=0
 	for elem in target:
+		if os.path.isfile(elem[0]):
+			helper.AppendFailed(op,elem,183)#file_already_exists
+			continue
+		#end 上書き防止
 		try:
 			ws=win32com.client.Dispatch("wscript.shell")
 			scut=ws.CreateShortcut(elem[0])
@@ -35,8 +39,8 @@ def Execute(op):
 			log.error(err)
 			appendRetry(op.output,elem)
 		#end except
+		op.output["succeeded"]+=1
 	#end for
-	op.output["succeeded"]+=1
 	if len(op.output["retry"]["target"])>0:
 		op.output["retry"]["operation"]=VERB
 		retry=len(op.output["retry"]["target"])
