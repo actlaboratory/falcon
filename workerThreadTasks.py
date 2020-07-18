@@ -76,7 +76,10 @@ def DebugBeep(taskState,param):
 	#end for
 	return True
 
-def GetNetworkResources(taskState,param):
+def GetNetworkResources(taskState=None,param=None):
+	#同期処理でも呼び出し可能。パラメータ無しで呼ぶ。
+	sync_resources=None
+	if not taskState: sync_resources=[]
 	try:
 		h=win32wnet.WNetOpenEnum(5,1,0,None)
 		#5=RESOURCE_CONTEXT
@@ -84,10 +87,15 @@ def GetNetworkResources(taskState,param):
 		lst=win32wnet.WNetEnumResource(h,64)	#65以上の指定不可
 		win32wnet.WNetCloseEnum(h);
 	except win32net.error as er:
-		param["onFinish"](-1)#コールバックに通知
-		return True
+		if taskState:
+			param["onFinish"](-1)#コールバックに通知
+			return True
+		else:#同期処理
+			raise err
+			return None
+		#end 同期処理
 	#end 情報取得失敗
-	if taskState.canceled: return False
+	if taskState and taskState.canceled: return False
 	lst.pop(0)	#先頭はドライブではない者が入るので省く
 	for l in lst:
 		ret, shfileinfo=shell.SHGetFileInfo(l.lpRemoteName,0,shellcon.SHGFI_ICON)
@@ -95,8 +103,17 @@ def GetNetworkResources(taskState,param):
 		addr=misc.ResolveLocalIpAddress(l.lpRemoteName[2:])
 		s=browsableObjects.NetworkResource()
 		s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,addr,shfileinfo[0])
-		if taskState.canceled: return False
-		wx.CallAfter(param["onAppend"],s)
+		if taskState and taskState.canceled: return False
+		if taskState:
+			wx.CallAfter(param["onAppend"],s)
+		else:
+			sync_resources.append(s)
+		#end 同期処理
 	#end 追加ループ
-	if taskState.canceled: return False
-	wx.CallAfter(param["onFinish"],len(lst))
+	if taskState and taskState.canceled: return False
+	if taskState:
+		wx.CallAfter(param["onFinish"],len(lst))
+		return True
+	else:
+		return sync_resources
+
