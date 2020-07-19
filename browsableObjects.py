@@ -147,7 +147,7 @@ class GrepItem(File):
 		self.hits=0#とりあえず入れておく
 		self.hIcon=fileobject.hIcon
 
-		if fullpath[0:2]=="\\\\":
+		if self.fullpath[0:2]=="\\\\":
 			self.canHardLinkTarget=False
 
 	def SetHitCount(self,h):
