@@ -533,7 +533,7 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("FILE_MAKESHORTCUT"):
 			target=self.parent.activeTab.GetSelectedItems().GetElement(0)		#browsableObjects
-			d=views.makeShortcut.Dialog(target.basename)
+			d=views.makeShortcut.Dialog(target.basename,target.canLnkTarget,target.canHardLinkTarget,target.canSynLinkTarget)
 			d.Initialize()
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return

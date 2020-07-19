@@ -24,11 +24,18 @@ class Dialog(BaseDialog):
 	LINK_ABSOLUTE=0
 	LINK_RELATIVE=1
 
-	#作成先初期値を決めるためのターゲットの名前とタイプ
-	def __init__(self,targetName):
+	#作成先初期値を決めるためのターゲットの名前、作成できないタイプがあれば指定
+	def __init__(self,targetName,canMakeLnk=True,canMakeHardLink=True,canMakeSynLink=True):
+		if not canMakeLnk and not canMakeSynLink and not canMakeHardLink:
+			raise ValueError(_("makeShortcutDialogを表示するには、少なくとも１種類のショートカットの作成が有効化されている必要があります。"))
+
 		super().__init__()
 		#対象オブジェクトの拡張子を除く名前
 		self.targetName=targetName
+		self.canMakeLnk=canMakeLnk
+		self.canMakeSynLink=canMakeSynLink
+		self.canMakeHardLink=canMakeHardLink
+		print(self.canMakeHardLink)
 
 	def Initialize(self):
 		t=misc.Timer()
@@ -50,6 +57,10 @@ class Dialog(BaseDialog):
 		#種類の設定
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20)
 		self.type=self.creator.radiobox(_("作成方式"),_typeChoices,self.typeChangeEvent,1,wx.VERTICAL)
+
+		self.type.EnableItem(self.TYPE_LNK,self.canMakeLnk)
+		self.type.EnableItem(self.TYPE_HARDLINK,self.canMakeHardLink)
+		self.type.EnableItem(self.TYPE_SYNLINK,self.canMakeSynLink)
 
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,0,"",wx.EXPAND)
 		self.destination,tmp=self.creator.inputbox(_("作成先")+"：",-1,self.targetName+".lnk")

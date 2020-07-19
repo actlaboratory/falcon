@@ -15,8 +15,13 @@ class FalconBrowsableBase():
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
 	__slots__=["attributes","attributesString","log","longAttributesString"]
 
+	canLnkTarget=True
+	canHardLinkTarget=True
+	canSynLinkTarget=True
+
 	def __init__(self):
 		self.log=logging.getLogger("falcon.browsableObjects")
+
 	def GetAttributesString(self):
 		"""属性の文字列を設定する。"""
 		attrib=self.attributes
@@ -57,10 +62,10 @@ class FalconBrowsableBase():
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
-	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString","hIcon"]
+	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString","hIcon","canHardLinkTarget"]
 
 	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None,shortName="",hIcon=-1):
-		"""必要な情報をセットする"""
+		"""必要な情報をセットする。継承しているクラスのうち、grepItemだけはここを通らないので注意。"""
 		self.directory=directory
 		self.basename=basename
 		self.fullpath=directory+"\\"+basename
@@ -72,6 +77,9 @@ class File(FalconBrowsableBase):
 		self.typeString=typeString
 		self.shortName=shortName
 		self.hIcon=hIcon
+
+		if self.fullpath[0:2]=="\\\\":
+			self.canHardLinkTarget=False
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
@@ -138,6 +146,9 @@ class GrepItem(File):
 		self.preview=preview
 		self.hits=0#とりあえず入れておく
 		self.hIcon=fileobject.hIcon
+
+		if fullpath[0:2]=="\\\\":
+			self.canHardLinkTarget=False
 
 	def SetHitCount(self,h):
 		"""ヒット数を設定する。"""
@@ -215,6 +226,8 @@ class Stream(FalconBrowsableBase):
 
 class NetworkResource(FalconBrowsableBase):
 	"""ネットワーク上のディスクリソースを表す。このオブジェクトは情報を保持するだけで、指し示すリソースにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
+	canHardLinkTarget=False
+
 	def Initialize(self,basename="", fullpath="", address="",hIcon=-1):
 		"""
 			必要な情報をセットする
