@@ -15,11 +15,13 @@ import hashlib
 import winreg
 import win32api
 import win32file
+
 import constants
 import globalVars
+import workerThreadTasks
+
 from logging import getLogger
 from simpleDialog import dialog
-
 
 log=getLogger("falcon.misc")
 
@@ -274,4 +276,17 @@ def ResolveLocalIpAddress(name):
 		pass
 	#end error
 	return addr
+
+def GetNetworkResource(target):
+	#targetに指定した名前のネットワークリソースを取得(例：\\network。存在しない場合や何らかのエラー発生時はNoneを返す。)
+	try:
+		resources=workerThreadTasks.GetNetworkResources()
+		for resource in resources:
+			if resource.fullpath==target:
+				return resource
+		log.info("network resource \""+target+"\" not found.")
+		return None
+	except Exception as e:
+		return None
+
 

@@ -99,7 +99,7 @@ def GetNetworkResources(taskState=None,param=None):
 	lst.pop(0)	#先頭はドライブではない者が入るので省く
 	for l in lst:
 		ret, shfileinfo=shell.SHGetFileInfo(l.lpRemoteName,0,shellcon.SHGFI_ICON)
-		if taskState.canceled: return False
+		if taskState and taskState.canceled: return False
 		addr=misc.ResolveLocalIpAddress(l.lpRemoteName[2:])
 		s=browsableObjects.NetworkResource()
 		s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,addr,shfileinfo[0])
