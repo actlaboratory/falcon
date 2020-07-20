@@ -366,6 +366,7 @@ class Menu(BaseMenu):
 		self.RegisterMenuCommand(self.hEnvMenu,{
 			"ENV_REGIST_ORIGINAL_ASSOCIATION":_("独自関連付けの管理"),
 			"ENV_TESTDIALOG":_("テストダイアログを表示"),
+			"ENV_PASTTABTEST":_("貼り付け状況ダイアログテスト"),
 			"ENV_FONTTEST":_("フォントテストダイアログを表示")
 		})
 
@@ -428,6 +429,10 @@ class Events(BaseEvents):
 			event.Skip()
 			return
 
+		if selected==menuItemsStore.getRef("ENV_PASTTABTEST"):
+			self.parent.Navigate({"action": "past"},as_new_tab=True)
+			return
+		#end test
 		if selected==menuItemsStore.getRef("MOVE_BACKWARD"):
 			self.GoBackward()
 			return
@@ -650,9 +655,6 @@ class Events(BaseEvents):
 			globalVars.app.config.read_dict(result)
 			return
 		if selected==menuItemsStore.getRef("ENV_TESTDIALOG"):
-			self.testdialog=views.test.View()
-			self.testdialog.Initialize()
-			self.testdialog.Show()
 			return
 		if selected==menuItemsStore.getRef("ENV_FONTTEST"):
 			self.fonttest=views.fonttest.View()

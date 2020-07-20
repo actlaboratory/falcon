@@ -19,7 +19,7 @@ import globalVars
 import constants
 import misc
 import views.ViewCreator
-from . import fileList,driveList,streamList,searchResult,grepResult,NetworkResourceList
+from . import fileList,driveList,streamList,searchResult,grepResult,NetworkResourceList,pastProgress
 from simpleDialog import dialog
 
 def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environment={}):
@@ -47,6 +47,14 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'], target['isRegularExpression'])
 			return newtab
 		#end grep検索
+		if target['action']=='past':
+			newtab=pastProgress.PastProgressTab(environment)
+			newtab.Initialize(parent,creator)
+			lst=lists.PastProgressList()
+			lst.Initialize()
+			newtab.Update(lst)
+			return newtab
+		#end 貼り付け
 	#end targetが辞書の時の特殊処理
 
 	if target=="":#ドライブリスト
