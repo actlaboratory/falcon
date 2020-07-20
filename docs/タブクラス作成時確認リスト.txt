@@ -1,13 +1,13 @@
 # タブクラス作成時確認リスト
 
 タブを新規作成する際などに記載可能または記載が必要な関数の抜け・漏れを確認するためのリストです。
+ただし、継承をうまく使えば、手順を省略できる場合があります。
 このリストとは別に、メニューバー管理手順も別途読んでください。重複する内容はこのリストには記載されていません。
 
 ## 必須
-	def Update(self,cursor=""):
 	def ReadCurrentFolder
-	def def ReadListItemNumber
-	def def ReadListInfo
+	def ReadListItemNumber
+	def ReadListInfo
 	def getTabName
 	def GetRootObject(self):
 
@@ -15,6 +15,8 @@
 	def GoBackward(self):
 	def MarkSet(self):
 	def BeginDrag(self,event):
+	def MakeShortcut(self,option):
+
 
 ## 任意　ビュー操作系(対応している場合に記載が必要)
 	def GoToTopFile(self):
@@ -28,7 +30,6 @@
 ## 任意 ファイル操作系(実装する場合に記載が必要)
 	def Trash(self):
 	def MakeDirectory
-	def MakeShortcut(self,option):
 	def Delete(self):
 	def ChangeAttribute(self,attrib_checks):
 	def OnLabelEditEnd(self,evt):
