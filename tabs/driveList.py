@@ -147,3 +147,7 @@ class DriveListTab(base.FalconTabBase):
 	def OnClose(self):
 		"""ネットワークリソース一覧をキャンセルして大気"""
 		if self.networkListTask: self.networkListTask.Cancel()
+
+	def OnUpdate(self):
+		"""ネットワークリソース一覧の読み込み開始"""
+		self._getNetworkList()

@@ -567,6 +567,7 @@ class FalconTabBase(object):
 		result=self.listObject.Update()
 		if result != errorCodes.OK:
 			return result			#アクセス負荷など
+		self.OnUpdate()
 		cursor=-1
 		if cursorTargetName=="":
 			if item!=None:
@@ -575,6 +576,10 @@ class FalconTabBase(object):
 			cursor=self.listObject.Search(cursorTargetName,0)
 		#end ターゲットが指定されているかどうか
 		self.Update(self.listObject,cursor)
+
+	def OnUpdate(self):
+		"""リスト更新時のみ、更新後に呼ばれる"""
+		pass
 
 	def SortCycleAd(self):
 		"""昇順と降順を交互に切り替える。"""
