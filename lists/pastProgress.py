@@ -27,6 +27,8 @@ class PastProgressList(FalconListBase):
 			_("詳細"): wx.LIST_FORMAT_LEFT,
 		}
 		self.results=[]
+		self.headers=[]
+		self.lists=[self.headers,self.results]
 
 	def Initialize(self,another_instance=None):
 		"""テストアイテムを作る"""
@@ -47,19 +49,3 @@ class PastProgressList(FalconListBase):
 
 	def Update(self):
 		pass
-	def GetItems(self):
-		return [elem.GetListTuple() for elem in self.results]
-	def GetItemList(self):
-		return [elem for elem in self.results]
-
-	def GetElement(self,index):
-		"""インデックスを指定して、対応するリスト内のオブジェクトを返す。"""
-		return self.results[index]
-
-	def GetItemPaths(self):
-		"""リストの中身をパスのリストで取得する。"""
-		return [elem.fullpath for elem in self.results]
-
-	def GetItemNames(self):
-		"""リストの中身をファイル名のリストで取得する。"""
-		return [elem.basename for elem in self.results]
