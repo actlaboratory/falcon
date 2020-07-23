@@ -7,7 +7,7 @@
 import os
 import re
 import wx
-from browsableObjects import PastProgressItem
+from browsableObjects import PastProgressItem, PastProgressHeader
 
 import errorCodes
 import misc
@@ -38,6 +38,9 @@ class PastProgressList(FalconListBase):
 			#end for
 			return errorCodes.OK
 		#end another_instance の処理
+		head=PastProgressHeader()
+		head.Initialize("myfolder","path/to/myfolder","進行中","path/to/destination にコピーしています",50)
+		self.headers.append(head)
 		self.results.append(self._make(random.randint(0,9999),"用確認","宛先にすでにファイルが存在しています。"))
 		self.results.append(self._make(random.randint(0,9999),"エラー","宛先ドライブに十分な空き領域がありません"))
 		self.results.append(self._make(random.randint(0,9999),"エラー","アクセスが拒否されました。"))
