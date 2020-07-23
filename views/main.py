@@ -87,6 +87,8 @@ class View(BaseView):
 		self.hTabCtrl=self.creator.tabCtrl(_("タブ選択"),self.ChangeTab,0,1,wx.EXPAND)
 		self.MakeFirstTab()
 		self.hFrame.Bind(wx.EVT_CLOSE, self.OnClose)
+		if self.app.config.getboolean(self.identifier,"maximized",False):
+			self.hFrame.Maximize()
 		self.hFrame.Show()
 		self.app.SetTopWindow(self.hFrame)
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
