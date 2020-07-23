@@ -77,7 +77,7 @@ class PastProgressTab(base.FalconTabBase):
 	def OnClose(self):
 		"""検索の非同期処理が実行中であればキャンセルして、終了を待機する。"""
 		super().OnClose()
-		simpleDialog.dialog("タブを閉じるとキャンセルになるので、本番では、ここで終了していいかどうか確認してくださいね。")
+		simpleDialog.dialog("お行儀良く閉じてくださいね","タブを閉じるとキャンセルになるので、本番では、ここで終了していいかどうか確認してくださいね。")
 
 	def OnLabelEditStart(self,evt):
 		pass
