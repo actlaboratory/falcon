@@ -30,57 +30,6 @@ from simpleDialog import *
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
 
-	blockMenuList=[]
-	selectItemMenuConditions=[]
-	selectItemMenuConditions.append([])
-	selectItemMenuConditions[0].extend([
-		"FILE_RENAME",
-		"FILE_CHANGEATTRIBUTE",
-		"FILE_MAKESHORTCUT",
-		"FILE_TRASH",
-		"FILE_DELETE",
-		"FILE_VIEW_DETAIL",
-		"FILE_SHOWPROPERTIES",
-		"EDIT_COPY",
-		"EDIT_CUT",
-		"EDIT_NAMECOPY",
-		"EDIT_FULLPATHCOPY",
-		"EDIT_OPENCONTEXTMENU",
-		"EDIT_MARKITEM",
-		"MOVE_FORWARD",
-		"MOVE_FORWARD_ADMIN",
-		"MOVE_FORWARD_TAB",
-		"MOVE_FORWARD_STREAM",
-		"MOVE_EXEC_ORIGINAL_ASSOCIATION",
-		"TOOL_DIRCALC",
-		"TOOL_HASHCALC",
-		"TOOL_ADDPATH",
-		"TOOL_EJECT_DRIVE",
-		"TOOL_EJECT_DEVICE",
-		"READ_CONTENT_PREVIEW",
-		"READ_CONTENT_READHEADER",
-		"READ_CONTENT_READFOOTER",
-	])
-	selectItemMenuConditions.append([])
-	selectItemMenuConditions.append([])
-	selectItemMenuConditions[2].extend([
-		"FILE_RENAME",
-		"FILE_MAKESHORTCUT",
-		"FILE_VIEW_DETAIL",
-		"FILE_SHOWPROPERTIES",
-		"MOVE_FORWARD",
-		"MOVE_FORWARD_ADMIN",
-		"MOVE_FORWARD_TAB",
-		"MOVE_FORWARD_STREAM",
-		"MOVE_EXEC_ORIGINAL_ASSOCIATION",
-		"TOOL_HASHCALC",
-		"TOOL_EJECT_DRIVE",
-		"TOOL_EJECT_DEVICE",
-		"READ_CONTENT_PREVIEW",
-		"READ_CONTENT_READHEADER",
-		"READ_CONTENT_READFOOTER",
-	])
-
 	selectItemTypeMenuConditions={}
 	selectItemTypeMenuConditions[browsableObjects.File]=[]
 	selectItemTypeMenuConditions[browsableObjects.File].extend([
@@ -114,7 +63,58 @@ class FalconTabBase(object):
 	selectItemTypeMenuConditions[browsableObjects.Drive]=[]
 	selectItemTypeMenuConditions[browsableObjects.Stream]=[]
 
+
 	def __init__(self,environment):
+		self.selectItemMenuConditions=[]
+		self.selectItemMenuConditions.append([])
+		self.selectItemMenuConditions[0].extend([
+			"FILE_RENAME",
+			"FILE_CHANGEATTRIBUTE",
+			"FILE_MAKESHORTCUT",
+			"FILE_TRASH",
+			"FILE_DELETE",
+			"FILE_VIEW_DETAIL",
+			"FILE_SHOWPROPERTIES",
+			"EDIT_COPY",
+			"EDIT_CUT",
+			"EDIT_NAMECOPY",
+			"EDIT_FULLPATHCOPY",
+			"EDIT_OPENCONTEXTMENU",
+			"EDIT_MARKITEM",
+			"MOVE_FORWARD",
+			"MOVE_FORWARD_ADMIN",
+			"MOVE_FORWARD_TAB",
+			"MOVE_FORWARD_STREAM",
+			"MOVE_EXEC_ORIGINAL_ASSOCIATION",
+			"TOOL_DIRCALC",
+			"TOOL_HASHCALC",
+			"TOOL_ADDPATH",
+			"TOOL_EJECT_DRIVE",
+			"TOOL_EJECT_DEVICE",
+			"READ_CONTENT_PREVIEW",
+			"READ_CONTENT_READHEADER",
+			"READ_CONTENT_READFOOTER",
+		])
+		self.selectItemMenuConditions.append([])
+		self.selectItemMenuConditions.append([])
+		self.selectItemMenuConditions[2].extend([
+			"FILE_RENAME",
+			"FILE_MAKESHORTCUT",
+			"FILE_VIEW_DETAIL",
+			"FILE_SHOWPROPERTIES",
+			"MOVE_FORWARD",
+			"MOVE_FORWARD_ADMIN",
+			"MOVE_FORWARD_TAB",
+			"MOVE_FORWARD_STREAM",
+			"MOVE_EXEC_ORIGINAL_ASSOCIATION",
+			"TOOL_HASHCALC",
+			"TOOL_EJECT_DRIVE",
+			"TOOL_EJECT_DEVICE",
+			"READ_CONTENT_PREVIEW",
+			"READ_CONTENT_READHEADER",
+			"READ_CONTENT_READFOOTER",
+		])
+
 		self.task=None
 		self.colums=[]#タブに表示されるカラムの一覧。外からは読み取りのみ。
 		self.listObject=None#リストの中身を保持している listObjects のうちのどれかのオブジェクト・インスタンス
