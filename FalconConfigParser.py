@@ -3,8 +3,6 @@
 #Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-
-
 import os
 import configparser
 import logging
@@ -12,8 +10,6 @@ from logging import getLogger, FileHandler, Formatter
 
 
 class FalconConfigParser(configparser.ConfigParser):
-
-
 	def __init__(self):
 		super().__init__()
 		self.identifier="falconConfigParser"
@@ -27,6 +23,7 @@ class FalconConfigParser(configparser.ConfigParser):
 			try:
 				return super().read(fileName, encoding='UTF-8')
 			except configparser.ParsingError:
+				self.log.warning("configFile parse failed.")
 				return {}
 		else:
 			self.log.warning("configFile not found.")
@@ -118,10 +115,5 @@ class FalconConfigSection(configparser.SectionProxy):
 			self._parser[self._name][key]=""
 			return ""
 
-	def __setitem__(self,key,_value):
-		if (isinstance(_value,int)):
-			value=str(_value)
-		else:
-			value=_value
-
-		return super().__setitem__(key,value)
+	def __setitem__(self,key,value):
+		return super().__setitem__(key,str(value))
