@@ -54,7 +54,7 @@ class NetworkResourceList(FalconListBase):
 				#1=RESOURCETYPE_DISK
 			lst=win32wnet.WNetEnumResource(h,64)	#65以上の指定不可
 			win32wnet.WNetCloseEnum(h);
-		except win32net.error as er:
+		except win32wnet.error as er:
 			dialog(_("エラー"), _("ネットワーク上のリソース一覧を取得できませんでした(%(error)s)") % {"error": str(er)})
 			return errorCodes.ACCESS_DENIED
 

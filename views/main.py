@@ -86,6 +86,7 @@ class View(BaseView):
 		self.activeTab=None#最初なので空
 		self.hTabCtrl=self.creator.tabCtrl(_("タブ選択"),self.ChangeTab,0,1,wx.EXPAND)
 		self.MakeFirstTab()
+		self.activeTab.hListCtrl.SetFocus()
 		self.hFrame.Bind(wx.EVT_CLOSE, self.OnClose)
 		if self.app.config.getboolean(self.identifier,"maximized",False):
 			self.hFrame.Maximize()
@@ -113,19 +114,24 @@ class View(BaseView):
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
-		if len(sys.argv)>1 and os.path.isdir(os.path.expandvars(sys.argv[1])):
-			self.Navigate(os.path.expandvars(sys.argv[1]),as_new_tab=True)
-		elif self.app.config["browse"]["startPath"]=="":
-			self.Navigate("",as_new_tab=True)
-		elif os.path.isdir(os.path.expandvars(self.app.config["browse"]["startPath"])):
-			self.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),as_new_tab=True)
+
+		if len(sys.argv)>1:
+			result=self.Navigate(os.path.expandvars(sys.argv[1]),as_new_tab=True)
+			if result==errorCodes.OK:
+				return
+			else:
+				dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
+		result=self.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),as_new_tab=True)
+		if result==errorCodes.OK:
+			return
 		else:
-			self.Navigate("",as_new_tab=True)
-		#end どこを開くか
-		if(len(sys.argv)>1 and not os.path.isdir(os.path.expandvars(sys.argv[1]))):
-			dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
-		#end エラー
-		self.activeTab.hListCtrl.SetFocus()
+			if os.path.expandvars(self.app.config["browse"]["startPath"])!="":
+				dialog("Error",_("設定された起動時ディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
+			result=self.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),as_new_tab=True)
+		if result==errorCodes.OK:
+			return
+		else:
+			dialog("Error",_("ドライブ一覧の読み込みに失敗しました。大変お手数ですが、ログファイルを添付して開発者までお問い合わせください。"))
 	#end makeFirstTab
 
 	def Navigate(self,target,as_new_tab=False):
@@ -139,12 +145,15 @@ class View(BaseView):
 		hPanel=views.ViewCreator.makePanel(self.hTabCtrl)
 		creator=views.ViewCreator.ViewCreator(1,hPanel,None)
 		newtab=tabs.navigator.Navigate(target,create_new_tab_info=(self,creator))
+		if type(newtab)==int:		#Error
+			return newtab
 		newtab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
 		self.tabs.append(newtab)
 		#self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
 		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,newtab.GetTabName(),False)
 
 		self.ActivateTab(len(self.tabs)-1)
+		return errorCodes.OK
 
 	def _sayNewTab(self):
 		s=_("新しいタブ") if len(self.tabs)>1 else _("falcon")
