@@ -8,6 +8,7 @@ import re
 import time
 import win32file
 from . import confirmElement, failedElement, helper
+import globalVars#temporary
 import misc
 from clipboard import COPY, MOVE
 
@@ -81,6 +82,7 @@ def Execute(op,resume=False):
 	log.debug("Start copying...")
 	overwrite=0 if resume else win32file.COPY_FILE_FAIL_IF_EXISTS
 	for elem in f:
+		globalVars.app.PlaySound("tip.ogg")
 		if elem.destpath is None:#フォルダ削除用
 			try:
 				time.sleep(1)
@@ -90,7 +92,7 @@ def Execute(op,resume=False):
 		#end フォルダ消す
 		try:
 			if elem.isfile:
-				time.sleep(10)
+				time.sleep(1)
 			else:
 				if resume and os.path.isdir(elem.destpath): continue#再開している場合はエラーになる前に逃げる
 				time.sleep(1)

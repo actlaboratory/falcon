@@ -303,10 +303,8 @@ class FileListTab(base.FalconTabBase):
 
 		#状況確認
 		if not op.CheckFinished():#終わってないのでタブに分ける
-			print("Launching tab")
 			nav={"action": "past", "operator": op}
 			globalVars.app.hMainView.Navigate(nav,as_new_tab=True)
-			print("launched")
 			return#このあとのことは新しいタブに任せる
 		#end タブに分ける処理
 		self.log.debug("Start checking confirmation")

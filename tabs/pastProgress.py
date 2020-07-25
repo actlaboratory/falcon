@@ -56,6 +56,14 @@ class PastProgressTab(base.FalconTabBase):
 		"VIEW_DRIVE_INFO",
 	]
 
+	def SetFileOperator(self,operator):
+		"""ファイルオペレーターを設定して、オペレーション終了時のコールバックを登録する。"""
+		self.fileOperator=operator
+		operator.SetFinishedCallback(self.OnOperationFinish)
+
+	def OnOperationFinish(self):
+		simpleDialog.dialog("終了","終了しました。")
+
 	def OpenContextMenu(self,event):
 		simpleDialog.dialog("コンテキストメニュー検討中","コンテキストメニューで、問い合わせへの応答などできるようにしたいと思ってます。")
 
@@ -75,7 +83,6 @@ class PastProgressTab(base.FalconTabBase):
 		super().DeleteAllItems()
 
 	def OnClose(self):
-		"""検索の非同期処理が実行中であればキャンセルして、終了を待機する。"""
 		super().OnClose()
 		simpleDialog.dialog("お行儀良く閉じてくださいね","タブを閉じるとキャンセルになるので、本番では、ここで終了していいかどうか確認してくださいね。")
 

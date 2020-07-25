@@ -10,6 +10,7 @@ import random
 import threading
 import win32api
 import win32event
+import wx
 from win32com.shell import shell, shellcon
 from simpleDialog import dialog
 
@@ -48,6 +49,10 @@ class FileOperator(object):
 		#end str or dict
 	#end __init__
 
+	def SetFinishedCallback(self,callable):
+		"""終了したときのコールバックを設定。"""
+		self.finished_callback=callable
+
 	def Execute(self, threaded=False):
 		"""
 		ファイルオペレーションを実行。threaded=True にすると、バックグラウンドで実行される。
@@ -68,8 +73,10 @@ class FileOperator(object):
 			return False
 		#end キーがセットされてない
 		op=op.lower()
+		self.threaded=threaded
 		if threaded:
 			self.thread=threading.Thread(target=self._process)
+			self.thread.start()
 		else:
 			self._process()
 		#end スレッドかそうじゃないか
@@ -113,7 +120,16 @@ class FileOperator(object):
 		if self.elevated: self._postElevation()#昇格した後の後処理
 		self.working=False
 		self.log.info("Finished (%f sec)" % self.opTimer.elapsed)
+		if self.finished_callback: self._doCallback(self.finished_callback)
 	#end _process
+
+	def _doCallback(self,callable):
+		if self.threaded:
+			wx.CallAfter(callable)
+		else:
+			callable()
+		#end スレッド実行の場合はcallAfter
+#end _doCallback
 
 	def _elevate(self):
 		"""権限昇格し、アクセス拒否になった項目を再実行する。"""
