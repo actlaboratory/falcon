@@ -228,7 +228,7 @@ class NetworkResource(FalconBrowsableBase):
 
 	def __init__(self):
 		super().__init__()
-		canHardLinkTarget=False
+		self.canHardLinkTarget=False
 
 	def Initialize(self,basename="", fullpath="", address="",hIcon=-1):
 		"""
@@ -257,9 +257,11 @@ class NetworkResource(FalconBrowsableBase):
 
 class PastProgressItem(FalconBrowsableBase):
 	"""貼り付けにおいて、渓谷/エラーになったファイルを表す。"""
-	canLnkTarget=False
-	canHardLinkTarget=False
-	canSynLinkTarget=False
+	def __init__(self):
+		super().__init__()
+		self.canLnkTarget=False
+		self.canHardLinkTarget=False
+		self.canSynLinkTarget=False
 
 	def Initialize(self,basename="",fullpath="",status="",details=""):
 		self.basename=basename
