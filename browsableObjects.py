@@ -254,3 +254,42 @@ class NetworkResource(FalconBrowsableBase):
 
 	def GetRootDrivePath(self):
 		return self.basename
+
+class PastProgressItem(FalconBrowsableBase):
+	"""貼り付けにおいて、渓谷/エラーになったファイルを表す。"""
+	canLnkTarget=False
+	canHardLinkTarget=False
+	canSynLinkTarget=False
+
+	def Initialize(self,basename="",fullpath="",status="",details=""):
+		self.basename=basename
+		self.fullpath=fullpath
+		self.status=status
+		self.details=details
+		self.hIcon=0
+
+	def GetListTuple(self):
+		"""表示に必要なタプルを返す。"""
+		return (self.fullpath, self.status, self.details)
+
+	def __str__(self):
+		return "<past progress item>"
+
+	def __repr__(self):
+		return "<past progress item>"
+
+class PastProgressHeader(PastProgressItem):
+	def __init__(self):
+		PastProgressItem.__init__(self)
+		self.percentage=0
+
+	def Initialize(self,basename="",fullpath="",status="",details="", percentage=0):
+		PastProgressItem.Initialize(self,basename,fullpath,status,details)
+		self.percentage=percentage
+
+	def SetPercentage(self,percentage):
+		self.percentage=percentage
+
+	def GetListTuple(self):
+		"""表示に必要なタプルを返す。"""
+		return (self.fullpath, self.status, "%s(%s%%)" % (self.details,self.percentage))

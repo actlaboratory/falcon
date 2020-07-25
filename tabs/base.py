@@ -62,6 +62,8 @@ class FalconTabBase(object):
 	selectItemTypeMenuConditions[browsableObjects.GrepItem]=[]
 	selectItemTypeMenuConditions[browsableObjects.Drive]=[]
 	selectItemTypeMenuConditions[browsableObjects.Stream]=[]
+	selectItemTypeMenuConditions[browsableObjects.PastProgressItem]=[]
+	selectItemTypeMenuConditions[browsableObjects.PastProgressHeader]=[]
 
 
 	def __init__(self,environment):
