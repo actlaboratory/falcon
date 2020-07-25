@@ -13,14 +13,13 @@ import globalVars
 
 class FalconBrowsableBase():
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
-	__slots__=["attributes","attributesString","log","longAttributesString"]
-
-	canLnkTarget=True
-	canHardLinkTarget=True
-	canSynLinkTarget=True
+	__slots__=["attributes","attributesString","log","longAttributesString","canLnkTarget","canHardLinkTarget","canSynLinkTarget"]
 
 	def __init__(self):
 		self.log=logging.getLogger("falcon.browsableObjects")
+		self.canLnkTarget=True
+		self.canHardLinkTarget=True
+		self.canSynLinkTarget=True
 
 	def GetAttributesString(self):
 		"""属性の文字列を設定する。"""
@@ -62,7 +61,7 @@ class FalconBrowsableBase():
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
-	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString","hIcon","canHardLinkTarget"]
+	__slots__=["basename","creationDate","directory","fullpath","modDate","shortName","size","typeString","hIcon"]
 
 	def Initialize(self,directory="", basename="", fullpath="", size=-1, modDate=None, attributes=-1, typeString="",creationDate=None,shortName="",hIcon=-1):
 		"""必要な情報をセットする。継承しているクラスのうち、grepItemだけはここを通らないので注意。"""
@@ -226,7 +225,10 @@ class Stream(FalconBrowsableBase):
 
 class NetworkResource(FalconBrowsableBase):
 	"""ネットワーク上のディスクリソースを表す。このオブジェクトは情報を保持するだけで、指し示すリソースにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
-	canHardLinkTarget=False
+
+	def __init__(self):
+		super().__init__()
+		canHardLinkTarget=False
 
 	def Initialize(self,basename="", fullpath="", address="",hIcon=-1):
 		"""
