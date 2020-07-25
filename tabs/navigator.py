@@ -51,7 +51,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab=pastProgress.PastProgressTab(environment)
 			newtab.Initialize(parent,creator)
 			lst=lists.PastProgressList()
-			lst.Initialize()
+			lst.Initialize(header_directory=target["operator"].instructions["to"])
 			newtab.Update(lst)
 			return newtab
 		#end 貼り付け

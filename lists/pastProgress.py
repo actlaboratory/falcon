@@ -30,7 +30,7 @@ class PastProgressList(FalconListBase):
 		self.headers=[]
 		self.lists=[self.headers,self.results]
 
-	def Initialize(self,another_instance=None):
+	def Initialize(self,another_instance=None, header_directory=""):
 		"""テストアイテムを作る"""
 		if isinstance(another_instance,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			for elem in another_instance:
@@ -39,7 +39,7 @@ class PastProgressList(FalconListBase):
 			return errorCodes.OK
 		#end another_instance の処理
 		head=PastProgressHeader()
-		head.Initialize("myfolder","path/to/myfolder","進行中","path/to/destination にコピーしています",50)
+		head.Initialize(header_directory,header_directory,"進行中","コピーしています",50)
 		self.headers.append(head)
 		self.results.append(self._make(random.randint(0,9999),"用確認","宛先にすでにファイルが存在しています。"))
 		self.results.append(self._make(random.randint(0,9999),"エラー","宛先ドライブに十分な空き領域がありません"))
