@@ -137,7 +137,7 @@ def _processExistingFolder(output,elem):
 def _expandFolder(lst,path,e,basepath,destpath):
 	"""フォルダを展開して、指定されたリストに入れる。"""
 	lst.append(e)#イテレーションの最初に親フォルダ追加
-	for elem in misc.IteratePaths_dirFirst(path):
+	for elem in misc.IteratePaths(path):
 		lst.append(Element(elem,basepath,destpath))
 	#end フォルダからファイルリスト
 #end _expandFolder
