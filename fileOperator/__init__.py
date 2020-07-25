@@ -16,7 +16,7 @@ from simpleDialog import dialog
 import globalVars
 import misc
 
-from . import rename, changeAttribute, mkdir,trash,shortcut,symbolicLink,hardLink,delete,past
+from . import rename, changeAttribute, mkdir,trash,shortcut,symbolicLink,hardLink,delete,pastMock
 from . import failedElement, confirmElement
 
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
@@ -69,7 +69,7 @@ class FileOperator(object):
 		#end キーがセットされてない
 		op=op.lower()
 		if threaded:
-			self.thread=threading.thread(self._process)
+			self.thread=threading.Thread(target=self._process)
 		else:
 			self._process()
 		#end スレッドかそうじゃないか
@@ -106,7 +106,7 @@ class FileOperator(object):
 			retry=delete.Execute(self)
 		#end hardLink
 		if op=="past":
-			retry=past.Execute(self,resume=self.resume)
+			retry=pastMock.Execute(self,resume=self.resume)
 		#end hardLink
 		self.log.debug("success %s, retry %s, need to confirm %s, failure %s." % (self.output["succeeded"], retry, len(self.output["need_to_confirm"]), len(self.output["failed"])))
 		if not self.elevated and retry>0: self._elevate()#昇格してリトライ

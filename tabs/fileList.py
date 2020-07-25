@@ -293,13 +293,22 @@ class FileListTab(base.FalconTabBase):
 		#fileOperatorに処理依頼
 		inst={"operation": "past", "target": target, "to": dest, 'copy_move_flag': op}
 		op=fileOperator.FileOperator(inst)
-		ret=op.Execute()
+		ret=op.Execute(threaded=True)
+		print("started")
 
 		#0.5秒待つ
 		time.sleep(0.5)
 
+		print("waited")
+
 		#状況確認
-		#TODO:タブに分ける処理
+		if not op.CheckFinished():#終わってないのでタブに分ける
+			print("Launching tab")
+			nav={"action": "past", "operator": op}
+			globalVars.app.hMainView.Navigate(nav,as_new_tab=True)
+			print("launched")
+			return#このあとのことは新しいタブに任せる
+		#end タブに分ける処理
 		self.log.debug("Start checking confirmation")
 		confs=op.GetConfirmationManager()
 		while(True):

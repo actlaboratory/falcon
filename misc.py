@@ -173,6 +173,22 @@ def IteratePaths(path,append_eol=False):
 	#EOL挿入
 	if append_eol: yield "eol"
 
+def IteratePaths_dirFirst(path,append_eol=False):
+	"""貼り付け用。フォルダを先にyieldする。"""
+	try:
+		for elem in win32file.FindFilesIterator(path+"\\*"):
+			if elem[8]=="." or elem[8]=="..": continue
+			yield os.path.join(path,elem[8])
+			if elem[0]&win32file.FILE_ATTRIBUTE_DIRECTORY: 
+				yield from IteratePaths(path+"\\"+elem[8])
+			#end ディレクトリ
+		#end iterate
+	except pywintypes.error as e:
+		log.error("Access denied while searching paths at %s (%s)." % (path,e))
+	#end except
+	#EOL挿入
+	if append_eol: yield "eol"
+
 def GetDirectorySize(path):
 	"""ディレクトリのサイズをバイト数で返す。"""
 	total = 0
