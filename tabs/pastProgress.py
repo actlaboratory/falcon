@@ -63,7 +63,7 @@ class PastProgressTab(base.FalconTabBase):
 		operator.SetCallback("setPercentage",self.OnPercentageSet)
 
 	def OnOperationFinish(self,op):
-		simpleDialog.dialog("終了","終了しました。")
+		if self.listObject.GetUnresolvedCount()==0: globalVars.app.hMainView.CloseTab(self)
 
 	def OnPercentageSet(self,op):
 		self.listObject.SetHeaderPercentage(op.GetPercentage())
@@ -89,7 +89,8 @@ class PastProgressTab(base.FalconTabBase):
 
 	def OnClose(self):
 		super().OnClose()
-		simpleDialog.dialog("お行儀良く閉じてくださいね","タブを閉じるとキャンセルになるので、本番では、ここで終了していいかどうか確認してくださいね。")
+		if self.fileOperator.GetFinishedState is False:
+			simpleDialog.dialog("ファイル処理中","ファイル操作を実行中のため、このタブを閉じることはできません。")
 
 	def OnLabelEditStart(self,evt):
 		pass

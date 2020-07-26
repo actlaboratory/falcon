@@ -41,9 +41,9 @@ class PastProgressList(FalconListBase):
 		head=PastProgressHeader()
 		head.Initialize(header_directory,header_directory,"進行中","コピーしています",0)
 		self.headers.append(head)
-		self.results.append(self._make(random.randint(0,9999),"用確認","宛先にすでにファイルが存在しています。"))
-		self.results.append(self._make(random.randint(0,9999),"エラー","宛先ドライブに十分な空き領域がありません"))
-		self.results.append(self._make(random.randint(0,9999),"エラー","アクセスが拒否されました。"))
+		#self.results.append(self._make(random.randint(0,9999),"用確認","宛先にすでにファイルが存在しています。"))
+		#self.results.append(self._make(random.randint(0,9999),"エラー","宛先ドライブに十分な空き領域がありません"))
+		#self.results.append(self._make(random.randint(0,9999),"エラー","アクセスが拒否されました。"))
 
 	def _make(self,p1,p3,p4):
 		o=PastProgressItem()
@@ -61,3 +61,7 @@ class PastProgressList(FalconListBase):
 	def GetHeaderObject(self):
 		"""ヘッダーオブジェクトを取得。複数は想定してない。"""
 		return self.headers[0] if len(self.headers)>0 else None
+
+	def GetUnresolvedCount(self):
+		"""未解決の項目の数を返す。"""
+		return len(self.results)

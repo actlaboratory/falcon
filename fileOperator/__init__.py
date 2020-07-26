@@ -62,6 +62,9 @@ class FileOperator(object):
 		self.output["percentage"]=p
 		self._doCallback("setPercentage")
 
+	def GetFinishedState(self):
+		return self.output["finished"]
+
 	def Execute(self, threaded=False):
 		"""
 		ファイルオペレーションを実行。threaded=True にすると、バックグラウンドで実行される。
