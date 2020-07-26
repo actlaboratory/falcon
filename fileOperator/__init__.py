@@ -25,6 +25,7 @@ from . import failedElement, confirmElement
 class FileOperator(object):
 	def __init__(self,instructions=None, elevated=False):
 		"""指示を与える。まだ実行しない。"""
+		self.callbacks={}
 		self.elevated=elevated#昇格してるかどうか
 		self.thread=None
 		self.opTimer=None
@@ -38,6 +39,7 @@ class FileOperator(object):
 		self.output["failed"]=[]#失敗したファイル立ちの情報
 		self.output["retry"]={"files": []}#権限昇格して自動的にリトライするオペレーション
 		self.output["all_OK"]=False#全て成功ならTrueにする
+		self.output["percentage"]=0
 		self.started=False#スタートしたかどうか
 		self.instructions=None
 		self.resume=False#確認に応答した後のファイル処理では、これが True になっている。なので、エラーを無視したりとかする。処理に渡されたファイルは、問答無用で処理刷る(上書きするとかしないとかは、 confirmationManager が追加するかどうかのみに左右される)
@@ -49,9 +51,15 @@ class FileOperator(object):
 		#end str or dict
 	#end __init__
 
-	def SetFinishedCallback(self,callable):
+	def SetCallback(self,identifier,callable):
 		"""終了したときのコールバックを設定。"""
-		self.finished_callback=callable
+		self.callbacks[identifier]=callable
+
+	def GetPercentage(self):
+		return self.output["percentage"]
+
+	def SetPercentage(self,p):
+		self.output["percentage"]=p
 
 	def Execute(self, threaded=False):
 		"""
@@ -120,14 +128,15 @@ class FileOperator(object):
 		if self.elevated: self._postElevation()#昇格した後の後処理
 		self.working=False
 		self.log.info("Finished (%f sec)" % self.opTimer.elapsed)
-		if self.finished_callback: self._doCallback(self.finished_callback)
+		self._doCallback("finished")
 	#end _process
 
-	def _doCallback(self,callable):
+	def _doCallback(self,identifier):
+		if not identifier in self.callbacks: return
 		if self.threaded:
-			wx.CallAfter(callable)
+			wx.CallAfter(self.callbacks[identifier])
 		else:
-			callable()
+			self.callbacks[identifier]()
 		#end スレッド実行の場合はcallAfter
 #end _doCallback
 

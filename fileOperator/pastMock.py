@@ -81,6 +81,7 @@ def Execute(op,resume=False):
 	log.debug("Size: %d bbytes" % total)
 	log.debug("Start copying...")
 	overwrite=0 if resume else win32file.COPY_FILE_FAIL_IF_EXISTS
+	pasted_size=0
 	for elem in f:
 		globalVars.app.PlaySound("tip.ogg")
 		if elem.destpath is None:#フォルダ削除用
@@ -109,6 +110,8 @@ def Execute(op,resume=False):
 			#end except
 		#end 移動モード
 		op.output["succeeded"]+=1
+		pasted_size+=elem.size
+		op.SetPercentage(int(pasted_size/total*100))
 	#end 削除処理
 	if len(op.output["retry"]["target"])>0:
 		op.output["retry"]["operation"]=VERB

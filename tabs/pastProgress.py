@@ -59,7 +59,7 @@ class PastProgressTab(base.FalconTabBase):
 	def SetFileOperator(self,operator):
 		"""ファイルオペレーターを設定して、オペレーション終了時のコールバックを登録する。"""
 		self.fileOperator=operator
-		operator.SetFinishedCallback(self.OnOperationFinish)
+		operator.SetCallback("finished",self.OnOperationFinish)
 
 	def OnOperationFinish(self):
 		simpleDialog.dialog("終了","終了しました。")
