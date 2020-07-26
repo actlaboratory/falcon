@@ -351,6 +351,15 @@ class FalconTabBase(object):
 			if iconIndex>=0:
 				self.hListCtrl.SetItemImage(index,iconIndex,iconIndex)
 
+	def _replaceElement(self,elem,index):
+		"""
+			インデックスとbrowsableObjectを指定して、指定したインデックスの内容をbrowsableObjectsの内容に入れ替える。
+		"""
+		i=0
+		for text in elem.GetListTuple():
+			self.hListCtrl.SetItem(index,i,text)
+			i+=1
+
 	def GetIconIndex(self,hIcon):
 		"""同じhIconから作ったアイコンをImageListに複数追加しようとするとエラーとなるので対策。"""
 		if hIcon in self.iconNumbers:

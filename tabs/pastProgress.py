@@ -66,7 +66,8 @@ class PastProgressTab(base.FalconTabBase):
 		simpleDialog.dialog("終了","終了しました。")
 
 	def OnPercentageSet(self,op):
-		globalVars.app.say("%d" % op.GetPercentage())
+		self.listObject.SetHeaderPercentage(op.GetPercentage())
+		self._replaceElement(self.listObject.GetHeaderObject(),0)
 
 	def OpenContextMenu(self,event):
 		simpleDialog.dialog("コンテキストメニュー検討中","コンテキストメニューで、問い合わせへの応答などできるようにしたいと思ってます。")
