@@ -60,6 +60,7 @@ class FileOperator(object):
 
 	def SetPercentage(self,p):
 		self.output["percentage"]=p
+		self._doCallback("setPercentage")
 
 	def Execute(self, threaded=False):
 		"""
@@ -134,9 +135,9 @@ class FileOperator(object):
 	def _doCallback(self,identifier):
 		if not identifier in self.callbacks: return
 		if self.threaded:
-			wx.CallAfter(self.callbacks[identifier])
+			wx.CallAfter(self.callbacks[identifier],self)
 		else:
-			self.callbacks[identifier]()
+			self.callbacks[identifier](self)
 		#end スレッド実行の場合はcallAfter
 #end _doCallback
 
