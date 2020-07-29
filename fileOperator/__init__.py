@@ -135,10 +135,10 @@ class FileOperator(object):
 		self._doCallback("finished")
 	#end _process
 
-	def _doCallback(self,identifier):
+	def _doCallback(self,identifier, parameters={}):
 		if not identifier in self.callbacks: return
 		if self.threaded:
-			wx.CallAfter(self.callbacks[identifier],self)
+			wx.CallAfter(self.callbacks[identifier],self,parameters)
 		else:
 			self.callbacks[identifier](self)
 		#end スレッド実行の場合はcallAfter

@@ -62,10 +62,10 @@ class PastProgressTab(base.FalconTabBase):
 		operator.SetCallback("finished",self.OnOperationFinish)
 		operator.SetCallback("setPercentage",self.OnPercentageSet)
 
-	def OnOperationFinish(self,op):
+	def OnOperationFinish(self,op,parameters):
 		if self.listObject.GetUnresolvedCount()==0: globalVars.app.hMainView.CloseTab(self)
 
-	def OnPercentageSet(self,op):
+	def OnPercentageSet(self,op,parameters):
 		self.listObject.SetHeaderPercentage(op.GetPercentage())
 		self._replaceElement(self.listObject.GetHeaderObject(),0)
 
