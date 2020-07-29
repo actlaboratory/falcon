@@ -50,6 +50,9 @@ class PastProgressList(FalconListBase):
 		o.Initialize("test%04d" % (p1),"full\\path\\test%04d" % (p1),p3,p4)
 		return o
 
+	def Append(self,elem):
+		self.results.append(elem)
+
 	def Update(self):
 		pass
 

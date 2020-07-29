@@ -8,8 +8,10 @@
 コピー/貼り付けの進捗状況を表示するタブ。
 """
 
+import os
 import wx
 
+import browsableObjects
 import errorCodes
 import globalVars
 import misc
@@ -71,7 +73,11 @@ class PastProgressTab(base.FalconTabBase):
 		self._replaceElement(self.listObject.GetHeaderObject(),0)
 
 	def OnConfirm(self,op,parameters):
-		globalVars.app.say("confirm")
+		path=parameters["elem"].path
+		elem=browsableObjects.PastProgressItem()
+		elem.Initialize(os.path.basename(path),path,_("確認"),_("宛先に同名ファイルが存在します"))
+		self.listObject.Append(elem)
+		self._AppendElement(elem)
 
 	def OpenContextMenu(self,event):
 		simpleDialog.dialog("コンテキストメニュー検討中","コンテキストメニューで、問い合わせへの応答などできるようにしたいと思ってます。")

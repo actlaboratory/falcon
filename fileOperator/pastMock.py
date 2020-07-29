@@ -132,7 +132,7 @@ def ProcessError(op,elem,msg,resume):
 	#コピー/移動先ファイルがすでに存在する
 	if number==80 or number==183:
 		op.output["need_to_confirm"].Append(confirmElement.ConfirmElement(elem,number,msg))
-		op._doCallback("confirm", {"reason": "already_exists", elem: elem})
+		op._doCallback("confirm", {"reason": "already_exists", "elem": elem})
 		return
 	#end 要確認
 	output["all_OK"]=False
