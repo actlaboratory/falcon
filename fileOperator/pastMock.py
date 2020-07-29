@@ -94,12 +94,13 @@ def Execute(op,resume=False):
 		try:
 			if elem.isfile:
 				time.sleep(1)
+				raise win32file.error("80,test")
 			else:
 				if resume and os.path.isdir(elem.destpath): continue#再開している場合はエラーになる前に逃げる
 				time.sleep(1)
 		except win32file.error as err:
 			log.error("Cannot create %s (%s)" % (elem.destpath, str(err)))
-			ProcessError(op.output,elem,str(err),resume)
+			ProcessError(op,elem,str(err),resume)
 			continue
 		#end except
 		if copy_move_flag==MOVE:
@@ -121,16 +122,17 @@ def Execute(op,resume=False):
 	op.instructions["target"]=[]
 	return retry
 
-def ProcessError(output,elem,msg,resume):
+def ProcessError(op,elem,msg,resume):
 	"""アクセス拒否であれば、リトライするリストに追加する。昇格しても失敗するエラーであれば、 need_to_confirm に追加する。"""
 	number=helper.GetErrorNumber(msg)
 	if helper.IsAccessDenied(number):#アクセス拒否なので、リトライするリストに追加する
-		output["retry"]["target"].append(elem)
+		op.output["retry"]["target"].append(elem)
 		return
 	#end リトライ
 	#コピー/移動先ファイルがすでに存在する
 	if number==80 or number==183:
-		output["need_to_confirm"].Append(confirmElement.ConfirmElement(elem,number,msg))
+		op.output["need_to_confirm"].Append(confirmElement.ConfirmElement(elem,number,msg))
+		op._doCallback("confirm", {"reason": "already_exists", elem: elem})
 		return
 	#end 要確認
 	output["all_OK"]=False
