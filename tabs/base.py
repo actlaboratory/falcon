@@ -397,9 +397,14 @@ class FalconTabBase(object):
 		if not os.path.isabs(dest):	#早退の場合は絶対に直す
 			dest=os.path.normpath(os.path.join(os.path.dirname(target),dest))
 
+		#ハードリンクの場合、同一ドライブ上への作成に限られる
+		#ネットワーク上の項目への作成はここにくる以前でブロック済み
+		if option["type"]=="hardLink":
+			if target[0]!=dest[0]:	#異なるドライブへの作成
+				dialog(_("エラー"),_("他のドライブに対してハードリンクを作成することはできません。"))
+
 		#TODO:
 		#相対パスでの作成に後日対応する必要がある
-		#ハードリンクはドライブをまたげないのでバリデーションする
 		#ファイルシステムを確認し、対応してない種類のものは作れないようにバリデーションする
 		#作業フォルダの指定に対応する(ファイルオペレータ側の修正も必用)
 
