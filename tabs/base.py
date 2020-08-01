@@ -823,6 +823,16 @@ class FalconTabBase(object):
 					globalVars.app.hMainView.menu.Block(self.selectItemTypeMenuConditions[elem.__class__])
 
 	def ItemDeSelected(self,event=None,index=0):
+		#個数ベースでのメニューのロック・アンロック
+		c=self.GetSelectedItemCount()
+		if c>2:c=2
+		#print(str(self.environment["selectedItemCount"])+"=>"+str(c))
+		if self.environment["selectedItemCount"]!=c:
+			if self.environment["selectedItemCount"]!=None:
+				globalVars.app.hMainView.menu.UnBlock(self.selectItemMenuConditions[self.environment["selectedItemCount"]])
+			globalVars.app.hMainView.menu.Block(self.selectItemMenuConditions[c])
+			self.environment["selectedItemCount"]=c
+
 		#種類ベースでのメニューのアンロック
 		if event:
 			#チェック状態なら何もしない
