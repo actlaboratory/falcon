@@ -105,6 +105,10 @@ class File(FalconBrowsableBase):
 class Folder(File):
 	__slots__=[]
 
+	def __init__(self,**args):
+		super().__init__(*args)
+		self.canHardLinkTarget=False
+
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。フォルダなのでサイズ不明(-1)の場合があり、この場合は <dir> にする。"""
 		if self.size<0:
