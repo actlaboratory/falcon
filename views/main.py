@@ -10,6 +10,7 @@ import os
 import pickle
 import sys
 import wx
+import win32file
 import re
 import ctypes
 import pywintypes
@@ -897,6 +898,27 @@ class Events(BaseEvents):
 				dic[_("短い名前")]=elem.shortName
 			else:
 				dic[_("短い名前")]=_("なし")
+
+			print(elem.fullpath)
+			h=win32file.CreateFile(
+					elem.fullpath,
+					0,
+					win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
+					None,
+					win32file.OPEN_EXISTING,
+					win32file.FILE_FLAG_BACKUP_SEMANTICS,		#これがないとディレクトリを開けない
+					0)
+			info=win32file.GetFileInformationByHandleEx(h,win32file.FileStandardInfo)
+			if info:
+				dic[_("消費ディスク領域")]=misc.ConvertBytesTo(info["AllocationSize"],misc.UNIT_AUTO,True)+" ("+str(info["AllocationSize"])+" bytes)"
+				dic[_("追加情報")]=""
+				if info["DeletePending"]:
+					dic[_("追加情報")]+=_("削除予約済 ")
+				if info["NumberOfLinks"]>1:
+					dic[_("追加情報")]+=_("ハードリンクにより他の%d 箇所から参照 " % (info["NumberOfLinks"]-1))
+				if dic[_("追加情報")]=="":
+					dic[_("追加情報")]=_("なし")
+
 		if type(elem)==browsableObjects.Drive:
 			if elem.free>=0:
 				dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
