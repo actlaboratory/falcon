@@ -143,10 +143,11 @@ def ProcessError(op,elem,msg,resume):
 
 def _processExistingFolder(output,elem):
 	"""指定したフォルダを、すでに存在するフォルダとして、 need_to_confirm に入れる。"""
-	output["need_to_confirm"].Append(confirmElement.ConfirmElement(elem,80,"このフォルダはすでに存在します。"))
+	output["need_to_confirm"].Append(confirmElement.ConfirmElement(Element(elem,basepath,destpath),80,_("このフォルダはすでに存在します。")))
 
 def _expandFolder(lst,path,e,basepath,destpath):
 	"""フォルダを展開して、指定されたリストに入れる。"""
+	print("expand")
 	lst.append(e)#イテレーションの最初に親フォルダ追加
 	for elem in misc.IteratePaths_dirFirst(path):
 		lst.append(Element(elem,basepath,destpath))

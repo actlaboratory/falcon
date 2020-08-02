@@ -314,6 +314,7 @@ class FileListTab(base.FalconTabBase):
 			if len(confs_list)==0: break
 			elem=confs_list[0]
 			e=elem.GetElement()
+			print(e)
 			from_path=e.path
 			dest_path=e.destpath
 			from_stat=os.stat(from_path)
