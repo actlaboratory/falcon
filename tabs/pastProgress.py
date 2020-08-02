@@ -17,6 +17,7 @@ import globalVars
 import misc
 import StringUtil
 import tabs
+import views.OperationSelecter
 import simpleDialog
 
 from . import base
@@ -75,12 +76,41 @@ class PastProgressTab(base.FalconTabBase):
 	def OnConfirm(self,op,parameters):
 		path=parameters["elem"].path
 		elem=browsableObjects.PastProgressItem()
-		elem.Initialize(os.path.basename(path),path,_("確認"),_("宛先に同名ファイルが存在します"))
+		elem.Initialize(os.path.basename(path),path,_("確認"),_("宛先に同名ファイルが存在します"),parameters["confirmation_manager_index"])
 		self.listObject.Append(elem)
 		self._AppendElement(elem)
 
 	def OpenContextMenu(self,event):
-		simpleDialog.dialog("コンテキストメニュー検討中","コンテキストメニューで、問い合わせへの応答などできるようにしたいと思ってます。")
+		m=wx.Menu()
+		m.Append(0,"詳細を表示")
+		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
+		m.Destroy()
+		print(item)
+		elem=self.GetFocusedElement()
+		index=elem.GetConfirmationManagerIndex()
+		confs=self.fileOperator.GetConfirmationManager()
+		confirmElem=confs.GetAt(index)
+		e=confirmElem.GetElement()
+		from_path=e.path
+		dest_path=e.destpath
+		from_stat=os.stat(from_path)
+		dest_stat=os.stat(dest_path)
+		info=[
+			(_("名前"),"test.txt","",""),
+			(_("サイズ"),misc.ConvertBytesTo(dest_stat.st_size,misc.UNIT_AUTO,True),"→",misc.ConvertBytesTo(from_stat.st_size,misc.UNIT_AUTO,True)),
+			(_("更新日時"),datetime.datetime.fromtimestamp(dest_stat.st_mtime),"→",datetime.datetime.fromtimestamp(from_stat.st_mtime))
+		]
+		d=views.OperationSelecter.Dialog(_("上書きしますか？"),info,views.OperationSelecter.GetMethod("ALREADY_EXISTS"),False)
+		d.Initialize()
+		d.Show()
+		val=d.GetValue()
+		if val['all'] is True:#「以降も同様に処理」がオン
+			confs.RespondAll(confirmElem,val['response'])
+		else:#この1件だけ
+			confirmElem.SetResponse(d.GetValue())#渓谷に対して、文字列でレスポンスする
+		#end これ以降全てかこれだけか
+		self.fileOperator.UpdateConfirmation()#これで繁栄する
+		self.fileOperator.Execute()#これでコピーを再実行
 
 	def ReadCurrentFolder(self):
 		globalVars.app.say("貼り付けの結果を閲覧中")

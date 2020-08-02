@@ -259,16 +259,20 @@ class PastProgressItem(FalconBrowsableBase):
 	canHardLinkTarget=False
 	canSynLinkTarget=False
 
-	def Initialize(self,basename="",fullpath="",status="",details=""):
+	def Initialize(self,basename="",fullpath="",status="",details="",confirmation_manager_index=-1):
 		self.basename=basename
 		self.fullpath=fullpath
 		self.status=status
 		self.details=details
+		self.confirmation_manager_index=confirmation_manager_index
 		self.hIcon=0
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
 		return (self.fullpath, self.status, self.details)
+
+	def GetConfirmationManagerIndex(self):
+		return self.confirmation_manager_index
 
 	def __str__(self):
 		return "<past progress item>"
