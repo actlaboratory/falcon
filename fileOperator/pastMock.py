@@ -64,7 +64,7 @@ def Execute(op,resume=False):
 		else:
 			e=Element(elem,basepath,destpath)
 			if os.path.isdir(e.destpath) and not resume:
-				_processExistingFolder(op.output,elem)#フォルダがもうあれば、その時点で確認に入れる(中のフォルダを展開しない)
+				_processExistingFolder(op.output,elem,basepath,destpath)#フォルダがもうあれば、その時点で確認に入れる(中のフォルダを展開しない)
 			else:#まだないか、確認済みなので追加
 				_expandFolder(lst,elem,e,basepath,destpath)
 			#end フォルダを展開するかしないか
@@ -141,7 +141,7 @@ def ProcessError(op,elem,msg,resume):
 	output["failed"].append(failedElement.FailedElement(elem.destpath,(number,msg)))
 #end ProcessError
 
-def _processExistingFolder(output,elem):
+def _processExistingFolder(output,elem,basepath,destpath):
 	"""指定したフォルダを、すでに存在するフォルダとして、 need_to_confirm に入れる。"""
 	output["need_to_confirm"].Append(confirmElement.ConfirmElement(Element(elem,basepath,destpath),80,_("このフォルダはすでに存在します。")))
 
