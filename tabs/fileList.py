@@ -294,7 +294,6 @@ class FileListTab(base.FalconTabBase):
 		inst={"operation": "past", "target": target, "to": dest, 'copy_move_flag': op}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute(threaded=True)
-		print("started")
 
 		#0.5秒待つ
 		time.sleep(0.5)

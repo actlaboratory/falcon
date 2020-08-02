@@ -46,6 +46,8 @@ def Execute(op,resume=False):
 		#ベースパスを決定
 		op.output["basepath"]=os.path.dirname(f[0])
 		op.output["destpath"]=op.instructions['to']
+		op.output["basepath"]=op.output["basepath"].rstrip("\\")
+		op.output["destpath"]=op.output["destpath"].rstrip("\\")
 	#end 初期化
 	basepath=op.output["basepath"]
 	destpath=op.output["destpath"]

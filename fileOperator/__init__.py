@@ -86,6 +86,7 @@ class FileOperator(object):
 		#end キーがセットされてない
 		op=op.lower()
 		self.threaded=threaded
+		self.started=True
 		if threaded:
 			self.thread=threading.Thread(target=self._process)
 			self.thread.start()
@@ -185,6 +186,7 @@ class FileOperator(object):
 
 	def CheckFinished(self):
 		"""ファイルオペレーションが終了したかどうかを取得する。"""
+		print("started=%s working=%s" % (self.started,self.working))
 		return self.started and not self.working
 	#end CheckFinished
 

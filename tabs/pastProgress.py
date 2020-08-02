@@ -93,6 +93,7 @@ class PastProgressTab(base.FalconTabBase):
 		e=confirmElem.GetElement()
 		from_path=e.path
 		dest_path=e.destpath
+		print(dest_path)
 		from_stat=os.stat(from_path)
 		dest_stat=os.stat(dest_path)
 		info=[
