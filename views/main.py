@@ -788,18 +788,20 @@ class Events(BaseEvents):
 		out_lst=[]#入力画面が出てるときに、もうファイルリスト取得を開始してしまう
 		task=workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList,{'path': basePath, 'out_lst': out_lst,'eol':True})
 
-		searchHistory=history.History(globalVars.app.config.getint("search","histry_count",0,0,100),False)
-		grepHistory=history.History(globalVars.app.config.getint("search","histry_count",0,0,100),False)
+		searchHistory=history.History(globalVars.app.config.getint("search","history_count",0,0,100),False)
+		grepHistory=history.History(globalVars.app.config.getint("search","history_count",0,0,100),False)
 		hist={}
 		try:
 			with open(constants.HISTORY_FILE_NAME, 'rb') as f:
 				hist=pickle.load(f)
 				searchHistory.lst=hist["search"]
+				searchHistory.cursor=len(hist["search"])-1
 				grepHistory.lst=hist["grep"]
+				grepHistory.cursor=len(hist["grep"])-1
 		except:
 			pass
 
-		d=views.search.Dialog(basePath,searchHistory.getList(),grepHistory.getList())
+		d=views.search.Dialog(basePath,list(reversed(searchHistory.getList())),list(reversed(grepHistory.getList())))
 		d.Initialize()
 		canceled=False
 		while(True):
@@ -830,7 +832,6 @@ class Events(BaseEvents):
 			grepHistory.add(val['keyword'])
 		hist["search"]=searchHistory.getList()
 		hist["grep"]=grepHistory.getList()
-
 		try:
 			with open(constants.HISTORY_FILE_NAME, 'wb') as f:
 				pickle.dump(hist,f)

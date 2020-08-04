@@ -9,6 +9,8 @@ from .baseDialog import *
 import misc
 import views.ViewCreator
 
+from simpleDialog import dialog
+
 class Dialog(BaseDialog):
 
 	#検索の起点を設定
@@ -39,7 +41,7 @@ class Dialog(BaseDialog):
 
 		#ボタンエリア
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,"",wx.ALIGN_RIGHT)
-		self.bOk=self.creator.okbutton(_("ＯＫ"),None)
+		self.bOk=self.creator.okbutton(_("ＯＫ"),self.OkEvent)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
 	def GetData(self):
@@ -55,3 +57,9 @@ class Dialog(BaseDialog):
 			self.keyword.Set(self.searchHistory)
 		else:
 			self.keyword.Set(self.grepHistory)
+
+	def OkEvent(self,event):
+		if self.keyword.GetValue()=="":
+			dialog(_("エラー"),"検索キーワードを入力してください。")
+			return
+		event.Skip()
