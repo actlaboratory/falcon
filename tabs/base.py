@@ -762,6 +762,8 @@ class FalconTabBase(object):
 		"""
 		self._cancelBackgroundTasks()
 		self.hListCtrl.DeleteAllItems()
+		self.checkedItem=set()
+		self.hilightIndex=-1
 		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってるため必要
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"),True)
