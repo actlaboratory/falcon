@@ -170,6 +170,7 @@ class Drive(FalconBrowsableBase):
 
 		"""
 		self.letter=letter
+		self.basename=letter
 		self.free=free
 		self.total=total
 		self.type=type
