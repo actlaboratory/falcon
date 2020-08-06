@@ -88,9 +88,17 @@ class Dialog(BaseDialog):
 
 	#作成するショートカットタイプの変更
 	def typeChangeEvent(self,event):
-		if (event.GetInt()==self.TYPE_HARDLINK):
+		if event.GetInt()==self.TYPE_HARDLINK:
 			#ハードリンクに絶対・相対の選択はない
 			self.linkType.Disable()
 		else:
 			#ハードリンク以外であれば絶対・相対の選択がある
 			self.linkType.Enable()
+
+		#パラメータとディレクトリの指定はlnkだけ
+		if event.GetInt()==self.TYPE_LNK:
+			self.parameter.Enable()
+			self.directory.Enable()
+		else:
+			self.parameter.Disable()
+			self.directory.Disable()
