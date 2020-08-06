@@ -404,6 +404,7 @@ class FalconTabBase(object):
 			if (not tmp) or type(fileSystemManager.GetFileSystemObject(tmp.fullpath))!=fileSystemManager.NTFS:
 				dialog(_("エラー"),_("NTFSドライブ以外の場所にシンボリックリンクを作成することはできません。"))
 				return False
+
 		#ハードリンクの場合、同一ドライブ上への作成に限られる
 		#ネットワーク上の項目への作成はここにくる以前でブロック済み
 		if option["type"]=="hardLink":
@@ -412,13 +413,12 @@ class FalconTabBase(object):
 				return False
 
 		#TODO:
-		#相対パスでの作成に後日対応する必要がある
 		#作業フォルダの指定に対応する(ファイルオペレータ側の修正も必用)
 
 		if option["type"]=="shortcut":
 			inst={"operation":option["type"], "target": [(dest,target,prm)]}
 		else:
-			inst={"operation":option["type"], "from": [target], "to": [dest]}
+			inst={"operation":option["type"], "from": [target], "to": [dest], "relative":option["linkType"] }
 		#end ショートカットかそれ以外
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
