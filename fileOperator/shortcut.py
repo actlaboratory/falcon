@@ -25,6 +25,10 @@ def Execute(op):
 	op.output["retry"]["target"]=[]
 	retry=0
 	for elem in target:
+		target=elem[1]
+		if elem[4]:		#相対パスで作成
+			target=os.path.relpath(target,start=os.path.dirname(elem[0]))
+
 		if os.path.isfile(elem[0]):
 			helper.AppendFailed(op,elem,183)#file_already_exists
 			continue
@@ -32,8 +36,9 @@ def Execute(op):
 		try:
 			ws=win32com.client.Dispatch("wscript.shell")
 			scut=ws.CreateShortcut(elem[0])
-			scut.TargetPath=elem[1]
+			scut.TargetPath=target
 			scut.Arguments=elem[2]
+			scut.WorkingDirectory=elem[3]
 			scut.Save()
 		except Exception as err:
 			log.error(err)

@@ -412,11 +412,8 @@ class FalconTabBase(object):
 				dialog(_("エラー"),_("他のドライブに対してハードリンクを作成することはできません。"))
 				return False
 
-		#TODO:
-		#作業フォルダの指定に対応する(ファイルオペレータ側の修正も必用)
-
 		if option["type"]=="shortcut":
-			inst={"operation":option["type"], "target": [(dest,target,prm)]}
+			inst={"operation":option["type"], "target": [(dest,target,prm,dir,option["linkType"]==1)]}
 		else:
 			inst={"operation":option["type"], "from": [target], "to": [dest], "relative":option["linkType"] }
 		#end ショートカットかそれ以外
