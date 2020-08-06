@@ -18,6 +18,7 @@ import win32file
 
 import constants
 import globalVars
+import lists
 import workerThreadTasks
 
 from logging import getLogger
@@ -289,4 +290,21 @@ def GetNetworkResource(target):
 	except Exception as e:
 		return None
 
-
+def GetRootObject(rootPath):
+	"""
+		与えられたパスが示すルートドライブのオブジェクトを返す。
+		パスの妥当性・パスが示すアイテムの存在は確認しない。
+		DriveまたはNetworkResourceが返る
+	"""
+	elem=None
+	rootPath=rootPath[0]
+	if rootPath!="\\":		#\でないならそれはドライブ
+		try:
+			elem=lists.drive.GetDriveObject(int(ord(rootPath)-65))
+		except:
+			pass
+	else:					#ネットワークリソース
+		rootPath=self.listObject.rootDirectory
+		rootPath=rootPath[0:rootPath[2:].find("\\")+2]
+		elem=misc.GetNetworkResource(rootPath)
+	return elem

@@ -347,15 +347,4 @@ class FileListTab(base.FalconTabBase):
 
 	def GetRootObject(self):
 		"""ドライブ詳細情報表示で用いる"""
-		elem=None
-		rootPath=self.listObject.rootDirectory[0]
-		if rootPath!="\\":		#\でないならそれはドライブ
-			try:
-				elem=lists.drive.GetDriveObject(int(ord(rootPath)-65))
-			except:
-				pass
-		else:					#ネットワークリソース
-			rootPath=self.listObject.rootDirectory
-			rootPath=rootPath[0:rootPath[2:].find("\\")+2]
-			elem=misc.GetNetworkResource(rootPath)
-		return elem
+		return misc.GetRootObject(rootPath)
