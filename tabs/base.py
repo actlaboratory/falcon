@@ -18,6 +18,7 @@ import clipboardHelper
 import constants
 import errorCodes
 import fileOperator
+import fileSystemManager
 import globalVars
 import history
 import lists
@@ -397,15 +398,21 @@ class FalconTabBase(object):
 		if not os.path.isabs(dest):	#早退の場合は絶対に直す
 			dest=os.path.normpath(os.path.join(os.path.dirname(target),dest))
 
+		#シンボリックリンクはNTFSにしか作成できない
+		if option["type"]=="symbolicLink":
+			tmp=misc.GetRootObject(dest)
+			if (not tmp) or type(fileSystemManager.GetFileSystemObject(tmp.fullpath))!=fileSystemManager.NTFS:
+				dialog(_("エラー"),_("NTFSドライブ以外の場所にシンボリックリンクを作成することはできません。"))
+				return False
 		#ハードリンクの場合、同一ドライブ上への作成に限られる
 		#ネットワーク上の項目への作成はここにくる以前でブロック済み
 		if option["type"]=="hardLink":
 			if target[0]!=dest[0]:	#異なるドライブへの作成
 				dialog(_("エラー"),_("他のドライブに対してハードリンクを作成することはできません。"))
+				return False
 
 		#TODO:
 		#相対パスでの作成に後日対応する必要がある
-		#ファイルシステムを確認し、対応してない種類のものは作れないようにバリデーションする
 		#作業フォルダの指定に対応する(ファイルオペレータ側の修正も必用)
 
 		if option["type"]=="shortcut":
@@ -417,9 +424,10 @@ class FalconTabBase(object):
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
 			dialog(_("エラー"),_("ショートカットの作成に失敗しました。"))
-			return
+			return False
 		#end error
 		self.UpdateFilelist(silence=True)
+		return True
 
 	def MakeDirectory(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
