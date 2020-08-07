@@ -104,7 +104,7 @@ class FileListTab(base.FalconTabBase):
 		if fileSystemManager.ValidationObjectName(dir+"\\"+newdir,fileSystemManager.pathTypes.DIRECTORY):
 			dialog(_("エラー"),fileSystemManager.ValidationObjectName(newdir))
 			return
-		dest=os.path.join(dir,newdir)
+		dest=dir+"\\"+newdir
 		inst={"operation": "mkdir", "target": [dest]}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
@@ -347,4 +347,4 @@ class FileListTab(base.FalconTabBase):
 
 	def GetRootObject(self):
 		"""ドライブ詳細情報表示で用いる"""
-		return misc.GetRootObject(rootPath)
+		return misc.GetRootObject(self.rootPath)

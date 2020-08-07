@@ -38,11 +38,7 @@ class GrepResultList(SearchResultBase):
 		"""与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
 		if isinstance(rootDirectory,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			for elem in rootDirectory:
-				if type(elem) is browsableObjects.SearchedFolder:
-					self.folders.append(elem)
-				else:
-					self.files.append(elem)
-				#end ファイルかフォルダか
+				self.results.append(elem)
 			#end for
 			return errorCodes.OK
 		self.rootDirectory=rootDirectory
@@ -53,7 +49,7 @@ class GrepResultList(SearchResultBase):
 	def HitTest(self,path,ret_list):
 		"""_performSearchStepから呼ばれ、与えられたpathのファイルが検索にヒットするならリスト追加する"""
 		if misc.isDocumentExt(path.split(".")[-1]):
-			fullpath=os.path.join(self.rootDirectory,path)
+			fullpath=self.rootDirectory+"\\"+path
 			content=misc.ExtractText(fullpath).split("\n")
 			fileobj=None#複数ヒットでファイルオブジェクトを生成し続けないようにキャッシュする
 			ln=1

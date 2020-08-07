@@ -166,7 +166,7 @@ def IteratePaths(path,append_eol=False):
 			if elem[0]&win32file.FILE_ATTRIBUTE_DIRECTORY: 
 				yield from IteratePaths(path+"\\"+elem[8])
 			#end ディレクトリ
-			yield os.path.join(path,elem[8])
+			yield path+"\\"+elem[8]
 		#end iterate
 	except pywintypes.error as e:
 		log.error("Access denied while searching paths at %s (%s)." % (path,e))
