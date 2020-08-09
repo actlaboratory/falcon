@@ -689,7 +689,7 @@ class FalconTabBase(object):
 		index=self.GetFocusedItem()
 		elem=self.listObject.GetElement(index)
 		if (not stream) and (type(elem)==browsableObjects.File):	#このファイルを開く
-			misc.RunFile(elem.fullpath,admin)
+			misc.RunFile(elem.fullpath,admin,"",self.listObject.rootDirectory)
 			return
 		else:
 			#TODO: 管理者権限が要求され、自身が管理者権限を有していないなら、別のfalconが昇格して開くように

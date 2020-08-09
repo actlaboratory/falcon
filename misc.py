@@ -230,8 +230,8 @@ def RunFile(path, admin=False,prm="", workdir=""):
 		try:
 			executable=GetExecutableState(path)
 			p=path if executable else "cmd"
-			a=prm if executable else "/c "+path+" "+prm
-			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",p,a)
+			a=prm if executable else "/c \""+path+"\" "+prm
+			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",p,a,workdir)
 		except pywintypes.error as e:
 			error=str(e)
 		#end shellExecuteEx failure
