@@ -149,6 +149,9 @@ class SettingDialog(BaseDialog):
 		if not re.match("^[a-zA-Z0-9\\-$~]+$",self.extensionEdit.GetLineText(0)):
 			dialog(_("エラー"),_("入力された拡張子に利用できない文字が含まれています。パスを確認してください。"))
 			return
+		if not os.path.isabs(self.pathEdit.GetLineText(0)):
+			dialog(_("エラー"),_("実行ファイルのパスは絶対パスで指定してください。"))
+			return
 		if not os.path.isfile(self.pathEdit.GetLineText(0)):
 			dialog(_("エラー"),_("入力された実行ファイルが存在しません。パスを確認してください。"))
 			return

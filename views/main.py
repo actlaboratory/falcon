@@ -117,18 +117,18 @@ class View(BaseView):
 		"""最初のタブを作成する。"""
 
 		if len(sys.argv)>1:
-			result=self.Navigate(os.path.expandvars(sys.argv[1]),as_new_tab=True)
+			result=self.Navigate(os.path.abspath(os.path.expandvars(sys.argv[1])),as_new_tab=True)
 			if result==errorCodes.OK:
 				return
 			else:
 				dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
-		result=self.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),as_new_tab=True)
+		result=self.Navigate(os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"])),as_new_tab=True)
 		if result==errorCodes.OK:
 			return
 		else:
-			if os.path.expandvars(self.app.config["browse"]["startPath"])!="":
+			if os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"]))!="":
 				dialog("Error",_("設定された起動時ディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
-			result=self.Navigate(os.path.expandvars(self.app.config["browse"]["startPath"]),as_new_tab=True)
+			result=self.Navigate(os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"])),as_new_tab=True)
 		if result==errorCodes.OK:
 			return
 		else:
@@ -333,11 +333,8 @@ class Menu(BaseMenu):
 			subMenu=wx.Menu()
 			for v in m.paramMap:
 				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
-			#@@@@@@
-			#self.hMoveMenu.AppendSubMenu(subMenu,globalVars.app.userCommandManagers[m])
 			title=globalVars.app.userCommandManagers[m]
 			self.RegisterMenuCommand(self.hMoveMenu,m.refHead,title,subMenu)
-
 
 		#読みメニューの中身
 		subMenu=wx.Menu()
@@ -461,6 +458,7 @@ class Events(BaseEvents):
 					config=globalVars.app.config["originalAssociation"]["<default_file>"]
 			else:
 				config=globalVars.app.config["originalAssociation"]["<default_dir>"]
+			config=os.path.abspath(config)
 			misc.RunFile(config,prm=elem.fullpath)
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_ADMIN"):
@@ -685,10 +683,10 @@ class Events(BaseEvents):
 		for m in globalVars.app.userCommandManagers:
 			if m.isRefHit(selected):
 				if m == globalVars.app.favoriteDirectory:
-					ret=self.parent.activeTab.Move(m.get(selected))
+					ret=self.parent.activeTab.Move(os.path.abspath(m.get(selected)))
 					if issubclass(ret.__class__,tabs.base.FalconTabBase): self.parent.ReplaceCurrentTab(ret)
 					#TODO: エラー処理する
-				else:
+				else:									#ここで開く
 					path=m.get(selected)
 					path=path.replace("%1",self.parent.activeTab.listObject.rootDirectory)
 					prm=re.sub(r"^[^ ]* (.*)$",r"\1",path)
