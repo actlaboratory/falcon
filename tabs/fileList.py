@@ -212,9 +212,9 @@ class FileListTab(base.FalconTabBase):
 	def _dirCalc_receive(self,results,taskState):
 		"""DirCalc の結果を受ける。"""
 		for elem in results:
-			self.listObject.GetElement(elem[0]).size=elem[1]
-			if elem[1]>=0:
-				self.hListCtrl.SetItem(index=elem[0],column=1,label=misc.ConvertBytesTo(elem[1],misc.UNIT_AUTO,True))
+			self.listObject.GetElement(elem[0]).size=elem[1][0]
+			if elem[1][0]>=0:
+				self.hListCtrl.SetItem(index=elem[0],column=1,label=misc.ConvertBytesTo(elem[1][0],misc.UNIT_AUTO,True))
 			else:
 				self.hListCtrl.SetItem(index=elem[0],column=1,label="<取得失敗>")
 		#end for

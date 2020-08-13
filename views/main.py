@@ -880,13 +880,15 @@ class Events(BaseEvents):
 				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
 				dic[_("サイズ(バイト)")]=elem.size
 			else:
-				size=misc.GetDirectorySize(elem.fullpath)
+				size,fileCount,dirCount=misc.GetDirectorySize(elem.fullpath)
 				if size>=0:
 					dic[_("サイズ")]=misc.ConvertBytesTo(size,misc.UNIT_AUTO,True)
 					dic[_("サイズ(バイト)")]=size
+					dic[_("内容")]=_("ファイル数： %d サブディレクトリ数： %d") % (fileCount,dirCount)
 				else:
 					dic[_("サイズ")]=_("不明")
 					dic[_("サイズ(バイト)")]=_("不明")
+					dic[_("内容")]=_("不明")
 		elif isinstance(elem,browsableObjects.File) or type(elem)==browsableObjects.Stream:
 			dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
 			dic[_("サイズ(バイト)")]=elem.size

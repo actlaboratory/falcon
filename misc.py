@@ -174,7 +174,7 @@ def IteratePaths(path,append_eol=False):
 	#EOL挿入
 	if append_eol: yield "eol"
 
-def GetDirectorySize(path):
+def GetDirectorySize(path,fileCount=0,dirCount=0):
 	"""ディレクトリのサイズをバイト数で返す。"""
 	total = 0
 	try:
@@ -182,16 +182,19 @@ def GetDirectorySize(path):
 			for entry in it:
 				if entry.is_file():
 					total += entry.stat().st_size
+					fileCount+=1
 				elif entry.is_dir():
-					s=GetDirectorySize(entry.path)
-					if s==-1: return -1
-					total+=s
-
+					dirCount+=1
+					r=GetDirectorySize(entry.path,fileCount,dirCount)
+					if r[0]==-1: return -1
+					total+=r[0]
+					fileCount=r[1]
+					dirCount=r[2]
 	except OSError as er:
 		log.error("GetDirectorySize failed (%s" % er)
-		return -1
+		return -1,-1,-1
 	#end except
-	return total
+	return total,fileCount,dirCount
 
 def GetExecutableState(path):
 	"""指定されたファイルパスが、実行可能ファイルであろうかどうかを調べて boolean で返す。"""
