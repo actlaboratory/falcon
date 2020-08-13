@@ -58,13 +58,6 @@ class StreamListTab(base.FalconTabBase):
 			return
 		e=self.hListCtrl.GetEditControl()
 		f=self.listObject.GetElement(self.GetFocusedItem())
-		if isinstance(f,browsableObjects.Folder):
-			newName=f.directory+"\\"+e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.DIRECTORY)
-		elif isinstance(f,browsableObjects.File):
-			newName=f.directory+"\\"+e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.FILE)
-		#end フォルダかファイルか
 		if error:
 			dialog(_("エラー"),error)
 			evt.Veto()

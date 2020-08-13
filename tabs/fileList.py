@@ -52,10 +52,10 @@ class FileListTab(base.FalconTabBase):
 		f=self.listObject.GetElement(self.GetFocusedItem())
 		if isinstance(f,browsableObjects.Folder):
 			newName=f.directory+"\\"+e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.DIRECTORY)
+			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.DIRECTORY,e.GetLineText(0))
 		elif isinstance(f,browsableObjects.File):
 			newName=f.directory+"\\"+e.GetLineText(0)
-			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.FILE)
+			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.FILE,e.GetLineText(0))
 		#end フォルダかファイルか
 		if error:
 			dialog(_("エラー"),error)
@@ -101,9 +101,11 @@ class FileListTab(base.FalconTabBase):
 
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
-		if fileSystemManager.ValidationObjectName(dir+"\\"+newdir,fileSystemManager.pathTypes.DIRECTORY):
-			dialog(_("エラー"),fileSystemManager.ValidationObjectName(newdir))
-			return
+		error=fileSystemManager.ValidationObjectName(dir+"\\"+newdir,fileSystemManager.pathTypes.DIRECTORY,newdir)
+		print("@@@@"+error)
+		if error!="":
+			dialog(_("エラー"),error)
+			return False
 		dest=dir+"\\"+newdir
 		inst={"operation": "mkdir", "target": [dest]}
 		op=fileOperator.FileOperator(inst)

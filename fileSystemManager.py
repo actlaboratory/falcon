@@ -31,7 +31,13 @@ def ValidationObjectName(path,pathType,path2=""):
 		pathは原則フルパス
 		typeはpathTypeから１つを指定
 		ボリュームラベル変更などでpathがドライブ名を含まない場合、path2でドライブ名を指定
+		その他の場合、path2にはオブジェクト名のみを記載(フルパスからベースディレクトリを除いた部分)
 	"""
+	#path2には\を含められない
+	if '\\' in path2:
+		return _("「\\」 は、ファイルやディレクトリの名前として使用できない記号です。")
+	elif '/' in path2:
+		return _("「/」 は、ファイルやディレクトリの名前として使用できない記号です。")
 	s=os.path.split(path)[1]
 
 	#使用できない文字の確認
