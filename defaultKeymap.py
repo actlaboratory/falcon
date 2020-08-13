@@ -9,7 +9,7 @@ defaultKeymap={}
 defaultKeymap["mainView"]={
 	"FILE_RENAME": "F2",
 	"FILE_CHANGEATTRIBUTE": "shift+F2",
-	"FILE_MKDIR": "ctrl+f4/ctrl+shift+n",
+	"FILE_MKDIR": "ctrl+f4/ctrl+shift+n/ctrl+n",
 	"FILE_TRASH": "delete",
 	"FILE_DELETE": "shift+delete",
 	"FILE_MAKESHORTCUT": "ctrl+f2",
@@ -45,11 +45,11 @@ defaultKeymap["mainView"]={
 	"MOVE_MARKSET": "INSERT",
 	"MOVE_MARK": "shift+BACK",
 	"READ_CURRENTFOLDER": "alt+f5",
-	"READ_CONTENT_PREVIEW": "shift+return",
+	"READ_CONTENT_PREVIEW": "shift+return/ctrl+o",
 	"READ_CONTENT_READHEADER": "alt+home",
 	"READ_CONTENT_READFOOTER": "alt+end",
 	"READ_LISTITEMNUMBER": "alt+f3",
 	"READ_LISTINFO": "alt+f1",
 	"VIEW_DRIVE_INFO": "alt+f2",
-	"TOOL_EXEC_PROGRAM": "ctrl+h"
+	"TOOL_EXEC_PROGRAM": "ctrl+h/ctrl+shift+f2"
 }
