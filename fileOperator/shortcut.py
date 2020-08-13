@@ -30,9 +30,9 @@ def Execute(op):
 		if elem[4]:			#相対パスで作成
 			source=os.path.relpath(source,start=os.path.dirname(dest))
 			if elem[3]!="":
-				parameter="/C start /D \""+elem[3]+"\" \""+source+"\" "+elem[2]
+				parameter="/C start /D \"%s\" \"%s\" %s" % (elem[3],source,elem[2])
 			else:
-				parameter="/C \""+source+"\" "+elem[2]
+				parameter="/C \"%s\" %s" % (source,elem[2])
 			source="%windir%\\system32\\cmd.exe"
 			workDir=""		#スクリプト上で指定するのでショートカットには入れない
 			windowStyle=7	#最小化

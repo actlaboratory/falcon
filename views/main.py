@@ -33,7 +33,7 @@ import views.makeShortcut
 import views.objectDetail
 import views.search
 import views.makeHash
-import views.registOriginalAssociation
+import views.registerOriginalAssociation
 import views.execProgram
 
 import workerThreads
@@ -655,7 +655,7 @@ class Events(BaseEvents):
 			return
 		if selected==menuItemsStore.getRef("ENV_REGIST_ORIGINAL_ASSOCIATION"):
 			config=globalVars.app.config["originalAssociation"]
-			d=views.registOriginalAssociation.Dialog(dict(config.items()))
+			d=views.registerOriginalAssociation.Dialog(dict(config.items()))
 			d.Initialize()
 			if d.Show()==wx.ID_CANCEL:
 				return
