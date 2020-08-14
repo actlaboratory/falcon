@@ -5,16 +5,16 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import os
+import random
 import re
 import wx
-from browsableObjects import PastProgressItem, PastProgressHeader
 
+import browsableObjects
 import errorCodes
 import misc
 
-import random
-
 from .base import FalconListBase
+
 class PastProgressList(FalconListBase):
 	"""貼り付けの進捗状況を一覧するリスト。"""
 	def __init__(self):
@@ -38,7 +38,7 @@ class PastProgressList(FalconListBase):
 			#end for
 			return errorCodes.OK
 		#end another_instance の処理
-		head=PastProgressHeader()
+		head=browsableObjects.PastProgressHeader()
 		head.Initialize("myfolder","path/to/myfolder","進行中","path/to/destination にコピーしています",50)
 		self.headers.append(head)
 		self.results.append(self._make(random.randint(0,9999),"用確認","宛先にすでにファイルが存在しています。"))
@@ -46,7 +46,7 @@ class PastProgressList(FalconListBase):
 		self.results.append(self._make(random.randint(0,9999),"エラー","アクセスが拒否されました。"))
 
 	def _make(self,p1,p3,p4):
-		o=PastProgressItem()
+		o=browsableObjects.PastProgressItem()
 		o.Initialize("test%04d" % (p1),"full\\path\\test%04d" % (p1),p3,p4)
 		return o
 
