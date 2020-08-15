@@ -516,3 +516,75 @@ class AcceleratorEntry(wx.AcceleratorEntry):
 
 	def GetRefName(self):
 		return self.refName
+
+
+class KeyFilter:
+	"""
+		利用できるショートカットキーを制限するためのフィルタ
+	"""
+
+	def __init__(self):
+		"""
+			必用な変数を作成し、OSが利用するコマンドとの重複は設定できないようブロックします。
+		"""
+		self.modifierKey=set()								#有効な修飾キー
+		self.functionKey=set()								#有効なファンクションキー。単独または修飾キーとの組み合わせで利用可能
+		self.enableKey=set()								#修飾キーとの組み合わせで利用可能
+		self.noShiftEnableKey=set()							#SHIFTキー以外の修飾キーとの組み合わせで利用可能(modifierKeyにSHIFTを指定していない場合は無視される)
+		self.disablePattern=set()							#無効なキーの組み合わせ
+		self.disablePattern.add("CONTROL+ESCAPE")			#スタートメニュー
+		self.disablePattern.add("CONTROL+SHIFT+ESCAPE")		#タスクマネージャ
+		self.disablePattern.add("CONTROL+WINDOWS+ENTER")	#ナレーターの起動と終了
+		self.disablePattern.add("ALT+SHIFT+SNAPSHOT")		#ハイコントラストの切り替え
+		self.disablePattern.add("ALT+ESCAPE")				#最前面ウィンドウの最小化
+
+	def SetUserMode(self):
+		"""
+			ユーザが独自にキーをカスタマイズする場合に、指定することが望ましくないキーの組み合わせをブロックします。
+			将来、開発者が機能拡張する際の問題を和らげることを目的としています。
+			なお、開発者であってもコメントで記した目的以外に利用することは避けるべきです。
+		"""
+		self.disablePattern.add("APPLICATIONS")				#コンテキストメニューの表示
+		self.disablePattern.add("SHIFT+F10")				#コンテキストメニューの表示
+		self.disablePattern.add("F10")						#ALTキーの代わり
+		self.disablePattern.add("ESCAPE")					#操作の取り消し
+		self.disablePattern.add("ALT+F4")					#アプリケーションの終了
+		self.disablePattern.add("ALT+SPACE")				#リストビュー等で全ての選択を解除
+		return self
+
+	def SetDefault(self,supportInputChar):
+		"""
+			フィルタを一般的な設定に構成します。
+			supportInputCharには、そのウィンドウでの文字入力の可否を設定します。
+		"""
+		self.modifierKey.add("CONTROL")
+		self.modifierKey.add("ALT")
+		self.modifierKey.add("SHIFT")
+
+		self.functionKey|=str2FunctionKey.keys()
+		self.functionKey|=str2SpecialKey.keys()
+		self.noShiftEnableKey|=str2CharactorKey.keys()
+		self.enableKey|=str2StandaloneKey.keys()
+
+		if supportInputChar:
+			#文字入力に関わる共通のショートカットは設定不可
+			self.disablePattern.add("CONTROL+INSERT")		#コピー
+			self.disablePattern.add("SHIFT+INSERT")			#貼り付け
+			self.disablePattern.add("CONTROL+Z")			#元に戻す
+			self.disablePattern.add("CONTROL+X")			#切り取り
+			self.disablePattern.add("CONTROL+C")			#コピー
+			self.disablePattern.add("CONTROL+V")			#貼り付け
+			self.disablePattern.add("CONTROL+A")			#すべて選択
+			self.disablePattern.add("CONTROL+Y")			#やり直し
+			self.disablePattern.add("CONTROL+F7")			#単語登録(日本語変換時のみ)
+			self.disablePattern.add("CONTROL+F10")			#IMEメニュー表示(日本語変換時のみ)
+
+			#単独で文字入力の制御に利用されるので修飾キー必須
+			self.enableKey|=str2InputControlKey.keys()
+		else:
+			#単独で文字入力の制御に利用されるが、それがないなら単独利用可能
+			self.functionKey|=str2InputControlKey.keys()
+
+		return self
+
+
