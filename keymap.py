@@ -17,7 +17,7 @@ import browsableObjects
 
 from simpleDialog import *
 
-str2key={
+str2ControlCommand={
 	#制御キー
 	"CONTROL_A":wx.WXK_CONTROL_A,
 	"CONTROL_B":wx.WXK_CONTROL_B,
@@ -44,43 +44,29 @@ str2key={
 	"CONTROL_W":wx.WXK_CONTROL_W,
 	"CONTROL_X":wx.WXK_CONTROL_X,
 	"CONTROL_Y":wx.WXK_CONTROL_Y,
-	"CONTROL_Z":wx.WXK_CONTROL_Z,
+	"CONTROL_Z":wx.WXK_CONTROL_Z
+}
 
-	#修飾キー・主要キー
-	"BACK":wx.WXK_BACK,
-	"TAB":wx.WXK_TAB,
-	"RETURN":wx.WXK_RETURN,
-	"ESCAPE":wx.WXK_ESCAPE,
-	"SPACE":wx.WXK_SPACE,
-	"DELETE":wx.WXK_DELETE,
-	"SHIFT":wx.WXK_SHIFT,
-	"ALT":wx.WXK_ALT,
-	"CONTROL":wx.WXK_CONTROL,
-	"COMMAND":wx.WXK_COMMAND,				#CONTROLと同じ
-	"RAW_CONTROL":wx.WXK_RAW_CONTROL,		#CONTROLと同じ
-	"WINDOWS_LEFT":wx.WXK_WINDOWS_LEFT,
-	"WINDOWS_RIGHT":wx.WXK_WINDOWS_RIGHT,
-	"APPLICATIONS":wx.WXK_WINDOWS_MENU,		#コンテキストメニューを開くアプリケーションキー
-
-	#矢印キー
-	"LEFTARROW":wx.WXK_LEFT,
-	"UPARROW":wx.WXK_UP,
-	"RIGHTARROW":wx.WXK_RIGHT,
-	"DOWNARROW":wx.WXK_DOWN,
-
-	#マウスボタン
+#マウスボタン
+str2MouseKey={
 	"LBUTTON":wx.WXK_LBUTTON,
 	"MBUTTON":wx.WXK_MBUTTON,
-	"RBUTTON":wx.WXK_RBUTTON,
+	"RBUTTON":wx.WXK_RBUTTON
+}
 
-	#ジャンプキー
-	"HOME":wx.WXK_HOME,
-	"END":wx.WXK_END,
-	"PAGEUP":wx.WXK_PAGEUP,
-	"PAGEDOWN":wx.WXK_PAGEDOWN,
+#他の全てのキーの修飾キーとして利用可能
+str2ModifierKey={
+	#修飾キー
+	"ALT":wx.WXK_ALT,
+	"CONTROL":wx.WXK_CONTROL,
+	"WINDOWS_LEFT":wx.WXK_WINDOWS_LEFT,
+	"WINDOWS_RIGHT":wx.WXK_WINDOWS_RIGHT,
+	"SHIFT":wx.WXK_SHIFT
+}
 
-	#不明
-	"START":wx.WXK_START,		#Ctrl+ESC
+#不明なもの・Windowsでは使えないもの、
+str2UnknownKey={
+	"START":wx.WXK_START,					#Ctrl+ESC
 	"CANCEL":wx.WXK_CANCEL,
 	"MENU":wx.WXK_MENU,
 	"PAUSE":wx.WXK_PAUSE,
@@ -88,31 +74,24 @@ str2key={
 	"SELECT":wx.WXK_SELECT,
 	"PRINT":wx.WXK_PRINT,
 	"EXECUTE":wx.WXK_EXECUTE,
-	"SNAPSHOT":wx.WXK_SNAPSHOT,
-	"INSERT":wx.WXK_INSERT,
 	"HELP":wx.WXK_HELP,
-	"SCROLL":wx.WXK_SCROLL,		#ScrLk
+	"SCROLL":wx.WXK_SCROLL,					#ScrLk
+	"COMMAND":wx.WXK_COMMAND,				#CONTROLと同じ
+	"RAW_CONTROL":wx.WXK_RAW_CONTROL,		#CONTROLと同じ
+	"NUMPAD_BEGIN":wx.WXK_NUMPAD_BEGIN,
+	"CLEAR":wx.WXK_CLEAR,					#テンキー5
 
-	#テンキー数値
-	"NUMPAD0":wx.WXK_NUMPAD0,
-	"NUMPAD1":wx.WXK_NUMPAD1,
-	"NUMPAD2":wx.WXK_NUMPAD2,
-	"NUMPAD3":wx.WXK_NUMPAD3,
-	"NUMPAD4":wx.WXK_NUMPAD4,
-	"NUMPAD5":wx.WXK_NUMPAD5,
-	"NUMPAD6":wx.WXK_NUMPAD6,
-	"NUMPAD7":wx.WXK_NUMPAD7,
-	"NUMPAD8":wx.WXK_NUMPAD8,
-	"NUMPAD9":wx.WXK_NUMPAD9,
-
-	#記号文字キー
+	#記号キー 動作しない
 	"MULTIPLY":wx.WXK_MULTIPLY,
 	"ADD":wx.WXK_ADD,
 	"SEPARATOR":wx.WXK_SEPARATOR,
 	"SUBTRACT":wx.WXK_SUBTRACT,
 	"DECIMAL":wx.WXK_DECIMAL,
 	"DIVIDE":wx.WXK_DIVIDE,
+}
 
+#単独でも修飾キーとの組み合わせでも利用可能
+str2FunctionKey={
 	#ファンクションキー
 	"F1":wx.WXK_F1,
 	"F2":wx.WXK_F2,
@@ -139,41 +118,61 @@ str2key={
 	"F23":wx.WXK_F23,
 	"F24":wx.WXK_F24,
 
-	#テンキー修飾・制御キー
-	"NUMLOCK":wx.WXK_NUMLOCK,
-	"NUMPAD_SPACE":wx.WXK_NUMPAD_SPACE,
-	"NUMPAD_TAB":wx.WXK_NUMPAD_TAB,
-	"NUMPAD_ENTER":wx.WXK_NUMPAD_ENTER,
-	"NUMPAD_INSERT":wx.WXK_NUMPAD_INSERT,
-	"NUMPAD_DELETE":wx.WXK_NUMPAD_DELETE,
-	"NUMPAD_BEGIN":wx.WXK_NUMPAD_BEGIN,
-
 	#テンキーファンクションキー
 	"NUMPAD_F1":wx.WXK_NUMPAD_F1,
 	"NUMPAD_F2":wx.WXK_NUMPAD_F2,
 	"NUMPAD_F3":wx.WXK_NUMPAD_F3,
 	"NUMPAD_F4":wx.WXK_NUMPAD_F4,
+}
 
-	#テンキー矢印・ジャンプキー
+#文字入力時に利用できない単独キー
+str2InputControlKey={
+	"BACK":wx.WXK_BACK,
+	"SPACE":wx.WXK_SPACE,
+	"DELETE":wx.WXK_DELETE,
+	"INSERT":wx.WXK_INSERT,			#NUMPAD_INSERTと同時に反応するので注意
+
+	#テンキー
+	"NUMPAD_SPACE":wx.WXK_NUMPAD_SPACE,
+	"NUMPAD_INSERT":wx.WXK_NUMPAD_INSERT,
+	"NUMPAD_DELETE":wx.WXK_NUMPAD_DELETE,
+
+	#矢印キー
+	"LEFTARROW":wx.WXK_LEFT,
+	"UPARROW":wx.WXK_UP,
+	"RIGHTARROW":wx.WXK_RIGHT,
+	"DOWNARROW":wx.WXK_DOWN,
 	"NUMPAD_LEFT":wx.WXK_NUMPAD_LEFT,	#4
 	"NUMPAD_UP":wx.WXK_NUMPAD_UP,		#8
 	"NUMPAD_RIGHT":wx.WXK_NUMPAD_RIGHT,	#6
 	"NUMPAD_DOWN":wx.WXK_NUMPAD_DOWN,	#2
+
+	#ジャンプキー
+	"HOME":wx.WXK_HOME,
+	"END":wx.WXK_END,
+	"PAGEUP":wx.WXK_PAGEUP,
+	"PAGEDOWN":wx.WXK_PAGEDOWN,
 	"NUMPAD_PAGEUP":wx.WXK_NUMPAD_PAGEUP,#9
 	"NUMPAD_PAGEDOWN":wx.WXK_NUMPAD_PAGEDOWN,#3
 	"NUMPAD_HOME":wx.WXK_NUMPAD_HOME,	#7
 	"NUMPAD_END":wx.WXK_NUMPAD_END,		#9
-	"CLEAR":wx.WXK_CLEAR,				#5
+}
 
-	#テンキー記号キー
-	"NUMPAD_EQUAL":wx.WXK_NUMPAD_EQUAL,
-	"NUMPAD_MULTIPLY":wx.WXK_NUMPAD_MULTIPLY,
-	"NUMPAD_ADD":wx.WXK_NUMPAD_ADD,
-	"NUMPAD_SEPARATOR":wx.WXK_NUMPAD_SEPARATOR,
-	"NUMPAD_SUBTRACT":wx.WXK_NUMPAD_SUBTRACT,
-	"NUMPAD_DECIMAL":wx.WXK_NUMPAD_DECIMAL,
-	"NUMPAD_DIVIDE":wx.WXK_NUMPAD_DIVIDE,
+#主要キー
+str2StandaloneKey={
+	"TAB":wx.WXK_TAB,
+	"RETURN":wx.WXK_RETURN,
+	"ESCAPE":wx.WXK_ESCAPE,
+	"APPLICATIONS":wx.WXK_WINDOWS_MENU,		#コンテキストメニューを開くアプリケーションキー
+	"SNAPSHOT":wx.WXK_SNAPSHOT,		#PrintScr
 
+	#テンキー
+	"NUMPAD_TAB":wx.WXK_NUMPAD_TAB,
+	"NUMPAD_ENTER":wx.WXK_NUMPAD_ENTER,
+}
+
+#単独または修飾キーとの組み合わせで利用できる
+str2SpecialKey={
 	#メディア制御キー
 	"VOLUME_DOWN":wx.WXK_VOLUME_DOWN,
 	"VOLUME_MUTE":wx.WXK_VOLUME_MUTE,
@@ -191,14 +190,6 @@ str2key={
 	"BROWSER_REFRESH":wx.WXK_BROWSER_REFRESH,
 	"BROWSER_SEARCH":wx.WXK_BROWSER_SEARCH,
 	"BROWSER_STOP":wx.WXK_BROWSER_STOP,
-
-	#カテゴリ制御キー
-	"CATEGORY_ARROW":wx.WXK_CATEGORY_ARROW,
-	"CATEGORY_CUT":wx.WXK_CATEGORY_CUT,
-	"CATEGORY_JUMP":wx.WXK_CATEGORY_JUMP,
-	"CATEGORY_NAVIGATION":wx.WXK_CATEGORY_NAVIGATION,
-	"CATEGORY_PAGING":wx.WXK_CATEGORY_PAGING,
-	"CATEGORY_TAB":wx.WXK_CATEGORY_TAB,
 
 	#アプリケーション起動キー
 	"LAUNCH_APP1":wx.WXK_LAUNCH_APP1,
@@ -226,7 +217,11 @@ str2key={
 	"SPECIAL18":wx.WXK_SPECIAL18,
 	"SPECIAL19":wx.WXK_SPECIAL19,
 	"SPECIAL20":wx.WXK_SPECIAL20,
+}
 
+#他の修飾キーとの組み合わせで利用できるキー
+str2CharactorKey={
+	#アルファベットキー
 	"A": ord('A'),
 	"B": ord('B'),
 	"C": ord('C'),
@@ -254,6 +249,7 @@ str2key={
 	"Y": ord('Y'),
 	"Z": ord('Z'),
 
+	#数字キー
 	"0": ord('0'),
 	"1": ord('1'),
 	"2": ord('2'),
@@ -265,7 +261,54 @@ str2key={
 	"8": ord('8'),
 	"9": ord('9'),
 
+	#テンキー数字キー
+	"NUMPAD0":wx.WXK_NUMPAD0,
+	"NUMPAD1":wx.WXK_NUMPAD1,
+	"NUMPAD2":wx.WXK_NUMPAD2,
+	"NUMPAD3":wx.WXK_NUMPAD3,
+	"NUMPAD4":wx.WXK_NUMPAD4,
+	"NUMPAD5":wx.WXK_NUMPAD5,
+	"NUMPAD6":wx.WXK_NUMPAD6,
+	"NUMPAD7":wx.WXK_NUMPAD7,
+	"NUMPAD8":wx.WXK_NUMPAD8,
+	"NUMPAD9":wx.WXK_NUMPAD9,
+
+	#記号キー
+	",": ord(','),
+	".": ord('.'),
+	"/": ord('/'),
+	"\\": ord('\\'),	#上段側のみにマッチ
+	";": ord(';'),
+	":": ord(':'),
+	"[": ord('['),
+	"]": ord(']'),
+	"@": ord('@'),
+	"-": ord('-'),
+	"^": ord('^'),
+
+	#テンキー記号キー
+	"NUMPAD_EQUAL":wx.WXK_NUMPAD_EQUAL,
+	"NUMPAD_MULTIPLY":wx.WXK_NUMPAD_MULTIPLY,
+	"NUMPAD_ADD":wx.WXK_NUMPAD_ADD,
+	"NUMPAD_SEPARATOR":wx.WXK_NUMPAD_SEPARATOR,
+	"NUMPAD_SUBTRACT":wx.WXK_NUMPAD_SUBTRACT,
+	"NUMPAD_DECIMAL":wx.WXK_NUMPAD_DECIMAL,
+	"NUMPAD_DIVIDE":wx.WXK_NUMPAD_DIVIDE,
 }
+
+#利用不可
+str2categoryKey={
+	#カテゴリ制御キー
+	"CATEGORY_ARROW":wx.WXK_CATEGORY_ARROW,
+	"CATEGORY_CUT":wx.WXK_CATEGORY_CUT,
+	"CATEGORY_JUMP":wx.WXK_CATEGORY_JUMP,
+	"CATEGORY_NAVIGATION":wx.WXK_CATEGORY_NAVIGATION,
+	"CATEGORY_PAGING":wx.WXK_CATEGORY_PAGING,
+	"CATEGORY_TAB":wx.WXK_CATEGORY_TAB,
+}
+
+str2key={}
+str2key.update(**str2ControlCommand,**str2MouseKey,**str2ModifierKey,**str2UnknownKey,**str2FunctionKey,**str2InputControlKey,**str2StandaloneKey,**str2SpecialKey,**str2CharactorKey,**str2categoryKey)
 
 class KeymapHandler():
 	"""wxのアクセラレーターテーブルを生成します。"""
