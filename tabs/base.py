@@ -404,6 +404,7 @@ class FalconTabBase(object):
 			if (not tmp) or type(fileSystemManager.GetFileSystemObject(tmp.fullpath))!=fileSystemManager.NTFS:
 				dialog(_("エラー"),_("NTFSドライブ以外の場所にシンボリックリンクを作成することはできません。"))
 				return False
+
 		#ハードリンクの場合、同一ドライブ上への作成に限られる
 		#ネットワーク上の項目への作成はここにくる以前でブロック済み
 		if option["type"]=="hardLink":
@@ -411,14 +412,10 @@ class FalconTabBase(object):
 				dialog(_("エラー"),_("他のドライブに対してハードリンクを作成することはできません。"))
 				return False
 
-		#TODO:
-		#相対パスでの作成に後日対応する必要がある
-		#作業フォルダの指定に対応する(ファイルオペレータ側の修正も必用)
-
 		if option["type"]=="shortcut":
-			inst={"operation":option["type"], "target": [(dest,target,prm)]}
+			inst={"operation":option["type"], "target": [(dest,target,prm,dir,option["linkType"]==1)]}
 		else:
-			inst={"operation":option["type"], "from": [target], "to": [dest]}
+			inst={"operation":option["type"], "from": [target], "to": [dest], "relative":option["linkType"] }
 		#end ショートカットかそれ以外
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
@@ -692,7 +689,7 @@ class FalconTabBase(object):
 		index=self.GetFocusedItem()
 		elem=self.listObject.GetElement(index)
 		if (not stream) and (type(elem)==browsableObjects.File):	#このファイルを開く
-			misc.RunFile(elem.fullpath,admin)
+			misc.RunFile(elem.fullpath,admin,"",self.listObject.rootDirectory)
 			return
 		else:
 			#TODO: 管理者権限が要求され、自身が管理者権限を有していないなら、別のfalconが昇格して開くように
