@@ -58,8 +58,8 @@ str2MouseKey={
 str2ModifierKey={
 	#修飾キー
 	"ALT":wx.WXK_ALT,
-	"CONTROL":wx.WXK_CONTROL,
-	"WINDOWS_LEFT":wx.WXK_WINDOWS_LEFT,
+	"CTRL":wx.WXK_CONTROL,
+	"WINDOWS":wx.WXK_WINDOWS_LEFT,
 	"WINDOWS_RIGHT":wx.WXK_WINDOWS_RIGHT,
 	"SHIFT":wx.WXK_SHIFT
 }
@@ -169,6 +169,15 @@ str2StandaloneKey={
 	#テンキー
 	"NUMPAD_TAB":wx.WXK_NUMPAD_TAB,
 	"NUMPAD_ENTER":wx.WXK_NUMPAD_ENTER,
+
+	#テンキー記号キー
+	"NUMPAD_EQUAL":wx.WXK_NUMPAD_EQUAL,
+	"NUMPAD_MULTIPLY":wx.WXK_NUMPAD_MULTIPLY,
+	"NUMPAD_ADD":wx.WXK_NUMPAD_ADD,
+	"NUMPAD_SEPARATOR":wx.WXK_NUMPAD_SEPARATOR,
+	"NUMPAD_SUBTRACT":wx.WXK_NUMPAD_SUBTRACT,
+	"NUMPAD_DECIMAL":wx.WXK_NUMPAD_DECIMAL,
+	"NUMPAD_DIVIDE":wx.WXK_NUMPAD_DIVIDE,
 }
 
 #単独または修飾キーとの組み合わせで利用できる
@@ -285,15 +294,6 @@ str2CharactorKey={
 	"@": ord('@'),
 	"-": ord('-'),
 	"^": ord('^'),
-
-	#テンキー記号キー
-	"NUMPAD_EQUAL":wx.WXK_NUMPAD_EQUAL,
-	"NUMPAD_MULTIPLY":wx.WXK_NUMPAD_MULTIPLY,
-	"NUMPAD_ADD":wx.WXK_NUMPAD_ADD,
-	"NUMPAD_SEPARATOR":wx.WXK_NUMPAD_SEPARATOR,
-	"NUMPAD_SUBTRACT":wx.WXK_NUMPAD_SUBTRACT,
-	"NUMPAD_DECIMAL":wx.WXK_NUMPAD_DECIMAL,
-	"NUMPAD_DIVIDE":wx.WXK_NUMPAD_DIVIDE,
 }
 
 #利用不可
@@ -313,13 +313,14 @@ str2key.update(**str2ControlCommand,**str2MouseKey,**str2ModifierKey,**str2Unkno
 class KeymapHandler():
 	"""wxのアクセラレーターテーブルを生成します。"""
 
-	def __init__(self,dict=None):
+	def __init__(self,dict=None,filter=None):
 		#wx.AcceleratorEntry.__eq__=AcceleratorEntry_eq
 		self.log=logging.getLogger("falcon.keymapHandler")
 		self.errors={}
 		self.entries={}		#生成したAcceleratorEntry
 		self.map={}			#ref番号→ショートカットキーに変換
 		self.refMap={}		#キーの重複によりこのインスタンスで処理する必要のあるメニューと、そのとび先の本来のref
+		self.filter=filter	#指定の妥当性をチェックするフィルタ
 
 		if dict:
 			read=configparser.ConfigParser()
@@ -427,7 +428,9 @@ class KeymapHandler():
 
 	def makeEntry(self,ref,key):
 		"""ref(String)と、/区切りでない単一のkey(String)からwx.AcceleratorEntryを生成"""
-		key=key.upper()
+		key=key.upper()					#大文字に統一して処理
+
+		#修飾キーの確認
 		ctrl="CTRL+" in key
 		alt="ALT+" in key
 		shift="SHIFT+" in key
@@ -443,10 +446,20 @@ class KeymapHandler():
 		if shift:
 			flags=flags|wx.ACCEL_SHIFT
 			flagCount+=1
+
+		#修飾キーのみのもの、修飾キーでないキーが複数含まれるものはダメ
 		if not len(codestr)-flagCount==1:
 			return False
+
 		codestr=codestr[len(codestr)-1]
-		if not codestr in str2key:
+		if not codestr in str2key:			#存在しないキーの指定はエラー
+			return False
+
+		#フィルタの確認
+		if self.filter and not self.filter.Check(key):
+			self.log.warning("%s(%s): %s" % (ref,key,self.filter.GetLastError()))
+			print("%s(%s): %s" % (ref,key,self.filter.GetLastError()))
+
 			return False
 		return AcceleratorEntry(flags,str2key[codestr],menuItemsStore.getRef(ref.upper()),ref.upper())
 
@@ -527,57 +540,48 @@ class KeyFilter:
 		"""
 			必用な変数を作成し、OSが利用するコマンドとの重複は設定できないようブロックします。
 		"""
+		self.errorString=""									#最後に検知したエラーの原因を格納
 		self.modifierKey=set()								#有効な修飾キー
 		self.functionKey=set()								#有効なファンクションキー。単独または修飾キーとの組み合わせで利用可能
 		self.enableKey=set()								#修飾キーとの組み合わせで利用可能
 		self.noShiftEnableKey=set()							#SHIFTキー以外の修飾キーとの組み合わせで利用可能(modifierKeyにSHIFTを指定していない場合は無視される)
-		self.disablePattern=set()							#無効なキーの組み合わせ
-		self.disablePattern.add("CONTROL+ESCAPE")			#スタートメニュー
-		self.disablePattern.add("CONTROL+SHIFT+ESCAPE")		#タスクマネージャ
-		self.disablePattern.add("CONTROL+WINDOWS+ENTER")	#ナレーターの起動と終了
-		self.disablePattern.add("ALT+SHIFT+SNAPSHOT")		#ハイコントラストの切り替え
-		self.disablePattern.add("ALT+ESCAPE")				#最前面ウィンドウの最小化
+		self.disablePattern=[]								#無効なキーの組み合わせ
+		self.AddDisablePattern("CTRL+ESCAPE")			#スタートメニュー
+		self.AddDisablePattern("CTRL+SHIFT+ESCAPE")		#タスクマネージャ
+		self.AddDisablePattern("CTRL+WINDOWS+RETURN")#ナレーターの起動と終了
+		self.AddDisablePattern("ALT+SHIFT+SNAPSHOT")		#ハイコントラストの切り替え
+		self.AddDisablePattern("ALT+ESCAPE")				#最前面ウィンドウの最小化
 
-	def SetUserMode(self):
+	def SetDefault(self,supportInputChar,isSystem):
 		"""
+			フィルタを一般的な設定に構成します。
+			supportInputCharには、そのウィンドウでの文字入力の可否を設定します。
+
+			isSystemには、システム内部で設定する場合にはTrue、ユーザが独自で設定する場合にはFalseを指定します。
 			ユーザが独自にキーをカスタマイズする場合に、指定することが望ましくないキーの組み合わせをブロックします。
 			将来、開発者が機能拡張する際の問題を和らげることを目的としています。
 			なお、開発者であってもコメントで記した目的以外に利用することは避けるべきです。
 		"""
-		self.disablePattern.add("APPLICATIONS")				#コンテキストメニューの表示
-		self.disablePattern.add("SHIFT+F10")				#コンテキストメニューの表示
-		self.disablePattern.add("F10")						#ALTキーの代わり
-		self.disablePattern.add("ESCAPE")					#操作の取り消し
-		self.disablePattern.add("ALT+F4")					#アプリケーションの終了
-		self.disablePattern.add("ALT+SPACE")				#リストビュー等で全ての選択を解除
-		return self
-
-	def SetDefault(self,supportInputChar):
-		"""
-			フィルタを一般的な設定に構成します。
-			supportInputCharには、そのウィンドウでの文字入力の可否を設定します。
-		"""
-		self.modifierKey.add("CONTROL")
+		self.modifierKey.add("CTRL")
 		self.modifierKey.add("ALT")
 		self.modifierKey.add("SHIFT")
 
 		self.functionKey|=str2FunctionKey.keys()
 		self.functionKey|=str2SpecialKey.keys()
 		self.noShiftEnableKey|=str2CharactorKey.keys()
-		self.enableKey|=str2StandaloneKey.keys()
 
 		if supportInputChar:
 			#文字入力に関わる共通のショートカットは設定不可
-			self.disablePattern.add("CONTROL+INSERT")		#コピー
-			self.disablePattern.add("SHIFT+INSERT")			#貼り付け
-			self.disablePattern.add("CONTROL+Z")			#元に戻す
-			self.disablePattern.add("CONTROL+X")			#切り取り
-			self.disablePattern.add("CONTROL+C")			#コピー
-			self.disablePattern.add("CONTROL+V")			#貼り付け
-			self.disablePattern.add("CONTROL+A")			#すべて選択
-			self.disablePattern.add("CONTROL+Y")			#やり直し
-			self.disablePattern.add("CONTROL+F7")			#単語登録(日本語変換時のみ)
-			self.disablePattern.add("CONTROL+F10")			#IMEメニュー表示(日本語変換時のみ)
+			self.AddDisablePattern("CTRL+INSERT")		#コピー
+			self.AddDisablePattern("SHIFT+INSERT")			#貼り付け
+			self.AddDisablePattern("CTRL+Z")			#元に戻す
+			self.AddDisablePattern("CTRL+X")			#切り取り
+			self.AddDisablePattern("CTRL+C")			#コピー
+			self.AddDisablePattern("CTRL+V")			#貼り付け
+			self.AddDisablePattern("CTRL+A")			#すべて選択
+			self.AddDisablePattern("CTRL+Y")			#やり直し
+			self.AddDisablePattern("CTRL+F7")			#単語登録(日本語変換時のみ)
+			self.AddDisablePattern("CTRL+F10")			#IMEメニュー表示(日本語変換時のみ)
 
 			#単独で文字入力の制御に利用されるので修飾キー必須
 			self.enableKey|=str2InputControlKey.keys()
@@ -585,6 +589,94 @@ class KeyFilter:
 			#単独で文字入力の制御に利用されるが、それがないなら単独利用可能
 			self.functionKey|=str2InputControlKey.keys()
 
+		if isSystem:
+			self.functionKey|=str2StandaloneKey.keys()
+		else:
+			self.AddDisablePattern("APPLICATIONS")				#コンテキストメニューの表示
+			self.AddDisablePattern("SHIFT+F10")				#コンテキストメニューの表示
+			self.AddDisablePattern("F10")						#ALTキーの代わり
+			self.AddDisablePattern("ESCAPE")					#操作の取り消し
+			self.AddDisablePattern("ALT+F4")					#アプリケーションの終了
+			self.AddDisablePattern("ALT+SPACE")				#リストビュー等で全ての選択を解除
+			self.enableKey|=str2StandaloneKey.keys()
+
 		return self
 
+	def AddDisablePattern(self,patternString):
+		patterns=patternString.split("+")
+		for ptn in patterns:
+			ptn=ptn.upper()
+			if not ptn in str2key:
+				raise ValueError(_("%s は存在しないキーです。" % (ptn)))
+		self.disablePattern.append(set(patterns))
+
+
+	def Check(self,keyString):
+		if keyString=="":
+			self.errorString="キーが指定されていません。"
+			return False
+
+		self.errorString=""
+		keys=keyString.split("+")
+		modFlg=False
+		shiftFlg=False
+		funcCount=0
+		enableCount=0
+		noShiftCount=0
+		for key in keys:
+			if key in self.modifierKey:
+				if key=="SHIFT":
+					shiftFlg=True
+				else:
+					modFlg=True
+				continue
+			if key in self.functionKey:
+				funcCount+=1
+				continue
+			if key in self.enableKey:
+				enableCount+=1
+				continue
+			if key in self.noShiftEnableKey:
+				noShiftCount+=1
+				continue
+
+			#ここまでcontinue去れなかったらエラー
+			self.errorString=_("%s は使用できないキーです。") % (key)
+			return False
+
+		#組み合わせの妥当性確認
+		if len(keys)==1:
+			if funcCount>0:
+				return True
+			else:
+				if modFlg>0 or shiftFlg>0:
+					self.errorString=_("修飾キーのみのパターンは設定できません。")
+				else:
+					self.errorString=_("このキーは修飾キーと合わせて指定する必要があります。")
+				return False
+
+		#２つ以上が指定されている場合
+		if funcCount+enableCount+noShiftCount>1:
+			self.errorString=_("修飾キーでないキーを複数指定することはできません。")
+			return False
+		elif modFlg==False and shiftFlg==False and funcCount==0:
+			self.errorString=_("このキーは、SHIFTキー以外の修飾キーと合わせて指定する必要があります。")
+			return
+		elif funcCount==0 and noShiftCount==0:
+			self.errorString=_("修飾キーのみの組み合わせは指定できません。")
+			return False
+		if enableCount>0 and modFlg==False and shiftFlg==False:
+			raise Error("コードのバグです。")
+		if noShiftCount>0 and modFlg==False:
+			self.errorString=_("このキーは、SHIFTキー以外の修飾キーと合わせて指定する必要があります。")
+			return False
+
+		if set(keys) in self.disablePattern:
+			self.errorString=_("この組み合わせは別の用途で予約されているため、利用できません。")
+			return False
+
+		return True
+
+	def GetLastError(self):
+			return self.errorString
 
