@@ -25,15 +25,33 @@ def Execute(op):
 	op.output["retry"]["target"]=[]
 	retry=0
 	for elem in target:
-		if os.path.isfile(elem[0]):
+		dest=os.path.abspath(elem[0])
+		source=elem[1]
+		if elem[4]:			#相対パスで作成
+			source=os.path.relpath(source,start=os.path.dirname(dest))
+			if elem[3]!="":
+				parameter="/C start /D \"%s\" \"%s\" %s" % (elem[3],source,elem[2])
+			else:
+				parameter="/C \"%s\" %s" % (source,elem[2])
+			source="%windir%\\system32\\cmd.exe"
+			workDir=""		#スクリプト上で指定するのでショートカットには入れない
+			windowStyle=7	#最小化
+		else:				#絶対パスで作成
+			workDir=elem[3]
+			parameter=elem[2]
+			windowStyle=1	#通常
+
+		if os.path.isfile(dest):
 			helper.AppendFailed(op,elem,183)#file_already_exists
 			continue
 		#end 上書き防止
 		try:
 			ws=win32com.client.Dispatch("wscript.shell")
-			scut=ws.CreateShortcut(elem[0])
-			scut.TargetPath=elem[1]
-			scut.Arguments=elem[2]
+			scut=ws.CreateShortcut(dest)
+			scut.TargetPath=source
+			scut.Arguments=parameter
+			scut.WorkingDirectory=workDir
+			scut.WindowStyle=windowStyle
 			scut.Save()
 		except Exception as err:
 			log.error(err)

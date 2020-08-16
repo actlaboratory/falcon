@@ -28,6 +28,11 @@ def Execute(op):
 		try:
 			flag=0
 			if os.path.isdir(elem): flag=win32file.SYMBOLIC_LINK_FLAG_DIRECTORY
+
+			#相対パスで作成の場合
+			if op.instructions["relative"]:
+				elem=os.path.relpath(elem,start=os.path.dirname(t[i]))
+
 			win32file.CreateSymbolicLink(t[i],elem,flag|win32file.SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE)#これで、昇格しなくてもできるのか？
 		except win32file.error as err:
 			if helper.CommonFailure(op,elem,err,log): appendRetry(op.output,elem,t[i])
