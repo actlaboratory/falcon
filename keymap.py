@@ -592,12 +592,16 @@ class KeyFilter:
 		if isSystem:
 			self.functionKey|=str2StandaloneKey.keys()
 		else:
-			self.AddDisablePattern("APPLICATIONS")				#コンテキストメニューの表示
-			self.AddDisablePattern("SHIFT+F10")				#コンテキストメニューの表示
-			self.AddDisablePattern("F10")						#ALTキーの代わり
-			self.AddDisablePattern("ESCAPE")					#操作の取り消し
-			self.AddDisablePattern("ALT+F4")					#アプリケーションの終了
-			self.AddDisablePattern("ALT+SPACE")				#リストビュー等で全ての選択を解除
+			self.AddDisablePattern("APPLICATIONS")		#コンテキストメニューの表示
+			self.AddDisablePattern("SHIFT+F10")			#コンテキストメニューの表示
+			self.AddDisablePattern("F10")				#ALTキーの代わり
+			self.AddDisablePattern("ESCAPE")			#操作の取り消し
+			self.AddDisablePattern("ALT+F4")			#アプリケーションの終了
+			self.AddDisablePattern("ALT+SPACE")			#リストビュー等で全ての選択を解除
+			self.AddDisablePattern("TAB")				#カーソル移動
+			self.AddDisablePattern("SHIFT+TAB")			#カーソル移動
+			self.AddDisablePattern("CTRL+TAB")			#ページ切り替え
+			self.AddDisablePattern("CTRL+SHIFT+TAB")	#ページ切り替え
 			self.enableKey|=str2StandaloneKey.keys()
 
 		return self
