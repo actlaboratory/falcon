@@ -11,7 +11,7 @@ from logging import getLogger, FileHandler, Formatter
 
 class FalconConfigParser(configparser.ConfigParser):
 	def __init__(self):
-		super().__init__()
+		super().__init__(interpolation=None)
 		self.identifier="falconConfigParser"
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("Create config instance")
