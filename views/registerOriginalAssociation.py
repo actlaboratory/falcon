@@ -92,7 +92,6 @@ class Dialog(BaseDialog):
 		ext,path=d.GetValue()
 		self.hListCtrl.SetItem(index,1,os.path.basename(os.path.dirname(path))+"\\"+os.path.basename(path))
 		self.config[ext]=path
-		d.Destroy()
 
 	def delete(self,event):
 		index=self.hListCtrl.GetFocusedItem()

@@ -69,7 +69,6 @@ str2UnknownKey={
 	"START":wx.WXK_START,					#Ctrl+ESC
 	"CANCEL":wx.WXK_CANCEL,
 	"MENU":wx.WXK_MENU,
-	"PAUSE":wx.WXK_PAUSE,
 	"CAPITAL":wx.WXK_CAPITAL,
 	"SELECT":wx.WXK_SELECT,
 	"PRINT":wx.WXK_PRINT,
@@ -78,7 +77,6 @@ str2UnknownKey={
 	"SCROLL":wx.WXK_SCROLL,					#ScrLk
 	"COMMAND":wx.WXK_COMMAND,				#CONTROLと同じ
 	"RAW_CONTROL":wx.WXK_RAW_CONTROL,		#CONTROLと同じ
-	"NUMPAD_BEGIN":wx.WXK_NUMPAD_BEGIN,
 	"CLEAR":wx.WXK_CLEAR,					#テンキー5
 
 	#記号キー 動作しない
@@ -117,12 +115,6 @@ str2FunctionKey={
 	"F22":wx.WXK_F22,
 	"F23":wx.WXK_F23,
 	"F24":wx.WXK_F24,
-
-	#テンキーファンクションキー
-	"NUMPAD_F1":wx.WXK_NUMPAD_F1,
-	"NUMPAD_F2":wx.WXK_NUMPAD_F2,
-	"NUMPAD_F3":wx.WXK_NUMPAD_F3,
-	"NUMPAD_F4":wx.WXK_NUMPAD_F4,
 }
 
 #文字入力時に利用できない単独キー
@@ -130,32 +122,20 @@ str2InputControlKey={
 	"BACK":wx.WXK_BACK,
 	"SPACE":wx.WXK_SPACE,
 	"DELETE":wx.WXK_DELETE,
-	"INSERT":wx.WXK_INSERT,			#NUMPAD_INSERTと同時に反応するので注意
+	"INSERT":wx.WXK_INSERT,
 
-	#テンキー
-	"NUMPAD_SPACE":wx.WXK_NUMPAD_SPACE,
-	"NUMPAD_INSERT":wx.WXK_NUMPAD_INSERT,
-	"NUMPAD_DELETE":wx.WXK_NUMPAD_DELETE,
 
 	#矢印キー
 	"LEFTARROW":wx.WXK_LEFT,
 	"UPARROW":wx.WXK_UP,
 	"RIGHTARROW":wx.WXK_RIGHT,
 	"DOWNARROW":wx.WXK_DOWN,
-	"NUMPAD_LEFT":wx.WXK_NUMPAD_LEFT,	#4
-	"NUMPAD_UP":wx.WXK_NUMPAD_UP,		#8
-	"NUMPAD_RIGHT":wx.WXK_NUMPAD_RIGHT,	#6
-	"NUMPAD_DOWN":wx.WXK_NUMPAD_DOWN,	#2
 
 	#ジャンプキー
 	"HOME":wx.WXK_HOME,
 	"END":wx.WXK_END,
 	"PAGEUP":wx.WXK_PAGEUP,
 	"PAGEDOWN":wx.WXK_PAGEDOWN,
-	"NUMPAD_PAGEUP":wx.WXK_NUMPAD_PAGEUP,#9
-	"NUMPAD_PAGEDOWN":wx.WXK_NUMPAD_PAGEDOWN,#3
-	"NUMPAD_HOME":wx.WXK_NUMPAD_HOME,	#7
-	"NUMPAD_END":wx.WXK_NUMPAD_END,		#9
 }
 
 #主要キー
@@ -164,11 +144,8 @@ str2StandaloneKey={
 	"RETURN":wx.WXK_RETURN,
 	"ESCAPE":wx.WXK_ESCAPE,
 	"APPLICATIONS":wx.WXK_WINDOWS_MENU,		#コンテキストメニューを開くアプリケーションキー
-	"SNAPSHOT":wx.WXK_SNAPSHOT,		#PrintScr
-
-	#テンキー
-	"NUMPAD_TAB":wx.WXK_NUMPAD_TAB,
-	"NUMPAD_ENTER":wx.WXK_NUMPAD_ENTER,
+	"PRINTSCREEN":wx.WXK_SNAPSHOT,		#PrintScr
+	"PAUSE":wx.WXK_PAUSE,
 
 	#テンキー記号キー
 	"NUMPAD_EQUAL":wx.WXK_NUMPAD_EQUAL,
@@ -176,8 +153,8 @@ str2StandaloneKey={
 	"NUMPAD_ADD":wx.WXK_NUMPAD_ADD,
 	"NUMPAD_SEPARATOR":wx.WXK_NUMPAD_SEPARATOR,
 	"NUMPAD_SUBTRACT":wx.WXK_NUMPAD_SUBTRACT,
-	"NUMPAD_DECIMAL":wx.WXK_NUMPAD_DECIMAL,
 	"NUMPAD_DIVIDE":wx.WXK_NUMPAD_DIVIDE,
+	"NUMPAD_DECIMAL":wx.WXK_NUMPAD_DECIMAL,
 }
 
 #単独または修飾キーとの組み合わせで利用できる
@@ -307,8 +284,33 @@ str2categoryKey={
 	"CATEGORY_TAB":wx.WXK_CATEGORY_TAB,
 }
 
+#テンキー関連の内、本来のキーと重複して判定されてしまうキー
+str2numpadKey={
+	"NUMPAD_F1":wx.WXK_NUMPAD_F1,
+	"NUMPAD_F2":wx.WXK_NUMPAD_F2,
+	"NUMPAD_F3":wx.WXK_NUMPAD_F3,
+	"NUMPAD_F4":wx.WXK_NUMPAD_F4,
+
+	"NUMPAD_SPACE":wx.WXK_NUMPAD_SPACE,
+	"NUMPAD_INSERT":wx.WXK_NUMPAD_INSERT,
+	"NUMPAD_DELETE":wx.WXK_NUMPAD_DELETE,
+
+	"NUMPAD_LEFT":wx.WXK_NUMPAD_LEFT,	#4
+	"NUMPAD_UP":wx.WXK_NUMPAD_UP,		#8
+	"NUMPAD_RIGHT":wx.WXK_NUMPAD_RIGHT,	#6
+	"NUMPAD_DOWN":wx.WXK_NUMPAD_DOWN,	#2
+
+	"NUMPAD_PAGEUP":wx.WXK_NUMPAD_PAGEUP,#9
+	"NUMPAD_PAGEDOWN":wx.WXK_NUMPAD_PAGEDOWN,#3
+	"NUMPAD_HOME":wx.WXK_NUMPAD_HOME,	#7
+	"NUMPAD_END":wx.WXK_NUMPAD_END,		#9
+
+	"NUMPAD_TAB":wx.WXK_NUMPAD_TAB,
+	"NUMPAD_ENTER":wx.WXK_NUMPAD_ENTER,
+}
+
 str2key={}
-str2key.update(**str2ControlCommand,**str2MouseKey,**str2ModifierKey,**str2UnknownKey,**str2FunctionKey,**str2InputControlKey,**str2StandaloneKey,**str2SpecialKey,**str2CharactorKey,**str2categoryKey)
+str2key.update(**str2ControlCommand,**str2MouseKey,**str2ModifierKey,**str2UnknownKey,**str2FunctionKey,**str2InputControlKey,**str2StandaloneKey,**str2SpecialKey,**str2CharactorKey,**str2categoryKey,**str2numpadKey)
 
 class KeymapHandler():
 	"""wxのアクセラレーターテーブルを生成します。"""
@@ -327,7 +329,8 @@ class KeymapHandler():
 			read.read_dict(defaultKeymap.defaultKeymap)
 			for identifier in read.sections():
 				for elem in read.items(identifier):
-					self.add(identifier,elem[0],elem[1])
+					if elem[1]!="":						#空白のものは無視する
+						self.add(identifier,elem[0],elem[1])
 
 	def addFile(self, filename):
 		"""
@@ -347,7 +350,8 @@ class KeymapHandler():
 		#newKeysの情報を、検証しながらaddしていく
 		for identifier in newKeys.sections():
 			for elem in newKeys.items(identifier):
-				self.add(identifier,elem[0],elem[1])
+				if elem[1]!="":				#空白のものは無視する
+					self.add(identifier,elem[0],elem[1])
 		return errorCodes.OK
 
 	def GetError(self,identifier):
@@ -546,11 +550,16 @@ class KeyFilter:
 		self.enableKey=set()								#修飾キーとの組み合わせで利用可能
 		self.noShiftEnableKey=set()							#SHIFTキー以外の修飾キーとの組み合わせで利用可能(modifierKeyにSHIFTを指定していない場合は無視される)
 		self.disablePattern=[]								#無効なキーの組み合わせ
-		self.AddDisablePattern("CTRL+ESCAPE")			#スタートメニュー
-		self.AddDisablePattern("CTRL+SHIFT+ESCAPE")		#タスクマネージャ
+		self.AddDisablePattern("CTRL+ESCAPE")				#スタートメニュー
+		self.AddDisablePattern("CTRL+SHIFT+ESCAPE")			#タスクマネージャ
 		self.AddDisablePattern("CTRL+WINDOWS+RETURN")#ナレーターの起動と終了
-		self.AddDisablePattern("ALT+SHIFT+SNAPSHOT")		#ハイコントラストの切り替え
+		self.AddDisablePattern("ALT+SHIFT+PRINTSCREEN")		#ハイコントラストの切り替え
 		self.AddDisablePattern("ALT+ESCAPE")				#最前面ウィンドウの最小化
+		self.AddDisablePattern("ALT+TAB")					#ウィンドウの切り替え
+		self.AddDisablePattern("ALT+SHIFT+TAB")				#ウィンドウの切り替え
+		self.AddDisablePattern("PRINTSCREEN")				#スクリーンショットの取得
+		self.AddDisablePattern("ALT+PRINTSCREEN")			#単一画面のスクリーンショット取得
+
 
 	def SetDefault(self,supportInputChar,isSystem):
 		"""
@@ -600,8 +609,14 @@ class KeyFilter:
 			self.AddDisablePattern("ALT+SPACE")			#リストビュー等で全ての選択を解除
 			self.AddDisablePattern("TAB")				#カーソル移動
 			self.AddDisablePattern("SHIFT+TAB")			#カーソル移動
+			self.AddDisablePattern("UPARROW")			#カーソル移動
+			self.AddDisablePattern("DOWNARROW")			#カーソル移動
+			self.AddDisablePattern("RIGHTARROW")		#カーソル移動
+			self.AddDisablePattern("LEFTARROW")			#カーソル移動
 			self.AddDisablePattern("CTRL+TAB")			#ページ切り替え
+
 			self.AddDisablePattern("CTRL+SHIFT+TAB")	#ページ切り替え
+
 			self.enableKey|=str2StandaloneKey.keys()
 
 		return self
@@ -661,26 +676,30 @@ class KeyFilter:
 
 		#２つ以上が指定されている場合
 		if funcCount+enableCount+noShiftCount>1:
-			self.errorString=_("修飾キーでないキーを複数指定することはできません。")
+			self.errorString=_("非修飾キーの複数指定はできません。")
 			return False
 		elif modFlg==False and shiftFlg==False and funcCount==0:
-			self.errorString=_("このキーは、SHIFTキー以外の修飾キーと合わせて指定する必要があります。")
+			self.errorString=_("SHIFT以外の修飾キーと合わせて指定する必要があります。")
 			return
-		elif funcCount==0 and noShiftCount==0:
+		elif funcCount==0 and noShiftCount==0 and enableCount==0:
 			self.errorString=_("修飾キーのみの組み合わせは指定できません。")
 			return False
 		if enableCount>0 and modFlg==False and shiftFlg==False:
 			raise Error("コードのバグです。")
 		if noShiftCount>0 and modFlg==False:
-			self.errorString=_("このキーは、SHIFTキー以外の修飾キーと合わせて指定する必要があります。")
+			self.errorString=_("SHIFT以外の修飾キーと合わせて指定する必要があります。")
 			return False
 
 		if set(keys) in self.disablePattern:
-			self.errorString=_("この組み合わせは別の用途で予約されているため、利用できません。")
+			self.errorString=_("この組み合わせは利用できません。")
 			return False
 
 		return True
 
 	def GetLastError(self):
-			return self.errorString
+		return self.errorString
 
+	def GetUsableKeys(self):
+		ret=[]
+		ret.extend([*self.modifierKey,*self.functionKey,*self.enableKey,*self.noShiftEnableKey])
+		return ret

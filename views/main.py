@@ -26,6 +26,7 @@ import menuItemsStore
 import fileSystemManager
 import deviceCtrl
 
+import views.favoriteDirectory
 import views.fonttest
 import views.changeAttribute
 import views.mkdir
@@ -73,7 +74,8 @@ class View(BaseView):
 		#お気に入りフォルダと「ここで開く」のショートカットキーを登録
 		for target in (globalVars.app.userCommandManagers):
 			for v in target.keyMap:
-				self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
+				if target.keyMap[v]!="":		#キーが指定されていない場合は無視
+					self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
 		errors=self.menu.keymap.GetError(self.identifier)
 		if errors:
 			tmp=_("お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
@@ -127,8 +129,8 @@ class View(BaseView):
 			return
 		else:
 			if os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"]))!="":
-				dialog("Error",_("設定された起動時ディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
-			result=self.Navigate(os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"])),as_new_tab=True)
+				dialog("Error",_("設定された起動時ディレクトリ '%(dir)s' は存在しません。") % {"dir": self.app.config["browse"]["startPath"]})
+			result=self.Navigate("",as_new_tab=True)
 		if result==errorCodes.OK:
 			return
 		else:
@@ -333,6 +335,13 @@ class Menu(BaseMenu):
 			subMenu=wx.Menu()
 			for v in m.paramMap:
 				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
+
+			if m==globalVars.app.favoriteDirectory:
+				self.RegisterMenuCommand(subMenu,{
+					"MOVE_ADD_FAVORITE": _("現在の場所を登録"),
+					"MOVE_SETTING_FAVORITE":_("登録内容の修正")
+				})
+
 			title=globalVars.app.userCommandManagers[m]
 			self.RegisterMenuCommand(self.hMoveMenu,m.refHead,title,subMenu)
 
@@ -516,6 +525,35 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("MOVE_MARK"):
 			self.parent.activeTab.GoToMark()
 			return
+		if selected==menuItemsStore.getRef("MOVE_ADD_FAVORITE"):
+			d=views.favoriteDirectory.SettingDialog(self.parent.hFrame,os.path.basename(self.parent.activeTab.listObject.rootDirectory),self.parent.activeTab.listObject.rootDirectory,"")
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+			name,path,key=d.GetValue()
+
+			if globalVars.app.config["favorite_directories"][name]!="":
+				dlg=wx.MessageDialog(self.parent.hFrame,_("この名前は既に登録されています。登録を上書きしますか？"),_("上書き確認"),wx.YES_NO|wx.ICON_QUESTION)
+				if dlg.ShowModal()==wx.ID_NO:
+					return
+
+			globalVars.app.config["favorite_directories"][name]=path
+			globalVars.app.config["favorite_directories_shortcut"][name]=key
+			return
+
+		if selected==menuItemsStore.getRef("MOVE_SETTING_FAVORITE"):
+			d=views.favoriteDirectory.Dialog(dict(globalVars.app.config["favorite_directories"].items()),dict(globalVars.app.config["favorite_directories_shortcut"].items()))
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+
+			result={}
+			result["favorite_directories"],result["favorite_directories_shortcut"]=d.GetValue()
+			globalVars.app.config.remove_section("favorite_directories")
+			globalVars.app.config.remove_section("favorite_directories_shortcut")
+			globalVars.app.config.read_dict(result)
+			return
+
 		if selected==menuItemsStore.getRef("VIEW_SORTNEXT"):
 			self.DelaiedCall(self.SortNext)
 			return
