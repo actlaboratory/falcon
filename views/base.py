@@ -70,23 +70,35 @@ class BaseMenu(object):
 		#これ以降はユーザ設定の追加なのでフィルタを変更
 		self.keymap.filter=keymap.KeyFilter().SetDefault(False,False)
 
-	def RegisterMenuCommand(self,menu_handle,ref_id,title="",subMenu=None):
+	def RegisterMenuCommand(self,menu_handle,ref_id,title="",subMenu=None,index=-1):
 		if type(ref_id)==dict:
 			for k,v in ref_id.items():
-				self._RegisterMenuCommand(menu_handle,k,v,None)
+				self._RegisterMenuCommand(menu_handle,k,v,None,index)
 		else:
-			return self._RegisterMenuCommand(menu_handle,ref_id,title,subMenu)
+			return self._RegisterMenuCommand(menu_handle,ref_id,title,subMenu,index)
 
-	def _RegisterMenuCommand(self,menu_handle,ref_id,title,subMenu):
+	def _RegisterMenuCommand(self,menu_handle,ref_id,title,subMenu,index):
+		if ref_id=="" and title=="":
+			if index>=0:
+				menu_handle.InsertSeparator()
+			else:
+				menu_handle.AppendSeparator()
+			return
 		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
 		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
 		if subMenu==None:
-			menu_handle.Append(menuItemsStore.getRef(ref_id),s)
+			if index>=0:
+				menu_handle.Insert(index,menuItemsStore.getRef(ref_id),s)
+			else:
+				menu_handle.Append(menuItemsStore.getRef(ref_id),s)
 		else:
-			menu_handle.Append(menuItemsStore.getRef(ref_id),s,subMenu)
+			if index>=0:
+				menu_handle.Insert(index,menuItemsStore.getRef(ref_id),s,subMenu)
+			else:
+				menu_handle.Append(menuItemsStore.getRef(ref_id),s,subMenu)
 		self.blockCount[menuItemsStore.getRef(ref_id)]=0
 
-	def ApplyShortcut(self,hFrame):
+	def ApplyShortcut(self):
 		self.acceleratorTable=self.keymap.GetTable(self.keymap_identifier)
 
 	def Block(self,ref):
