@@ -7,6 +7,10 @@ from FalconConfigParser import *
 
 
 class DefaultSettings:
+	"""
+		このクラスには、キーの削除が許されない設定のデフォルト値を設定する。
+		ここでの設定後にユーザが上書きできるが、ユーザ側ファイルに値がなければここでの値がそのまま利用される。
+	"""
 
 	def get():
 		config = FalconConfigParser()
@@ -85,37 +89,10 @@ class DefaultSettings:
 			"checked":"click.ogg",
 			"check":"checked.ogg"
 		}
-		config["favorite_directories"]={
-			"ドキュメント" : "%userprofile%\documents",
-			"デスクトップ" : "%userprofile%\desktop"
-		}
-		config["favorite_directories_shortcut"]={
-			"ドキュメント" : "alt+1",
-			"デスクトップ" : "alt+2"
-		}
-		config["open_here"]={
-			"Explorer" : "%windir%\explorer.exe \"%1\"",
-			"コマンド プロンプト" : "%windir%\system32\cmd.exe /K cd /d  \"%1\"",
-			"Windows Power Shell" : "%windir%\System32\WindowsPowerShell\\v1.0\powershell.exe -NoExit -command cd \'%1\'"
-		}
-		config["open_here_shortcut"]={
-			"Explorer" : "ctrl+e",
-			"コマンド プロンプト" : "ctrl+shift+o",
-			"Windows Power Shell" : "ctrl+shift+p"
-		}
 		config["preview"]={
 			"header_line_count": 10,
 			"footer_line_count": 10,
 			"audio_volume": 100
-		}
-		config['on_list_moved']={
-			"read_directory_level": True,
-			"read_directory_name": True,
-			"read_item_count": True
-		}
-		config["originalAssociation"]={
-			"<default_file>": "C:\Program Files (x86)\KSD\MyEdit\MyEdit.exe",
-			"<default_dir>": "falcon.exe"
 		}
 		config["on_list_moved"]={
 			"read_directory_level": True,
@@ -124,3 +101,32 @@ class DefaultSettings:
 		}
 		return config
 
+initialValues={}
+"""
+	この辞書には、ユーザによるキーの削除が許されるが、初回起動時に組み込んでおきたい設定のデフォルト値を設定する。
+	ここでの設定はユーザの環境に設定ファイルがなかった場合のみ適用され、初期値として保存される。
+"""
+
+
+initialValues["favorite_directories"]={
+	"ドキュメント" : "%userprofile%\documents",
+	"デスクトップ" : "%userprofile%\desktop"
+}
+initialValues["favorite_directories_shortcut"]={
+	"ドキュメント" : "alt+1",
+	"デスクトップ" : "alt+2"
+}
+initialValues["open_here"]={
+	"Explorer" : "%windir%\explorer.exe \"%1\"",
+	"コマンド プロンプト" : "%windir%\system32\cmd.exe /K cd /d  \"%1\"",
+	"Windows Power Shell" : "%windir%\System32\WindowsPowerShell\\v1.0\powershell.exe -NoExit -command cd \'%1\'"
+}
+initialValues["open_here_shortcut"]={
+	"Explorer" : "ctrl+e",
+	"コマンド プロンプト" : "ctrl+shift+o",
+	"Windows Power Shell" : "ctrl+shift+p"
+}
+initialValues["originalAssociation"]={
+	"<default_file>": "C:\Program Files (x86)\KSD\MyEdit\MyEdit.exe",
+	"<default_dir>": "falcon.exe"
+}

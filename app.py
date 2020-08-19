@@ -108,8 +108,10 @@ class falconAppMain(wx.App):
 	def LoadSettings(self):
 		"""設定ファイルを読み込む。なければデフォルト設定を適用し、設定ファイルを書く。"""
 		self.config = DefaultSettings.DefaultSettings.get()
-		self.config.read(constants.SETTING_FILE_NAME)
-		self.config.write()
+		if not self.config.read(constants.SETTING_FILE_NAME):
+			#初回起動
+			self.config.read_dict(DefaultSettings.initialValues)
+			self.config.write()
 
 	def LoadUserCommandSettings(self):
 		"""お気に入りフォルダと「ここで開く」の設定を読み込む"""
@@ -198,6 +200,15 @@ class falconAppMain(wx.App):
 
 	def OnExit(self):
 		workerThreads.Stop()
+
+		#UserCommandManagerの内容をconfigに反映し、この後の保存処理に備える
+		del self.config["favorite_directories"]
+		self.config["favorite_directories"]=self.favoriteDirectory.paramMap
+		self.config["favorite_directories_shortcut"]=self.favoriteDirectory.keyMap
+		del self.config["open_here"]
+		self.config["open_here"]=self.openHereCommand.paramMap
+		self.config["open_here_shortcut"]=self.openHereCommand.keyMap
+
 		return wx.App.OnExit(self)
 
 	def SetTimeZone(self):
