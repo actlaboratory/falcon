@@ -22,6 +22,8 @@ import views.ViewCreator
 from . import fileList,driveList,streamList,searchResult,grepResult,NetworkResourceList,pastProgress
 from simpleDialog import dialog
 
+log=logging.getLogger("falcon.navigator")
+
 def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environment={}):
 	"""
 		指定したパスにアクセスする。現在のタブと違う種類のタブが必要とされた場合に、新しいタブを返す。今のタブを再利用した場合は、Trueを返す。失敗時にはエラーコードを返す。
@@ -82,6 +84,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 		newtab=NetworkResourceList.NetworkResourceListTab(environment)
 		newtab.Initialize(parent,creator,hListCtrl)
 	elif not os.path.exists(target):
+		log.error("navigate failed: %s not exist." % target)
 		dialog(_("エラー"),_("移動に失敗しました。移動先が存在しません。"))
 		return errorCodes.FILE_NOT_FOUND
 	elif os.path.isfile(target):	#副ストリームへ移動
