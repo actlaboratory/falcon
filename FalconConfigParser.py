@@ -24,10 +24,10 @@ class FalconConfigParser(configparser.ConfigParser):
 				return super().read(fileName, encoding='UTF-8')
 			except configparser.ParsingError:
 				self.log.warning("configFile parse failed.")
-				return {}
+				return []
 		else:
 			self.log.warning("configFile not found.")
-			return self
+			return []
 
 	def write(self):
 		self.log.info("write configFile:"+self.fileName)
