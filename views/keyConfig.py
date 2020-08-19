@@ -16,15 +16,19 @@ from views.baseDialog import *
 TIMER_INTERVAL=100
 
 class Dialog(BaseDialog):
-	def __init__(self,parent,filter=None):
+	def __init__(self,parent,filter=None,keyEntries=None,keyAddSet=None,keyDeleteSet=None):
 		super().__init__()
-		self.parent=parent
-		self.filter=filter
-		if self.filter==None:
+		self.parent=parent				#親ウィンドウ
+		self.filter=filter				#キーフィルタ
+		if self.filter==None:			#キーフィルタ未指定ならデフォルトとしてメインビューで設定されたキーフィルタを適用
 			self.filter=globalVars.app.hMainView.menu.keymap.filter
-		self.result=""			#取得した入力キー(結果格納・外部参照用)
-		self.key=""				#取得した入力キー(内部処理用)
-		self.timer=None
+		self.keyEntries=keyEntries		#既存のkeymap.AcceleratorEntry(重複設定防止に利用)
+		self.keyAddSet=keyAddSet		#未確定の編集で追加中のキーセット(重複設定防止に利用)	(例：Set("CTRL","ALT","A")
+		self.keyDeleteSet=keyDeleteSet	#未確定の編集で削除中のキーセット(重複設定防止に利用)	(例：Set("CTRL","ALT","A")
+
+		self.result=""					#取得した入力キー(結果格納・外部参照用)
+		self.key=""						#取得した入力キー(内部処理用)
+		self.timer=None					#wx.Timerオブジェクト
 
 	def Initialize(self):
 		t=misc.Timer()
@@ -95,13 +99,31 @@ class Dialog(BaseDialog):
 		else:									#キーが放されたら前の入力を検証する
 			if self.result!="":
 				if self.filter.Check(self.result):
-					self.wnd.EndModal(wx.ID_OK)		#正しい入力なのでダイアログを閉じる
+					if self.IsDuplicated(self.result):
+						tmp=_("このパターンは既に登録済みです。")
+						self.errorText.SetLabel(tmp)
+						globalVars.app.say(tmp,True)
+					else:
+						self.wnd.EndModal(wx.ID_OK)		#正しい入力なのでダイアログを閉じる
+						return
 				else:
 					self.errorText.SetLabel(self.filter.GetLastError())
 					globalVars.app.say(self.filter.GetLastError(),True)
 
-					self.key=""
-					self.result=""
+				self.key=""
+				self.result=""
 		self.timer.Start(TIMER_INTERVAL)
 		return
 
+	def IsDuplicated(self,v):
+		"""キーパターンvが既存のものと重複するか否かを判定する"""
+		e=keymap.makeEntry("DUMMY",v,self.filter,self.log)
+		if e==False:
+			self.log.worning("makeEntry(%s) returned False." % v)
+			return True
+		s=set(v.split("+"))
+		if e in self.keyEntries and (self.keyDeleteSet==None or s not in self.keyDeleteSet):
+			return True
+		elif self.keyAddSet!=None and s in self.keyAddSet:
+			return True
+		return False

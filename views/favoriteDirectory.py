@@ -177,7 +177,7 @@ class SettingDialog(BaseDialog):
 		event.Skip()
 
 	def SetKey(self,event):
-		d=views.keyConfig.Dialog(self.wnd)
+		d=views.keyConfig.Dialog(self.wnd,keyEntries=globalVars.app.hMainView.GetKeyEntries())
 		d.Initialize()
 		if d.Show()==wx.ID_CANCEL:
 			return

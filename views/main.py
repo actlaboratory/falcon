@@ -300,6 +300,9 @@ class View(BaseView):
 		self.SetShortcutEnabled(self.SetShortcutEnable)	#テーブルを適用
 		return
 
+	def GetKeyEntries(self):
+		return self.menu.keymap.GetEntries(self.identifier)
+
 class Menu(BaseMenu):
 	def __init__(self):
 		super().__init__()

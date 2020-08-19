@@ -377,7 +377,7 @@ class KeymapHandler():
 
 		#エントリーの作成・追加
 		for e in key.split("/"):
-			entry=self.makeEntry(ref,e)
+			entry=makeEntry(ref,e,self.filter,self.log)
 			if entry==False:
 				self.addError(identifier,ref,key)
 				continue
@@ -429,47 +429,15 @@ class KeymapHandler():
 		#end except
 		return r
 
-	def makeEntry(self,ref,key):
-		"""ref(String)と、/区切りでない単一のkey(String)からwx.AcceleratorEntryを生成"""
-		key=key.upper()					#大文字に統一して処理
-
-		#修飾キーの確認
-		ctrl="CTRL+" in key
-		alt="ALT+" in key
-		shift="SHIFT+" in key
-		codestr=key.split("+")
-		flags=0
-		flagCount=0
-		if ctrl:
-			flags=wx.ACCEL_CTRL
-			flagCount+=1
-		if alt:
-			flags=flags|wx.ACCEL_ALT
-			flagCount+=1
-		if shift:
-			flags=flags|wx.ACCEL_SHIFT
-			flagCount+=1
-
-		#修飾キーのみのもの、修飾キーでないキーが複数含まれるものはダメ
-		if not len(codestr)-flagCount==1:
-			return False
-
-		codestr=codestr[len(codestr)-1]
-		if not codestr in str2key:			#存在しないキーの指定はエラー
-			return False
-
-		#フィルタの確認
-		if self.filter and not self.filter.Check(key):
-			self.log.warning("%s(%s): %s" % (ref,key,self.filter.GetLastError()))
-			print("%s(%s): %s" % (ref,key,self.filter.GetLastError()))
-
-			return False
-		return AcceleratorEntry(flags,str2key[codestr],menuItemsStore.getRef(ref.upper()),ref.upper())
-
 	def GetTable(self, identifier):
 		"""アクセラレーターテーブルを取得します。identifier で、どのビューでのテーブルを取得するかを指定します。"""
 		identifier=identifier.upper()
 		return wx.AcceleratorTable(self.entries[identifier])
+
+	def GetEntries(self,identifier):
+		"""登録されているエントリーの一覧を取得します。identifier で、どのビューでのテーブルを取得するかを指定します。"""
+		identifier=identifier.upper()
+		return self.entries[identifier]
 
 	#複数メニューに対するキーの割り当ての重複を許すか否かを調べる
 	#itemsには調べたいAcceleratorEntryのリストを入れる
@@ -514,6 +482,45 @@ class KeymapHandler():
 
 	def GetOriginalRefs(self,ref):
 		return self.refMap[ref]
+
+def makeEntry(ref,key,filter,log):
+	"""ref(String)と、/区切りでない単一のkey(String)からwx.AcceleratorEntryを生成"""
+	key=key.upper()					#大文字に統一して処理
+
+	#修飾キーの確認
+	ctrl="CTRL+" in key
+	alt="ALT+" in key
+	shift="SHIFT+" in key
+	codestr=key.split("+")
+	flags=0
+	flagCount=0
+	if ctrl:
+		flags=wx.ACCEL_CTRL
+		flagCount+=1
+	if alt:
+		flags=flags|wx.ACCEL_ALT
+		flagCount+=1
+	if shift:
+		flags=flags|wx.ACCEL_SHIFT
+		flagCount+=1
+
+	#修飾キーのみのもの、修飾キーでないキーが複数含まれるものはダメ
+	if not len(codestr)-flagCount==1:
+		return False
+
+	codestr=codestr[len(codestr)-1]
+	if not codestr in str2key:			#存在しないキーの指定はエラー
+		return False
+
+	#フィルタの確認
+	if filter and not filter.Check(key):
+		log.warning("%s(%s): %s" % (ref,key,filter.GetLastError()))
+		print("%s(%s): %s" % (ref,key,filter.GetLastError()))
+
+		return False
+	return AcceleratorEntry(flags,str2key[codestr],menuItemsStore.getRef(ref.upper()),ref.upper())
+
+
 
 class AcceleratorEntry(wx.AcceleratorEntry):
 	#ショートカットキーの一致によって判定され、登録されたメニューコマンドの一致は無視される
