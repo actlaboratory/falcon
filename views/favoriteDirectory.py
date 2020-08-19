@@ -156,7 +156,7 @@ class SettingDialog(BaseDialog):
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
 	def GetData(self):
-		return (self.nameEdit.GetLineText(0),os.path.abspath(self.pathEdit.GetLineText(0)),self.keyEdit.GetLineText(0))
+		return (self.nameEdit.GetLineText(0),self.pathEdit.GetLineText(0),self.keyEdit.GetLineText(0))
 
 	def getRef(self,event):
 		d=wx.DirDialog(self.wnd,"場所の選択",style=wx.DD_DIR_MUST_EXIST | wx.DD_SHOW_HIDDEN)

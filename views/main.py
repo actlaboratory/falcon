@@ -70,20 +70,9 @@ class View(BaseView):
 		)
 		self.menu=Menu()
 		self.menu.InitShortcut(self.identifier)
-
-		#お気に入りフォルダと「ここで開く」のショートカットキーを登録
-		for target in (globalVars.app.userCommandManagers):
-			for v in target.keyMap:
-				if target.keyMap[v]!="":		#キーが指定されていない場合は無視
-					self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
-		errors=self.menu.keymap.GetError(self.identifier)
-		if errors:
-			tmp=_("お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
-			for v in errors:
-				tmp+=v+"\n"
-			dialog(_("エラー"),tmp)
-
+		self.AddUserCommandKey()
 		self.InstallMenuEvent(self.menu,self.events)
+		self.AddUserCommandMenu()
 
 		self.tabs=[]
 		self.activeTab=None#最初なので空
@@ -263,6 +252,53 @@ class View(BaseView):
 		if index>=0:
 			self.hTabCtrl.SetPageText(index,self.activeTab.GetTabName())
 
+	def AddUserCommandKey(self):
+		#お気に入りフォルダと「ここで開く」のショートカットキーを登録
+		for target in (globalVars.app.userCommandManagers):
+			for v in target.keyMap:
+				if target.keyMap[v]!="":		#キーが指定されていない場合は無視
+					self.menu.keymap.add(self.identifier,target.refHead+v,target.keyMap[v])
+		errors=self.menu.keymap.GetError(self.identifier)
+		if errors:
+			tmp=_("お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
+			for v in errors:
+				tmp+=v+"\n"
+			dialog(_("エラー"),tmp)
+
+	def AddUserCommandMenu(self):
+		for m in globalVars.app.userCommandManagers:
+			#既に登録済みならインデックスを取得していったん削除する
+			item=self.menu.hMoveMenu.FindItemById(menuItemsStore.getRef(m.refHead))
+			if item:
+				index=self.menu.hMoveMenu.GetMenuItems().index(item)
+				self.menu.hMoveMenu.DestroyItem(item)
+			else:
+				index=self.menu.hMoveMenu.GetMenuItemCount()
+
+			#self.menu.hMenuBar.Detach()
+			#self.menu.hMenuBar.Attach(self.hFrame)
+
+			subMenu=wx.Menu()
+			for v in m.paramMap:
+				self.menu.RegisterMenuCommand(subMenu,m.refHead+v,v)
+
+			if m==globalVars.app.favoriteDirectory:
+				self.menu.RegisterMenuCommand(subMenu,{
+					"":"",
+					"MOVE_ADD_FAVORITE": _("現在の場所を登録"),
+					"MOVE_SETTING_FAVORITE":_("登録内容の修正")
+				})
+
+			title=globalVars.app.userCommandManagers[m]
+			self.menu.RegisterMenuCommand(self.menu.hMoveMenu,m.refHead,title,subMenu,index)
+
+	def UpdateUserCommand(self):
+		self.menu.InitShortcut(self.identifier)			#キーマップを再取得
+		self.menu.ApplyShortcut()						#acceleratorTable再取得
+		self.AddUserCommandKey()						#ユーザコマンドを登録
+		self.AddUserCommandMenu()						#メニューバーの登録更新
+		self.SetShortcutEnabled(self.SetShortcutEnable)	#テーブルを適用
+		return
 
 class Menu(BaseMenu):
 	def __init__(self):
@@ -331,20 +367,6 @@ class Menu(BaseMenu):
 			"MOVE_MARK":_("マークした場所へ移動")
 		})
 
-		for m in globalVars.app.userCommandManagers:
-			subMenu=wx.Menu()
-			for v in m.paramMap:
-				self.RegisterMenuCommand(subMenu,m.refHead+v,v)
-
-			if m==globalVars.app.favoriteDirectory:
-				self.RegisterMenuCommand(subMenu,{
-					"MOVE_ADD_FAVORITE": _("現在の場所を登録"),
-					"MOVE_SETTING_FAVORITE":_("登録内容の修正")
-				})
-
-			title=globalVars.app.userCommandManagers[m]
-			self.RegisterMenuCommand(self.hMoveMenu,m.refHead,title,subMenu)
-
 		#読みメニューの中身
 		subMenu=wx.Menu()
 		self.RegisterMenuCommand(subMenu,{
@@ -407,7 +429,7 @@ class Menu(BaseMenu):
 		#イベントとショートカットキーの登録
 		target.Bind(wx.EVT_MENU,event.OnMenuSelect)
 		target.Bind(wx.EVT_MENU_OPEN,event.OnMenuOpen)
-		self.ApplyShortcut(target)
+		self.ApplyShortcut()
 
 		#名前の変更中に出しておくダミーのメニューバー
 		#これがないとメニューバーの高さ分リストオブジェクトの大きさが変わってしまうために必要
@@ -532,28 +554,25 @@ class Events(BaseEvents):
 			if ret==wx.ID_CANCEL: return
 			name,path,key=d.GetValue()
 
-			if globalVars.app.config["favorite_directories"][name]!="":
+			if name in globalVars.app.favoriteDirectory:
 				dlg=wx.MessageDialog(self.parent.hFrame,_("この名前は既に登録されています。登録を上書きしますか？"),_("上書き確認"),wx.YES_NO|wx.ICON_QUESTION)
 				if dlg.ShowModal()==wx.ID_NO:
 					return
 
-			globalVars.app.config["favorite_directories"][name]=path
-			globalVars.app.config["favorite_directories_shortcut"][name]=key
+			globalVars.app.favoriteDirectory.add(name,path,key)
+			self.parent.UpdateUserCommand()
 			return
-
 		if selected==menuItemsStore.getRef("MOVE_SETTING_FAVORITE"):
-			d=views.favoriteDirectory.Dialog(dict(globalVars.app.config["favorite_directories"].items()),dict(globalVars.app.config["favorite_directories_shortcut"].items()))
+			d=views.favoriteDirectory.Dialog(dict(globalVars.app.favoriteDirectory.paramMap.items()),dict(globalVars.app.favoriteDirectory.keyMap.items()))
 			d.Initialize()
 			ret=d.Show()
 			if ret==wx.ID_CANCEL: return
 
 			result={}
-			result["favorite_directories"],result["favorite_directories_shortcut"]=d.GetValue()
-			globalVars.app.config.remove_section("favorite_directories")
-			globalVars.app.config.remove_section("favorite_directories_shortcut")
-			globalVars.app.config.read_dict(result)
+			params,keys=d.GetValue()
+			globalVars.app.favoriteDirectory.replace(params,keys)
+			self.parent.UpdateUserCommand()
 			return
-
 		if selected==menuItemsStore.getRef("VIEW_SORTNEXT"):
 			self.DelaiedCall(self.SortNext)
 			return
@@ -721,7 +740,7 @@ class Events(BaseEvents):
 		for m in globalVars.app.userCommandManagers:
 			if m.isRefHit(selected):
 				if m == globalVars.app.favoriteDirectory:
-					ret=self.parent.activeTab.Move(os.path.abspath(m.get(selected)))
+					ret=self.parent.activeTab.Move(os.path.abspath(os.path.expandvars(m.get(selected))))
 					if issubclass(ret.__class__,tabs.base.FalconTabBase): self.parent.ReplaceCurrentTab(ret)
 					#TODO: エラー処理する
 				else:									#ここで開く
@@ -938,7 +957,6 @@ class Events(BaseEvents):
 			else:
 				dic[_("短い名前")]=_("なし")
 
-			print(elem.fullpath)
 			h=win32file.CreateFile(
 					elem.fullpath,
 					0,
