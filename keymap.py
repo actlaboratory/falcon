@@ -326,7 +326,7 @@ class KeymapHandler():
 
 		if dict:
 			read=configparser.ConfigParser()
-			read.read_dict(defaultKeymap.defaultKeymap)
+			read.read_dict(dict)
 			for identifier in read.sections():
 				for elem in read.items(identifier):
 					if elem[1]!="":						#空白のものは無視する
@@ -366,7 +366,6 @@ class KeymapHandler():
 
 	def add(self,identifier,ref,key):
 		"""重複をチェックしながらキーマップにショートカットを追加します。"""
-
 		#refとidentifierは大文字・小文字の区別をしないので大文字に統一
 		ref=ref.upper()
 		identifier=identifier.upper()
