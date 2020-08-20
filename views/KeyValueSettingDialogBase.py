@@ -68,8 +68,20 @@ class KeyValueSettingDialogBase(BaseDialog):
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
 	def ItemSelected(self,event):
-		self.editButton.Enable(self.hListCtrl.GetFocusedItem()>=0)
-		self.deleteButton.Enable(self.hListCtrl.GetFocusedItem()>=0)
+		if self.hListCtrl.GetFocusedItem()<0:	#選択解除の通知
+			self.editButton.Enable(False)
+			self.deleteButton.Enable(False)
+		else:									#選択追加の通知
+			self.editButton.Enable(True)
+			key=self.hListCtrl.GetItemText(self.hListCtrl.GetFocusedItem(),0)
+			self.deleteButton.Enable(self.DeleteValidation(key))
+
+	def DeleteValidation(self,key):
+		"""
+			指定されたキー(String)のデータを削除可能か否かを返す
+			デフォルトではキーに関係なく削除可能なので、制限したい場合はオーバーライドする。
+		"""
+		return True
 
 	def GetData(self):
 		return self.values

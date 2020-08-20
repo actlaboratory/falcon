@@ -720,7 +720,7 @@ class Events(BaseEvents):
 			if d.Show()==wx.ID_CANCEL:
 				return
 			result={}
-			result["originalAssociation"]=d.GetValue()
+			result["originalAssociation"]=d.GetValue()[0]
 			globalVars.app.config.remove_section("originalAssociation")
 			globalVars.app.config.read_dict(result)
 			return
