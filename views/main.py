@@ -26,16 +26,17 @@ import menuItemsStore
 import fileSystemManager
 import deviceCtrl
 
+import views.changeAttribute
+import views.execProgram
 import views.favoriteDirectory
 import views.fonttest
-import views.changeAttribute
 import views.mkdir
+import views.makeHash
 import views.makeShortcut
 import views.objectDetail
+import views.openHere
 import views.search
-import views.makeHash
 import views.registerOriginalAssociation
-import views.execProgram
 
 import workerThreads
 import workerThreadTasks
@@ -288,7 +289,11 @@ class View(BaseView):
 					"MOVE_ADD_FAVORITE": _("現在の場所を登録"),
 					"MOVE_SETTING_FAVORITE":_("登録内容の修正")
 				})
-
+			else:
+				self.menu.RegisterMenuCommand(subMenu,{
+					"":"",
+					"MOVE_SETTING_OPEN_HERE":_("登録内容の修正")
+				})
 			title=globalVars.app.userCommandManagers[m]
 			self.menu.RegisterMenuCommand(self.menu.hMoveMenu,m.refHead,title,subMenu,index)
 
@@ -576,6 +581,17 @@ class Events(BaseEvents):
 			globalVars.app.favoriteDirectory.replace(params,keys)
 			self.parent.UpdateUserCommand()
 			return
+		if selected==menuItemsStore.getRef("MOVE_SETTING_OPEN_HERE"):
+			d=views.openHere.Dialog(dict(globalVars.app.openHereCommand.paramMap.items()),dict(globalVars.app.openHereCommand.keyMap.items()))
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+
+			result={}
+			params,keys=d.GetValue()
+			globalVars.app.openHereCommand.replace(params,keys)
+			self.parent.UpdateUserCommand()
+			return
 		if selected==menuItemsStore.getRef("VIEW_SORTNEXT"):
 			self.DelaiedCall(self.SortNext)
 			return
@@ -748,9 +764,8 @@ class Events(BaseEvents):
 					#TODO: エラー処理する
 				else:									#ここで開く
 					path=m.get(selected)
-					path=path.replace("%1",self.parent.activeTab.listObject.rootDirectory)
-					prm=re.sub(r"^[^ ]* (.*)$",r"\1",path)
-					path=re.sub(r"^([^ ]*).*$",r"\1",path)
+					path,prm=misc.PathParamSplit(path)
+					prm=prm.replace("%1",self.parent.activeTab.listObject.rootDirectory)
 					misc.RunFile(path,False,prm)
 				return
 
