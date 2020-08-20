@@ -10,6 +10,7 @@ import views.ViewCreator
 
 from .baseDialog import *
 from logging import getLogger
+from simpleDialog import dialog
 
 class KeyValueSettingDialogBase(BaseDialog):
 	def __init__(self,settingDialog,columnInfo,*values):
@@ -185,14 +186,27 @@ class SettingDialogBase(BaseDialog):
 
 		#ボタンエリア
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,"",wx.ALIGN_RIGHT)
-		self.bOk=self.creator.okbutton(_("ＯＫ"),self.Validation)
+		self.bOk=self.creator.okbutton(_("ＯＫ"),self.OkButtonEvent)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
 	def GetData(self):
 		ret=[None]*len(self.edits)
 		for i in range(len(self.edits)):
 			ret[i]=self.edits[i].GetLineText(0)
+		ret[0]=ret[0].lower()			#iniファイルへの保存の為キーは小文字に統一
 		return ret
+
+	def OkButtonEvent(self,event):
+		"""
+			OKボタン押下時のイベント処理。
+			iniファイル保存時のキーとなる先頭要素が空欄でないか、半角の=を含んでいないかバリデーションする。
+			問題なければValidation()を呼び出す。
+		"""
+		key=self.edits[0].GetLineText(0)
+		if key=="" or "=" in key:
+			dialog(_("エラー"),_("%sを空白や半角の=を含む値に設定することはできません。") % self.valueNames[0][0])
+			return
+		return self.Validation(event)
 
 	def Validation(self,event):
 		"""
