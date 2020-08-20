@@ -311,3 +311,24 @@ def GetRootObject(rootPath):
 		rootPath=rootPath[0:rootPath[2:].find("\\")+2]
 		elem=misc.GetNetworkResource(rootPath)
 	return elem
+
+def PathParamSplit(input):
+	"""
+		pathとparamがつながった１つのStringをPathとParamに分けて返します。
+		windowsの規則に従い、Pathは" "で囲われているか、半角スペースを含まずに記述されている必要があります。
+		inputが不正な場合、path,param共にNoneが返ります。
+	"""
+	if input[0]=="\"":		#" "で囲われた範囲を抽出
+		end=input.find("\"",1)
+		if end==1 or end==-1:
+			return None,None
+		path=input[1:end]
+		prm=input[end+1:]
+		return path,prm
+	else:
+		end=input.find(" ",0)
+		if end<=0:
+			return None,None
+		path=input[0:end]
+		prm=input[end+1:]
+		return path,prm
