@@ -16,7 +16,7 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 
 	def __init__(self,config):
 		info=[
-			(_("種類"),wx.LIST_FORMAT_LEFT,250),
+			(_("拡張子"),wx.LIST_FORMAT_LEFT,250),
 			(_("実行ファイル名"),wx.LIST_FORMAT_LEFT,550)
 		]
 		super().__init__(SettingDialog,info,config)
@@ -33,7 +33,7 @@ class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
 	def __init__(self,parent,extention="",path=""):
 		super().__init__(
 				parent,
-				((_("種類"),not "<default_" in extention),(_("実行ファイル名"),True)),
+				((_("拡張子"),not "<default_" in extention),(_("実行ファイル名"),True)),
 				(None,(_("参照"),self.getRef)),
 				extention,path
 				)
@@ -51,13 +51,14 @@ class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
 	def Validation(self,event):
 		if self.edits[0].GetLineText(0)=="" or self.edits[1].GetLineText(0)=="":
 			return
-		if not os.path.isabs(self.edits[1].GetLineText(0)):
+		path=os.path.expandvars(self.edits[1].GetLineText(0))
+		if not os.path.isabs(path):
 			dialog(_("エラー"),_("実行ファイルのパスは絶対パスで指定してください。"))
 			return
-		if not os.path.isfile(self.edits[1].GetLineText(0)):
+		if not os.path.isfile(path):
 			dialog(_("エラー"),_("入力された実行ファイルが存在しません。パスを確認してください。"))
 			return
-		if not misc.GetExecutableState(self.edits[1].GetLineText(0)):
+		if not misc.GetExecutableState(path):
 			dialog(_("エラー"),_("指定されたファイルは存在しますが、実行可能な形式のファイルではありません。"))
 			return
 		if self.edits[0].GetLineText(0)=="<default_file>" or self.edits[0].GetLineText(0)=="<default_dir>":
