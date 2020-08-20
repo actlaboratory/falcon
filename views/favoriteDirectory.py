@@ -16,7 +16,7 @@ from simpleDialog import dialog
 class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 	def __init__(self,config,keyConfig):
 		info=[
-			(_("名前"),wx.LIST_FORMAT_LEFT,200),
+			(_("登録名"),wx.LIST_FORMAT_LEFT,200),
 			(_("場所"),wx.LIST_FORMAT_LEFT,350),
 			(_("ショートカット"),wx.LIST_FORMAT_LEFT,200)
 		]
@@ -32,7 +32,7 @@ class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
 	def __init__(self,parent,name="",path="",key=""):
 		super().__init__(
 				parent,
-				((_("名前"),True),(_("パス"),True),(_("ショートカット"),False)),
+				((_("登録名"),True),(_("場所"),True),(_("ショートカット"),False)),
 				(None,(_("参照"),self.getRef),(_("設定"),self.SetKey)),
 				name,path,key
 				)
