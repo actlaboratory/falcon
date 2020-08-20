@@ -57,6 +57,9 @@ class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
 		if not os.path.isfile(self.edits[1].GetLineText(0)):
 			dialog(_("エラー"),_("入力された実行ファイルが存在しません。パスを確認してください。"))
 			return
+		if not misc.GetExecutableState(self.edits[1].GetLineText(0)):
+			dialog(_("エラー"),_("指定されたファイルは存在しますが、実行可能な形式のファイルではありません。"))
+			return
 		if self.edits[0].GetLineText(0)=="<default_file>" or self.edits[0].GetLineText(0)=="<default_dir>":
 			event.Skip()
 			return
