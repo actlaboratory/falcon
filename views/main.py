@@ -563,6 +563,10 @@ class Events(BaseEvents):
 				dlg=wx.MessageDialog(self.parent.hFrame,_("この名前は既に登録されています。登録を上書きしますか？"),_("上書き確認"),wx.YES_NO|wx.ICON_QUESTION)
 				if dlg.ShowModal()==wx.ID_NO:
 					return
+			v=dict(globalVars.app.favoriteDirectory.keyMap.items())
+			v[name]=key
+			if not views.KeyValueSettingDialogBase.KeySettingValidation(dict(globalVars.app.favoriteDirectory.keyMap.items()),v,None):
+				return
 
 			globalVars.app.favoriteDirectory.add(name,path,key)
 			self.parent.UpdateUserCommand()

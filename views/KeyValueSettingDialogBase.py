@@ -5,6 +5,8 @@
 
 import wx
 
+import globalVars
+import keymap
 import misc
 import views.ViewCreator
 
@@ -222,3 +224,32 @@ class SettingDialogBase(BaseDialog):
 			デフォルトでは何も検査せず許可している。
 		"""
 		event.Skip()
+
+
+def KeySettingValidation(oldKeyConfig,newKeyConfig,logger):
+	if logger==None:
+		logger=getLogger("falcon.%s" % "KeySettingValidation")
+	errors=""
+	oldKeys={}
+	for k,v in oldKeyConfig.items():
+		oldKeys.setdefault(v, list()).append(k)
+	newKeys={}
+	for k,v in newKeyConfig.items():
+		newKeys.setdefault(v, list()).append(k)
+	entries=globalVars.app.hMainView.GetKeyEntries()
+
+	for k,v in newKeys.items():
+		if len(v)==2:
+			errors+=_("%sと%sに同じショートカットキー%sが設定されています。\n") % (v[0],v[1],k)
+		elif len(v)>2:
+			errors+=("%s、%sなど計%d箇所に同じショートカットキー%sが設定されています。\n") % (v[0],v[1],len(v),k)
+		else:
+			e=keymap.makeEntry("DUMMY",k,globalVars.app.hMainView.menu.keymap.filter,logger)
+			if e==None:
+				errors+=_("設定されたショートカット%sが認識できません。お手数ですが、このエラーメッセージを作者へご連絡ください。\n") % k
+			elif e in entries and (k not in oldKeys):
+				errors+=_("%sに設定されたショートカットキー%sは、別の場所で利用されています。\n") % (v[0],k)
+	if errors!="":
+		dialog(_("エラー"),errors)
+		return False
+	return True

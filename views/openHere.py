@@ -3,11 +3,14 @@
 #Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-import wx
+import copy
 import os
-import re
+import wx
 
+import globalVars
 import misc
+
+import views.keyConfig
 import views.KeyValueSettingDialogBase
 
 from simpleDialog import dialog
@@ -21,9 +24,19 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 			(_("ショートカット"),wx.LIST_FORMAT_LEFT,200)
 		]
 		super().__init__(SettingDialog,info,config,keyConfig)
+		self.oldKeyConfig=copy.copy(keyConfig)
+
 
 	def Initialize(self):
 		return super().Initialize(self.app.hMainView.hFrame,"openHereSettingDialog",_("「ここで開く」コマンドの設定"))
+
+	def OkButtonEvent(self,event):
+		"""
+			設定されたキーが重複している場合はエラーとする
+		"""
+		if views.KeyValueSettingDialogBase.KeySettingValidation(self.oldKeyConfig,self.values[1],self.log):
+			event.Skip()
+		return
 
 class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
 	"""設定内容を入力するダイアログ"""
@@ -66,7 +79,7 @@ class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
 		event.Skip()
 
 	def SetKey(self,event):
-		d=views.keyConfig.Dialog(self.wnd,keyEntries=globalVars.app.hMainView.GetKeyEntries())
+		d=views.keyConfig.Dialog(self.wnd)
 		d.Initialize()
 		if d.Show()==wx.ID_CANCEL:
 			self.edits[2].SetValue("")
