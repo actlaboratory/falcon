@@ -65,7 +65,7 @@ class KeyValueSettingDialogBase(BaseDialog):
 
 		#ボタンエリア
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,"",wx.ALIGN_RIGHT)
-		self.bOk=self.creator.okbutton(_("ＯＫ"),None)
+		self.bOk=self.creator.okbutton(_("ＯＫ"),self.OkButtonEvent)
 		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
 
 	def ItemSelected(self,event):
@@ -148,6 +148,13 @@ class KeyValueSettingDialogBase(BaseDialog):
 		for i in range(len(self.values)):
 			del self.values[i][key]
 		self.hListCtrl.DeleteItem(index)
+
+	def OkButtonEvent(self,event):
+		"""
+			最終的な値のバリデーションを行いたい場合にオーバーライドする。
+		"""
+		event.Skip()
+
 
 class SettingDialogBase(BaseDialog):
 	"""Dialogの上に作られ、設定内容を入力するダイアログ"""
