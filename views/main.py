@@ -276,9 +276,6 @@ class View(BaseView):
 			else:
 				index=self.menu.hMoveMenu.GetMenuItemCount()
 
-			#self.menu.hMenuBar.Detach()
-			#self.menu.hMenuBar.Attach(self.hFrame)
-
 			subMenu=wx.Menu()
 			for v in m.paramMap:
 				self.menu.RegisterMenuCommand(subMenu,m.refHead+v,v)
@@ -299,8 +296,8 @@ class View(BaseView):
 
 	def UpdateUserCommand(self):
 		self.menu.InitShortcut(self.identifier)			#キーマップを再取得
-		self.menu.ApplyShortcut()						#acceleratorTable再取得
 		self.AddUserCommandKey()						#ユーザコマンドを登録
+		self.menu.ApplyShortcut()						#acceleratorTable再取得
 		self.AddUserCommandMenu()						#メニューバーの登録更新
 		self.SetShortcutEnabled(self.SetShortcutEnable)	#テーブルを適用
 		return
