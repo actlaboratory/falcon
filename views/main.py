@@ -114,6 +114,7 @@ class View(BaseView):
 				return
 			else:
 				dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
+
 		result=self.Navigate(os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"])),as_new_tab=True)
 		if result==errorCodes.OK:
 			return
@@ -975,7 +976,6 @@ class Events(BaseEvents):
 				dic[_("短い名前")]=elem.shortName
 			else:
 				dic[_("短い名前")]=_("なし")
-
 			h=win32file.CreateFile(
 					elem.fullpath,
 					0,

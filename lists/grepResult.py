@@ -49,7 +49,7 @@ class GrepResultList(SearchResultBase):
 	def HitTest(self,path,ret_list):
 		"""_performSearchStepから呼ばれ、与えられたpathのファイルが検索にヒットするならリスト追加する"""
 		if misc.isDocumentExt(path.split(".")[-1]):
-			fullpath=self.rootDirectory+"\\"+path
+			fullpath=os.path.join(self.rootDirectory,path)
 			content=misc.ExtractText(fullpath).split("\n")
 			fileobj=None#複数ヒットでファイルオブジェクトを生成し続けないようにキャッシュする
 			ln=1

@@ -50,7 +50,7 @@ class SearchResultList(SearchResultBase):
 	def HitTest(self,path,ret_list):
 		"""_performSearchStepから呼ばれ、与えられたpathのファイルが検索にヒットするならリスト追加する"""
 		if re.search(self.keyword,path):
-			fullpath=self.rootDirectory+"\\"+path
+			fullpath=os.path.join(self.rootDirectory,path)
 			if os.path.isfile(fullpath):
 				f=self._MakeObject(browsableObjects.SearchedFile,fullpath)
 				self.files.append(f)

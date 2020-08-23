@@ -63,6 +63,8 @@ class FalconConfigParser(configparser.ConfigParser):
 	def getint(self,section,key,default=0,min=None,max=None):
 		if type(default)!=int:
 			raise ValueError("default value must be int")
+		if (min!=None and type(min)!=int) or (max!=None and type(max)!=int):
+			raise ValueError("min/max value must be int")
 		try:
 			ret = super().getint(section,key)
 			if (min!=None and ret<min) or (max!=None and ret>max):

@@ -67,7 +67,7 @@ class File(FalconBrowsableBase):
 		"""必要な情報をセットする。継承しているクラスのうち、grepItemだけはここを通らないので注意。"""
 		self.directory=directory
 		self.basename=basename
-		self.fullpath=directory+"\\"+basename
+		self.fullpath=os.path.join(directory,basename)
 		self.size=size
 		self.modDate=modDate.astimezone(globalVars.app.timezone)
 		self.creationDate=creationDate.astimezone(globalVars.app.timezone)
@@ -100,7 +100,7 @@ class File(FalconBrowsableBase):
 	#end GetNewAttributes
 
 	def GetRootDrivePath(self):
-		return self.fullpath[0]
+		return misc.GetRootObject(self.fullpath).fullpath
 
 class Folder(File):
 	__slots__=[]
@@ -176,7 +176,7 @@ class Drive(FalconBrowsableBase):
 		self.type=type
 		self.UpdateTypeString()
 		self.basename=name
-		self.fullpath=letter+":"
+		self.fullpath=letter+":\\"
 		self.hIcon=hIcon
 
 	def UpdateTypeString(self):
@@ -209,7 +209,7 @@ class Drive(FalconBrowsableBase):
 		return (self.basename, self.letter, misc.ConvertBytesTo(self.free, misc.UNIT_AUTO, True), misc.ConvertBytesTo(self.total, misc.UNIT_AUTO, True), self.typeString)
 
 	def GetRootDrivePath(self):
-		return self.fullpath[0]
+		return self.fullpath
 
 class Stream(FalconBrowsableBase):
 	"""NTFS 副ストリームを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
@@ -226,7 +226,7 @@ class Stream(FalconBrowsableBase):
 		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True))
 
 	def GetRootDrivePath(self):
-		return self.fullpath[0]
+		return misc.GetRootObject(self.fullpath).fullpath
 
 class NetworkResource(FalconBrowsableBase):
 	"""ネットワーク上のディスクリソースを表す。このオブジェクトは情報を保持するだけで、指し示すリソースにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""

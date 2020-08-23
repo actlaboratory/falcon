@@ -15,6 +15,7 @@ SUPPORTING_LANGUAGE=("ja-JP","en-US")
 
 
 SETTING_FILE_NAME="settings.ini"
+LOG_FILE_NAME="falcon.log"
 KEYMAP_FILE_NAME="keymap.ini"
 HISTORY_FILE_NAME="history.dat"
 

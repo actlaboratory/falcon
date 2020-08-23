@@ -95,7 +95,7 @@ class falconAppMain(wx.App):
 
 	def InitLogger(self):
 		"""ロギング機能を初期化して準備する。"""
-		self.hLogHandler=FileHandler("falcon.log", mode="w", encoding="UTF-8")
+		self.hLogHandler=FileHandler(constants.LOG_FILE_NAME, mode="w", encoding="UTF-8")
 		self.hLogHandler.setLevel(logging.DEBUG)
 		self.hLogFormatter=Formatter("%(name)s - %(levelname)s - %(message)s (%(asctime)s)")
 		self.hLogHandler.setFormatter(self.hLogFormatter)
