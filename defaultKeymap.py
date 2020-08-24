@@ -32,7 +32,7 @@ defaultKeymap["mainView"]={
 	"EDIT_OPENCONTEXTMENU": "shift+f10/applications/shift+applications",
 	"MOVE_FORWARD": "return",
 	"MOVE_EXEC_ORIGINAL_ASSOCIATION":"ctrl+return",
-	"MOVE_BACKWARD": "BACK/LEFTARROW",
+	"MOVE_BACKWARD": "BACK/LEFTARROW/ALT+UPARROW",
 	"MOVE_FORWARD_STREAM": "RIGHTARROW",
 	"MOVE_FORWARD_TAB": "shift+return",
 	"MOVE_NEWTAB": "ctrl+t",
