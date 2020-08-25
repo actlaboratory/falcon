@@ -53,7 +53,8 @@ class BaseView(object):
 
 class BaseMenu(object):
 	def __init__(self):
-		self.blockCount={}
+		self.blockCount={}				#key=intのref、value=blockCount
+		self.desableItems=set()			#ブロック中のメニューのrefを格納
 		self.hMenuBar=wx.MenuBar()
 
 	def InitShortcut(self,identifier):
@@ -128,15 +129,15 @@ class BaseMenu(object):
 				self.blockCount[menuItemsStore.getRef(i)]=0
 
 			#ブロック解除
-			if self.blockCount[menuItemsStore.getRef(i)]==0:
+			if self.blockCount[menuItemsStore.getRef(i)]==0 and i not in self.desableItems:
 				self.hMenuBar.Enable(menuItemsStore.getRef(i),True)
 
 	def Enable(self,ref,enable):
-		self.hMenuBar.Enable(ref,enable)
 		if enable:
-			self.blockCount[ref]=0
+			self.desableItems.add(ref)
 		else:
-			self.blockCount[ref]=2100000000
+			self.desableItems.discard(ref)
+		self.hMenuBar.Enable(ref,self.blockCount[ref]==0 and ref not in self.desableItems)
 
 	def IsEnable(self,ref):
 		return self.blockCount[menuItemsStore.getRef(ref)]<=0

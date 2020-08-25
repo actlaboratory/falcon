@@ -29,6 +29,8 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_BACKWARD",
+		"MOVE_HIST_PREV",
+		"MOVE_HIST_NEXT",
 		"MOVE_MARKSET",
 		"MOVE_MARK",
 		"TOOL_ADDPATH",
