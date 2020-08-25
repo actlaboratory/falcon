@@ -141,32 +141,6 @@ class BaseMenu(object):
 	def IsEnable(self,ref):
 		return self.blockCount[menuItemsStore.getRef(ref)]<=0
 
-	def getItemInfo(self):
-		"""
-			メニューに登録されたすべてのアイテムを[(表示名,ref)...]で返します。
-		"""
-		ret=[]
-		print(self.hMenuBar.GetMenus())
-		print(self.hMenuBar.GetMenuCount())
-
-		if self.hMenuBar==None:
-			return ret
-		for menu,id in self.hMenuBar.GetMenus():
-			print(menu)
-			self._addMenuItemList(menu,ret)
-		return ret
-
-	def _addMenuItemList(self,menu,ret):
-		if type(menu)==wx.Menu:
-			items=menu.GetMenuItems()
-		else:
-			items=menu.GetSubMenu().GetMenuItems()
-		for item in items:
-			if item.GetSubMenu()!=None:
-				self._addMenuItemList(item,ret)
-			else:
-				if item.GetItemLabelText()!="":		#セパレータ対策
-					ret.append((item.GetItemLabelText(),item.GetId()))
 
 
 class BaseEvents(object):
