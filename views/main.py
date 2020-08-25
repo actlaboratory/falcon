@@ -281,16 +281,16 @@ class View(BaseView):
 				self.menu.RegisterMenuCommand(subMenu,m.refHead+v,v)
 
 			if m==globalVars.app.favoriteDirectory:
-				self.menu.RegisterMenuCommand(subMenu,{
-					"":"",
-					"MOVE_ADD_FAVORITE": _("現在の場所を登録"),
-					"MOVE_SETTING_FAVORITE":_("登録内容の修正")
-				})
+				self.menu.RegisterMenuCommand(subMenu,(
+					"",
+					"MOVE_ADD_FAVORITE",
+					"MOVE_SETTING_FAVORITE"
+				))
 			else:
-				self.menu.RegisterMenuCommand(subMenu,{
-					"":"",
-					"MOVE_SETTING_OPEN_HERE":_("登録内容の修正")
-				})
+				self.menu.RegisterMenuCommand(subMenu,(
+					"",
+					"MOVE_SETTING_OPEN_HERE"
+				))
 			title=globalVars.app.userCommandManagers[m]
 			self.menu.RegisterMenuCommand(self.menu.hMoveMenu,m.refHead,title,subMenu,index)
 
@@ -323,102 +323,102 @@ class Menu(BaseMenu):
 		self.hHelpMenu=wx.Menu()
 
 		#ファイルメニューの中身
-		self.RegisterMenuCommand(self.hFileMenu,{
-			"FILE_RENAME":_("名前を変更"),
-			"FILE_CHANGEATTRIBUTE":_("属性を変更"),
-			"FILE_MAKESHORTCUT":_("ショートカットを作成"),
-			"FILE_TRASH":_("ゴミ箱へ移動"),
-			"FILE_DELETE":_("完全削除"),
-			"FILE_VIEW_DETAIL":_("詳細情報を表示"),
-			"FILE_SHOWPROPERTIES":_("プロパティを表示"),
-			"FILE_MKDIR":_("新規ディレクトリ作成"),
-			"FILE_FILEOPTEST":_("テスト中のファイルオペレーションを実行"),
-			"FILE_EXIT":_("終了")
-		})
+		self.RegisterMenuCommand(self.hFileMenu,(
+			"FILE_RENAME",
+			"FILE_CHANGEATTRIBUTE",
+			"FILE_MAKESHORTCUT",
+			"FILE_TRASH",
+			"FILE_DELETE",
+			"FILE_VIEW_DETAIL",
+			"FILE_SHOWPROPERTIES",
+			"FILE_MKDIR",
+			"FILE_FILEOPTEST",
+			"FILE_EXIT"
+		))
 
 		#編集メニューの中身
-		self.RegisterMenuCommand(self.hEditMenu,{
-			"EDIT_COPY":_("コピー"),
-			"EDIT_CUT":_("切り取り"),
-			"EDIT_PAST":_("貼り付け"),
-			"EDIT_NAMECOPY":_("名前をコピー"),
-			"EDIT_FULLPATHCOPY":_("フルパスをコピー"),
-			"EDIT_SELECTALL":_("全て選択"),
-			"EDIT_SEARCH":_("検索"),
-			"EDIT_UPDATEFILELIST":_("最新の情報に更新"),
-			"EDIT_MARKITEM":_("チェック／チェック解除"),
-			"EDIT_MARKITEM_ALL":_("すべてチェック"),
-			"EDIT_UNMARKITEM_ALL":_("すべてチェック解除"),
-			"EDIT_MARKITEM_INVERSE":_("チェック状態反転"),
-			"EDIT_OPENCONTEXTMENU":_("コンテキストメニューを開く"),
-		})
+		self.RegisterMenuCommand(self.hEditMenu,(
+			"EDIT_COPY",
+			"EDIT_CUT",
+			"EDIT_PAST",
+			"EDIT_NAMECOPY",
+			"EDIT_FULLPATHCOPY",
+			"EDIT_SELECTALL",
+			"EDIT_SEARCH",
+			"EDIT_UPDATEFILELIST",
+			"EDIT_MARKITEM",
+			"EDIT_MARKITEM_ALL",
+			"EDIT_UNMARKITEM_ALL",
+			"EDIT_MARKITEM_INVERSE",
+			"EDIT_OPENCONTEXTMENU",
+		))
 
 		#移動メニューの中身
-		self.RegisterMenuCommand(self.hMoveMenu,{
-			"MOVE_FORWARD":_("開く"),
-			"MOVE_FORWARD_ADMIN":_("管理者として開く"),
-			"MOVE_EXEC_ORIGINAL_ASSOCIATION":_("独自関連付けで実行"),
-			"MOVE_FORWARD_TAB":_("別のタブで開く"),
-			"MOVE_FORWARD_STREAM":_("開く(ストリーム)"),
-			"MOVE_BACKWARD":_("上の階層へ"),
-			"MOVE_NEWTAB":_("新しいタブ"),
-			"MOVE_CLOSECURRENTTAB":_("現在のタブを閉じる"),
-			"MOVE_TOPFILE":_("先頭ファイルへ"),
-			"MOVE_SPECIAL_UP":_("上にジャンプ"),
-			"MOVE_SPECIAL_DOWN":_("下にジャンプ"),
-			"MOVE_HIST_NEXT":_("次の履歴位置へ"),
-			"MOVE_HIST_PREV":_("前の履歴位置へ"),
-			"MOVE_MARKSET":_("表示中の場所をマーク"),
-			"MOVE_MARK":_("マークした場所へ移動")
-		})
+		self.RegisterMenuCommand(self.hMoveMenu,(
+			"MOVE_FORWARD",
+			"MOVE_FORWARD_ADMIN",
+			"MOVE_EXEC_ORIGINAL_ASSOCIATION",
+			"MOVE_FORWARD_TAB",
+			"MOVE_FORWARD_STREAM",
+			"MOVE_BACKWARD",
+			"MOVE_NEWTAB",
+			"MOVE_CLOSECURRENTTAB",
+			"MOVE_TOPFILE",
+			"MOVE_SPECIAL_UP",
+			"MOVE_SPECIAL_DOWN",
+			"MOVE_HIST_NEXT",
+			"MOVE_HIST_PREV",
+			"MOVE_MARKSET",
+			"MOVE_MARK"
+		))
 
 		#読みメニューの中身
 		subMenu=wx.Menu()
-		self.RegisterMenuCommand(subMenu,{
-			"READ_CONTENT_PREVIEW":_("ファイルをプレビュー"),
-			"READ_CONTENT_READHEADER":_("テキストヘッダー読み"),
-			"READ_CONTENT_READFOOTER":_("テキストフッター読み")
-		}),
+		self.RegisterMenuCommand(subMenu,(
+			"READ_CONTENT_PREVIEW",
+			"READ_CONTENT_READHEADER",
+			"READ_CONTENT_READFOOTER"
+		)),
 		self.RegisterMenuCommand(self.hReadMenu,"READ_PREVIEW",_("プレビュー"),subMenu)
-		self.RegisterMenuCommand(self.hReadMenu,{
-			"READ_CURRENTFOLDER":_("現在のフォルダ名を読み上げ"),
-			"READ_LISTITEMNUMBER":_("リスト項目数を読み上げ"),
-			"READ_LISTINFO":_("一覧情報を読み上げ"),
-			"READ_SETMOVEMENTREAD":_("移動先の読み方を設定")
-		})
+		self.RegisterMenuCommand(self.hReadMenu,(
+			"READ_CURRENTFOLDER",
+			"READ_LISTITEMNUMBER",
+			"READ_LISTINFO",
+			"READ_SETMOVEMENTREAD"
+		))
 
 		#ツールメニューの中身
-		self.RegisterMenuCommand(self.hToolMenu,{
-			"TOOL_DIRCALC":_("フォルダ容量計算"),
-			"TOOL_HASHCALC":_("ファイルハッシュの計算"),
-			"TOOL_EXEC_PROGRAM":_("ファイル名を指定して実行"),
-			"TOOL_ADDPATH":_("環境変数PATHに追加"),
-			"TOOL_EJECT_DRIVE":_("ドライブの取り外し"),
-			"TOOL_EJECT_DEVICE":_("デバイスの取り外し"),
-		})
+		self.RegisterMenuCommand(self.hToolMenu,(
+			"TOOL_DIRCALC",
+			"TOOL_HASHCALC",
+			"TOOL_EXEC_PROGRAM",
+			"TOOL_ADDPATH",
+			"TOOL_EJECT_DRIVE",
+			"TOOL_EJECT_DEVICE",
+		))
 
 		#表示メニューの中身
-		self.RegisterMenuCommand(self.hViewMenu,{
-			"VIEW_SORTNEXT":_("次の並び順"),
-			"VIEW_SORTSELECT":_("並び順を選択"),
-			"VIEW_SORTCYCLEAD":_("昇順/降順切り替え"),
-			"VIEW_DRIVE_INFO":_("ドライブ情報の表示"),
-		})
+		self.RegisterMenuCommand(self.hViewMenu,(
+			"VIEW_SORTNEXT",
+			"VIEW_SORTSELECT",
+			"VIEW_SORTCYCLEAD",
+			"VIEW_DRIVE_INFO",
+		))
 		subMenu=wx.Menu()
 		self.RegisterMenuCommand(self.hViewMenu,"VIEW_SORT_COLUMN",_("カラムの並び替え"),subMenu)
 
 		#環境メニューの中身
-		self.RegisterMenuCommand(self.hEnvMenu,{
-			"ENV_REGIST_ORIGINAL_ASSOCIATION":_("独自関連付けの管理"),
-			"ENV_TESTDIALOG":_("テストダイアログを表示"),
-			"ENV_PASTTABTEST":_("貼り付け状況ダイアログテスト"),
-			"ENV_FONTTEST":_("フォントテストダイアログを表示")
-		})
+		self.RegisterMenuCommand(self.hEnvMenu,(
+			"ENV_REGIST_ORIGINAL_ASSOCIATION",
+			"ENV_TESTDIALOG",
+			"ENV_PASTTABTEST",
+			"ENV_FONTTEST"
+		))
 
 		#ヘルプメニューの中身
-		self.RegisterMenuCommand(self.hHelpMenu,{
-			"HELP_VERINFO":_("バージョン情報")
-		})
+		self.RegisterMenuCommand(self.hHelpMenu,(
+			"HELP_VERINFO"
+		))
 
 		#メニューバー
 		self.hMenuBar.Append(self.hFileMenu,_("ファイル"))

@@ -23,7 +23,6 @@ import DefaultSettings
 import errorCodes
 import misc
 import workerThreads
-from views import main
 
 class falconAppMain(wx.App):
 	def initialize(self):
@@ -87,6 +86,7 @@ class falconAppMain(wx.App):
 		self.log.debug("finished environment setup (%f seconds from start)" % t.elapsed)
 
 		# メインビューを表示
+		from views import main
 		self.hMainView=main.View()
 		self.hMainView.Initialize()
 		misc.InitContextMenu(self.hMainView.hFrame.GetHandle())

@@ -13,7 +13,7 @@ import views.ViewCreator
 from simpleDialog import dialog
 
 import globalVars
-
+import menuItemsDic
 
 class BaseView(object):
 	"""falconのビューの基本クラス。"""
@@ -75,7 +75,12 @@ class BaseMenu(object):
 		if type(ref_id)==dict:
 			for k,v in ref_id.items():
 				self._RegisterMenuCommand(menu_handle,k,v,None,index)
+		elif type(ref_id) in (list,set,tuple):
+			for k in ref_id:
+				self._RegisterMenuCommand(menu_handle,k,menuItemsDic.dic[k],None,index)
 		else:
+			if title=="":
+				title=menuItemsDic.dic[ref_id]
 			return self._RegisterMenuCommand(menu_handle,ref_id,title,subMenu,index)
 
 	def _RegisterMenuCommand(self,menu_handle,ref_id,title,subMenu,index):
