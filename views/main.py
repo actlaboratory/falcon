@@ -534,7 +534,9 @@ class Events(BaseEvents):
 					section[menuData[name]]=key
 			keymap.write()	
 
+			#ショートカットキーの変更適用とメニューバーの再描画
 			self.parent.UpdateUserCommand()
+			self.parent.menu.Apply(self.parent.hFrame,self.parent.events)
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_ADMIN"):
 			self.GoForward(False,admin=True)

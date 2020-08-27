@@ -50,7 +50,7 @@ class Dialog(BaseDialog):
 
 		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL, wx.ALIGN_RIGHT)
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)
-		self.bCancel=self.creator.cancelbutton(_("キャンセル"),None)
+		self.bCancel=self.creator.cancelbutton(_("設定解除"),None)
 
 	def Show(self):
 		self.panel.Layout()
