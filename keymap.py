@@ -124,13 +124,6 @@ str2InputControlKey={
 	"DELETE":wx.WXK_DELETE,
 	"INSERT":wx.WXK_INSERT,
 
-
-	#矢印キー
-	"LEFTARROW":wx.WXK_LEFT,
-	"UPARROW":wx.WXK_UP,
-	"RIGHTARROW":wx.WXK_RIGHT,
-	"DOWNARROW":wx.WXK_DOWN,
-
 	#ジャンプキー
 	"HOME":wx.WXK_HOME,
 	"END":wx.WXK_END,
@@ -155,6 +148,12 @@ str2StandaloneKey={
 	"NUMPAD_SUBTRACT":wx.WXK_NUMPAD_SUBTRACT,
 	"NUMPAD_DIVIDE":wx.WXK_NUMPAD_DIVIDE,
 	"NUMPAD_DECIMAL":wx.WXK_NUMPAD_DECIMAL,
+
+	#矢印キー
+	"LEFTARROW":wx.WXK_LEFT,
+	"UPARROW":wx.WXK_UP,
+	"RIGHTARROW":wx.WXK_RIGHT,
+	"DOWNARROW":wx.WXK_DOWN,
 }
 
 #単独または修飾キーとの組み合わせで利用できる
@@ -325,12 +324,15 @@ class KeymapHandler():
 		self.filter=filter	#指定の妥当性をチェックするフィルタ
 
 		if dict:
-			read=configparser.ConfigParser()
-			read.read_dict(dict)
-			for identifier in read.sections():
-				for elem in read.items(identifier):
-					if elem[1]!="":						#空白のものは無視する
-						self.add(identifier,elem[0],elem[1])
+			self.addDict(dict)
+
+	def addDict(self,dict):
+		read=configparser.ConfigParser()
+		read.read_dict(dict)
+		for identifier in read.sections():
+			for elem in read.items(identifier):
+				if elem[1]!="":						#空白のものは無視する
+					self.add(identifier,elem[0],elem[1])
 
 	def addFile(self, filename):
 		"""
@@ -446,7 +448,7 @@ class KeymapHandler():
 		for i in [j.refName for j in items]:
 			iFlag=0
 			if i not in tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File]:
-				iFlag+=1
+					iFlag+=1
 			if i not in tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.Folder]:
 				iFlag+=2
 			if i not in tabs.streamList.StreamListTab.blockMenuList:
@@ -458,7 +460,7 @@ class KeymapHandler():
 				flg+=iFlag
 			else:
 				#重複によるエラー
-				self.log.debug("key confricted. "+i+" is confrict in "+str(items))
+				self.log.warn("key confricted. "+i+" is confrict in "+str(items))
 				return False
 		self.log.debug("key not confricted. "+i+" is not confrict in "+str(items))
 
@@ -540,6 +542,11 @@ class AcceleratorEntry(wx.AcceleratorEntry):
 	def GetRefName(self):
 		return self.refName
 
+	def __repr__(self):
+		return self.__str__()
+
+	def __str__(self):
+		return "<AcceleratorEntry %s>" % self.GetRefName()
 
 class KeyFilter:
 	"""
@@ -634,6 +641,44 @@ class KeyFilter:
 			if not ptn in str2key:
 				raise ValueError(_("%s は存在しないキーです。" % (ptn)))
 		self.disablePattern.append(set(patterns))
+
+	def AddEnableKey(self,keys):
+		if type(keys)==str:
+			return self.SetKeyGroup(keys,self.enableKey)
+		for key in keys:
+			self._SetKeyGroup(key,self.enableKey)
+
+	def AddFunctionKey(self,keys):
+		if type(keys)==str:
+			return self.SetKeyGroup(keys,self.functionKey)
+		for key in keys:
+			self._SetKeyGroup(key,self.functionKey)
+
+	def AddModifierKey(self,keys):
+		if type(keys)==str:
+			return self.SetKeyGroup(keys,self.modifierKey)
+		for key in keys:
+			self._SetKeyGroup(key,self.modifierKey)
+
+	def AddNoShiftEnableKey(self,keys):
+		if type(keys)==str:
+			return self.SetKeyGroup(keys,noShiftEnableKey)
+		for key in keys:
+			self._SetKeyGroup(key,self.noShiftEnableKey)
+
+	def _SetKeyGroup(self,key,target):
+		key=key.upper()
+		if not key in str2key:
+			raise ValueError(_("%s は存在しないキーです。" % key))
+		try:
+			self.disablePattern.remove(set(key))
+		except ValueError:
+			pass
+		self.enableKey.discard(key)
+		self.functionKey.discard(key)
+		self.modifierKey.discard(key)
+		self.noShiftEnableKey.discard(key)
+		target.add(key)
 
 
 	def Check(self,keyString):

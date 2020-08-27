@@ -37,7 +37,9 @@ class FalconTabBase(object):
 		"TOOL_DIRCALC",
 		"MOVE_FORWARD_TAB",
 		"TOOL_ADDPATH",
-		"MOVE_FORWARD_TAB"
+		"MOVE_FORWARD_TAB",
+		"TOOL_EJECT_DRIVE",
+		"TOOL_EJECT_DEVICE"
 	])
 
 	selectItemTypeMenuConditions[browsableObjects.Folder]=[]
@@ -47,6 +49,8 @@ class FalconTabBase(object):
 		"READ_CONTENT_PREVIEW",
 		"READ_CONTENT_READHEADER",
 		"READ_CONTENT_READFOOTER",
+		"TOOL_EJECT_DRIVE",
+		"TOOL_EJECT_DEVICE"
 	])
 	selectItemTypeMenuConditions[browsableObjects.NetworkResource]=[]
 	selectItemTypeMenuConditions[browsableObjects.NetworkResource].extend([

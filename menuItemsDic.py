@@ -68,6 +68,7 @@ dic={
 	"VIEW_SORT_COLUMN":_("カラムの並び替え"),
 
 	"ENV_REGIST_ORIGINAL_ASSOCIATION":_("独自関連付けの管理"),
+	"ENV_KEY_CONFIG":_("キーボードショートカットの設定"),
 	"ENV_TESTDIALOG":_("テストダイアログを表示"),
 	"ENV_PASTTABTEST":_("貼り付け状況ダイアログテスト"),
 	"ENV_FONTTEST":_("フォントテストダイアログを表示"),

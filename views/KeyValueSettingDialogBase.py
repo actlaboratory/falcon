@@ -163,7 +163,8 @@ class SettingDialogBase(BaseDialog):
 
 	def __init__(self,parent,valueNames,buttons,*v):
 		"""
-			valueNamesには各入力欄の名前(「名前」「パス」「ショートカットキー」など)とユーザによる直接入力の可否のタプルのリストを指定
+			valueNamesには各入力欄の名前(「名前」「パス」「ショートカットキー」など)とユーザによる直接入力の可否のタプルのリストを指定。
+			直接入力の可否はTrue/Falseの他、Noneにすると非表示にもできる。非表示でも入力欄自体は存在する為、内部用の値の保持に使える。
 			buttonsには、設置するボタンの情報をNone(ボタン無)または("参照",self.getRef())のように名前と押された時の動作関数のタプルで定義したもののリストを指定
 			*vには各入力欄の初期値(空欄を省略可能)
 
@@ -190,6 +191,9 @@ class SettingDialogBase(BaseDialog):
 				self.edits[i],dummy=self.creator.inputbox(name[0],500,self.values[i])
 			else:
 				self.edits[i],dummy=self.creator.inputbox(name[0],500,self.values[i],style=wx.TE_READONLY)
+			if name[1]==None:
+				dummy.Hide()
+				self.edits[i].Hide()
 			if self.buttons[i]:
 				dummy=self.creator.button(self.buttons[i][0],self.buttons[i][1],wx.ALIGN_RIGHT)
 
@@ -226,7 +230,14 @@ class SettingDialogBase(BaseDialog):
 		event.Skip()
 
 
-def KeySettingValidation(oldKeyConfig,newKeyConfig,logger):
+def KeySettingValidation(oldKeyConfig,newKeyConfig,logger,entries=None,AllowNewKeyDuplication=False):
+	"""
+		oldKeyConfig:	{name:key}	設定変更前
+		newKeyConfig:	{name:key}	設定変更後
+		logger:			logger		エラー時のログ出力用
+		entries:		set(keymap.AcceleratorEntry)	重複判定対象(省略時はメインビューのみ)
+		AllowNewKeyDuplication	bool	newKey内での重複を許すならTrue
+	"""
 	if logger==None:
 		logger=getLogger("falcon.%s" % "KeySettingValidation")
 	errors=""
@@ -236,19 +247,24 @@ def KeySettingValidation(oldKeyConfig,newKeyConfig,logger):
 	newKeys={}
 	for k,v in newKeyConfig.items():
 		newKeys.setdefault(v, list()).append(k)
-	entries=globalVars.app.hMainView.GetKeyEntries()
+	if entries==None:
+		entries=globalVars.app.hMainView.GetKeyEntries()
 
 	for k,v in newKeys.items():
-		if len(v)==2:
-			errors+=_("%sと%sに同じショートカットキー%sが設定されています。\n") % (v[0],v[1],k)
-		elif len(v)>2:
-			errors+=("%s、%sなど計%d箇所に同じショートカットキー%sが設定されています。\n") % (v[0],v[1],len(v),k)
-		else:
-			e=keymap.makeEntry("DUMMY",k,globalVars.app.hMainView.menu.keymap.filter,logger)
-			if e==None:
-				errors+=_("設定されたショートカット%sが認識できません。お手数ですが、このエラーメッセージを作者へご連絡ください。\n") % k
-			elif e in entries and (k not in oldKeys):
-				errors+=_("%sに設定されたショートカットキー%sは、別の場所で利用されています。\n") % (v[0],k)
+		if k==_("なし"):
+			continue
+		if not AllowNewKeyDuplication:
+			if len(v)==2:
+				errors+=_("%sと%sに同じショートカットキー%sが設定されています。\n") % (v[0],v[1],k)
+				continue
+			elif len(v)>2:
+				errors+=_("%s、%sなど計%d箇所に同じショートカットキー%sが設定されています。\n") % (v[0],v[1],len(v),k)
+				continue
+		e=keymap.makeEntry("DUMMY",k,None,logger)
+		if e==None:
+			errors+=_("設定されたショートカット%sが認識できません。お手数ですが、このエラーメッセージを作者へご連絡ください。\n") % k
+		elif e in entries and (k not in oldKeys):
+			errors+=_("%sに設定されたショートカットキー%sは、別の場所で利用されています。\n") % (v[0],k)
 	if errors!="":
 		dialog(_("エラー"),errors)
 		return False

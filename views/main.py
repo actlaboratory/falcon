@@ -4,6 +4,7 @@
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
+import copy
 import history
 import logging
 import os
@@ -19,6 +20,7 @@ import browsableObjects
 import misc
 import constants
 import errorCodes
+import FalconConfigParser
 import globalVars
 import lists
 import tabs.navigator
@@ -30,6 +32,7 @@ import views.changeAttribute
 import views.execProgram
 import views.favoriteDirectory
 import views.fonttest
+import views.globalKeyConfig
 import views.mkdir
 import views.makeHash
 import views.makeShortcut
@@ -410,6 +413,7 @@ class Menu(BaseMenu):
 		#環境メニューの中身
 		self.RegisterMenuCommand(self.hEnvMenu,(
 			"ENV_REGIST_ORIGINAL_ASSOCIATION",
+			"ENV_KEY_CONFIG",
 			"ENV_TESTDIALOG",
 			"ENV_PASTTABTEST",
 			"ENV_FONTTEST"
@@ -442,6 +446,10 @@ class Menu(BaseMenu):
 		self.hDisableSubMenu=wx.Menu()
 		self.hDisableMenuBar.Append(self.hDisableSubMenu,_("現在メニューは操作できません"))
 
+	def InitShortcut(self,identifier):
+		super().InitShortcut(identifier)
+		self.keymap.filter.AddFunctionKey(("LEFTARROW","RIGHTARROW","NUMPAD_DIVIDE","NUMPAD_MULTIPLY"))
+	
 class Events(BaseEvents):
 
 	def OnMenuSelect(self,event):
@@ -496,6 +504,37 @@ class Events(BaseEvents):
 				config=globalVars.app.config["originalAssociation"]["<default_dir>"]
 			config=os.path.abspath(config)
 			misc.RunFile(config,prm=elem.fullpath)
+			return
+		if selected==menuItemsStore.getRef("ENV_KEY_CONFIG"):
+			keys=self.parent.menu.keymap.map[self.parent.identifier.upper()]
+			keyData={}
+			menuData={}
+			for refName in defaultKeymap.defaultKeymap["mainView"].keys():
+				title=menuItemsDic.dic[refName]
+				if refName in keys:
+					keyData[title]=keys[refName]
+				else:
+					keyData[title]="なし"
+				menuData[title]=refName
+			d=views.globalKeyConfig.Dialog(keyData,menuData)
+			d.Initialize()
+			ret=d.Show()
+			if ret==wx.ID_CANCEL: return
+
+			result={}
+			keyData,menuData=d.GetValue()
+			#キーマップの既存設定を置き換える
+			keymap=FalconConfigParser.FalconConfigParser()
+			keymap.read(constants.KEYMAP_FILE_NAME)
+			keymap.remove_section(self.parent.identifier)
+			keymap.add_section(self.parent.identifier)
+			section=keymap[self.parent.identifier]
+			for name,key in keyData.items():
+				if key!=_("なし"):
+					section[menuData[name]]=key
+			keymap.write()	
+
+			self.parent.UpdateUserCommand()
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_ADMIN"):
 			self.GoForward(False,admin=True)
