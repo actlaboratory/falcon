@@ -242,11 +242,13 @@ def KeySettingValidation(oldKeyConfig,newKeyConfig,logger,entries=None,AllowNewK
 		logger=getLogger("falcon.%s" % "KeySettingValidation")
 	errors=""
 	oldKeys={}
-	for k,v in oldKeyConfig.items():
-		oldKeys.setdefault(v, list()).append(k)
+	for k,vs in oldKeyConfig.items():
+		for v in vs.split("/"):
+			oldKeys.setdefault(v, list()).append(k)
 	newKeys={}
-	for k,v in newKeyConfig.items():
-		newKeys.setdefault(v, list()).append(k)
+	for k,vs in newKeyConfig.items():
+		for v in vs.split("/"):
+			newKeys.setdefault(v, list()).append(k)
 	if entries==None:
 		entries=globalVars.app.hMainView.GetKeyEntries()
 
