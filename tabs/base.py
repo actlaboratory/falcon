@@ -11,6 +11,7 @@ import copy
 import json
 import logging
 import os
+import pywintypes
 import re
 
 import wx
@@ -25,6 +26,8 @@ import history
 import lists
 import misc
 import menuItemsStore
+
+from win32com.shell import shell, shellcon
 
 from . import navigator
 from simpleDialog import *
@@ -461,6 +464,16 @@ class FalconTabBase(object):
 
 	def GoToTopFile(self):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
+
+	def ShowProperties(self):
+		index=self.GetFocusedItem()
+		try:
+			shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
+		except pywintypes.error as e:
+			if e.winerror==1223:		#'この操作はユーザーによって取り消されました。'で、ネットワーク接続失敗などで発生
+				pass
+			else:
+				raise e
 
 	def Jump(self,direction):
 		cursor=self.listObject.Jump(self.GetFocusedItem(),direction)

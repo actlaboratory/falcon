@@ -21,7 +21,6 @@ import workerThreads
 import workerThreadTasks
 
 from simpleDialog import *
-from win32com.shell import shell, shellcon
 from . import base
 
 class DriveListTab(base.FalconTabBase):
@@ -106,10 +105,6 @@ class DriveListTab(base.FalconTabBase):
 			self.task.Cancel()
 		else:
 			self.task=workerThreads.RegisterTask(workerThreadTasks.DebugBeep)
-
-	def ShowProperties(self):
-		index=self.GetFocusedItem()
-		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
 
 	def ReadCurrentFolder(self):
 		globalVars.app.say(_("現在は、ドライブ洗濯"), interrupt=True)

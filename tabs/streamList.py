@@ -23,9 +23,7 @@ import fileSystemManager
 from tabs.driveList import *
 import StringUtil
 
-
 from simpleDialog import *
-from win32com.shell import shell, shellcon
 from . import base
 
 class StreamListTab(base.FalconTabBase):
@@ -159,10 +157,6 @@ class StreamListTab(base.FalconTabBase):
 		self.UpdateFilelist(silence=True)
 		focus_index=self._findFocusAfterDeletion(paths,focus_index)
 		self.Focus(focus_index)
-
-	def ShowProperties(self):
-		index=self.GetFocusedItem()
-		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
 
 	def Copy(self):
 		if not self.IsItemSelected(): return
