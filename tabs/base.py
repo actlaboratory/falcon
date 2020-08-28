@@ -873,7 +873,8 @@ class FalconTabBase(object):
 			self.environment["selectingItemCount"][elem.__class__]=0
 
 	def _appendContextMenu(self,hMenu,elem):
-		if elem['type']=="separator": return
+		if elem['type']=="separator":
+			hMenu.AppendSeparator()
 		if 'submenu' in elem:
 			hSubMenu=wx.Menu()
 			hMenu.AppendSubMenu(hSubMenu,elem['name'])

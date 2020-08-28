@@ -130,14 +130,14 @@ class DriveListTab(base.FalconTabBase):
 	def OpenContextMenu(self,event):
 		menu=wx.Menu()
 		if type(self.GetFocusedElement())==browsableObjects.Drive:
-			globalVars.app.hMainView.menu.RegisterMenuCommand(menu,{
-				"TOOL_EJECT_DRIVE":_("ドライブの取り外し"),
-				"TOOL_EJECT_DEVICE":_("デバイスの取り外し"),
-			})
-		globalVars.app.hMainView.menu.RegisterMenuCommand(menu,{
-			"VIEW_DRIVE_INFO":_("ドライブ情報の表示"),
-			"FILE_SHOWPROPERTIES":_("プロパティを表示")
-		})
+			globalVars.app.hMainView.menu.RegisterMenuCommand(menu,(
+				"TOOL_EJECT_DRIVE",
+				"TOOL_EJECT_DEVICE",
+			))
+		globalVars.app.hMainView.menu.RegisterMenuCommand(menu,(
+			"VIEW_DRIVE_INFO",
+			"FILE_SHOWPROPERTIES"
+		))
 		globalVars.app.hMainView.PopupMenu(menu)
 
 	def GetRootObject(self):
