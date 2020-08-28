@@ -7,6 +7,7 @@
 """
 タブは、必ずリストビューです。カラムの数と名前と、それに対応するリストの要素がタブを構成します。たとえば、ファイル一覧では「ファイル名」や「サイズ」などがカラムになり、その情報がリストに格納されています。ファイル操作の状況を示すタブの場合は、「進行率」や「状態」などがカラムの名前として想定されています。リスト上でエンターを押すことで、アクションを実行できます。ファイルビューではファイルやフォルダを開き、ファイル操作では問い合わせに応答することができます。
 """
+import copy
 import json
 import logging
 import os
@@ -27,6 +28,60 @@ import menuItemsStore
 
 from . import navigator
 from simpleDialog import *
+
+
+#選択中のアイテム個数によるブロック
+#ここに定義したものが__init__でコピーされる
+#各インスタンスで追加は許されるが減らすことは許されない
+selectItemMenuConditions=[]
+selectItemMenuConditions.append([])
+selectItemMenuConditions[0].extend([
+	"FILE_RENAME",
+	"FILE_CHANGEATTRIBUTE",
+	"FILE_MAKESHORTCUT",
+	"FILE_TRASH",
+	"FILE_DELETE",
+	"FILE_VIEW_DETAIL",
+	"FILE_SHOWPROPERTIES",
+	"EDIT_COPY",
+	"EDIT_CUT",
+	"EDIT_NAMECOPY",
+	"EDIT_FULLPATHCOPY",
+	"EDIT_OPENCONTEXTMENU",
+	"EDIT_MARKITEM",
+	"MOVE_FORWARD",
+	"MOVE_FORWARD_ADMIN",
+	"MOVE_FORWARD_TAB",
+	"MOVE_FORWARD_STREAM",
+	"MOVE_EXEC_ORIGINAL_ASSOCIATION",
+	"TOOL_DIRCALC",
+	"TOOL_HASHCALC",
+	"TOOL_ADDPATH",
+	"TOOL_EJECT_DRIVE",
+	"TOOL_EJECT_DEVICE",
+	"READ_CONTENT_PREVIEW",
+	"READ_CONTENT_READHEADER",
+	"READ_CONTENT_READFOOTER",
+])
+selectItemMenuConditions.append([])
+selectItemMenuConditions.append([])
+selectItemMenuConditions[2].extend([
+	"FILE_RENAME",
+	"FILE_MAKESHORTCUT",
+	"FILE_VIEW_DETAIL",
+	"FILE_SHOWPROPERTIES",
+	"MOVE_FORWARD",
+	"MOVE_FORWARD_ADMIN",
+	"MOVE_FORWARD_TAB",
+	"MOVE_FORWARD_STREAM",
+	"MOVE_EXEC_ORIGINAL_ASSOCIATION",
+	"TOOL_HASHCALC",
+	"TOOL_EJECT_DRIVE",
+	"TOOL_EJECT_DEVICE",
+	"READ_CONTENT_PREVIEW",
+	"READ_CONTENT_READHEADER",
+	"READ_CONTENT_READFOOTER",
+])
 
 class FalconTabBase(object):
 	"""全てのタブに共通する基本クラス。"""
@@ -56,7 +111,8 @@ class FalconTabBase(object):
 	selectItemTypeMenuConditions[browsableObjects.NetworkResource].extend([
 		"FILE_RENAME",
 		"TOOL_EJECT_DRIVE",
-		"TOOL_EJECT_DEVICE"
+		"TOOL_EJECT_DEVICE",
+		"READ_CONTENT_PREVIEW"
 	])
 
 	#それぞれFile・Folderと同期
@@ -70,58 +126,10 @@ class FalconTabBase(object):
 	selectItemTypeMenuConditions[browsableObjects.PastProgressItem]=[]
 	selectItemTypeMenuConditions[browsableObjects.PastProgressHeader]=[]
 
-
 	def __init__(self,environment):
 		self.selectItemMenuConditions=[]
-		self.selectItemMenuConditions.append([])
-		self.selectItemMenuConditions[0].extend([
-			"FILE_RENAME",
-			"FILE_CHANGEATTRIBUTE",
-			"FILE_MAKESHORTCUT",
-			"FILE_TRASH",
-			"FILE_DELETE",
-			"FILE_VIEW_DETAIL",
-			"FILE_SHOWPROPERTIES",
-			"EDIT_COPY",
-			"EDIT_CUT",
-			"EDIT_NAMECOPY",
-			"EDIT_FULLPATHCOPY",
-			"EDIT_OPENCONTEXTMENU",
-			"EDIT_MARKITEM",
-			"MOVE_FORWARD",
-			"MOVE_FORWARD_ADMIN",
-			"MOVE_FORWARD_TAB",
-			"MOVE_FORWARD_STREAM",
-			"MOVE_EXEC_ORIGINAL_ASSOCIATION",
-			"TOOL_DIRCALC",
-			"TOOL_HASHCALC",
-			"TOOL_ADDPATH",
-			"TOOL_EJECT_DRIVE",
-			"TOOL_EJECT_DEVICE",
-			"READ_CONTENT_PREVIEW",
-			"READ_CONTENT_READHEADER",
-			"READ_CONTENT_READFOOTER",
-		])
-		self.selectItemMenuConditions.append([])
-		self.selectItemMenuConditions.append([])
-		self.selectItemMenuConditions[2].extend([
-			"FILE_RENAME",
-			"FILE_MAKESHORTCUT",
-			"FILE_VIEW_DETAIL",
-			"FILE_SHOWPROPERTIES",
-			"MOVE_FORWARD",
-			"MOVE_FORWARD_ADMIN",
-			"MOVE_FORWARD_TAB",
-			"MOVE_FORWARD_STREAM",
-			"MOVE_EXEC_ORIGINAL_ASSOCIATION",
-			"TOOL_HASHCALC",
-			"TOOL_EJECT_DRIVE",
-			"TOOL_EJECT_DEVICE",
-			"READ_CONTENT_PREVIEW",
-			"READ_CONTENT_READHEADER",
-			"READ_CONTENT_READFOOTER",
-		])
-
+		for i in selectItemMenuConditions:
+			self.selectItemMenuConditions.append(copy.copy(i))
 		self.task=None
 		self.colums=[]#タブに表示されるカラムの一覧。外からは読み取りのみ。
 		self.listObject=None#リストの中身を保持している listObjects のうちのどれかのオブジェクト・インスタンス

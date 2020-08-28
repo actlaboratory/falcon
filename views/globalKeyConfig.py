@@ -8,7 +8,7 @@ import os
 import wx
 
 import globalVars
-
+import keymap
 import views.keyConfig
 import views.KeyValueSettingDialogBase
 
@@ -34,9 +34,26 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 		"""
 			設定されたキーが重複している場合はエラーとする
 		"""
-		if views.KeyValueSettingDialogBase.KeySettingValidation(self.oldKeyConfig,self.values[0],self.log,None,True):
-			event.Skip()
-		return
+		#他のビューとの重複調査
+		if not views.KeyValueSettingDialogBase.KeySettingValidation(self.oldKeyConfig,self.values[0],self.log,None,True):
+			return
+
+		#このビュー内での重複調査
+		newKeys={}
+		for name,keys in self.values[0].items():
+			for key in keys.split("/"):
+				newKeys.setdefault(key, set()).add(name)
+		for key,names in newKeys.items():
+			if key==_("なし"):
+				continue
+			if len(names)>=2:
+				entries=[]
+				for name in names:
+					entries.append(keymap.makeEntry(self.values[1][name],key,None,self.log))
+				if not keymap.checkConfrict(entries,self.log):
+					dialog(_("エラー"),_("以下の項目において、重複するキー %s が設定されています。\n\n%s") % (key,names))
+					return
+		event.Skip()
 
 class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
 	"""設定内容を入力するダイアログ"""
