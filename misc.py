@@ -26,7 +26,7 @@ from simpleDialog import dialog
 
 log=getLogger("falcon.misc")
 
-falconHelper=ctypes.cdll.LoadLibrary("./falconHelper.dll")
+falconHelper=ctypes.cdll.LoadLibrary("falconHelper.dll")
 
 class Timer:
 	"""シンプルなタイマー。経過時間や処理時間を計測するのに使う。単位は秒で、float。"""
