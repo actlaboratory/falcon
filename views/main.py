@@ -976,6 +976,7 @@ class Events(BaseEvents):
 				dic[_("短い名前")]=elem.shortName
 			else:
 				dic[_("短い名前")]=_("なし")
+
 			h=win32file.CreateFile(
 					elem.fullpath,
 					0,

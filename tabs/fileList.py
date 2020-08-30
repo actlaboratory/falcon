@@ -102,7 +102,6 @@ class FileListTab(base.FalconTabBase):
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
 		error=fileSystemManager.ValidationObjectName(os.path.join(dir,newdir),fileSystemManager.pathTypes.DIRECTORY,newdir)
-		print("@@@@"+error)
 		if error!="":
 			dialog(_("エラー"),error)
 			return False
