@@ -117,7 +117,10 @@ class View(BaseView):
 				return
 			else:
 				dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
-		result=self.Navigate(os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"])),as_new_tab=True)
+		if self.app.config["browse"]["startPath"]!="":
+			result=self.Navigate(os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"])),as_new_tab=True)
+		else:												#ドライブ一覧を表示
+			result=self.Navigate("",as_new_tab=True)
 		if result==errorCodes.OK:
 			return
 		else:
