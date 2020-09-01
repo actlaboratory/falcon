@@ -78,7 +78,7 @@ class DefaultSettings:
 			"sizeY": "600",
 		}
 		config["browse"]={
-			"startPath": "%HOMEDRIVE%"
+			"startPath": ""
 		}
 		config["search"]={
 			"history_count": 20,
