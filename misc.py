@@ -224,7 +224,7 @@ def addPath(paths):
 def RunFile(path, admin=False,prm="", workdir=""):
 	"""ファイルを起動する。admin=True の場合、管理者として実行する。"""
 	path=os.path.expandvars(path)
-	msg="running %s as admin" % (path) if admin else "running %s" % (path)
+	msg="running '%s' prm='%s' workdir='%s' asAdmin=%s" % (path,prm,workdir,str(admin))
 	log.debug(msg)
 	msg=_("管理者で起動") if admin else _("起動")
 	globalVars.app.say(msg)
