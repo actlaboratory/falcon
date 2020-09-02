@@ -7,14 +7,15 @@ defaultKeymap={}
 
 
 defaultKeymap["mainView"]={
-	"FILE_RENAME": "F2",
+	"FILE_RENAME": "ctrl+r/F2",
 	"FILE_CHANGEATTRIBUTE": "shift+F2",
 	"FILE_MKDIR": "ctrl+f4/ctrl+shift+n/ctrl+n",
 	"FILE_TRASH": "delete",
 	"FILE_DELETE": "shift+delete",
 	"FILE_MAKESHORTCUT": "ctrl+f2",
-	"FILE_VIEW_DETAIL": "alt+return",
+	"FILE_VIEW_DETAIL": "ctrl+i/alt+return",
 	"FILE_SHOWPROPERTIES": "ctrl+shift+return",
+	"FILE_EXIT": "alt+f4",
 
 	"EDIT_COPY": "ctrl+c",
 	"EDIT_CUT": "ctrl+x",
