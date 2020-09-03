@@ -3,7 +3,7 @@
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-import FalconConfigParser
+import ConfigManager
 import errorCodes
 import menuItemsStore
 
@@ -11,7 +11,7 @@ class UserCommandManager:
 	def __init__(self,params,keys,refHead):
 		"""
 			params,keymapは(name,value)のタプルのリスト
-			configparser.items(section)の利用を想定
+			ConfigManager.items(section)の利用を想定
 		"""
 
 		#変数を初期化
@@ -42,7 +42,7 @@ class UserCommandManager:
 		#引数からconfigを生成
 		dic["param"]=dict(params)
 		dic["key"]=dict(keys)
-		config=FalconConfigParser.FalconConfigParser()
+		config=ConfigManager.ConfigManager()
 		config.read_dict(dic)
 
 		#configから２つのmapを生成

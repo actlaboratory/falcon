@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-#FalconConfigManager
-#Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
-#Note: All comments except these top lines will be written in Japanese. 
+#ConfigManager
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 
 import os
 import configparser
 import logging
-from logging import getLogger, FileHandler, Formatter
+from logging import getLogger
 
 
-class FalconConfigParser(configparser.ConfigParser):
+
+class ConfigManager(configparser.ConfigParser):
 	def __init__(self):
 		super().__init__(interpolation=None)
-		self.identifier="falconConfigParser"
-		self.log=getLogger("falcon.%s" % self.identifier)
+		self.identifier="ConfigManager"
+		self.log=getLogger(self.identifier)
 		self.log.debug("Create config instance")
 
 	def read(self,fileName):
@@ -35,9 +35,9 @@ class FalconConfigParser(configparser.ConfigParser):
 
 	def __getitem__(self,key):
 		try:
-			return FalconConfigSection(super().__getitem__(key))
+			return ConfigSection(super().__getitem__(key))
 		except KeyError as e:
-			self.log.debug("create new section:"+key)
+			self.log.debug("created new section:"+key)
 			self.add_section(key)
 			return self.__getitem__(key)
 
@@ -63,6 +63,8 @@ class FalconConfigParser(configparser.ConfigParser):
 	def getint(self,section,key,default=0,min=None,max=None):
 		if type(default)!=int:
 			raise ValueError("default value must be int")
+		if (min!=None and type(min)!=int) or (max!=None and type(max)!=int):
+			raise ValueError("min/max value must be int")
 		try:
 			ret = super().getint(section,key)
 			if (min!=None and ret<min) or (max!=None and ret>max):
@@ -104,7 +106,7 @@ class FalconConfigParser(configparser.ConfigParser):
 		if not self.has_section(name):
 			return super().add_section(name)
 
-class FalconConfigSection(configparser.SectionProxy):
+class ConfigSection(configparser.SectionProxy):
 	def __init__(self,proxy):
 		super().__init__(proxy._parser, proxy._name)
 

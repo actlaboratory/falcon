@@ -20,7 +20,7 @@ import browsableObjects
 import misc
 import constants
 import errorCodes
-import FalconConfigParser
+import ConfigManager
 import globalVars
 import lists
 import tabs.navigator
@@ -527,7 +527,7 @@ class Events(BaseEvents):
 			result={}
 			keyData,menuData=d.GetValue()
 			#キーマップの既存設定を置き換える
-			keymap=FalconConfigParser.FalconConfigParser()
+			keymap=ConfigManager.ConfigManager()
 			keymap.read(constants.KEYMAP_FILE_NAME)
 			keymap.remove_section(self.parent.identifier)
 			keymap.add_section(self.parent.identifier)
