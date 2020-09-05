@@ -48,20 +48,27 @@ class FileList(FileListBase):
 		#end copy
 		self.files.clear()
 		self.folders.clear()
-		dir=dir.rstrip("\\")
-		dir_spl=dir.split("\\")
+		dir_spl=dir[len(os.path.splitdrive(dir)[0])+1:].split("\\")
 		level=len(dir_spl)
+		if dir_spl[0]=="":level-=1
 		if not silent:
 			r=[]
-			if globalVars.app.config['on_list_moved']['read_directory_level']=='True': r.append("%s%d " % (dir[0],level))
-			if globalVars.app.config['on_list_moved']['read_directory_name']=='True': r.append(dir_spl[level-1])
+			if globalVars.app.config['on_list_moved']['read_directory_level']=='True':
+				drive=os.path.splitdrive(dir)[0]
+				if len(drive)==2:
+					drive=drive[0]
+				if level==0:
+					r.append("%sルート" % drive)
+				else:
+					r.append("%sの%d " % (drive,level))
+					if globalVars.app.config['on_list_moved']['read_directory_name']=='True': r.append(dir_spl[level-1])
 			if len(r)>0: globalVars.app.say("".join(r))
 		#end read
 		self.rootDirectory=dir
 		self.log.debug("Getting file list for %s..." % self.rootDirectory)
 		t=misc.Timer()
 		try:
-			lst=win32api.FindFiles(dir+"\\*")
+			lst=win32api.FindFiles(os.path.join(dir,"*"))
 		except pywintypes.error as err:
 			self.log.error("Cannot open the directory! {0}".format(err))
 			if err.winerror==5:
@@ -69,14 +76,14 @@ class FileList(FileListBase):
 			dialog(_("エラー"), _("フォルダを開くことができませんでした(%(error)s)") % {"error": str(err)})
 			return errorCodes.FATAL
 		#end except
-		if "\\" in self.rootDirectory:		#ルート以外では余計な.と..がが一番上に入っている
-			del lst[0:2]
 		if len(lst)==0:
 			self.log.debug("Blank folder.")
 			return errorCodes.OK
 		#end 空のフォルダだったらさっさと帰る
 		for elem in lst:
-			fullpath=dir+"\\"+elem[8]
+			if elem[8]=="." or elem[8]=="..":
+				continue
+			fullpath=os.path.join(dir,elem[8])
 			ret, shfileinfo=shell.SHGetFileInfo(fullpath,0,shellcon.SHGFI_ICON | shellcon.SHGFI_TYPENAME)
 			if os.path.isfile(fullpath):
 				f=browsableObjects.File()

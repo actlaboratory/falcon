@@ -411,7 +411,7 @@ class FalconTabBase(object):
 		target=self.GetFocusedElement().fullpath
 		dest=option["destination"]
 		if not os.path.isabs(dest):	#早退の場合は絶対に直す
-			dest=os.path.normpath(os.path.dirname(target)+"\\"+dest)
+			dest=os.path.normpath(os.path.join(os.path.dirname(target),dest))
 
 		#シンボリックリンクはNTFSにしか作成できない
 		if option["type"]=="symbolicLink":
@@ -725,7 +725,7 @@ class FalconTabBase(object):
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
 		self.StopSound()
-		if len(self.listObject.rootDirectory)<3:		#ドライブリストへ
+		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
 			target=""
 			cursorTarget=self.listObject.rootDirectory[0]
 		else:

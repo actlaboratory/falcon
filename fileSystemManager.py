@@ -63,7 +63,7 @@ def ValidationObjectName(path,pathType,path2=""):
 			return _("この文字列は、Windowsによって予約された特別な名前のため、ファイルやディレクトリの名前として使用できません。")
 
 	#末尾が.と半角スペースでないことの確認
-	if re.sub("(.*\\.$)|(.* $)",r"",s.upper())=="":
+	if re.sub("(.*\\.$)|(.* $)",r"",s)=="":
 		return _("名前の最後を半角の.(ピリオド)または半角スペースとすることはできません。")
 
 	#パス長の確認
@@ -80,7 +80,6 @@ def ValidationObjectName(path,pathType,path2=""):
 		elif pathType==pathTypes.FILE:
 			if len(path)>drive.MAX_FULLPATH_LENGTH:
 				return _("このドライブでは、ファイル名のフルパスが以下の文字数を超えないように名前を付ける必要があります。\n\n制限文字数:"+str(drive.MAX_FULLPATH_LENGTH))
-
 	#問題なし
 	return ""
 
