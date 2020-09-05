@@ -14,6 +14,7 @@ import time
 import hashlib
 import winreg
 import win32api
+import win32con
 import win32file
 
 import constants
@@ -180,13 +181,17 @@ def GetDirectorySize(path,fileCount=0,dirCount=0):
 	try:
 		with os.scandir(path) as it:
 			for entry in it:
-				if entry.is_file():
+				if isLink(entry.path):
+					print("Synlink skipped:"+entry.path)
+					log.debug("Synlink skipped:"+entry.path)
+					continue
+				elif entry.is_file(follow_symlinks=False):
 					total += entry.stat().st_size
 					fileCount+=1
-				elif entry.is_dir():
+				elif entry.is_dir(follow_symlinks=False):
 					dirCount+=1
 					r=GetDirectorySize(entry.path,fileCount,dirCount)
-					if r[0]==-1: return -1
+					if r==(-1,0-1,-1):continue
 					total+=r[0]
 					fileCount=r[1]
 					dirCount=r[2]
@@ -332,3 +337,10 @@ def PathParamSplit(input):
 		path=input[0:end]
 		prm=input[end+1:]
 		return path,prm
+
+def isLink(path):
+	"""
+		pathがシンボリックリンクまたはジャンクションならTrue
+	"""
+	attrs = win32api.GetFileAttributes(path)
+	return attrs & win32con.FILE_ATTRIBUTE_REPARSE_POINT!=0
