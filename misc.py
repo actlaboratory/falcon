@@ -24,6 +24,7 @@ import workerThreadTasks
 
 from logging import getLogger
 from simpleDialog import dialog
+from win32com.shell import shell, shellcon
 
 log=getLogger("falcon.misc")
 
