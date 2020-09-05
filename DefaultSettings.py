@@ -3,7 +3,7 @@
 #Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese. 
 
-from FalconConfigParser import *
+from ConfigManager import *
 
 
 class DefaultSettings:
@@ -13,7 +13,7 @@ class DefaultSettings:
 	"""
 
 	def get():
-		config = FalconConfigParser()
+		config = ConfigManager()
 		config["general"]={
 			"language": "ja-JP",
 			"fileVersion": "100",
@@ -78,7 +78,7 @@ class DefaultSettings:
 			"sizeY": "600",
 		}
 		config["browse"]={
-			"startPath": "%HOMEDRIVE%\\"
+			"startPath": ""
 		}
 		config["search"]={
 			"history_count": 20,

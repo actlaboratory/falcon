@@ -124,13 +124,6 @@ str2InputControlKey={
 	"DELETE":wx.WXK_DELETE,
 	"INSERT":wx.WXK_INSERT,
 
-
-	#矢印キー
-	"LEFTARROW":wx.WXK_LEFT,
-	"UPARROW":wx.WXK_UP,
-	"RIGHTARROW":wx.WXK_RIGHT,
-	"DOWNARROW":wx.WXK_DOWN,
-
 	#ジャンプキー
 	"HOME":wx.WXK_HOME,
 	"END":wx.WXK_END,
@@ -155,6 +148,12 @@ str2StandaloneKey={
 	"NUMPAD_SUBTRACT":wx.WXK_NUMPAD_SUBTRACT,
 	"NUMPAD_DIVIDE":wx.WXK_NUMPAD_DIVIDE,
 	"NUMPAD_DECIMAL":wx.WXK_NUMPAD_DECIMAL,
+
+	#矢印キー
+	"LEFTARROW":wx.WXK_LEFT,
+	"UPARROW":wx.WXK_UP,
+	"RIGHTARROW":wx.WXK_RIGHT,
+	"DOWNARROW":wx.WXK_DOWN,
 }
 
 #単独または修飾キーとの組み合わせで利用できる
@@ -325,12 +324,15 @@ class KeymapHandler():
 		self.filter=filter	#指定の妥当性をチェックするフィルタ
 
 		if dict:
-			read=configparser.ConfigParser()
-			read.read_dict(dict)
-			for identifier in read.sections():
-				for elem in read.items(identifier):
-					if elem[1]!="":						#空白のものは無視する
-						self.add(identifier,elem[0],elem[1])
+			self.addDict(dict)
+
+	def addDict(self,dict):
+		read=configparser.ConfigParser()
+		read.read_dict(dict)
+		for identifier in read.sections():
+			for elem in read.items(identifier):
+				if elem[1]!="":						#空白のものは無視する
+					self.add(identifier,elem[0],elem[1])
 
 	def addFile(self, filename):
 		"""
@@ -389,7 +391,8 @@ class KeymapHandler():
 					checkList.append(i)
 			if checkList:
 					checkList.append(entry)
-					if self.checkConfrict(checkList,identifier):
+					if checkConfrict(checkList,self.log):
+						self.replaceOriginalRef(checkList,identifier)
 						entry=None
 					else:
 						self.addError(identifier,ref,key)
@@ -439,31 +442,14 @@ class KeymapHandler():
 		identifier=identifier.upper()
 		return self.entries[identifier]
 
-	#複数メニューに対するキーの割り当ての重複を許すか否かを調べる
-	#itemsには調べたいAcceleratorEntryのリストを入れる
-	def checkConfrict(self,items,identifier):
-		flg=0
-		for i in [j.refName for j in items]:
-			iFlag=0
-			if i not in tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.File]:
-				iFlag+=1
-			if i not in tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.Folder]:
-				iFlag+=2
-			if i not in tabs.streamList.StreamListTab.blockMenuList:
-				iFlag+=4
-			if i not in tabs.driveList.DriveListTab.blockMenuList:
-				iFlag+=8
-			#print(i+":"+str(iFlag))
-			if iFlag&flg==0:
-				flg+=iFlag
-			else:
-				#重複によるエラー
-				self.log.debug("key confricted. "+i+" is confrict in "+str(items))
-				return False
-		self.log.debug("key not confricted. "+i+" is not confrict in "+str(items))
+	def replaceOriginalRef(self,items,identifier):
+		"""
+			refを独自のものに置き換えることによって、キーの重複を許容しながら登録する
 
-		#重複してるが問題なしの場合
-		#refを書き換える
+			items		重複したキーが設定されているAcceleratorEntryのリスト
+			identifier	itemsが設定されているウィンドウの識別名
+		"""
+		#keymap_keynameのrefを取得
 		newref=menuItemsStore.getRef("keymap_"+items[0].ToRawString())
 		self.refMap[newref]=[]
 
@@ -471,7 +457,7 @@ class KeymapHandler():
 		for i in range(len(items)-1):
 			self.entries[identifier].remove(items[0])
 
-		#refを差し替えて再登録
+		#refを差し替えて再登録し、元のrefを記録
 		for i in items:
 			self.refMap[newref].append(i.GetCommand())
 			self.entries[identifier].append(AcceleratorEntry(i.GetFlags(),i.GetKeyCode(),newref,i.GetRefName()))
@@ -482,6 +468,59 @@ class KeymapHandler():
 
 	def GetOriginalRefs(self,ref):
 		return self.refMap[ref]
+
+#複数メニューに対するキーの割り当ての重複を許すか否かを調べる
+#itemsには調べたいAcceleratorEntryのリストを入れる
+def checkConfrict(items,log):
+	typeCondition=tabs.base.FalconTabBase.selectItemTypeMenuConditions
+	countCondition=tabs.base.selectItemMenuConditions;
+	flg=0
+	for i in [j.refName for j in items]:
+		iFlag=0
+		#ファイルリストタブ
+		if i not in tabs.fileList.FileListTab.blockMenuList:
+			if i not in typeCondition[browsableObjects.File]:
+				iFlag+=1
+			if i not in typeCondition[browsableObjects.Folder]:
+				iFlag+=2
+			if i not in countCondition[0]:
+				iFlag+=4
+
+		#ストリームリストタブ
+		if i not in tabs.streamList.StreamListTab.blockMenuList:
+			iFlag+=8
+
+		#ドライブリストタブ
+		if i not in tabs.driveList.DriveListTab.blockMenuList:
+			if i not in tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.Drive]:
+				iFlag+=16
+			if i not in tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.NetworkResource]:
+				iFlag+=32
+			if i not in countCondition[0]:
+				iFlag+=64
+
+		#GrepResultTab
+		if i not in tabs.grepResult.GrepResultTab.blockMenuList:
+			iFlag+=128
+
+		#SearchResultTab
+		if i not in tabs.searchResult.SearchResultTab.blockMenuList:
+			if i not in typeCondition[browsableObjects.SearchedFile]:
+				iFlag+=256
+			if i not in typeCondition[browsableObjects.SearchedFolder]:
+				iFlag+=512
+			if i not in countCondition[0]:
+				iFlag+=1024
+
+		#print("{:010b}".format(iFlag)+":"+i)
+		if iFlag&flg==0:
+			flg+=iFlag
+		else:
+			#重複によるエラー
+			log.warn("key confricted. "+i+" is confrict in "+str(items))
+			return False
+	log.debug("key not confricted. "+i+" is not confrict in "+str(items))
+	return True
 
 def makeEntry(ref,key,filter,log):
 	"""ref(String)と、/区切りでない単一のkey(String)からwx.AcceleratorEntryを生成"""
@@ -540,6 +579,11 @@ class AcceleratorEntry(wx.AcceleratorEntry):
 	def GetRefName(self):
 		return self.refName
 
+	def __repr__(self):
+		return self.__str__()
+
+	def __str__(self):
+		return "<AcceleratorEntry %s>" % self.GetRefName()
 
 class KeyFilter:
 	"""
@@ -634,6 +678,44 @@ class KeyFilter:
 			if not ptn in str2key:
 				raise ValueError(_("%s は存在しないキーです。" % (ptn)))
 		self.disablePattern.append(set(patterns))
+
+	def AddEnableKey(self,keys):
+		if type(keys)==str:
+			return self.SetKeyGroup(keys,self.enableKey)
+		for key in keys:
+			self._SetKeyGroup(key,self.enableKey)
+
+	def AddFunctionKey(self,keys):
+		if type(keys)==str:
+			return self.SetKeyGroup(keys,self.functionKey)
+		for key in keys:
+			self._SetKeyGroup(key,self.functionKey)
+
+	def AddModifierKey(self,keys):
+		if type(keys)==str:
+			return self.SetKeyGroup(keys,self.modifierKey)
+		for key in keys:
+			self._SetKeyGroup(key,self.modifierKey)
+
+	def AddNoShiftEnableKey(self,keys):
+		if type(keys)==str:
+			return self.SetKeyGroup(keys,noShiftEnableKey)
+		for key in keys:
+			self._SetKeyGroup(key,self.noShiftEnableKey)
+
+	def _SetKeyGroup(self,key,target):
+		key=key.upper()
+		if not key in str2key:
+			raise ValueError(_("%s は存在しないキーです。" % key))
+		try:
+			self.disablePattern.remove(set(key))
+		except ValueError:
+			pass
+		self.enableKey.discard(key)
+		self.functionKey.discard(key)
+		self.modifierKey.discard(key)
+		self.noShiftEnableKey.discard(key)
+		target.add(key)
 
 
 	def Check(self,keyString):

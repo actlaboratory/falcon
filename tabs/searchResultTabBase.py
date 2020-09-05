@@ -29,6 +29,8 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 		"EDIT_PAST",
 		"EDIT_SEARCH",
 		"MOVE_BACKWARD",
+		"MOVE_HIST_PREV",
+		"MOVE_HIST_NEXT",
 		"MOVE_MARKSET",
 		"MOVE_MARK",
 		"TOOL_ADDPATH",
@@ -97,19 +99,19 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 
 	def OpenContextMenu(self,event):
 		menu=wx.Menu()
-		globalVars.app.hMainView.menu.RegisterMenuCommand(menu,{
-			"MOVE_FORWARD":_("開く"),
-			"EDIT_FULLPATHCOPY":_("フルパスをコピー"),
-			"EDIT_CUT":_("切り取り"),
-			"EDIT_COPY":_("コピー"),
-			"FILE_RENAME":_("名前を変更"),
-			"FILE_CHANGEATTRIBUTE":_("属性を変更"),
-			"FILE_MAKESHORTCUT":_("ショートカットを作成"),
-			"FILE_TRASH":_("ゴミ箱へ移動"),
-			"FILE_DELETE":_("完全削除"),
-			"FILE_VIEW_DETAIL":_("詳細情報を表示"),
-			"FILE_SHOWPROPERTIES":_("プロパティを表示")
-		})
+		globalVars.app.hMainView.menu.RegisterMenuCommand(menu,(
+			"MOVE_FORWARD",
+			"EDIT_FULLPATHCOPY",
+			"EDIT_CUT",
+			"EDIT_COPY",
+			"FILE_RENAME",
+			"FILE_CHANGEATTRIBUTE",
+			"FILE_MAKESHORTCUT",
+			"FILE_TRASH",
+			"FILE_DELETE",
+			"FILE_VIEW_DETAIL",
+			"FILE_SHOWPROPERTIES"
+		))
 		globalVars.app.hMainView.PopupMenu(menu)
 
 

@@ -14,7 +14,6 @@ import fileOperator
 import misc
 
 from simpleDialog import *
-from win32com.shell import shell, shellcon
 from . import base
 
 class NetworkResourceListTab(base.FalconTabBase):
@@ -54,10 +53,6 @@ class NetworkResourceListTab(base.FalconTabBase):
 	def OnLabelEditEnd(self,event):
 		evt.Veto()
 		return
-
-	def ShowProperties(self):
-		index=self.GetFocusedItem()
-		shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST,0,"properties",self.listObject.GetElement(index).fullpath)
 
 	def ReadCurrentFolder(self):
 		globalVars.app.say(_("現在は、"+self.listObject.rootDirectory), interrupt=True)

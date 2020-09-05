@@ -69,7 +69,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
 		targetItemIndex=lst.Search(cursor,1)
-		if targetItemIndex==-1:
+		if targetItemIndex==-1 and cursor!="":			#ネットワークドライブ対策
 			targetItemIndex=lst.Search(cursor,0)
 		newtab.Update(lst,targetItemIndex)
 		if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)

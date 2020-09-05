@@ -5,8 +5,10 @@
 #Note: All comments except these top lines will be written in Japanese.
 
 import os
+import win32con
 import win32file
 import logging
+
 import constants
 import misc
 import globalVars
@@ -48,6 +50,11 @@ class FalconBrowsableBase():
 			self.longAttributesString+= _("システム")
 		else:
 			self.attributesString+="-"
+
+		if attrib&win32con.FILE_ATTRIBUTE_REPARSE_POINT:
+			if not self.longAttributesString=="":
+				self.longAttributesString+="・"
+			self.longAttributesString+= _("リパースポイント")
 
 		if self.longAttributesString=="":
 			self.longAttributesString="なし"

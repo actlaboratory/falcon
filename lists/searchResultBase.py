@@ -69,7 +69,7 @@ class SearchResultBase(FileListBase):
 			keyword=keyword.replace("*",".*")
 			keyword=keyword.replace("?",".")
 		#end ワイルドカード置き換え
-		self.keyword=re.compile(keyword)
+		self.keyword=re.compile(keyword,re.IGNORECASE)
 		if not silent: globalVars.app.say("%sの検索結果 %s から" % (keyword,self.rootDirectory,))
 
 	def _initSearch(self):

@@ -6,6 +6,7 @@
 
 import wx
 import constants
+import errorCodes
 import keymap
 import defaultKeymap
 import menuItemsStore
@@ -13,7 +14,7 @@ import views.ViewCreator
 from simpleDialog import dialog
 
 import globalVars
-
+import menuItemsDic
 
 class BaseView(object):
 	"""falconのビューの基本クラス。"""
@@ -53,13 +54,16 @@ class BaseView(object):
 
 class BaseMenu(object):
 	def __init__(self):
-		self.blockCount={}
+		self.blockCount={}				#key=intのref、value=blockCount
+		self.desableItems=set()			#ブロック中のメニューのrefを格納
 		self.hMenuBar=wx.MenuBar()
 
 	def InitShortcut(self,identifier):
-		self.keymap=keymap.KeymapHandler(defaultKeymap.defaultKeymap,keymap.KeyFilter().SetDefault(False,True))
+		self.keymap=keymap.KeymapHandler(None,keymap.KeyFilter().SetDefault(False,True))
 		self.keymap_identifier=identifier
-		self.keymap.addFile(constants.KEYMAP_FILE_NAME)
+		if self.keymap.addFile(constants.KEYMAP_FILE_NAME)!=errorCodes.OK:
+			self.keymap.addDict(defaultKeymap.defaultKeymap)
+
 		errors=self.keymap.GetError(identifier)
 		if errors:
 			tmp=_(constants.KEYMAP_FILE_NAME+"で設定されたショートカットキーが正しくありません。キーの重複、存在しないキー名の指定、使用できないキーパターンの指定などが考えられます。以下のキーの設定内容をご確認ください。\n\n")
@@ -74,7 +78,12 @@ class BaseMenu(object):
 		if type(ref_id)==dict:
 			for k,v in ref_id.items():
 				self._RegisterMenuCommand(menu_handle,k,v,None,index)
+		elif type(ref_id) in (list,set,tuple):
+			for k in ref_id:
+				self._RegisterMenuCommand(menu_handle,k,menuItemsDic.dic[k],None,index)
 		else:
+			if title=="":
+				title=menuItemsDic.dic[ref_id]
 			return self._RegisterMenuCommand(menu_handle,ref_id,title,subMenu,index)
 
 	def _RegisterMenuCommand(self,menu_handle,ref_id,title,subMenu,index):
@@ -128,15 +137,15 @@ class BaseMenu(object):
 				self.blockCount[menuItemsStore.getRef(i)]=0
 
 			#ブロック解除
-			if self.blockCount[menuItemsStore.getRef(i)]==0:
+			if self.blockCount[menuItemsStore.getRef(i)]==0 and i not in self.desableItems:
 				self.hMenuBar.Enable(menuItemsStore.getRef(i),True)
 
 	def Enable(self,ref,enable):
-		self.hMenuBar.Enable(ref,enable)
 		if enable:
-			self.blockCount[ref]=0
+			self.desableItems.add(ref)
 		else:
-			self.blockCount[ref]=2100000000
+			self.desableItems.discard(ref)
+		self.hMenuBar.Enable(ref,self.blockCount[ref]==0 and ref not in self.desableItems)
 
 	def IsEnable(self,ref):
 		return self.blockCount[menuItemsStore.getRef(ref)]<=0

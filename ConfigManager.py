@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-#FalconConfigManager
-#Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
-#Note: All comments except these top lines will be written in Japanese. 
+#ConfigManager
+#Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 
 import os
 import configparser
 import logging
-from logging import getLogger, FileHandler, Formatter
+from logging import getLogger
 
 
-class FalconConfigParser(configparser.ConfigParser):
+
+class ConfigManager(configparser.ConfigParser):
 	def __init__(self):
 		super().__init__(interpolation=None)
-		self.identifier="falconConfigParser"
-		self.log=getLogger("falcon.%s" % self.identifier)
+		self.identifier="ConfigManager"
+		self.log=getLogger(self.identifier)
 		self.log.debug("Create config instance")
 
 	def read(self,fileName):
@@ -35,9 +35,9 @@ class FalconConfigParser(configparser.ConfigParser):
 
 	def __getitem__(self,key):
 		try:
-			return FalconConfigSection(super().__getitem__(key))
+			return ConfigSection(super().__getitem__(key))
 		except KeyError as e:
-			self.log.debug("create new section:"+key)
+			self.log.debug("created new section:"+key)
 			self.add_section(key)
 			return self.__getitem__(key)
 
@@ -49,7 +49,7 @@ class FalconConfigParser(configparser.ConfigParser):
 		except ValueError:
 			self.log.debug("value is not boolean.  return default "+str(default)+" at section "+section+", key "+key)
 			self[section][key]=str(default)
-			return default
+			return int(default)
 		except configparser.NoOptionError as e:
 			self.log.debug("add new boolval "+str(default)+" at section "+section+", key "+key)
 			self[section][key]=default
@@ -83,7 +83,7 @@ class FalconConfigParser(configparser.ConfigParser):
 			return int(default)
 
 	def getstring(self,section,key,default="",selection=None,*, raw=False, vars=None,fallback=None):
-		if type(selection) not in (set,tuple,list):
+		if selection!=None and type(selection) not in (set,tuple,list):
 			raise TypeError("selection must be set, list or tuple")
 		ret=self.__getitem__(section)[key]
 		if ret=="":
@@ -96,7 +96,7 @@ class FalconConfigParser(configparser.ConfigParser):
 				ret=default
 				if selection==None:return ret
 
-		if ret not in selection:
+		if selection!=None and ret not in selection:
 			self.log.debug("value "+ret+" not in selection.  at section "+section+", key "+key)
 			self[section][key]=default
 			ret=default
@@ -106,7 +106,7 @@ class FalconConfigParser(configparser.ConfigParser):
 		if not self.has_section(name):
 			return super().add_section(name)
 
-class FalconConfigSection(configparser.SectionProxy):
+class ConfigSection(configparser.SectionProxy):
 	def __init__(self,proxy):
 		super().__init__(proxy._parser, proxy._name)
 
@@ -119,3 +119,4 @@ class FalconConfigSection(configparser.SectionProxy):
 
 	def __setitem__(self,key,value):
 		return super().__setitem__(key,str(value))
+
