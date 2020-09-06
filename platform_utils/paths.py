@@ -15,7 +15,6 @@ if is_windows:
 	import ctypes
 	import ctypes.wintypes
 	ctypes.wintypes.create_unicode_buffer = ctypes.create_unicode_buffer
-	import winpaths
 
 try:
 	unicode
@@ -26,7 +25,7 @@ def app_data_path(app_name=None):
 	"""Cross-platform method for determining where to put application data."""
 	"""Requires the name of the application"""
 	if is_windows:
-		path = winpaths.get_appdata()
+		path = os.path.expandvars("%appdata%")
 	elif is_mac:
 		path = os.path.join(os.path.expanduser('~'), 'Library', 'Application Support')
 	elif is_linux:
@@ -89,7 +88,7 @@ def module_path(level=2):
 def documents_path():
 	"""On windows, returns the path to My Documents. On OSX, returns the user's Documents folder. For anything else, returns the user's home directory."""
 	if is_windows:
-		path = winpaths.get_my_documents()
+		os.path.expandvars("%userprofile%"+"\\documents")
 	elif is_mac:
 		path = os.path.join(os.path.expanduser('~'), 'Documents')
 	else:
@@ -118,6 +117,6 @@ def start_file(path):
 def get_applications_path():
 	"""Return the directory where applications are commonly installed on the system."""
 	if is_windows:
-		return winpaths.get_program_files()
+		os.path.expandvars("%programfiles%")
 	elif is_mac:
 		return '/Applications'
