@@ -60,6 +60,9 @@ class FalconBrowsableBase():
 			self.longAttributesString="なし"
 		return
 
+	def IsReparsePoint(self):
+		return self.attributes&win32con.FILE_ATTRIBUTE_REPARSE_POINT>0
+
 	def __str__(self):
 		return "<"+self.__class__.__name__+" "+self.basename+">"
 

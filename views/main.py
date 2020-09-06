@@ -1015,6 +1015,8 @@ class Events(BaseEvents):
 			dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
 			dic[_("属性")]=elem.longAttributesString
 			dic[_("種類")]=elem.typeString
+			if elem.IsReparsePoint():
+				dic[_("リンク先")]=os.readlink(elem.fullpath)
 			if not elem.shortName=="":
 				dic[_("短い名前")]=elem.shortName
 			else:
