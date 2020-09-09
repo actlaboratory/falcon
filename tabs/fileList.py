@@ -50,10 +50,10 @@ class FileListTab(base.FalconTabBase):
 		e=self.hListCtrl.GetEditControl()
 		f=self.listObject.GetElement(self.GetFocusedItem())
 		if isinstance(f,browsableObjects.Folder):
-			newName=f.directory+"\\"+e.GetLineText(0)
+			newName=os.path.join(f.directory,e.GetLineText(0))
 			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.DIRECTORY,e.GetLineText(0))
 		elif isinstance(f,browsableObjects.File):
-			newName=f.directory+"\\"+e.GetLineText(0)
+			newName=os.path.join(f.directory,e.GetLineText(0))
 			error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.FILE,e.GetLineText(0))
 		#end フォルダかファイルか
 		if error:
@@ -70,7 +70,7 @@ class FileListTab(base.FalconTabBase):
 		#end fail
 		f.basename=e.GetLineText(0)
 		if isinstance(f,browsableObjects.File):
-			f.fullpath=f.directory+"\\"+f.basename
+			f.fullpath=os.path.join(f.directory,f.basename)
 		if isinstance(f,browsableObjects.Stream):
 			f.fullpath=f.file+f.basename
 	#end onLabelEditEnd
@@ -100,12 +100,11 @@ class FileListTab(base.FalconTabBase):
 
 	def MakeDirectory(self,newdir):
 		dir=self.listObject.rootDirectory
-		error=fileSystemManager.ValidationObjectName(dir+"\\"+newdir,fileSystemManager.pathTypes.DIRECTORY,newdir)
-		print("@@@@"+error)
+		error=fileSystemManager.ValidationObjectName(os.path.join(dir,newdir),fileSystemManager.pathTypes.DIRECTORY,newdir)
 		if error!="":
 			dialog(_("エラー"),error)
 			return False
-		dest=dir+"\\"+newdir
+		dest=os.path.join(dir,newdir)
 		inst={"operation": "mkdir", "target": [dest]}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
@@ -218,8 +217,12 @@ class FileListTab(base.FalconTabBase):
 		self.background_tasks.remove(taskState)
 
 	def ReadCurrentFolder(self):
-		f=self.listObject.rootDirectory.split(":\\")
-		s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': self.listObject.rootDirectory[0], 'folder': f[1] if len(f)==2 else "ルート"}
+		curdir=os.path.basename(self.listObject.rootDirectory)
+		drive=os.path.splitdrive(self.listObject.rootDirectory)[0]
+		if self.listObject.rootDirectory[0]!="\\":
+			s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': drive[0], 'folder': curdir if curdir!="" else "ルート"}
+		else:
+			s=_("現在は、%(drive)sの %(folder)s") % {'drive': drive, 'folder': curdir if curdir!="" else "ルート"}
 		globalVars.app.say(s, interrupt=True)
 
 	def ReadListItemNumber(self,short=False):
@@ -228,13 +231,22 @@ class FileListTab(base.FalconTabBase):
 			globalVars.app.say(_("フォルダ数 %(folders)d ファイル数 %(files)d") % {'folders': folders, 'files': files})
 			return
 		#end short
-		tmp=self.listObject.rootDirectory.split("\\")
-		curdir=_("%(letter)sルート") % {'letter': tmp[0][0]} if len(tmp)==1 else tmp[-1]
+		curdir=os.path.basename(self.listObject.rootDirectory)
+		if curdir=="":
+			if len(self.listObject.rootDirectory)<=3:
+				curdir=_("%(letter)sルート") % {'letter': self.listObject.rootDirectory[0]}
+			else:				#ネットワークルート
+				curdir=self.listObject.rootDirectory
 		globalVars.app.say(_("%(containing)sの中には、フォルダ %(folders)d個、 ファイル %(files)d個") % {'containing': curdir, 'folders': folders, 'files': files}, interrupt=True)
 
 	def ReadListInfo(self):
 		tmp=self.listObject.rootDirectory.split("\\")
-		curdir=_("%(letter)sルート") % {'letter': tmp[0][0]} if len(tmp)==1 else tmp[-1]
+		curdir=os.path.basename(self.listObject.rootDirectory)
+		if curdir=="":
+			if len(self.listObject.rootDirectory)<=3:
+				curdir=_("%(letter)sルート") % {'letter': self.listObject.rootDirectory[0]}
+			else:				#ネットワークルート
+				curdir=self.listObject.rootDirectory
 		prefix=_("フォルダ ") if len(tmp)>1 else ""
 		globalVars.app.say(_("%(prefix)s%(dir)sを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'prefix': prefix, 'dir': curdir, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
@@ -334,11 +346,11 @@ class FileListTab(base.FalconTabBase):
 		self.UpdateFilelist(silence=True)
 	#end past
 
-
 	def GetTabName(self):
 		"""タブコントロールに表示する名前"""
-		word=self.listObject.rootDirectory.split("\\")
-		word=word[len(word)-1]
+		word=os.path.basename(self.listObject.rootDirectory)
+		if word=="":	#ルート
+			word=self.listObject.rootDirectory
 		word=StringUtil.GetLimitedString(word,globalVars.app.config["view"]["header_title_length"])
 		return word
 

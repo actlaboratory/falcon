@@ -180,8 +180,12 @@ class StreamListTab(base.FalconTabBase):
 		return errorCodes.NOT_SUPPORTED#基底クラスではなにも許可しない
 
 	def ReadCurrentFolder(self):
-		f=self.listObject.rootDirectory.split(":\\")
-		s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': self.listObject.rootDirectory[0], 'folder': f[1] if len(f)==2 else "ルート"}
+		curdir=os.path.basename(self.listObject.rootDirectory)
+		drive=os.path.splitdrive(self.listObject.rootDirectory)[0]
+		if self.listObject.rootDirectory[0]!="\\":
+			s=_("現在は、ドライブ%(drive)sの %(folder)s") % {'drive': drive[0], 'folder': curdir if curdir!="" else "ルート"}
+		else:
+			s=_("現在は、%(drive)sの %(folder)s") % {'drive': drive, 'folder': curdir if curdir!="" else "ルート"}
 		globalVars.app.say(s, interrupt=True)
 
 	def ReadListItemNumber(self,short=False):
@@ -190,27 +194,32 @@ class StreamListTab(base.FalconTabBase):
 			globalVars.app.say(_("ストリーム数 %(streams)d") % {'streams': streams})
 			return
 		#end short
-		curdir=self.listObject.rootDirectory.split("\\")[-1]
-		globalVars.app.say(_("%(containing)sの中には、ストリーム %(streams)d個") % {'containing': curdir, 'streams': streams}, interrupt=True)
+		curdir=os.path.basename(self.listObject.rootDirectory)
+		if curdir=="":
+			if len(self.listObject.rootDirectory)<=3:
+				curdir=_("%(letter)sルート") % {'letter': self.listObject.rootDirectory[0]}
+			else:				#ネットワークルート
+				curdir=self.listObject.rootDirectory
+		globalVars.app.say(_("%(containing)sには、ストリーム %(streams)d個") % {'containing': curdir, 'streams': streams}, interrupt=True)
 
 	def ReadListInfo(self):
-		tmp=self.listObject.rootDirectory.split("\\")[-1]
-		globalVars.app.say(_("%(dir)sに含まれるストリームを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'dir': tmp, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
+		tmp=self.listObject.rootDirectory.split("\\")
+		curdir=os.path.basename(self.listObject.rootDirectory)
+		if curdir=="":
+			if len(self.listObject.rootDirectory)<=3:
+				curdir=_("%(letter)sルート") % {'letter': self.listObject.rootDirectory[0]}
+			else:				#ネットワークルート
+				curdir=self.listObject.rootDirectory
+		globalVars.app.say(_("%(dir)sに含まれるストリームを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目") %{'dir': curdir, 'sortkind': self.listObject.GetSortKindString(), 'sortad': self.listObject.GetSortAdString(), 'max': len(self.listObject), 'current': self.GetFocusedItem()+1}, interrupt=True)
 
 	def GetTabName(self):
 		"""タブコントロールに表示する名前"""
-		word=self.listObject.rootDirectory.split("\\")
-		word=word[len(word)-1]
+		word=os.path.basename(self.listObject.rootDirectory)
+		if word=="":	#ルート
+			word=self.listObject.rootDirectory
 		word=StringUtil.GetLimitedString(word,globalVars.app.config["view"]["header_title_length"])
 		return word
 
 	def GetRootObject(self):
 		"""ドライブ詳細情報表示で用いる"""
-		rootPath=self.listObject.rootDirectory[0]
-		elem=None
-		if len(rootPath)==1:
-			try:
-				elem=lists.drive.GetDriveObject(int(ord(rootPath)-65))
-			except:
-				pass
-		return elem
+		return misc.GetRootObject(self.listObject.rootDirectory)

@@ -131,7 +131,6 @@ def AddCustomContextMenuItem(name,identifier):
 	falconHelper.addCustomContextMenuItem(makeStringForFalconHelper(name),identifier)
 
 def AddContextMenuItemsFromWindows(path):
-	print("len %d" % len(path))
 	path_bytes=makeStringForFalconHelper(json.dumps(path))
 	ret=falconHelper.addContextMenuItemsFromWindows(path_bytes)
 	return ret==1
@@ -163,12 +162,12 @@ def disableWindowStyleFlag(hwnd,flag):
 def IteratePaths(path,append_eol=False):
 	"""FindFirstFile 系を使って、パス名をイテレートする。append_eol=True にすると、最後に "eol" という1行をリストに入れるので、検索の終了判定などに使える。"""
 	try:
-		for elem in win32file.FindFilesIterator(path+"\\*"):
+		for elem in win32file.FindFilesIterator(os.path.join(path,"*")):
 			if elem[8]=="." or elem[8]=="..": continue
 			if elem[0]&win32file.FILE_ATTRIBUTE_DIRECTORY: 
-				yield from IteratePaths(path+"\\"+elem[8])
+				yield from IteratePaths(os.path.join(path,elem[8]))
 			#end ディレクトリ
-			yield path+"\\"+elem[8]
+			yield os.path.join(path,elem[8])
 		#end iterate
 	except pywintypes.error as e:
 		log.error("Access denied while searching paths at %s (%s)." % (path,e))
