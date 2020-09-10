@@ -8,12 +8,12 @@ import configparser
 import logging
 import os
 import wx
+
+import browsableObjects
 import defaultKeymap
 import errorCodes
 import menuItemsStore
-
 import tabs
-import browsableObjects
 
 from simpleDialog import *
 
@@ -355,6 +355,27 @@ class KeymapHandler():
 				if elem[1]!="":				#空白のものは無視する
 					self.add(identifier,elem[0],elem[1])
 		return errorCodes.OK
+
+	def SaveFile(self,fileName):
+		"""
+			指定した名前でキーマップの保存を試みます
+		"""
+		c=configparser.ConfigParser()
+		try:
+			c.read(fileName)
+		except:
+			pass
+		for section in self.entries.keys():
+			c.add_section(section)
+			for entry in self.entries[section]:
+				c[section][entry.refName]=self.map[section][entry.refName]
+		try:
+			print(fileName)
+			with open(fileName,"w", encoding='UTF-8') as f: return c.write(f)
+			print("write")
+			return errorCodes.OK
+		except:
+			return errorCodes.ACCESS_DENIED
 
 	def GetError(self,identifier):
 		"""指定されたビューのエラー内容を返し、内容をクリアする"""

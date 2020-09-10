@@ -63,6 +63,7 @@ class BaseMenu(object):
 		self.keymap_identifier=identifier
 		if self.keymap.addFile(constants.KEYMAP_FILE_NAME)!=errorCodes.OK:
 			self.keymap.addDict(defaultKeymap.defaultKeymap)
+			self.keymap.SaveFile(constants.KEYMAP_FILE_NAME)
 
 		errors=self.keymap.GetError(identifier)
 		if errors:
