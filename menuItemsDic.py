@@ -39,6 +39,7 @@ dic={
 	"MOVE_HIST_PREV":_("前の履歴位置へ"),
 	"MOVE_MARKSET":_("表示中の場所をマーク"),
 	"MOVE_MARK":_("マークした場所へ移動"),
+	"MOVE_INPUT_DIR":_("パスを指定して移動"),
 
 	"MOVE_ADD_FAVORITE":_("現在の場所をお気に入りに登録"),
 	"MOVE_SETTING_FAVORITE":_("お気に入りディレクトリの設定"),

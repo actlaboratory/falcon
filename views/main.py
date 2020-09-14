@@ -33,7 +33,7 @@ import views.execProgram
 import views.favoriteDirectory
 import views.fonttest
 import views.globalKeyConfig
-import views.mkdir
+import views.SympleImputDialog
 import views.makeHash
 import views.makeShortcut
 import views.objectDetail
@@ -375,7 +375,8 @@ class Menu(BaseMenu):
 			"MOVE_HIST_NEXT",
 			"MOVE_HIST_PREV",
 			"MOVE_MARKSET",
-			"MOVE_MARK"
+			"MOVE_MARK",
+			"MOVE_INPUT_DIR"
 		))
 
 		#読みメニューの中身
@@ -596,6 +597,12 @@ class Events(BaseEvents):
 		if selected==menuItemsStore.getRef("MOVE_MARK"):
 			self.parent.activeTab.GoToMark()
 			return
+		if selected==menuItemsStore.getRef("MOVE_INPUT_DIR"):
+			d=views.SympleImputDialog.Dialog(_("パスを指定して移動"),_("移動先"))
+			d.Initialize()
+			if d.Show()==wx.ID_CANCEL: return
+			self.parent.activeTab.Move(d.GetValue())
+			return
 		if selected==menuItemsStore.getRef("MOVE_ADD_FAVORITE"):
 			d=views.favoriteDirectory.SettingDialog(self.parent.hFrame,os.path.basename(self.parent.activeTab.listObject.rootDirectory),self.parent.activeTab.listObject.rootDirectory,"")
 			d.Initialize()
@@ -684,10 +691,9 @@ class Events(BaseEvents):
 			self.parent.activeTab.ChangeAttribute(val)
 			return
 		if selected==menuItemsStore.getRef("FILE_MKDIR"):
-			d=views.mkdir.Dialog()
+			d=views.SympleImputDialog.Dialog(_("ディレクトリ作成"),_("ディレクトリ名"))
 			d.Initialize()
-			ret=d.Show()
-			if ret==wx.ID_CANCEL: return
+			if d.Show()==wx.ID_CANCEL: return
 			self.parent.activeTab.MakeDirectory(d.GetValue())
 			return
 		if selected==menuItemsStore.getRef("FILE_FILEOPTEST"):

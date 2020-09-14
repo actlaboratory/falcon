@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #Falcon app GUI implementation
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Note: All comments except these top lines will be written in Japanese. 

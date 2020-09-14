@@ -46,6 +46,7 @@ defaultKeymap["mainView"]={
 	"MOVE_HIST_NEXT":"alt+rightarrow/numpad_multiply",
 	"MOVE_MARKSET": "INSERT",
 	"MOVE_MARK": "shift+BACK",
+	"MOVE_INPUT_DIR": "ctrl+shift+f1",
 	"MOVE_ADD_FAVORITE": "ctrl+f6",
 	"MOVE_SETTING_FAVORITE": "ctrl+shift+f6",
 
