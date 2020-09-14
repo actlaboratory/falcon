@@ -41,13 +41,11 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab=searchResult.SearchResultTab(environment)
 			newtab.Initialize(parent,creator)
 			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'], target['isRegularExpression'])
-			return newtab
 		#end 検索
 		if target['action']=='grep':
 			newtab=grepResult.GrepResultTab(environment)
 			newtab.Initialize(parent,creator)
 			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'], target['isRegularExpression'])
-			return newtab
 		#end grep検索
 		if target['action']=='past':
 			newtab=pastProgress.PastProgressTab(environment)
@@ -55,10 +53,12 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			lst=lists.PastProgressList()
 			lst.Initialize()
 			newtab.Update(lst)
-			return newtab
 		#end 貼り付け
+		globalVars.app.hMainView.ReplaceCurrentTab(newtab)
+		return newtab
 	#end targetが辞書の時の特殊処理
 
+	target=os.path.expandvars(target)
 	if target=="":#ドライブリスト
 		lst=lists.DriveList()
 		lst.Initialize()
@@ -71,12 +71,8 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 		targetItemIndex=lst.Search(cursor,1)
 		if targetItemIndex==-1 and cursor!="":			#ネットワークドライブ対策
 			targetItemIndex=lst.Search(cursor,0)
-		newtab.Update(lst,targetItemIndex)
-		if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
-		return newtab
 	#end ドライブリストへ行く
-	target=os.path.expandvars(target)
-	if target[0:2]=="\\\\" and "\\" not in target[2:]:
+	elif target[0:2]=="\\\\" and "\\" not in target[2:]:
 		lst=lists.NetworkResourceList()
 		result=lst.Initialize(target)
 		if result != errorCodes.OK:
@@ -96,9 +92,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab=streamList.StreamListTab(environment)
 			newtab.Initialize(parent,creator,hListCtrl)
 		#end 再利用するかどうか
-		newtab.Update(lst)
-		if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
-		return newtab
+		targetItemIndex=-1
 	else:
 		lst=lists.FileList()
 		result=lst.Initialize(target)
@@ -119,5 +113,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 	newtab.Update(lst,targetItemIndex)
 	#end ターゲットにフォーカス
 	if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
+	if newtab!=previous_tab:
+		globalVars.app.hMainView.ReplaceCurrentTab(newtab)
 	return newtab
 #end Navigate

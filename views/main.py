@@ -161,9 +161,7 @@ class View(BaseView):
 	def ReplaceCurrentTab(self,newtab):
 		"""現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""
 		i=self.GetTabIndex(self.activeTab)
-
-		#environmentの内容を引き継ぐ
-		newtab.SetEnvironment(self.activeTab.environment)
+		if i==-1: return	#最初のタブの作成
 
 		self.UpdateMenuState(self.activeTab,newtab)
 		self.tabs[i]=newtab
@@ -811,7 +809,6 @@ class Events(BaseEvents):
 			if m.isRefHit(selected):
 				if m == globalVars.app.favoriteDirectory:
 					ret=self.parent.activeTab.Move(os.path.abspath(os.path.expandvars(m.get(selected))))
-					if issubclass(ret.__class__,tabs.base.FalconTabBase): self.parent.ReplaceCurrentTab(ret)
 					#TODO: エラー処理する
 				else:									#ここで開く
 					path=m.get(selected)
@@ -885,12 +882,8 @@ class Events(BaseEvents):
 
 	def GoBackward(self):
 		"""back アクションを実行"""
-		p=self.parent
-		ret=p.activeTab.GoBackward()
-		if issubclass(ret.__class__,tabs.base.FalconTabBase): p.ReplaceCurrentTab(ret)
-		if ret==errorCodes.NOT_SUPPORTED:
-			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
-		elif ret==errorCodes.BOUNDARY:
+		ret=self.parent.activeTab.GoBackward()
+		if ret==errorCodes.BOUNDARY:
 			globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
 
 	def OpenNewTab(self):
@@ -964,14 +957,7 @@ class Events(BaseEvents):
 
 	def GoForward(self,stream=False,admin=False):
 		"""forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
-		p=self.parent
-		st=True if stream else False
-		ret=p.activeTab.GoForward(st,admin)
-		if issubclass(ret.__class__,tabs.base.FalconTabBase): p.ReplaceCurrentTab(ret)
-		if ret==errorCodes.NOT_SUPPORTED:
-			dialog(_("エラー"),_("このオペレーションはサポートされていません。"))
-		elif ret==errorCodes.BOUNDARY:
-			dialog("test","mada")
+		ret=self.parent.activeTab.GoForward(stream,admin)
 
 	def SortNext(self):
 		"""sortNext アクションを実行。"""

@@ -483,16 +483,12 @@ class FalconTabBase(object):
 		if not self.environment["history"].hasNext():
 			return errorCodes.BOUNDARY
 		ret=self.Move(self.environment["history"].getNext(),addHistory=False)
-		self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"),self.environment["history"].hasNext())
-		self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"),self.environment["history"].hasPrevious())
 		return ret
 
 	def GoHistPrevious(self):
 		if not self.environment["history"].hasPrevious():
 			return errorCodes.BOUNDARY
 		ret=self.Move(self.environment["history"].getPrevious(),addHistory=False)
-		self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"),self.environment["history"].hasNext())
-		self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PReV"),self.environment["history"].hasPrevious())
 		return ret
 
 	def KeyDown(self,event):
