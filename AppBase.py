@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 #Application Initializer
 
 import accessible_output2.outputs
@@ -72,13 +72,14 @@ class MaiｎBase(wx.App):
 
 	def InitLogger(self):
 		"""ログ機能を初期化して準備する。"""
-		self.hLogHandler=FileHandler(constants.APP_NAME+".log", mode="w", encoding="UTF-8")
+		self.hLogHandler=FileHandler(constants.LOG_FILE_NAME, mode="w", encoding="UTF-8")
 		self.hLogHandler.setLevel(logging.DEBUG)
 		self.hLogFormatter=Formatter("%(name)s - %(levelname)s - %(message)s (%(asctime)s)")
 		self.hLogHandler.setFormatter(self.hLogFormatter)
-		self.log=getLogger("ApplicationMain")
-		self.log.setLevel(logging.DEBUG)
-		self.log.addHandler(self.hLogHandler)
+		logger=getLogger(constants.LOG_PREFIX)
+		logger.setLevel(logging.DEBUG)
+		logger.addHandler(self.hLogHandler)
+		self.log=getLogger(constants.LOG_PREFIX+".Main")
 		r="executable" if self.frozen else "interpreter"
 		self.log.info("Starting"+constants.APP_NAME+" as %s!" % r)
 

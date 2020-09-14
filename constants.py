@@ -6,7 +6,7 @@
 import win32file
 import wx
 
-APP_NAME="Falcon Test"
+APP_NAME="Falcon test"
 APP_VERSION="0.01"
 APP_COPYRIGHT_YEAR="2019-2020"
 APP_DEVELOPERS="Yukio Nozawa and Yuki Kochi"
@@ -15,6 +15,7 @@ SUPPORTING_LANGUAGE=("ja-JP","en-US")
 
 
 SETTING_FILE_NAME="settings.ini"
+LOG_PREFIX="falcon"
 LOG_FILE_NAME="falcon.log"
 KEYMAP_FILE_NAME="keymap.ini"
 HISTORY_FILE_NAME="history.dat"
