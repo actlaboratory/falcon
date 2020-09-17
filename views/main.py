@@ -29,7 +29,6 @@ import fileSystemManager
 import deviceCtrl
 
 import views.changeAttribute
-import views.execProgram
 import views.favoriteDirectory
 import views.fonttest
 import views.globalKeyConfig
@@ -112,13 +111,13 @@ class View(BaseView):
 		"""最初のタブを作成する。"""
 
 		if len(sys.argv)>1:
-			result=self.Navigate(os.path.abspath(os.path.expandvars(sys.argv[1])),as_new_tab=True)
+			result = self.Navigate(misc.analyzeUserInputPath(sys.argv[1],os.getcwd()),as_new_tab=True)
 			if result==errorCodes.OK:
 				return
 			else:
 				dialog("Error",_("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
 		if self.app.config["browse"]["startPath"]!="":
-			result=self.Navigate(os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"])),as_new_tab=True)
+			result=self.Navigate(misc.analyzeUserInputPath(self.app.config["browse"]["startPath"],os.getcwd()),as_new_tab=True)
 		else:												#ドライブ一覧を表示
 			result=self.Navigate("",as_new_tab=True)
 		if result==errorCodes.OK:
@@ -504,7 +503,7 @@ class Events(BaseEvents):
 					config=globalVars.app.config["originalAssociation"]["<default_file>"]
 			else:
 				config=globalVars.app.config["originalAssociation"]["<default_dir>"]
-			config=os.path.abspath(config)
+			config=misc.analyzeUserInputPath(config)
 			misc.RunFile(config,prm=elem.fullpath)
 			return
 		if selected==menuItemsStore.getRef("ENV_KEY_CONFIG"):
@@ -599,7 +598,7 @@ class Events(BaseEvents):
 			d=views.SympleImputDialog.Dialog(_("パスを指定して移動"),_("移動先"))
 			d.Initialize()
 			if d.Show()==wx.ID_CANCEL: return
-			self.parent.activeTab.Move(d.GetValue())
+			self.parent.activeTab.Move(misc.analyzeUserInputPath(d.GetValue(),self.parent.activeTab.listObject.rootDirectory))
 			return
 		if selected==menuItemsStore.getRef("MOVE_ADD_FAVORITE"):
 			d=views.favoriteDirectory.SettingDialog(self.parent.hFrame,os.path.basename(self.parent.activeTab.listObject.rootDirectory),self.parent.activeTab.listObject.rootDirectory,"")
@@ -808,7 +807,7 @@ class Events(BaseEvents):
 		for m in globalVars.app.userCommandManagers:
 			if m.isRefHit(selected):
 				if m == globalVars.app.favoriteDirectory:
-					ret=self.parent.activeTab.Move(os.path.abspath(os.path.expandvars(m.get(selected))))
+					ret=self.parent.activeTab.Move(misc.analyzeUserInputPath(m.get(selected),self.parent.activeTab.listObject.rootDirectory))
 					#TODO: エラー処理する
 				else:									#ここで開く
 					path=m.get(selected)
@@ -874,7 +873,7 @@ class Events(BaseEvents):
 
 
 	def ExecProgram(self):
-		d=views.execProgram.Dialog()
+		d=views.SympleImputDialog.Dialog(_("ファイル名を指定して実行"),_("コマンドライン"))
 		d.Initialize()
 		if d.Show()==wx.ID_CANCEL:return
 		val=d.GetValue()

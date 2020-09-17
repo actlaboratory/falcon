@@ -344,3 +344,27 @@ def isLink(path):
 	"""
 	attrs = win32api.GetFileAttributes(path)
 	return attrs & win32con.FILE_ATTRIBUTE_REPARSE_POINT!=0
+
+def analyzeUserInputPath(path,parent="C:\\"):
+	"""
+		ユーザが入力したパスを最適化
+		・入力は絶対パスを想定
+		・環境変数の展開
+		・ドライブ直下以外では末尾の\\を除去
+		・相対パスの場合はparentからの絶対パスへ変換
+		・C:でもCでもC:\\にする
+	"""
+	if type(path)!=str:
+		return None
+	if len(path)==2 and path[0].upper()>='A' and path[0].upper()<='Z' and path[1]==':':
+		#アルファベット:はドライブルートと仮定
+		return path.upper()+"\\"
+	if path=="":
+		#空文字はドライブ一覧を示す
+		return ""
+	else:
+		#それ以外
+		if os.path.isabs(path):
+			return os.path.normpath(os.path.expandvars(path))
+		else:
+			return os.path.normpath(os.path.join(parent, os.path.expandvars(path)))

@@ -262,7 +262,10 @@ class ViewCreator():
 		hTextCtrl=TextCtrl(self.parent, -1,size=(x,-1),name=text,value=defaultValue,style=style)
 		self.SetFace(hTextCtrl)
 		if x==-1:	#幅を拡張
-			Add(self.sizer,hTextCtrl,1)
+			if (self.sizer.__class__==wx.BoxSizer or self.sizer.__class__==wx.StaticBoxSizer) and self.sizer.GetOrientation()==wx.HORIZONTAL:
+				Add(self.sizer,hTextCtrl,1)
+			else:
+				Add(self.sizer,hTextCtrl,0,wx.EXPAND)
 		else:
 			Add(self.sizer,hTextCtrl)
 		self.AddSpace(self.space)
