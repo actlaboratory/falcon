@@ -15,11 +15,12 @@ import misc
 import workerThreads
 
 class falconAppMain(AppBase.MaiｎBase):
+	def __init__(self):
+		super().__init__()
+
 	def initialize(self):
 		"""アプリを初期化する。"""
 		t=misc.Timer()
-		super().__init__()
-
 
 		wx.DisableAsserts()
 		self.error_sound_handle=None
