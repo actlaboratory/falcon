@@ -13,6 +13,7 @@ from logging import getLogger, FileHandler, Formatter
 
 import constants
 import DefaultSettings
+import views.langDialog
 
 class MaiｎBase(wx.App):
 	def __init__(self):
@@ -99,7 +100,7 @@ class MaiｎBase(wx.App):
 				self.config["general"]["language"] = locale.getdefaultlocale()[0]
 			else:
 				# 言語選択を表示
-				langSelect = langDialog.langDialog()
+				langSelect = views.langDialog.langDialog()
 				langSelect.Initialize()
 				langSelect.Show()
 				self.config["general"]["language"] = langSelect.GetValue()
