@@ -113,7 +113,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 	newtab.Update(lst,targetItemIndex)
 	#end ターゲットにフォーカス
 	if globalVars.app.config['on_list_moved']['read_item_count']=='True': newtab.ReadListItemNumber(short=True)
-	if newtab!=previous_tab:
+	if newtab!=previous_tab and previous_tab!=None:
 		globalVars.app.hMainView.ReplaceCurrentTab(newtab)
 	return newtab
 #end Navigate
