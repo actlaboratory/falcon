@@ -16,6 +16,7 @@ import winreg
 import win32api
 import win32con
 import win32file
+import win32process
 
 import constants
 import globalVars
@@ -236,12 +237,19 @@ def RunFile(path, admin=False,prm="", workdir=""):
 	error=""
 	try:
 		executable=GetExecutableState(path)
-		p=path if executable else "cmd"
+		p=path if executable else os.path.expandvars("%windir%\\system32\\cmd.exe")
 		a=prm if executable else "/c \"%s\" %s" % (path,prm)
 		if admin:
 			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE,0,"runas",p,a,workdir)
 		else:
-			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS | shellcon.SEE_MASK_NO_CONSOLE,0,"open",p,a,workdir,win32con.SW_SHOWNORMAL)
+			if executable:
+				hProcess, hThread, dwProcessId, dwThreadId=win32process.CreateProcess(p,a,None,None,False,
+					win32process.CREATE_NEW_PROCESS_GROUP | win32process.CREATE_BREAKAWAY_FROM_JOB | win32process.CREATE_DEFAULT_ERROR_MODE | win32process.CREATE_NEW_CONSOLE | win32process.NORMAL_PRIORITY_CLASS,
+					None,workdir,win32process.STARTUPINFO())
+				win32api.CloseHandle(hProcess)
+				win32api.CloseHandle(hThread)
+			else:
+				ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS | shellcon.SEE_MASK_NO_CONSOLE,0,"open",p,a,workdir,win32con.SW_SHOWNORMAL)
 		#end admin or not
 	except pywintypes.error as e:
 		error=str(e)
