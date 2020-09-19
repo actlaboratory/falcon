@@ -234,22 +234,18 @@ def RunFile(path, admin=False,prm="", workdir=""):
 	msg=_("管理者で起動") if admin else _("起動")
 	globalVars.app.say(msg)
 	error=""
-	if admin:
-		try:
-			executable=GetExecutableState(path)
-			p=path if executable else "cmd"
-			a=prm if executable else "/c \"%s\" %s" % (path,prm)
-			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS,0,"runas",p,a,workdir)
-		except pywintypes.error as e:
-			error=str(e)
-		#end shellExecuteEx failure
-	else:
-		try:
-			win32api.ShellExecute(0,"open",path,prm,workdir,1)
-		except win32api.error as er:
-			error=str(er)
-		#end shellExecute failure
-	#end admin or not
+	try:
+		executable=GetExecutableState(path)
+		p=path if executable else "cmd"
+		a=prm if executable else "/c \"%s\" %s" % (path,prm)
+		if admin:
+			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE,0,"runas",p,a,workdir)
+		else:
+			ret=shell.ShellExecuteEx(shellcon.SEE_MASK_NOCLOSEPROCESS | shellcon.SEE_MASK_NO_CONSOLE,0,"open",p,a,workdir,win32con.SW_SHOWNORMAL)
+		#end admin or not
+	except pywintypes.error as e:
+		error=str(e)
+	#end shellExecuteEx failure
 	if error!="":
 		dialog(_("エラー"),_("ファイルを開くことができませんでした(%(error)s)") % {"error": error})
 	#end ファイル開けなかった
