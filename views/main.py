@@ -999,6 +999,7 @@ class Events(BaseEvents):
 					dic[_("サイズ(バイト)")]=_("不明")
 					dic[_("内容")]=_("不明")
 		elif isinstance(elem,browsableObjects.File) or type(elem)==browsableObjects.Stream:
+			print("きた")
 			dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
 			dic[_("サイズ(バイト)")]=elem.size
 		if isinstance(elem,browsableObjects.File):
@@ -1006,30 +1007,36 @@ class Events(BaseEvents):
 			dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
 			dic[_("属性")]=elem.longAttributesString
 			dic[_("種類")]=elem.typeString
+			if elem.IsReparsePoint():
+				dic[_("リンク先")]=os.readlink(elem.fullpath)
 			if not elem.shortName=="":
 				dic[_("短い名前")]=elem.shortName
 			else:
 				dic[_("短い名前")]=_("なし")
-
-			h=win32file.CreateFile(
-					elem.fullpath,
-					0,
-					win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
-					None,
-					win32file.OPEN_EXISTING,
-					win32file.FILE_FLAG_BACKUP_SEMANTICS,		#これがないとディレクトリを開けない
-					0)
-			info=win32file.GetFileInformationByHandleEx(h,win32file.FileStandardInfo)
-			if info:
-				dic[_("消費ディスク領域")]=misc.ConvertBytesTo(info["AllocationSize"],misc.UNIT_AUTO,True)+" ("+str(info["AllocationSize"])+" bytes)"
-				dic[_("追加情報")]=""
-				if info["DeletePending"]:
-					dic[_("追加情報")]+=_("削除予約済 ")
-				if info["NumberOfLinks"]>1:
-					dic[_("追加情報")]+=_("ハードリンクにより他の%d 箇所から参照 " % (info["NumberOfLinks"]-1))
-				if dic[_("追加情報")]=="":
+			try:
+				h=win32file.CreateFile(
+						elem.fullpath,
+						0,
+						win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
+						None,
+						win32file.OPEN_EXISTING,
+						win32file.FILE_FLAG_BACKUP_SEMANTICS,		#これがないとディレクトリを開けない
+						0)
+				info=win32file.GetFileInformationByHandleEx(h,win32file.FileStandardInfo)
+				if info:
+					dic[_("消費ディスク領域")]=misc.ConvertBytesTo(info["AllocationSize"],misc.UNIT_AUTO,True)+" ("+str(info["AllocationSize"])+" bytes)"
+					dic[_("追加情報")]=""
+					if info["DeletePending"]:
+						dic[_("追加情報")]+=_("削除予約済 ")
+					if info["NumberOfLinks"]>1:
+						dic[_("追加情報")]+=_("ハードリンクにより他の%d 箇所から参照 " % (info["NumberOfLinks"]-1))
+					if dic[_("追加情報")]=="":
+						dic[_("追加情報")]=_("なし")
+				else:
 					dic[_("追加情報")]=_("なし")
-
+			except:
+				dic[_("消費ディスク領域")]="不明"
+				dic[_("追加情報")]=_("なし")
 		if type(elem)==browsableObjects.Drive:
 			if elem.free>=0:
 				dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)

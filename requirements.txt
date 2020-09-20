@@ -1,5 +1,4 @@
 ﻿wxpython
-pywin32==224
-winpaths
-pyinstaller==3.6
+pywin32
+pyinstaller
 https://github.com/actlaboratory/history/archive/v1.0.2.zip

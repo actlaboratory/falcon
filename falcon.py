@@ -9,11 +9,13 @@ import win32timezone#ダミー
 
 def _(string): pass#dummy
 
-#dllを相対パスで指定した時のため、カレントディレクトリを変更
+#dllをカレントディレクトリから読み込むように設定
 import os
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+os.add_dll_directory(os.path.dirname(os.path.abspath(__file__)))
 import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import traceback
 import app as application
 import constants
