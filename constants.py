@@ -12,7 +12,7 @@ APP_COPYRIGHT_YEAR="2019-2020"
 APP_DEVELOPERS="Yukio Nozawa and Yuki Kochi"
 
 SUPPORTING_LANGUAGE=("ja-JP","en-US")
-DISPLAY_LANGUAGE = ("日本語", "english")# 言語選択表示用の文字列
+DISPLAY_LANGUAGE = ("日本語", "English")# 言語選択表示用の文字列
 
 
 SETTING_FILE_NAME="settings.ini"

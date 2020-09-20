@@ -2,11 +2,12 @@
 # language select dialog
 
 import wx
+
+import constants
 import globalVars
 import views.ViewCreator
 from logging import getLogger
 from views.baseDialog import *
-import constants
 
 class langDialog(BaseDialog):
 	def __init__(self):
@@ -27,15 +28,10 @@ class langDialog(BaseDialog):
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
 		self.creator=views.ViewCreator.ViewCreator(self.viewMode,self.panel,self.sizer,wx.VERTICAL,20)
-		#翻訳
-		self.langSelect = self.creator.combobox("select language", constants.DISPLAY_LANGUAGE, None, state=0)
-		self.ok = self.creator.okbutton("OK", None)
 
-	def Destroy(self, events = None):
-		self.log.debug("destroy")
-		self.wnd.Destroy()
+		self.langSelect = self.creator.combobox("language:", constants.DISPLAY_LANGUAGE, None, state=0,sizerFlag=wx.ALIGN_CENTER_HORIZONTAL)
+		self.ok = self.creator.okbutton("OK", None)
 
 	def GetData(self):
 		select = self.langSelect.GetSelection()
 		return constants.SUPPORTING_LANGUAGE[select]
-

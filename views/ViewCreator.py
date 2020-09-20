@@ -95,7 +95,7 @@ class ViewCreator():
 		hButton=wx.Button(self.parent, wx.ID_OK,label=text, name=text,style=wx.BORDER_SUNKEN)
 		hButton.Bind(wx.EVT_BUTTON,event)
 		self.SetFace(hButton,mode=BUTTON_COLOUR)
-		Add(self.sizer,hButton,1, wx.ALIGN_BOTTOM | wx.ALL,5)
+		Add(self.sizer,hButton,1, wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL,5)
 		hButton.SetDefault()
 		self.AddSpace(self.space)
 		return hButton
@@ -124,9 +124,9 @@ class ViewCreator():
 		self.AddSpace(self.space)
 		return hCombo,hStaticText
 
-	def combobox(self,text,selection,event,state=-1):
+	def combobox(self,text,selection,event,state=-1,sizerFlag=wx.ALIGN_CENTER_VERTICAL):
 		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
-		Add(self.sizer,hStaticText,0,wx.ALIGN_CENTER_VERTICAL)
+		Add(self.sizer,hStaticText,0,sizerFlag)
 
 		v=""
 		if state>=0:
