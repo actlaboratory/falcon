@@ -719,10 +719,6 @@ class FalconTabBase(object):
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
-		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
-			target=""
-			cursorTarget=self.listObject.rootDirectory[0]
-
 		target=self.listObject.rootDirectory
 		while(True):
 			spl=os.path.split(target)
@@ -751,7 +747,6 @@ class FalconTabBase(object):
 				cursorTarget=spl[1]
 				break
 			#end 移動先が存在するので抜ける
-			root=target
 		#end フォルダがアルマで下がる
 		return self.Move(target,cursorTarget)
 
