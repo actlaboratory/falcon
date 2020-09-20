@@ -719,37 +719,40 @@ class FalconTabBase(object):
 
 	def GoBackward(self):
 		"""内包しているフォルダ/ドライブ一覧へ移動する。"""
-		self.StopSound()
 		if len(self.listObject.rootDirectory)<=3:		#ドライブリストへ
 			target=""
 			cursorTarget=self.listObject.rootDirectory[0]
-		else:
-			root=self.listObject.rootDirectory
-			while(True):
-				if len(self.listObject.rootDirectory)<3:		#ドライブリストへ
-					target=""
-					cursorTarget=self.listObject.rootDirectory[0]
-					break
-				#end 下がっていってドライブリスト
-				spl=os.path.split(root)
+
+		target=self.listObject.rootDirectory
+		while(True):
+			spl=os.path.split(target)
+			if spl[0]!=target:
 				target=spl[0]
-				if(target==root and root[0:2]=="\\\\"):
-					#\\hoge\\fuga　の階層のみ、os.path.split()しても結果が変わらない
-					target=re.sub("(\\\\\\\\[^\\\\]+).+","\\1",target)
-					cursorTarget=re.sub("\\\\\\\\[^\\\\]+(.+)","\\1",target)
-					result=self.Move(target,cursorTarget)
-					if(type(result)!=int):
-						return result
-					else:
-						cursorTarget=target
-						target=""
-				elif os.path.isdir(target):
-					cursorTarget=spl[1]
+			elif target[0:2]=="\\\\":
+				#\\hoge\\fuga　の階層のみ、os.path.split()しても結果が変わらない
+				#\\hogeに強制移動させる
+				target=re.sub("(\\\\\\\\[^\\\\]+).+","\\1",target)
+				cursorTarget=re.sub("\\\\\\\\[^\\\\]+(.+)","\\1",target)
+				result=self.Move(target,cursorTarget)
+				if(type(result)!=int):
+					return result
+				else:
+					#移動失敗時はドライブ一覧へ
+					cursorTarget=target
+					target=""
 					break
-				#end 移動先が存在するので抜ける
-				root=target
-			#end フォルダがアルマで下がる
-		#end ドライブリスト直行かそうでないか
+			else:
+				#X:\\の時はsplitしても結果が変わらない
+				#ドライブ一覧へ
+				target=""
+				cursorTarget=self.listObject.rootDirectory[0]
+				break
+			if os.path.isdir(target):
+				cursorTarget=spl[1]
+				break
+			#end 移動先が存在するので抜ける
+			root=target
+		#end フォルダがアルマで下がる
 		return self.Move(target,cursorTarget)
 
 	def MarkSet(self):
