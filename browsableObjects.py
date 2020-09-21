@@ -146,11 +146,13 @@ class SearchedFolder(Folder):
 class GrepItem(File):
 	def Initialize(self,ln,preview,fileobject):
 		"""grepの結果は、ファイルの情報に加えて、行数・プレビュー・ヒット数を含む。ヒット数は、後から設定する。ファイル名などは、与えられたファイルオブジェクトからとる。"""
+		self.directory=fileobject.directory
 		self.basename=fileobject.basename
 		self.fullpath=fileobject.fullpath
 		self.size=fileobject.size
 		self.modDate=fileobject.modDate
 		self.creationDate=fileobject.creationDate
+		self.attributes=fileobject.attributes
 		self.attributesString=fileobject.attributesString
 		self.longAttributesString=fileobject.longAttributesString
 		self.shortName=fileobject.shortName
