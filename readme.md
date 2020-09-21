@@ -3,7 +3,7 @@ Falcon Pythonで再スタートできればいいな。
 ## 準備
 シェル:コマンドプロンプト
 
-python:python 3.7 (3.8にすると動かないので、3.7固定で)  
+python:python 3.8 (3.7以下では動作しません)  
 
 python -m pip install -r requirements.txt  
 
