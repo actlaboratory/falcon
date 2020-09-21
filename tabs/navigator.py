@@ -54,7 +54,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			lst.Initialize()
 			newtab.Update(lst)
 		#end 貼り付け
-		globalVars.app.hMainView.ReplaceCurrentTab(newtab)
+		#かならずviews.Main.Navigateを経由して呼び出されているはず
 		return newtab
 	#end targetが辞書の時の特殊処理
 
