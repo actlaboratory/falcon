@@ -3,7 +3,6 @@ import os
 import platform
 import ctypes
 
-from platform_utils import paths
 from libloader import load_library
 from .base import Output
 
