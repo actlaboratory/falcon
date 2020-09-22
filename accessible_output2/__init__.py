@@ -11,7 +11,7 @@ import types
 def load_library(libname, cdll=False):
 	if hasattr(sys,"frozen"):
 		if sys.version_info.major>=3 and sys.version_info.minor>=8:
-			os.add_dll_directory(os.path.join(os.path.abspath(os.path.dirname(sys.executable)), 'lib'))
+			os.add_dll_directory(os.path.join(os.path.abspath(os.path.dirname(sys.executable)), 'accessible_output2', 'lib'))
 		libfile = os.path.join(os.path.abspath(os.path.dirname(sys.executable)), 'accessible_output2', 'lib', libname)
 	else:
 		import inspect
