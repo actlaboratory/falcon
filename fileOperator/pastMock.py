@@ -8,6 +8,7 @@ import re
 import time
 import win32file
 from . import confirmElement, failedElement, helper
+import globalVars#temporary
 import misc
 from clipboard import COPY, MOVE
 
@@ -45,6 +46,8 @@ def Execute(op,resume=False):
 		#ベースパスを決定
 		op.output["basepath"]=os.path.dirname(f[0])
 		op.output["destpath"]=op.instructions['to']
+		op.output["basepath"]=op.output["basepath"].rstrip("\\")
+		op.output["destpath"]=op.output["destpath"].rstrip("\\")
 	#end 初期化
 	basepath=op.output["basepath"]
 	destpath=op.output["destpath"]
@@ -61,7 +64,7 @@ def Execute(op,resume=False):
 		else:
 			e=Element(elem,basepath,destpath)
 			if os.path.isdir(e.destpath) and not resume:
-				_processExistingFolder(op.output,elem)#フォルダがもうあれば、その時点で確認に入れる(中のフォルダを展開しない)
+				_processExistingFolder(op.output,elem,basepath,destpath)#フォルダがもうあれば、その時点で確認に入れる(中のフォルダを展開しない)
 			else:#まだないか、確認済みなので追加
 				_expandFolder(lst,elem,e,basepath,destpath)
 			#end フォルダを展開するかしないか
@@ -80,7 +83,9 @@ def Execute(op,resume=False):
 	log.debug("Size: %d bbytes" % total)
 	log.debug("Start copying...")
 	overwrite=0 if resume else win32file.COPY_FILE_FAIL_IF_EXISTS
+	pasted_size=0
 	for elem in f:
+		globalVars.app.PlaySound("tip.ogg")
 		if elem.destpath is None:#フォルダ削除用
 			try:
 				time.sleep(1)
@@ -90,13 +95,14 @@ def Execute(op,resume=False):
 		#end フォルダ消す
 		try:
 			if elem.isfile:
-				time.sleep(10)
+				time.sleep(1)
+				raise win32file.error("80,test")
 			else:
 				if resume and os.path.isdir(elem.destpath): continue#再開している場合はエラーになる前に逃げる
 				time.sleep(1)
 		except win32file.error as err:
 			log.error("Cannot create %s (%s)" % (elem.destpath, str(err)))
-			ProcessError(op.output,elem,str(err),resume)
+			ProcessError(op,elem,str(err),resume)
 			continue
 		#end except
 		if copy_move_flag==MOVE:
@@ -107,6 +113,8 @@ def Execute(op,resume=False):
 			#end except
 		#end 移動モード
 		op.output["succeeded"]+=1
+		pasted_size+=elem.size
+		op.SetPercentage(int(pasted_size/total*100))
 	#end 削除処理
 	if len(op.output["retry"]["target"])>0:
 		op.output["retry"]["operation"]=VERB
@@ -116,28 +124,30 @@ def Execute(op,resume=False):
 	op.instructions["target"]=[]
 	return retry
 
-def ProcessError(output,elem,msg,resume):
+def ProcessError(op,elem,msg,resume):
 	"""アクセス拒否であれば、リトライするリストに追加する。昇格しても失敗するエラーであれば、 need_to_confirm に追加する。"""
 	number=helper.GetErrorNumber(msg)
 	if helper.IsAccessDenied(number):#アクセス拒否なので、リトライするリストに追加する
-		output["retry"]["target"].append(elem)
+		op.output["retry"]["target"].append(elem)
 		return
 	#end リトライ
 	#コピー/移動先ファイルがすでに存在する
 	if number==80 or number==183:
-		output["need_to_confirm"].Append(confirmElement.ConfirmElement(elem,number,msg))
+		op.output["need_to_confirm"].Append(confirmElement.ConfirmElement(elem,number,msg))
+		op._doCallback("confirm", {"reason": "already_exists", "elem": elem, "confirmation_manager_index": op.output["need_to_confirm"].GetLastIndex()})
 		return
 	#end 要確認
 	output["all_OK"]=False
 	output["failed"].append(failedElement.FailedElement(elem.destpath,(number,msg)))
 #end ProcessError
 
-def _processExistingFolder(output,elem):
+def _processExistingFolder(output,elem,basepath,destpath):
 	"""指定したフォルダを、すでに存在するフォルダとして、 need_to_confirm に入れる。"""
-	output["need_to_confirm"].Append(confirmElement.ConfirmElement(elem,80,"このフォルダはすでに存在します。"))
+	output["need_to_confirm"].Append(confirmElement.ConfirmElement(Element(elem,basepath,destpath),80,_("このフォルダはすでに存在します。")))
 
 def _expandFolder(lst,path,e,basepath,destpath):
 	"""フォルダを展開して、指定されたリストに入れる。"""
+	print("expand")
 	lst.append(e)#イテレーションの最初に親フォルダ追加
 	for elem in misc.IteratePaths_dirFirst(path):
 		lst.append(Element(elem,basepath,destpath))
