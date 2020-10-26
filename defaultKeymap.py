@@ -6,7 +6,7 @@
 defaultKeymap={}
 
 
-defaultKeymap["mainView"]={
+defaultKeymap["MAINVIEW"]={
 	"FILE_RENAME": "ctrl+r/F2",
 	"FILE_CHANGEATTRIBUTE": "shift+F2",
 	"FILE_MKDIR": "ctrl+f4/ctrl+shift+n/ctrl+n",
