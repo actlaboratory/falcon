@@ -50,7 +50,7 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 				entries=[]
 				for name in names:
 					entries.append(keymap.makeEntry(self.values[1][name],key,None,self.log))
-				if not keymap.checkConfrict(entries,self.log):
+				if not keymap.permitConfrict(entries,self.log):
 					dialog(_("エラー"),_("以下の項目において、重複するキー %s が設定されています。\n\n%s") % (key,names))
 					return
 		event.Skip()
