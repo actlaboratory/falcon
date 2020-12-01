@@ -197,7 +197,7 @@ class FileListTab(base.FalconTabBase):
 		lst=[]
 		for i in self.GetSelectedItems(index_mode=True):
 			elem=self.listObject.GetElement(i)
-			if elem.__class__.__name__=="Folder":
+			if isinstance(elem,browsableObjects.Folder):
 				self.hListCtrl.SetItem(index=i,column=1,label=_("<計算中>"))
 				lst.append((i,elem.fullpath))
 			#end フォルダだったら
