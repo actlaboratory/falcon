@@ -174,7 +174,6 @@ class View(BaseView):
 
 	def ActivateTab(self,pageNo):
 		"""指定されたインデックスのタブをアクティブにする。"""
-
 		self.UpdateMenuState(self.activeTab,self.tabs[pageNo])
 		self.activeTab=self.tabs[pageNo]
 		self.hTabCtrl.SetSelection(pageNo)
@@ -510,7 +509,7 @@ class Events(BaseEvents):
 			keys=self.parent.menu.keymap.map[self.parent.identifier.upper()]
 			keyData={}
 			menuData={}
-			for refName in defaultKeymap.defaultKeymap["mainView"].keys():
+			for refName in defaultKeymap.defaultKeymap["MainView"].keys():
 				title=menuItemsDic.dic[refName]
 				if refName in keys:
 					keyData[title]=keys[refName]
@@ -981,76 +980,64 @@ class Events(BaseEvents):
 		self.parent.activeTab.OpenContextMenu(event=None)
 
 	def ShowDetail(self,elem):
-		dic={}
-		dic[_("名前")]=elem.basename
-		dic[_("パス")]=elem.fullpath
-		if isinstance(elem,browsableObjects.Folder):
+		d=views.objectDetail.Dialog()
+		d.Initialize()
+		d.add(_("名前"),elem.basename)
+		d.add(_("パス"),elem.fullpath)
+		if isinstance(elem,browsableObjects.File) or type(elem)==browsableObjects.Stream:
 			if elem.size>=0:
-				dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
-				dic[_("サイズ(バイト)")]=elem.size
-			else:
-				size,fileCount,dirCount=misc.GetDirectorySize(elem.fullpath)
-				if size>=0:
-					dic[_("サイズ")]=misc.ConvertBytesTo(size,misc.UNIT_AUTO,True)
-					dic[_("サイズ(バイト)")]=size
-					dic[_("内容")]=_("ファイル数： %d サブディレクトリ数： %d") % (fileCount,dirCount)
-				else:
-					dic[_("サイズ")]=_("不明")
-					dic[_("サイズ(バイト)")]=_("不明")
-					dic[_("内容")]=_("不明")
-		elif isinstance(elem,browsableObjects.File) or type(elem)==browsableObjects.Stream:
-			print("きた")
-			dic[_("サイズ")]=misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True)
-			dic[_("サイズ(バイト)")]=elem.size
+				d.add(_("サイズ"),misc.ConvertBytesTo(elem.size,misc.UNIT_AUTO,True))
+				d.add(_("サイズ(バイト)"),elem.size)
+				if isinstance(elem,browsableObjects.Folder):
+					d.add(_("内容"),_("ファイル数： %d サブディレクトリ数： %d") % (elem.fileCount,elem.dirCount))
+			elif isinstance(elem,browsableObjects.Folder):
+				d.add(_("サイズ"),d.CALCURATING)
+				d.add(_("サイズ(バイト)"),d.CALCURATING)
+				d.add(_("内容"),d.CALCURATING)
+				param={'lst': [(0,elem.fullpath)], 'callback': d.setDirCalcResult}
+				d.setTask(workerThreads.RegisterTask(workerThreadTasks.DirCalc,param))
 		if isinstance(elem,browsableObjects.File):
-			dic[_("作成日時")]=elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-			dic[_("更新日時")]=elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S")
-			dic[_("属性")]=elem.longAttributesString
-			dic[_("種類")]=elem.typeString
-			if elem.IsReparsePoint():
-				dic[_("リンク先")]=os.readlink(elem.fullpath)
+			d.add(_("作成日時"),elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
+			d.add(_("更新日時"),elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
+			d.add(_("属性"),elem.longAttributesString)
+			d.add(_("種類"),elem.typeString)
 			if not elem.shortName=="":
-				dic[_("短い名前")]=elem.shortName
+				d.add(_("短い名前"),elem.shortName)
 			else:
-				dic[_("短い名前")]=_("なし")
-			try:
-				h=win32file.CreateFile(
-						elem.fullpath,
-						0,
-						win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
-						None,
-						win32file.OPEN_EXISTING,
-						win32file.FILE_FLAG_BACKUP_SEMANTICS,		#これがないとディレクトリを開けない
-						0)
-				info=win32file.GetFileInformationByHandleEx(h,win32file.FileStandardInfo)
-				if info:
-					dic[_("消費ディスク領域")]=misc.ConvertBytesTo(info["AllocationSize"],misc.UNIT_AUTO,True)+" ("+str(info["AllocationSize"])+" bytes)"
-					dic[_("追加情報")]=""
-					if info["DeletePending"]:
-						dic[_("追加情報")]+=_("削除予約済 ")
-					if info["NumberOfLinks"]>1:
-						dic[_("追加情報")]+=_("ハードリンクにより他の%d 箇所から参照 " % (info["NumberOfLinks"]-1))
-					if dic[_("追加情報")]=="":
-						dic[_("追加情報")]=_("なし")
-				else:
-					dic[_("追加情報")]=_("なし")
-			except:
-				dic[_("消費ディスク領域")]="不明"
-				dic[_("追加情報")]=_("なし")
+				d.add(_("短い名前"),_("なし"))
+
+			h=win32file.CreateFile(
+					elem.fullpath,
+					0,
+					win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
+					None,
+					win32file.OPEN_EXISTING,
+					win32file.FILE_FLAG_BACKUP_SEMANTICS,		#これがないとディレクトリを開けない
+					0)
+			info=win32file.GetFileInformationByHandleEx(h,win32file.FileStandardInfo)
+			if info:
+				d.add(_("消費ディスク領域"),misc.ConvertBytesTo(info["AllocationSize"],misc.UNIT_AUTO,True)+" ("+str(info["AllocationSize"])+" bytes)")
+				tmp=""
+				if info["DeletePending"]:
+					tmp+=_("削除予約済 ")
+				if info["NumberOfLinks"]>1:
+					tmp+=_("ハードリンクにより他の%d 箇所から参照 " % (info["NumberOfLinks"]-1))
+				if tmp=="":
+					tmp=_("なし")
+				d.add(_("追加情報"),tmp)
+
 		if type(elem)==browsableObjects.Drive:
 			if elem.free>=0:
-				dic[_("フォーマット")]=fileSystemManager.GetFileSystemObject(elem.letter)
-				dic[_("空き容量")]=misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO,True)
+				d.add(_("フォーマット"),fileSystemManager.GetFileSystemObject(elem.letter))
+				if elem.total>0:
+					d.add(_("空き容量"),"%s (%s%%)" % (misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO,True), elem.free*100//elem.total))
+				else:
+					d.add(_("空き容量"),misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO,True))
+				d.add(_("総容量"),misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True))
 			else:
-				dic[_("フォーマット")]=_("未挿入")
-			if elem.total>0:
-				dic[_("空き容量")]+=" ("+str(elem.free*100//elem.total)+"%)"
-			if elem.free>=0:
-				dic[_("総容量")]=misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True)
-			dic[_("種類")]=elem.typeString
+				d.add(_("フォーマット"),_("未挿入"))
+			d.add(_("種類"),elem.typeString)
 		if type(elem)==browsableObjects.NetworkResource and elem.address!="":
-			dic[_("IPアドレス")]=elem.address
-		d=views.objectDetail.Dialog()
-		d.Initialize(dic)
+			d.add(_("IPアドレス"),elem.address)
 		d.Show()
 		return

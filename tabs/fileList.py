@@ -210,6 +210,8 @@ class FileListTab(base.FalconTabBase):
 		for elem in results:
 			self.listObject.GetElement(elem[0]).size=elem[1][0]
 			if elem[1][0]>=0:
+				self.listObject.GetElement(elem[0]).fileCount=elem[1][1]
+				self.listObject.GetElement(elem[0]).dirCount=elem[1][2]
 				self.hListCtrl.SetItem(index=elem[0],column=1,label=misc.ConvertBytesTo(elem[1][0],misc.UNIT_AUTO,True))
 			else:
 				self.hListCtrl.SetItem(index=elem[0],column=1,label="<取得失敗>")

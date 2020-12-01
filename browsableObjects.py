@@ -113,11 +113,13 @@ class File(FalconBrowsableBase):
 		return misc.GetRootObject(self.fullpath).fullpath
 
 class Folder(File):
-	__slots__=[]
+	__slots__=["fileCount","dirCount"]
 
 	def __init__(self,**args):
 		super().__init__(*args)
 		self.canHardLinkTarget=False
+		self.fileCount=-1
+		self.dirCount=-1
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。フォルダなのでサイズ不明(-1)の場合があり、この場合は <dir> にする。"""

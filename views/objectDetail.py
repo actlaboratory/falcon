@@ -4,18 +4,29 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
+
+import globalVars
 import misc
 import views.ViewCreator
+
 from logging import getLogger
+
 from views.baseDialog import *
 
 class Dialog(BaseDialog):
-	def Initialize(self,dic):
+	#計算中のフィールドを表す
+	CALCURATING=None
+
+	def __init__(self):
+		self.task=None
+		self.calcuratingFields=[]
+
+	def Initialize(self,dic=None):
 		t=misc.Timer()
 		self.identifier="objectDetailDialog"#このビューを表す文字列
 		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
-		super().Initialize(self.app.hMainView.hFrame,_("詳細情報"))
+		super().Initialize(globalVars.app.hMainView.hFrame,_("詳細情報"))
 		self.InstallControls(dic)
 		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
@@ -24,9 +35,37 @@ class Dialog(BaseDialog):
 		"""いろんなwidgetを設置する。"""
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,views.ViewCreator.FlexGridSizer,20)
 
-		for title,content in dic.items():
-			self.iName,self.static=self.creator.inputbox(title,400,str(content),style=wx.TE_READONLY)
+		if dic:
+			for title,content in dic.items():
+				self.add(title,content)
 
-		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL, wx.ALIGN_RIGHT)
-		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)
-		self.bOk=self.creator.okbutton(_("ＯＫ"),None)
+		self.buttonArea=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,style=wx.ALIGN_RIGHT)
+		self.bOk=self.buttonArea.okbutton(_("ＯＫ"),None)
+
+	def add(self,title,content):
+		if content!=self.CALCURATING:
+			f,static=self.creator.inputbox(title,400,str(content),wx.TE_READONLY)
+		else:
+			f,static=self.creator.inputbox(title,400,_("計算中"),wx.TE_READONLY)
+			self.calcuratingFields.append(f)
+
+	def Destroy(self):
+		if self.task:
+			self.task.Cancel()
+		super().Destroy()
+
+	def setDirCalcResult(self,results,taskState):
+		result=results[0][1]		#2つ以上来ることはなく、パス文字列は不要
+		if result[0]>=0:
+			self.calcuratingFields[0].SetValue(misc.ConvertBytesTo(result[0],misc.UNIT_AUTO,True))
+			self.calcuratingFields[1].SetValue(str(result[0]))
+			self.calcuratingFields[2].SetValue(_("ファイル数： %d サブディレクトリ数： %d") % (result[1],result[2]))
+		else:
+			self.calcuratingFields[0].SetValue(_("不明"))
+			self.calcuratingFields[1].SetValue(_("不明"))
+			self.calcuratingFields[2].SetValue(_("不明"))
+		self.task=None
+
+	def setTask(self,task):
+		self.task=task
+
