@@ -8,6 +8,11 @@ import browsableObjects
 import keymapHandlerBase
 import tabs
 
+#KeyConfigDialog‚Ì‚½‚ß‚ÌŠÖ”
+str2key = keymapHandlerBase.str2key
+def makeEntry(*pArgs, **kArgs):
+	return keymapHandlerBase.makeEntry(*pArgs,*kArgs)
+
 class KeymapHandler(keymapHandlerBase.KeymapHandlerBase):
 
 	def __init__(self, dict=None, filter=None):

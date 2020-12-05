@@ -509,7 +509,7 @@ class Events(BaseEvents):
 			keys=self.parent.menu.keymap.map[self.parent.identifier.upper()]
 			keyData={}
 			menuData={}
-			for refName in defaultKeymap.defaultKeymap["MainView"].keys():
+			for refName in defaultKeymap.defaultKeymap["MainView".upper()].keys():
 				title=menuItemsDic.dic[refName]
 				if refName in keys:
 					keyData[title]=keys[refName]
@@ -526,9 +526,9 @@ class Events(BaseEvents):
 			#キーマップの既存設定を置き換える
 			keymap=ConfigManager.ConfigManager()
 			keymap.read(constants.KEYMAP_FILE_NAME)
-			keymap.remove_section(self.parent.identifier)
-			keymap.add_section(self.parent.identifier)
-			section=keymap[self.parent.identifier]
+			keymap.remove_section(self.parent.identifier.upper())
+			keymap.add_section(self.parent.identifier.upper())
+			section=keymap[self.parent.identifier.upper()]
 			for name,key in keyData.items():
 				if key!=_("なし"):
 					section[menuData[name]]=key
