@@ -37,7 +37,7 @@ class falconAppMain(AppBase.MaiｎBase):
 
 		# メインビューを表示
 		from views import main
-		self.hMainView=main.View()
+		self.hMainView=main.View("mainView")
 		self.hMainView.Initialize()
 		misc.InitContextMenu(self.hMainView.hFrame.GetHandle())
 		self.log.debug("Finished mainView setup (%f seconds from start)" % t.elapsed)

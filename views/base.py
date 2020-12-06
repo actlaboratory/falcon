@@ -1,115 +1,126 @@
 ﻿# -*- coding: utf-8 -*-
-#Falcon app views base class
+#views base class
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
-#Note: All comments except these top lines will be written in Japanese. 
 
+import _winxptheme
 import wx
+
 import constants
-import errorCodes
-import keymap
 import defaultKeymap
+import errorCodes
+import globalVars
+import keymap
+import menuItemsDic
 import menuItemsStore
 import views.ViewCreator
+
+from logging import getLogger
 from simpleDialog import dialog
 
-import globalVars
-import menuItemsDic
 
 class BaseView(object):
-	"""falconのビューの基本クラス。"""
+	"""ビューの基本クラス。"""
+	def __init__(self,identifier):
+		self.identifier=identifier
+		self.log=getLogger("%s.%s" % (constants.LOG_PREFIX,self.identifier))
+		self.shortcutEnable=True
+		self.viewMode=globalVars.app.config.getstring("view","colorMode","white",("white","dark"))
+		self.app=globalVars.app
 
-	def __init__(self):
-		self.SetShortcutEnable=True
-
-	def Initialize(self, ttl, x, y,px,py):
+	def Initialize(self, ttl, x, y,px,py,style=wx.DEFAULT_FRAME_STYLE,space=0):
 		"""タイトルとウィンドウサイズとポジションを指定して、ウィンドウを初期化する。"""
-		self.hFrame=wx.Frame(None,-1,ttl, size=(x,y),pos=(px,py))
+		self.hFrame=wx.Frame(None,wx.ID_ANY,ttl, size=(x,y),pos=(px,py),name=ttl,style=style)
+		_winxptheme.SetWindowTheme(self.hFrame.GetHandle(),"","")
 		self.hFrame.Bind(wx.EVT_MOVE_END,self.events.WindowMove)
 		self.hFrame.Bind(wx.EVT_SIZE,self.events.WindowResize)
 		self.hFrame.Bind(wx.EVT_CLOSE,self.events.Exit)
+		self.MakePanel(space)
 
+	def MakePanel(self,space=0):
 		self.hPanel=views.ViewCreator.makePanel(self.hFrame)
-		self.creator=views.ViewCreator.ViewCreator(1,self.hPanel,None)
+		self.creator=views.ViewCreator.ViewCreator(self.viewMode,self.hPanel,None, wx.VERTICAL,style=wx.ALL,space=space)
+		self.hFrame.Layout()
+
+	def Clear(self):
+		self.hFrame.DestroyChildren()
+		self.MakePanel()
+
+	def Show(self):
+		self.creator.GetPanel().Layout()
+		self.hFrame.Show()
+		self.app.SetTopWindow(self.hFrame)
+		return True
 
 	def InstallMenuEvent(self,menu,event):
 		"""メニューを作り、指定されたイベント処理用オブジェクトと結びつける。"""
-		menu.Apply(self.hFrame,event)
+		menu.Apply(self.hFrame)
 		self.menu=menu
+
+		#ショートカット無効状態の時に表示するダミーのメニューバー
+		#これがないとメニューバーの高さ分画面がずれてしまうために必要
+		self.hDisableMenuBar=wx.MenuBar()
+		self.hDisableSubMenu=wx.Menu()
+		self.hDisableMenuBar.Append(self.hDisableSubMenu,_("現在メニューは操作できません"))
+		self.SetShortcutEnabled(True)
+
+		self.hFrame.Bind(wx.EVT_MENU,event)
 
 	def SetShortcutEnabled(self,en):
 		"""
 			ショートカットキーの有効/無効を切り替える。
-			AcceleratorTableを空にしないと、名前の変更中にエディットボックスに矢印キーやBSキーの操作がいかない。
-			逆に、AcceleratorTableだけを空にしてもメニューバーにあるコマンドが実行されてしまう。
-			ということで、両方の対策が必要。
+			AcceleratorTableとメニューバーのそれぞれに登録されているので、両方の対策が必要。
 		"""
-		t=self.menu.acceleratorTable if en else wx.AcceleratorTable()
-		self.activeTab.hListCtrl.SetAcceleratorTable(t)
-		self.SetShortcutEnable=en
-	#end SetShortcutEnabled
+		return self._SetShortcutEnabled(en,self.hFrame)
 
-	def PopupMenu(self,hMenu):
-		self.hFrame.PopupMenu(hMenu)
+	def _SetShortcutEnabled(self,en,target):
+		self.shortcutEnable=en
+		if en:
+			#通常のメニューバーに戻す
+			self.hFrame.SetMenuBar(self.menu.hMenuBar)
+		else:
+			self.hFrame.SetMenuBar(self.menu.hDisableMenuBar)
+		#SetMenuBarの後に呼び出しが必要
+		self.creator.GetSizer().Layout()
+
+		t=self.menu.acceleratorTable if en else wx.AcceleratorTable()
+		target.SetAcceleratorTable(t)
+
 
 class BaseMenu(object):
-	def __init__(self):
+	def __init__(self,identifier,*,keyFilter=None):
+		"""メニューバー・acceleratorTable登録準備"""
+		self.keymap_identifier=identifier
 		self.blockCount={}				#key=intのref、value=blockCount
 		self.desableItems=set()			#ブロック中のメニューのrefを格納
 		self.hMenuBar=wx.MenuBar()
+		if keyFilter:
+			self.keyFilter=keyFilter
+		else:
+			self.keyFilter=keymap.KeyFilter().SetDefault(False,True)
+		self.InitShortcut()
+		self.ApplyShortcut()
 
-	def InitShortcut(self,identifier):
-		self.keymap=keymap.KeymapHandler(None,keymap.KeyFilter().SetDefault(False,True))
-		self.keymap_identifier=identifier
+	def InitShortcut(self):
+		self.keymap=keymap.KeymapHandler(None,self.keyFilter)
 		if self.keymap.addFile(constants.KEYMAP_FILE_NAME)!=errorCodes.OK:
 			self.keymap.addDict(defaultKeymap.defaultKeymap)
 			self.keymap.SaveFile(constants.KEYMAP_FILE_NAME)
-
-		errors=self.keymap.GetError(identifier)
+		errors=self.keymap.GetError(self.keymap_identifier)
 		if errors:
 			tmp=_(constants.KEYMAP_FILE_NAME+"で設定されたショートカットキーが正しくありません。キーの重複、存在しないキー名の指定、使用できないキーパターンの指定などが考えられます。以下のキーの設定内容をご確認ください。\n\n")
 			for v in errors:
 				tmp+=v+"\n"
 			dialog(_("エラー"),tmp)
 
-		#これ以降はユーザ設定の追加なのでフィルタを変更
-		self.keymap.filter=keymap.KeyFilter().SetDefault(False,False)
-
-	def RegisterMenuCommand(self,menu_handle,ref_id,title="",subMenu=None,index=-1):
-		if type(ref_id)==dict:
-			for k,v in ref_id.items():
-				self._RegisterMenuCommand(menu_handle,k,v,None,index)
-		elif type(ref_id) in (list,set,tuple):
-			for k in ref_id:
-				self._RegisterMenuCommand(menu_handle,k,menuItemsDic.dic[k],None,index)
-		else:
-			if title=="":
-				title=menuItemsDic.dic[ref_id]
-			return self._RegisterMenuCommand(menu_handle,ref_id,title,subMenu,index)
-
-	def _RegisterMenuCommand(self,menu_handle,ref_id,title,subMenu,index):
-		if ref_id=="" and title=="":
-			if index>=0:
-				menu_handle.InsertSeparator()
-			else:
-				menu_handle.AppendSeparator()
-			return
-		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
-		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
-		if subMenu==None:
-			if index>=0:
-				menu_handle.Insert(index,menuItemsStore.getRef(ref_id),s)
-			else:
-				menu_handle.Append(menuItemsStore.getRef(ref_id),s)
-		else:
-			if index>=0:
-				menu_handle.Insert(index,menuItemsStore.getRef(ref_id),s,subMenu)
-			else:
-				menu_handle.Append(menuItemsStore.getRef(ref_id),s,subMenu)
-		self.blockCount[menuItemsStore.getRef(ref_id)]=0
-
-	def ApplyShortcut(self):
+	def ApplyShortcut(self,window=None):
+		"""
+			キーマップ上のショートカットキーの更新を反映する
+			windowが指定されていれば、そのウィンドウに更新されたショートカットキーを割り当てる
+		"""
 		self.acceleratorTable=self.keymap.GetTable(self.keymap_identifier)
+		if window:
+			self.keymap.Set(self.keymap_identifier,window)
 
 	def Block(self,ref):
 		"""
@@ -146,10 +157,93 @@ class BaseMenu(object):
 			self.desableItems.add(ref)
 		else:
 			self.desableItems.discard(ref)
-		self.hMenuBar.Enable(ref,self.blockCount[ref]==0 and ref not in self.desableItems)
+		return self.hMenuBar.Enable(ref,self.blockCount[ref]==0 and ref not in self.desableItems)
 
 	def IsEnable(self,ref):
 		return self.blockCount[menuItemsStore.getRef(ref)]<=0
+
+	def RegisterMenuCommand(self,menu_handle,ref_id,title="",subMenu=None,index=-1):
+		if type(ref_id)==dict:
+			for k,v in ref_id.items():
+				self._RegisterMenuCommand(menu_handle,k,v,None,index)
+		elif type(ref_id) in (list,set,tuple):
+			for k in ref_id:
+				self._RegisterMenuCommand(menu_handle,k,menuItemsDic.dic[k],None,index)
+		else:
+			if title=="":
+				title=menuItemsDic.dic[ref_id]
+			return self._RegisterMenuCommand(menu_handle,ref_id,title,subMenu,index)
+
+	def _RegisterMenuCommand(self,menu_handle,ref_id,title,subMenu,index):
+		if ref_id=="" and title=="":
+			if index>=0:
+				menu_handle.InsertSeparator(index)
+			else:
+				menu_handle.AppendSeparator()
+			return
+		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
+		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
+		if subMenu==None:
+			if index>=0:
+				menu_handle.Insert(index,menuItemsStore.getRef(ref_id),s)
+			else:
+				menu_handle.Append(menuItemsStore.getRef(ref_id),s)
+		else:
+			if index>=0:
+				menu_handle.Insert(index,menuItemsStore.getRef(ref_id),s,subMenu)
+			else:
+				menu_handle.Append(menuItemsStore.getRef(ref_id),s,subMenu)
+		self.blockCount[menuItemsStore.getRef(ref_id)]=0
+
+	def RegisterCheckMenuCommand(self,menu_handle,ref_id,title,index=-1):
+		"""チェックメニューアイテム生成補助関数"""
+		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
+		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
+		if index>=0:
+			menu_handle.InsertCheckItem(index,menuItemsStore.getRef(ref_id),s)
+		else:
+			menu_handle.AppendCheckItem(menuItemsStore.getRef(ref_id),s)
+		self.blockCount[menuItemsStore.getRef(ref_id)]=0
+
+	def RegisterRadioMenuCommand(self,menu_handle,ref_id,title,index=-1):
+		"""ラジオメニューアイテム生成補助関数"""
+		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
+		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
+		if index>=0:
+			menu_handle.InsertRadioItem(index,menuItemsStore.getRef(ref_id),s)
+		else:
+			menu_handle.AppendRadioItem(menuItemsStore.getRef(ref_id),s)
+		self.blockCount[menuItemsStore.getRef(ref_id)]=0
+
+	def CheckMenu(ref_id,state=True):
+		return self.menu.Check(menuItemsStore.getRef(ref_id),state)
+
+	def EnableMenu(self,ref_id,enable=True):
+		return self.Enable(menuItemsStore.getRef(ref_id),enable)
+
+	def getItemInfo(self):
+		"""
+			メニューに登録されたすべてのアイテムを[(表示名,ref)...]で返します。
+		"""
+		ret=[]
+
+		if self.hMenuBar==None:
+			return ret
+		for menu,id in self.hMenuBar.GetMenus():
+			self._addMenuItemList(menu,ret)
+		return ret
+
+	def _addMenuItemList(self,menu,ret):
+		if type(menu)==wx.Menu:
+			items=menu.GetMenuItems()
+		else:
+			items=menu.GetSubMenu().GetMenuItems()
+		for item in items:
+			if item.GetSubMenu()!=None:
+				self._addMenuItemList(item,ret)
+			else:
+				if item.GetItemLabelText()!="":		#セパレータ対策
+					ret.append((item.GetItemLabelText(),item.GetId()))
 
 class BaseEvents(object):
 	"""イベント処理のデフォルトの動作をいくつか定義してあります。"""
@@ -158,7 +252,7 @@ class BaseEvents(object):
 		self.identifier=identifier
 
 	def Exit(self,event=None):
-		self.parent.hFrame.Close()
+		self.parent.hFrame.Destroy()
 
 	# wx.EVT_MOVE_END→wx.MoveEvent
 	def WindowMove(self,event):
@@ -180,4 +274,3 @@ class BaseEvents(object):
 
 		#sizerを正しく機能させるため、Skipの呼出が必須
 		event.Skip()
-

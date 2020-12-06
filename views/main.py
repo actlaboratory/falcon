@@ -55,10 +55,7 @@ EVENT_FROM_SELF=-1	#適当な数字。そのイベントは自分自身で投げ
 class View(BaseView):
 	def Initialize(self):
 		t=misc.Timer()
-		self.identifier="mainView"#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
-		self.app=globalVars.app
 		self.events=Events(self,self.identifier)
 		title=""
 		if(ctypes.windll.shell32.IsUserAnAdmin()):
@@ -71,10 +68,9 @@ class View(BaseView):
 			self.app.config.getint(self.identifier,"positionX",50,0),
 			self.app.config.getint(self.identifier,"positionY",50,0)
 		)
-		self.menu=Menu()
-		self.menu.InitShortcut(self.identifier)
+		self.menu=Menu(self.identifier)
 		self.AddUserCommandKey()
-		self.InstallMenuEvent(self.menu,self.events)
+		self.InstallMenuEvent(self.menu,self.events.OnMenuSelect)
 		self.AddUserCommandMenu()
 
 		self.tabs=[]
@@ -83,6 +79,7 @@ class View(BaseView):
 		self.MakeFirstTab()
 		self.activeTab.hListCtrl.SetFocus()
 		self.hFrame.Bind(wx.EVT_CLOSE, self.OnClose)
+		self.hFrame.Bind(wx.EVT_MENU_OPEN,self.events.OnMenuOpen)
 		if self.app.config.getboolean(self.identifier,"maximized",False):
 			self.hFrame.Maximize()
 		self.hFrame.Show()
@@ -145,7 +142,6 @@ class View(BaseView):
 		newtab=tabs.navigator.Navigate(target,create_new_tab_info=(self,creator))
 		if type(newtab)==int:		#Error
 			return newtab
-		newtab.hListCtrl.SetAcceleratorTable(self.menu.acceleratorTable)
 		self.tabs.append(newtab)
 		#self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
 		self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,newtab.GetTabName(),False)
@@ -167,6 +163,7 @@ class View(BaseView):
 		self.activeTab.OnBeforeChangeTab()
 		self.activeTab.OnClose()
 		self.activeTab=newtab
+		self.menu.ApplyShortcut(self.activeTab.hListCtrl)
 
 		#タブ名変更。activeTab書き換え後に呼ぶ必要がある
 		self.UpdateTabName()
@@ -177,6 +174,7 @@ class View(BaseView):
 		self.UpdateMenuState(self.activeTab,self.tabs[pageNo])
 		self.activeTab=self.tabs[pageNo]
 		self.hTabCtrl.SetSelection(pageNo)
+		self.menu.ApplyShortcut(self.activeTab.hListCtrl)
 
 	def CloseTab(self,pageNo):
 		"""指定されたインデックスのタブを閉じる。閉じたタブがアクティブだった場合は、別のタブをアクティブ状態にする。全てのタブが閉じられた場合は、終了イベントを投げる。"""
@@ -295,23 +293,44 @@ class View(BaseView):
 				))
 			title=globalVars.app.userCommandManagers[m]
 			self.menu.RegisterMenuCommand(self.menu.hMoveMenu,m.refHead,title,subMenu,index)
+			self.hFrame.SetMenuBar(self.menu.hMenuBar)
 
 	def UpdateUserCommand(self):
-		self.menu.InitShortcut(self.identifier)			#キーマップを再取得
-		self.AddUserCommandKey()						#ユーザコマンドを登録
-		self.menu.ApplyShortcut()						#acceleratorTable再取得
-		self.AddUserCommandMenu()						#メニューバーの登録更新
-		self.SetShortcutEnabled(self.SetShortcutEnable)	#テーブルを適用
+		self.menu.InitShortcut()							#キーマップを再取得
+		self.AddUserCommandKey()							#ユーザコマンドを登録
+		self.menu.ApplyShortcut(self.activeTab.hListCtrl)	#acceleratorTable再取得
+		self.AddUserCommandMenu()							#メニューバーの登録更新
 		return
 
 	def GetKeyEntries(self):
 		return self.menu.keymap.GetEntries(self.identifier)
 
-class Menu(BaseMenu):
-	def __init__(self):
-		super().__init__()
+	def PopupMenu(self,hMenu):
+		self.hFrame.PopupMenu(hMenu)
 
-	def Apply(self,target,event):
+	def SetShortcutEnabled(self,en):
+		"""
+			ショートカットキーの有効/無効を切り替える。
+			AcceleratorTableとメニューバーのそれぞれに登録されているので、両方の対策が必要。
+		"""
+		#登録先が違うのでsuperのものを使わない
+		if hasattr(self,"activeTab"):
+			return self._SetShortcutEnabled(en,self.activeTab.hListCtrl)
+
+
+class Menu(BaseMenu):
+	def __init__(self,identifier):
+		filter = keyFilter=keymap.KeyFilter().SetDefault(False,True)
+		filter.AddFunctionKey(("LEFTARROW","RIGHTARROW","NUMPAD_DIVIDE","NUMPAD_MULTIPLY"))
+
+		super().__init__(identifier,keyFilter=filter)
+
+		#これ以降はユーザ設定の追加なのでフィルタを変更
+		filter = keyFilter=keymap.KeyFilter().SetDefault(False,True)
+		filter.AddFunctionKey(("LEFTARROW","RIGHTARROW","NUMPAD_DIVIDE","NUMPAD_MULTIPLY"))
+		self.keymap.filter=filter
+
+	def Apply(self,target):
 		"""指定されたウィンドウに、メニューを適用する。"""
 
 		#メニューの大項目を作る
@@ -435,27 +454,14 @@ class Menu(BaseMenu):
 		self.hMenuBar.Append(self.hHelpMenu,_("ヘルプ"))
 		target.SetMenuBar(self.hMenuBar)
 
-		#イベントとショートカットキーの登録
-		target.Bind(wx.EVT_MENU,event.OnMenuSelect)
-		target.Bind(wx.EVT_MENU_OPEN,event.OnMenuOpen)
 		self.ApplyShortcut()
 
-		#名前の変更中に出しておくダミーのメニューバー
-		#これがないとメニューバーの高さ分リストオブジェクトの大きさが変わってしまうために必要
-		self.hDisableMenuBar=wx.MenuBar()
-		self.hDisableSubMenu=wx.Menu()
-		self.hDisableMenuBar.Append(self.hDisableSubMenu,_("現在メニューは操作できません"))
-
-	def InitShortcut(self,identifier):
-		super().InitShortcut(identifier)
-		self.keymap.filter.AddFunctionKey(("LEFTARROW","RIGHTARROW","NUMPAD_DIVIDE","NUMPAD_MULTIPLY"))
-	
 class Events(BaseEvents):
 
 	def OnMenuSelect(self,event):
 		"""メニュー項目が選択されたときのイベントハンドら。"""
 		#ショートカットキーが無効状態のときは何もしない
-		if not self.parent.SetShortcutEnable:
+		if not self.parent.shortcutEnable:
 			event.Skip()
 			return
 
@@ -535,7 +541,7 @@ class Events(BaseEvents):
 
 			#ショートカットキーの変更適用とメニューバーの再描画
 			self.parent.UpdateUserCommand()
-			self.parent.menu.Apply(self.parent.hFrame,self.parent.events)
+			self.parent.menu.Apply(self.parent.hFrame)
 			return
 		if selected==menuItemsStore.getRef("MOVE_FORWARD_ADMIN"):
 			self.GoForward(False,admin=True)
