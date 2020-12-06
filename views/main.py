@@ -518,11 +518,11 @@ class Events(BaseEvents):
 				menuData[title]=refName
 			d=views.globalKeyConfig.Dialog(keyData,menuData)
 			d.Initialize()
-			ret=d.Show()
-			if ret==wx.ID_CANCEL: return
+			if d.Show()==wx.ID_CANCEL: return
 
 			result={}
 			keyData,menuData=d.GetValue()
+
 			#キーマップの既存設定を置き換える
 			keymap=ConfigManager.ConfigManager()
 			keymap.read(constants.KEYMAP_FILE_NAME)
