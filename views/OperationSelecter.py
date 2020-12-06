@@ -14,23 +14,18 @@ import views.ViewCreator
 class Dialog(BaseDialog):
 
 	def __init__(self,message,info,choices,enableCancel=False):
-		super().__init__()
+		super().__init__("OperationSelecterDialog")
 		self.message=message
 		self.info=info
 		self.choices=choices
 		self.enableCancel=enableCancel
 
 	def Initialize(self):
-		t=misc.Timer()
-		self.identifier="OperationSelecterDialog"#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
-		self.log.debug("created")
 		if self.enableCancel:
 			super().Initialize(self.app.hMainView.hFrame,_("ファイル操作確認"))
 		else:
 			super().Initialize(self.app.hMainView.hFrame,_("ファイル操作確認"),0)
 		self.InstallControls()
-		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
 	def InstallControls(self):

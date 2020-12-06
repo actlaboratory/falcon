@@ -7,7 +7,6 @@ import wx
 
 import globalVars
 import keymap
-import misc
 import views.ViewCreator
 
 from logging import getLogger
@@ -17,7 +16,7 @@ TIMER_INTERVAL=100
 
 class Dialog(BaseDialog):
 	def __init__(self,parent,filter=None):
-		super().__init__()
+		super().__init__("keyConfigDialog")
 		self.parent=parent				#親ウィンドウ
 		self.filter=filter				#キーフィルタ
 		if self.filter==None:			#キーフィルタ未指定ならデフォルトとしてメインビューで設定されたキーフィルタを適用
@@ -28,10 +27,6 @@ class Dialog(BaseDialog):
 		self.timer=None					#wx.Timerオブジェクト
 
 	def Initialize(self):
-		t=misc.Timer()
-		self.identifier="keyConfigDialog"#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
-		self.log.debug("created")
 		super().Initialize(self.parent,_("キー設定"))
 		self.wnd.Bind(wx.EVT_TIMER, self.OnTimer)
 		self.InstallControls()

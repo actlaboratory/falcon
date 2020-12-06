@@ -21,11 +21,11 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 			(_("ショートカット"),wx.LIST_FORMAT_LEFT,350),
 			(_("識別子"),wx.LIST_FORMAT_LEFT,200)
 		]
-		super().__init__(SettingDialog,info,keyConfig,menuIds)
+		super().__init__("globalKeyConfigDialog",SettingDialog,info,keyConfig,menuIds)
 		self.oldKeyConfig=copy.copy(keyConfig)
 
 	def Initialize(self):
-		super().Initialize(self.app.hMainView.hFrame,"globalKeyConfigDialog",_("ショートカットキーの設定"))
+		super().Initialize(self.app.hMainView.hFrame,_("ショートカットキーの設定"))
 		self.addButton.Hide()
 		self.deleteButton.Hide()
 		return

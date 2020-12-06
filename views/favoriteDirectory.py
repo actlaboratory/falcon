@@ -21,11 +21,11 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 			(_("場所"),wx.LIST_FORMAT_LEFT,350),
 			(_("ショートカット"),wx.LIST_FORMAT_LEFT,200)
 		]
-		super().__init__(SettingDialog,info,config,keyConfig)
+		super().__init__("favoriteDirectoryDialog",SettingDialog,info,config,keyConfig)
 		self.oldKeyConfig=copy.copy(keyConfig)
 
 	def Initialize(self):
-		return super().Initialize(self.app.hMainView.hFrame,"favoriteDirectoryDialog",_("お気に入りディレクトリの設定"))
+		return super().Initialize(self.app.hMainView.hFrame,_("お気に入りディレクトリの設定"))
 
 	def OkButtonEvent(self,event):
 		"""

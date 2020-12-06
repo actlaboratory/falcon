@@ -19,10 +19,10 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 			(_("拡張子"),wx.LIST_FORMAT_LEFT,250),
 			(_("実行ファイル名"),wx.LIST_FORMAT_LEFT,550)
 		]
-		super().__init__(SettingDialog,info,config)
+		super().__init__("registOriginalAssociationDialog",SettingDialog,info,config)
 
 	def Initialize(self):
-		return super().Initialize(self.app.hMainView.hFrame,"registOriginalAssociationDialog",_("拡張子の独自関連付け"))
+		return super().Initialize(self.app.hMainView.hFrame,_("拡張子の独自関連付け"))
 
 	def DeleteValidation(self,key):
 		return not "<default_" in key

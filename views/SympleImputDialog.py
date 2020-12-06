@@ -11,7 +11,7 @@ from views.baseDialog import *
 
 class Dialog(BaseDialog):
 	def __init__(self,title,detail,parent=None):
-		super().__init__()
+		super().__init__("SympleImputDialog")
 		self.title=title
 		self.detail=detail
 		if parent!=None:
@@ -20,8 +20,6 @@ class Dialog(BaseDialog):
 			self.parent=self.app.hMainView.hFrame
 
 	def Initialize(self):
-		self.identifier="SympleImputDialog"#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
 		self.log.debug("created")
 		super().Initialize(self.parent,self.title)
 		self.InstallControls()

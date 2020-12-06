@@ -7,7 +7,6 @@ import wx
 
 import globalVars
 import keymap
-import misc
 import views.ViewCreator
 
 from .baseDialog import *
@@ -15,12 +14,12 @@ from logging import getLogger
 from simpleDialog import dialog
 
 class KeyValueSettingDialogBase(BaseDialog):
-	def __init__(self,settingDialog,columnInfo,*values):
+	def __init__(self,identifier,settingDialog,columnInfo,*values):
 		"""
 			columnInfo:	(カラム名,フォーマット,width)のタプルのリスト(len>=2)
 			*values:	{key:value}の辞書(len(values)=len(columnInfo)-1)
 		"""
-		super().__init__()
+		super().__init__(identifier)
 		if len(columnInfo)!=len(values)+1:
 			raise ValueError(_("パラメータの個数が不正です。"))
 		self.settingDialog=settingDialog
@@ -28,14 +27,9 @@ class KeyValueSettingDialogBase(BaseDialog):
 		self.values=values
 		self.columnNames=[]
 
-	def Initialize(self,parent,identifier,title):
-		t=misc.Timer()
-		self.identifier=identifier#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
-		self.log.debug("created")
+	def Initialize(self,parent,title):
 		super().Initialize(parent,title)
 		self.InstallControls()
-		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
 	def InstallControls(self):
@@ -169,6 +163,7 @@ class SettingDialogBase(BaseDialog):
 			*vには各入力欄の初期値(空欄を省略可能)
 
 		"""
+		super().__init__("valueSettingDialog")
 		if len(valueNames)!=len(v):
 			raise ValueError(_("項目名と初期値の指定件数が一致しません。"))
 		self.parent=parent

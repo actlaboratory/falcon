@@ -6,7 +6,6 @@
 import wx
 from logging import getLogger, FileHandler, Formatter
 from .baseDialog import *
-import misc
 import views.ViewCreator
 
 from simpleDialog import dialog
@@ -15,19 +14,14 @@ class Dialog(BaseDialog):
 
 	#検索の起点を設定
 	def __init__(self,basePath,searchHistory,grepHistory):
-		super().__init__()
+		super().__init__("SearchDialog")
 		self.basePath=basePath
 		self.searchHistory=searchHistory
 		self.grepHistory=grepHistory
 
 	def Initialize(self):
-		t=misc.Timer()
-		self.identifier="SearchDialog"#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
-		self.log.debug("created")
 		super().Initialize(self.app.hMainView.hFrame,_("検索"))
 		self.InstallControls()
-		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
 	def InstallControls(self):

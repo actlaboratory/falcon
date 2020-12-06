@@ -18,17 +18,13 @@ class Dialog(BaseDialog):
 	CALCURATING=None
 
 	def __init__(self):
+		super().__init__("objectDetailDialog")
 		self.task=None
 		self.calcuratingFields=[]
 
 	def Initialize(self,dic=None):
-		t=misc.Timer()
-		self.identifier="objectDetailDialog"#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
-		self.log.debug("created")
 		super().Initialize(globalVars.app.hMainView.hFrame,_("詳細情報"))
 		self.InstallControls(dic)
-		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
 	def InstallControls(self,dic):

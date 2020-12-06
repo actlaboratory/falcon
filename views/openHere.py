@@ -23,12 +23,12 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 			(_("実行ファイル名"),wx.LIST_FORMAT_LEFT,350),
 			(_("ショートカット"),wx.LIST_FORMAT_LEFT,200)
 		]
-		super().__init__(SettingDialog,info,config,keyConfig)
+		super().__init__("openHereSettingDialog",SettingDialog,info,config,keyConfig)
 		self.oldKeyConfig=copy.copy(keyConfig)
 
 
 	def Initialize(self):
-		return super().Initialize(self.app.hMainView.hFrame,"openHereSettingDialog",_("「ここで開く」コマンドの設定"))
+		return super().Initialize(self.app.hMainView.hFrame,_("「ここで開く」コマンドの設定"))
 
 	def OkButtonEvent(self,event):
 		"""
@@ -41,7 +41,7 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
 class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
 	"""設定内容を入力するダイアログ"""
 
-	def __init__(self,parent,name,path="",key=""):
+	def __init__(self,parent,name="",path="",key=""):
 		super().__init__(
 				parent,
 				((_("名前"),True),(_("実行ファイル名(引数指定可)"),True),(_("ショートカット"),False)),

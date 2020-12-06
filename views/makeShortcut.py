@@ -6,7 +6,6 @@
 import wx
 from logging import getLogger, FileHandler, Formatter
 from .baseDialog import *
-import misc
 from simpleDialog import *
 import views.ViewCreator
 
@@ -28,23 +27,16 @@ class Dialog(BaseDialog):
 	def __init__(self,targetName,canMakeLnk=True,canMakeHardLink=True,canMakeSynLink=True):
 		if not canMakeLnk and not canMakeSynLink and not canMakeHardLink:
 			raise ValueError(_("makeShortcutDialogを表示するには、少なくとも１種類のショートカットの作成が有効化されている必要があります。"))
-
-		super().__init__()
+		super().__init__("MakeShortcutDialog")
 		#対象オブジェクトの拡張子を除く名前
 		self.targetName=targetName
 		self.canMakeLnk=canMakeLnk
 		self.canMakeSynLink=canMakeSynLink
 		self.canMakeHardLink=canMakeHardLink
-		print(self.canMakeHardLink)
 
 	def Initialize(self):
-		t=misc.Timer()
-		self.identifier="MakeShortcutDialog"#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
-		self.log.debug("created")
 		super().Initialize(self.app.hMainView.hFrame,_("ショートカットの作成"))
 		self.InstallControls()
-		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
 	def InstallControls(self):

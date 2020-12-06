@@ -4,20 +4,17 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import wx
-import misc
 import views.ViewCreator
 from logging import getLogger
 from views.baseDialog import *
 
 class Dialog(BaseDialog):
+	def __init__(self):
+		super().__init__("newNameEditDialog")
+
 	def Initialize(self,detailText=""):
-		t=misc.Timer()
-		self.identifier="newNameEditDialog"#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
-		self.log.debug("created")
 		super().Initialize(self.app.hMainView.hFrame,_("新しい名前を入力"))
 		self.InstallControls(detailText)
-		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
 	def InstallControls(self,detailText):

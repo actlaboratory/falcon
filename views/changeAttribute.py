@@ -14,18 +14,13 @@ import views.ViewCreator
 
 class Dialog(BaseDialog):
 	def __init__(self,defaultAttributes):
-		super().__init__()
+		super().__init__("changeAttributeDialog")
 		#現在の属性を初期値としてセット
 		self.defaultAttributes=defaultAttributes
 
 	def Initialize(self):
-		t=misc.Timer()
-		self.identifier="changeAttributeDialog"#このビューを表す文字列
-		self.log=getLogger("falcon.%s" % self.identifier)
-		self.log.debug("created")
 		super().Initialize(self.app.hMainView.hFrame,_("属性変更"))
 		self.InstallControls()
-		self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
 		return True
 
 	def InstallControls(self):

@@ -239,7 +239,7 @@ class ViewCreator():
 		self.AddSpace(self.space)
 		return hListCtrl
 
-	def tabCtrl(self,title,event=None,style=wx.NB_NOPAGETHEME | wx.NB_MULTILINE,proportion=0,sizerFlag=0):
+	def tabCtrl(self,title,event=None,style= wx.NB_MULTILINE,proportion=0,sizerFlag=0):
 		htab=wx.Notebook(self.parent, wx.ID_ANY,name=title,style=style)
 		htab.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED,event)
 		self.SetFace(htab)
@@ -247,10 +247,10 @@ class ViewCreator():
 		self.sizer.Layout()
 		return htab
 
-	def staticText(self,text):
-		hStaticText=wx.StaticText(self.parent,-1,label=text,name=text)
-		Add(self.sizer,hStaticText,0)
+	def staticText(self, title, text=" ",x=-1,style=0,layout=0):
+		hStaticText=wx.StaticText(self.parent,-1,label=text,name=title,size=(x,-1),style=style)
 		self.SetFace(hStaticText)
+		Add(self.sizer,hStaticText,0,layout)
 		self.AddSpace(self.space)
 		return hStaticText
 
