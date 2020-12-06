@@ -208,12 +208,15 @@ def GetExecutableState(path):
 def calcHash(path,algo):
 	h = hashlib.new(algo)
 	len = hashlib.new(algo).block_size * 0x800
-	with open(path,'rb') as f:
-		BinaryData = f.read(len)
-		while BinaryData:
-			h.update(BinaryData)
+	try:
+		with open(path,'rb') as f:
 			BinaryData = f.read(len)
-			return h.hexdigest()
+			while BinaryData:
+				h.update(BinaryData)
+				BinaryData = f.read(len)
+				return h.hexdigest()
+	except:
+		return _("エラー")
 
 #環境変数PATHに値を追加
 def addPath(paths):
