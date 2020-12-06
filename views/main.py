@@ -526,13 +526,12 @@ class Events(BaseEvents):
 			#キーマップの既存設定を置き換える
 			keymap=ConfigManager.ConfigManager()
 			keymap.read(constants.KEYMAP_FILE_NAME)
-			keymap.remove_section(self.parent.identifier.upper())
-			keymap.add_section(self.parent.identifier.upper())
-			section=keymap[self.parent.identifier.upper()]
 			for name,key in keyData.items():
 				if key!=_("なし"):
-					section[menuData[name]]=key
-			keymap.write()	
+					keymap[self.parent.identifier.upper()][menuData[name]]=key
+				else:
+					keymap[self.parent.identifier.upper()][menuData[name]]=""
+			keymap.write()
 
 			#ショートカットキーの変更適用とメニューバーの再描画
 			self.parent.UpdateUserCommand()
