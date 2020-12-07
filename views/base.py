@@ -166,11 +166,11 @@ class BaseMenu(object):
 		if type(ref_id)==dict:
 			for k,v in ref_id.items():
 				self._RegisterMenuCommand(menu_handle,k,v,None,index)
-		elif type(ref_id) in (list,set,tuple):
+		elif type(ref_id)!=str and hasattr(ref_id,"__iter__"):
 			for k in ref_id:
 				self._RegisterMenuCommand(menu_handle,k,menuItemsDic.dic[k],None,index)
 		else:
-			if title=="":
+			if not title:
 				title=menuItemsDic.dic[ref_id]
 			return self._RegisterMenuCommand(menu_handle,ref_id,title,subMenu,index)
 
@@ -195,9 +195,11 @@ class BaseMenu(object):
 				menu_handle.Append(menuItemsStore.getRef(ref_id),s,subMenu)
 		self.blockCount[menuItemsStore.getRef(ref_id)]=0
 
-	def RegisterCheckMenuCommand(self,menu_handle,ref_id,title,index=-1):
+	def RegisterCheckMenuCommand(self,menu_handle,ref_id,title=None,index=-1):
 		"""チェックメニューアイテム生成補助関数"""
 		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
+		if not title:
+			title=menuItemsDic.dic[ref_id]
 		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
 		if index>=0:
 			menu_handle.InsertCheckItem(index,menuItemsStore.getRef(ref_id),s)
@@ -205,9 +207,11 @@ class BaseMenu(object):
 			menu_handle.AppendCheckItem(menuItemsStore.getRef(ref_id),s)
 		self.blockCount[menuItemsStore.getRef(ref_id)]=0
 
-	def RegisterRadioMenuCommand(self,menu_handle,ref_id,title,index=-1):
+	def RegisterRadioMenuCommand(self,menu_handle,ref_id,title=None,index=-1):
 		"""ラジオメニューアイテム生成補助関数"""
 		shortcut=self.keymap.GetKeyString(self.keymap_identifier,ref_id)
+		if not title:
+			title=menuItemsDic.dic[ref_id]
 		s=title if shortcut is None else "%s\t%s" % (title,shortcut)
 		if index>=0:
 			menu_handle.InsertRadioItem(index,menuItemsStore.getRef(ref_id),s)
