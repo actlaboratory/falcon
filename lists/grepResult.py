@@ -76,3 +76,13 @@ class GrepResultList(SearchResultBase):
 			return len(hitobjects)
 		#end 対応している拡張子
 		return 0
+
+	def _GetJumpKey(self,index):
+		"""
+			デフォルトの先頭文字単位ではなく、見つかったファイル単位で動く
+		"""
+		sortType=self.supportedSorts[self.sortCursor]
+		if sortType == SORT_TYPE_BASENAME:
+			return self.GetElement(index).fullpath
+		else:
+			return super()._GetJumpKey(index)
