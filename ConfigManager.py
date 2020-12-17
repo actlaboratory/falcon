@@ -83,8 +83,8 @@ class ConfigManager(configparser.ConfigParser):
 			return int(default)
 
 	def getstring(self,section,key,default="",selection=None,*, raw=False, vars=None,fallback=None):
-		if selection!=None and type(selection) not in (set,tuple,list):
-			raise TypeError("selection must be set, list or tuple")
+		if selection!=None and not hasattr(selection, "__iter__"):
+			raise TypeError("selection must be iterable. %s were given." % type(selection))
 		ret=self.__getitem__(section)[key]
 		if ret=="":
 			if default=="":
@@ -105,6 +105,12 @@ class ConfigManager(configparser.ConfigParser):
 	def add_section(self,name):
 		if not self.has_section(name):
 			return super().add_section(name)
+
+	def items(self,section):
+		try:
+			return super().items(section)
+		except configparser.NoSectionError:
+			return []
 
 class ConfigSection(configparser.SectionProxy):
 	def __init__(self,proxy):

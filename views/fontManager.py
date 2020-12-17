@@ -1,24 +1,20 @@
 ﻿# -*- coding: utf-8 -*-
-#Falcon wx view.fontManager
 #Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
-#Note: All comments except these top lines will be written in Japanese. 
 
 import logging
 import wx
-from logging import getLogger, FileHandler, Formatter
+from logging import getLogger
 #from .base import *
 import constants
 import DefaultSettings
 import globalVars
-import misc
 from simpleDialog import *
 
 
 class FontManager():
 	def __init__(self):
-		t=misc.Timer()
-		self.identifier="wxFontManager"
-		self.log=getLogger("falcon.%s" % self.identifier)
+		self.identifier="FontManager"
+		self.log=getLogger("%s.%s" % (constants.APP_NAME,self.identifier))
 		self.log.debug("created")
 		self.app=globalVars.app
 

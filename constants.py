@@ -11,7 +11,7 @@ APP_VERSION="0.01"
 APP_COPYRIGHT_YEAR="2019-2020"
 APP_DEVELOPERS="Yukio Nozawa and Yuki Kochi"
 
-SUPPORTING_LANGUAGE=("ja-JP","en-US")
+SUPPORTING_LANGUAGE={"ja-JP": "日本語","en-US": "English"}# 対応言語一覧
 DISPLAY_LANGUAGE = ("日本語", "English")# 言語選択表示用の文字列
 
 

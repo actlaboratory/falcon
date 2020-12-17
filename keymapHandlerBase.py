@@ -73,7 +73,6 @@ str2UnknownKey={
 	"SCROLL":wx.WXK_SCROLL,					#ScrLk
 	"COMMAND":wx.WXK_COMMAND,				#CONTROLと同じ
 	"RAW_CONTROL":wx.WXK_RAW_CONTROL,		#CONTROLと同じ
-	"CLEAR":wx.WXK_CLEAR,					#テンキー5
 
 	#記号キー 動作しない
 	"MULTIPLY":wx.WXK_MULTIPLY,
@@ -150,6 +149,7 @@ str2StandaloneKey={
 	"UPARROW":wx.WXK_UP,
 	"RIGHTARROW":wx.WXK_RIGHT,
 	"DOWNARROW":wx.WXK_DOWN,
+	"CLEAR":wx.WXK_CLEAR,					#テンキー5
 }
 
 #単独または修飾キーとの組み合わせで利用できる
@@ -414,11 +414,15 @@ class KeymapHandlerBase():
 		identifier=identifier.upper()
 
 		try:
-			r=self.map[identifier][ref]
+			return self.map[identifier][ref]
 		except KeyError:
-			r=None
+			#他のビューを検索
+			for i in self.map:
+				if ref in self.map[i]:
+					return self.map[i][ref]
+			return None
 		#end except
-		return r
+
 
 	def GetTable(self, identifier):
 		"""
@@ -613,6 +617,9 @@ class KeyFilterBase:
 		self.AddDisablePattern("CTRL+WINDOWS+RETURN")		#ナレーターの起動と終了
 		self.AddDisablePattern("ALT+SHIFT+PRINTSCREEN")		#ハイコントラストの切り替え
 		self.AddDisablePattern("ALT+ESCAPE")				#最前面ウィンドウの最小化
+		self.AddDisablePattern("ALT+TAB")					#ウィンドウ間の移動
+		self.AddDisablePattern("ALT+SHIFT+TAB")				#ウィンドウ間の移動
+		self.AddDisablePattern("ALT+ESCAPE")				#ウィンドウの最小化
 
 	def SetDefault(self,supportInputChar,isSystem,arrowCharKey=False):
 		"""
@@ -726,7 +733,7 @@ class KeyFilterBase:
 			return False
 
 		self.errorString=""
-		keys=keyString.split("+")
+		keys=keyString.upper().split("+")
 		modFlg=False
 		shiftFlg=False
 		funcCount=0
