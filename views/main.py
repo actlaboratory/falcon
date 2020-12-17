@@ -89,6 +89,7 @@ class View(BaseView):
 
 	def OnClose(self,event=None):
 		"""ウィンドウが閉じられる直前に呼ばれる。"""
+		self.log.info("received close event(force="+("true" if not event.CanVeto() else "false")+")")
 		if not event.CanVeto():#強制シャットダウン
 			self.hFrame.Destroy()
 			return
@@ -99,10 +100,11 @@ class View(BaseView):
 			ret=dlg.ShowModal()
 			if ret==wx.ID_NO:
 				event.Veto()
+				self.log.info("CloseEvent.Veto(). user select cancel.")
 				return
 			#end no
 		#end 複数タブが開いている渓谷
-		self.hFrame.Destroy()
+		event.Skip()
 
 	def MakeFirstTab(self):
 		"""最初のタブを作成する。"""
@@ -193,7 +195,7 @@ class View(BaseView):
 		popped_tab=self.tabs.pop(pageNo)
 		popped_tab.OnClose()
 		if len(self.tabs)==0:#タブがなくなった
-			self.events.Exit()
+			self.hFrame.Close()
 			return
 		#タブがなくなったらソフト終了
 		self.hTabCtrl.DeletePage(pageNo)#この時点で、 noteBook がリストコントロールをデリートするらしいので、他の場所で明示的に消してはいけないとリファレンスに書いてある
@@ -802,7 +804,7 @@ class Events(BaseEvents):
 			self.StartRename()
 			return
 		if selected==menuItemsStore.getRef("FILE_EXIT"):
-			self.Exit(event)
+			self.parent.hFrame.Close()
 			return
 		if selected==menuItemsStore.getRef("HELP_VERINFO"):
 			self.ShowVersionInfo()
