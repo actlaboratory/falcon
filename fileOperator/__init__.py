@@ -10,13 +10,14 @@ import random
 import threading
 import win32api
 import win32event
+import wx
 from win32com.shell import shell, shellcon
 from simpleDialog import dialog
 
 import globalVars
 import misc
 
-from . import rename, changeAttribute, mkdir,trash,shortcut,symbolicLink,hardLink,delete,past
+from . import rename, changeAttribute, mkdir,trash,shortcut,symbolicLink,hardLink,delete,pastMock
 from . import failedElement, confirmElement
 
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
@@ -24,6 +25,7 @@ from . import failedElement, confirmElement
 class FileOperator(object):
 	def __init__(self,instructions=None, elevated=False):
 		"""指示を与える。まだ実行しない。"""
+		self.callbacks={}
 		self.elevated=elevated#昇格してるかどうか
 		self.thread=None
 		self.opTimer=None
@@ -37,6 +39,7 @@ class FileOperator(object):
 		self.output["failed"]=[]#失敗したファイル立ちの情報
 		self.output["retry"]={"files": []}#権限昇格して自動的にリトライするオペレーション
 		self.output["all_OK"]=False#全て成功ならTrueにする
+		self.output["percentage"]=0
 		self.started=False#スタートしたかどうか
 		self.instructions=None
 		self.resume=False#確認に応答した後のファイル処理では、これが True になっている。なので、エラーを無視したりとかする。処理に渡されたファイルは、問答無用で処理刷る(上書きするとかしないとかは、 confirmationManager が追加するかどうかのみに左右される)
@@ -47,6 +50,20 @@ class FileOperator(object):
 			self.instructions=instructions
 		#end str or dict
 	#end __init__
+
+	def SetCallback(self,identifier,callable):
+		"""終了したときのコールバックを設定。"""
+		self.callbacks[identifier]=callable
+
+	def GetPercentage(self):
+		return self.output["percentage"]
+
+	def SetPercentage(self,p):
+		self.output["percentage"]=p
+		self._doCallback("setPercentage")
+
+	def GetFinishedState(self):
+		return self.output["finished"]
 
 	def Execute(self, threaded=False):
 		"""
@@ -68,8 +85,11 @@ class FileOperator(object):
 			return False
 		#end キーがセットされてない
 		op=op.lower()
+		self.threaded=threaded
+		self.started=True
 		if threaded:
-			self.thread=threading.thread(self._process)
+			self.thread=threading.Thread(target=self._process)
+			self.thread.start()
 		else:
 			self._process()
 		#end スレッドかそうじゃないか
@@ -106,14 +126,24 @@ class FileOperator(object):
 			retry=delete.Execute(self)
 		#end hardLink
 		if op=="past":
-			retry=past.Execute(self,resume=self.resume)
+			retry=pastMock.Execute(self,resume=self.resume)
 		#end hardLink
 		self.log.debug("success %s, retry %s, need to confirm %s, failure %s." % (self.output["succeeded"], retry, len(self.output["need_to_confirm"]), len(self.output["failed"])))
 		if not self.elevated and retry>0: self._elevate()#昇格してリトライ
 		if self.elevated: self._postElevation()#昇格した後の後処理
 		self.working=False
 		self.log.info("Finished (%f sec)" % self.opTimer.elapsed)
+		self._doCallback("finished")
 	#end _process
+
+	def _doCallback(self,identifier, parameters={}):
+		if not identifier in self.callbacks: return
+		if self.threaded:
+			wx.CallAfter(self.callbacks[identifier],self,parameters)
+		else:
+			self.callbacks[identifier](self)
+		#end スレッド実行の場合はcallAfter
+#end _doCallback
 
 	def _elevate(self):
 		"""権限昇格し、アクセス拒否になった項目を再実行する。"""
@@ -156,6 +186,7 @@ class FileOperator(object):
 
 	def CheckFinished(self):
 		"""ファイルオペレーションが終了したかどうかを取得する。"""
+		print("started=%s working=%s" % (self.started,self.working))
 		return self.started and not self.working
 	#end CheckFinished
 
