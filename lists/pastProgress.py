@@ -5,16 +5,16 @@
 #Note: All comments except these top lines will be written in Japanese. 
 
 import os
-import random
 import re
 import wx
+from browsableObjects import PastProgressItem, PastProgressHeader
 
-import browsableObjects
 import errorCodes
 import misc
 
-from .base import FalconListBase
+import random
 
+from .base import FalconListBase
 class PastProgressList(FalconListBase):
 	"""貼り付けの進捗状況を一覧するリスト。"""
 	def __init__(self):
@@ -30,7 +30,7 @@ class PastProgressList(FalconListBase):
 		self.headers=[]
 		self.lists=[self.headers,self.results]
 
-	def Initialize(self,another_instance=None):
+	def Initialize(self,another_instance=None, header_directory=""):
 		"""テストアイテムを作る"""
 		if isinstance(another_instance,list):#パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
 			for elem in another_instance:
@@ -38,17 +38,33 @@ class PastProgressList(FalconListBase):
 			#end for
 			return errorCodes.OK
 		#end another_instance の処理
-		head=browsableObjects.PastProgressHeader()
-		head.Initialize("myfolder","path/to/myfolder","進行中","path/to/destination にコピーしています",50)
+		head=PastProgressHeader()
+		head.Initialize(header_directory,header_directory,"進行中","コピーしています",0)
 		self.headers.append(head)
-		self.results.append(self._make(random.randint(0,9999),"用確認","宛先にすでにファイルが存在しています。"))
-		self.results.append(self._make(random.randint(0,9999),"エラー","宛先ドライブに十分な空き領域がありません"))
-		self.results.append(self._make(random.randint(0,9999),"エラー","アクセスが拒否されました。"))
+		#self.results.append(self._make(random.randint(0,9999),"用確認","宛先にすでにファイルが存在しています。"))
+		#self.results.append(self._make(random.randint(0,9999),"エラー","宛先ドライブに十分な空き領域がありません"))
+		#self.results.append(self._make(random.randint(0,9999),"エラー","アクセスが拒否されました。"))
 
 	def _make(self,p1,p3,p4):
-		o=browsableObjects.PastProgressItem()
+		o=PastProgressItem()
 		o.Initialize("test%04d" % (p1),"full\\path\\test%04d" % (p1),p3,p4)
 		return o
 
+	def Append(self,elem):
+		self.results.append(elem)
+
 	def Update(self):
 		pass
+
+	def SetHeaderPercentage(self,percentage):
+		"""ヘッダーのパーセント表示を更新する。複数ヘッダーは想定してない。"""
+		if len(self.headers)==0: return
+		self.headers[0].SetPercentage(percentage)
+
+	def GetHeaderObject(self):
+		"""ヘッダーオブジェクトを取得。複数は想定してない。"""
+		return self.headers[0] if len(self.headers)>0 else None
+
+	def GetUnresolvedCount(self):
+		"""未解決の項目の数を返す。"""
+		return len(self.results)
