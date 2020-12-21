@@ -65,6 +65,8 @@ class PastProgressTab(base.FalconTabBase):
 		operator.SetCallback("finished",self.OnOperationFinish)
 		operator.SetCallback("setPercentage",self.OnPercentageSet)
 		operator.SetCallback("confirm",self.OnConfirm)
+		# パーセンテージのコールバックが来るのは、次にパーセンテージが変化するときだけである。なので、現時点でのパーセンテージは、このタイミングで手動で得ておく。
+		self.OnPercentageSet(operator,{})
 
 	def OnOperationFinish(self,op,parameters):
 		if self.listObject.GetUnresolvedCount()==0: globalVars.app.hMainView.CloseTab(self)
