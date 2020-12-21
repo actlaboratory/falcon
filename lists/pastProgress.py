@@ -50,6 +50,10 @@ class PastProgressList(FalconListBase):
 			obj=PastProgressItem()
 			obj.Initialize(os.path.basename(path),path,_("確認"),elem.GetMessageString())
 			self.results.append(obj)
+		#end 追加
+		self.lists=[]
+		self.lists.extend(self.headers)
+		self.lists.extend(self.results)
 
 	def SetHeaderPercentage(self,percentage):
 		"""ヘッダーのパーセント表示を更新する。複数ヘッダーは想定してない。"""
