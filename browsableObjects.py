@@ -309,7 +309,9 @@ class PastProgressHeader(PastProgressItem):
 
 	def SetPercentage(self,percentage):
 		self.percentage=percentage
-		if int(percentage) == 100: self.status=_("完了")
+		if int(percentage) == 100:
+			self.status=_("完了")
+			self.details=_("ctrl+w で閉じます")
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
