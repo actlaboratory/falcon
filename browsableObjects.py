@@ -1,5 +1,4 @@
-﻿# -*- coding: utf-8 -*-
-#Falcon browsable objects
+﻿# -*- coding: utf-8 -*-#Falcon browsable objects
 #Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 #Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 #Note: All comments except these top lines will be written in Japanese.
@@ -310,6 +309,7 @@ class PastProgressHeader(PastProgressItem):
 
 	def SetPercentage(self,percentage):
 		self.percentage=percentage
+		if int(percentage) == 100: self.status=_("完了")
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
