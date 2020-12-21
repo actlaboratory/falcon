@@ -67,6 +67,9 @@ class PastProgressTab(base.FalconTabBase):
 		operator.SetCallback("confirm",self.OnConfirm)
 		# パーセンテージのコールバックが来るのは、次にパーセンテージが変化するときだけである。なので、現時点でのパーセンテージは、このタイミングで手動で得ておく。
 		self.OnPercentageSet(operator,{})
+		# 確認項目を最新にしておく
+		self.listObject.Update(operator.GetConfirmationManager())
+		self.Update(self.listObject)
 
 	def OnOperationFinish(self,op,parameters):
 		if self.listObject.GetUnresolvedCount()==0: globalVars.app.hMainView.CloseTab(self)
@@ -76,9 +79,9 @@ class PastProgressTab(base.FalconTabBase):
 		self._replaceElement(self.listObject.GetHeaderObject(),0)
 
 	def OnConfirm(self,op,parameters):
-		path=parameters["elem"].path
+		path=parameters.GetElement().path
 		elem=browsableObjects.PastProgressItem()
-		elem.Initialize(os.path.basename(path),path,_("確認"),_("宛先に同名ファイルが存在します"),parameters["confirmation_manager_index"])
+		elem.Initialize(os.path.basename(path),path,_("確認"),parameters.GetMessageString())
 		self.listObject.Append(elem)
 		self._AppendElement(elem)
 

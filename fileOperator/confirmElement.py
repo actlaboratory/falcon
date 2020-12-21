@@ -4,12 +4,11 @@
 #Note: All comments except these top lines will be written in Japanese. 
 """ファイルオペレーションの結果、ユーザーに対して確認が必要になった項目を管理します。"""
 class ConfirmElement(object):
-	def __init__(self,elem,msg_number,msg_str):
+	def __init__(self,elem,msg_number,msg_string):
 		self.elem=elem
 		self.msg_number=msg_number
-		self.msg_str=msg_str
+		self.msg_string=msg_string
 		self.response=None
-		self.taken=False#ファイルオペレーションに回されたらTrue
 
 	def GetElement(self):
 		return self.elem
@@ -17,20 +16,20 @@ class ConfirmElement(object):
 	def GetMessageNumber(self):
 		return self.msg_number
 
-	def SetResponse(self,res):
-		self.response=res
+	def GetMessageString(self):
+		return self.msg_string
 
-	def GetIfResponded(self):
-		return self.response is not None
+	def Respond(self,res):
+		self.response=res
 
 	def GetResponse(self):
 		return self.response
 
+	def IsResponded(self):
+		return self.Response is not None
+
 	def __str__(self):
 		return "[%s] %s (%s)" % (self.msg_number,self.msg_str,self.elem)
-
-	def Take(self):
-		self.taken=True
 
 class ConfirmationManager(object):
 	def __init__(self):
@@ -39,8 +38,8 @@ class ConfirmationManager(object):
 	def Append(self,elem):
 		self.confirmations.append(elem)
 
-	def GetLastIndex(self):
-		return len(self)-1
+	def Remove(self,elem):
+		self.confirmations.Remove(elem)
 
 	def __len__(self):
 		return len(self.confirmations)
@@ -50,16 +49,19 @@ class ConfirmationManager(object):
 
 	def Iterate(self):
 		for elem in self.confirmations:
-			if not elem.taken: yield elem
+			yield elem
 
 	def IterateNotResponded(self):
 		for elem in self.confirmations:
-			if not elem.taken and not elem.GetIfResponded(): yield elem
+			if not elem.IsResponded(): yield elem
+
+	def IterateResponded(self):
+		for elem in self.confirmations:
+			if elem.IsResponded(): yield elem
 
 	def IterateWithFilter(self,number=None):
 		for elem in self.confirmations:
 			ok=True
-			if elem.taken: ok=False
 			if number is not None and elem.msg_number!=number: ok=False
 			if ok:yield elem
 		#end for
@@ -75,11 +77,7 @@ class ConfirmationManager(object):
 		#end インデックス番号を見つける
 		msg_number=elem.GetMessageNumber()
 		for i2 in range(i,len(self.confirmations)):
-			if self.confirmations[i2].GetMessageNumber()==msg_number: self.confirmations[i2].SetResponse(response)
+			if self.confirmations[i2].GetMessageNumber()==msg_number: self.confirmations[i2].Respond(response)
 		#end 全部応答
-		for elem in self.confirmations: print(elem.GetResponse())
 	#end RespondAll
 
-
-
-	

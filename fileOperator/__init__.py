@@ -214,10 +214,11 @@ class FileOperator(object):
 
 	def UpdateConfirmation(self):
 		self.resume=True
-		for elem in self.output["need_to_confirm"].Iterate():
+		responded=list(self.output["need_to_confirm"].IterateResponded())
+		for elem in responded:
 			if elem.GetResponse()=="overwrite":
 				self.instructions["target"].append(elem.elem.path)
-				elem.Take()
+				self.output["need_to_confirm"].Remove(elem)
 			#end overwrite なら追加
 		#end for
 	#end UpdateConfirmation

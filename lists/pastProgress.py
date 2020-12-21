@@ -41,20 +41,15 @@ class PastProgressList(FalconListBase):
 		head=PastProgressHeader()
 		head.Initialize(header_directory,header_directory,"進行中","コピーしています",0)
 		self.headers.append(head)
-		#self.results.append(self._make(random.randint(0,9999),"用確認","宛先にすでにファイルが存在しています。"))
-		#self.results.append(self._make(random.randint(0,9999),"エラー","宛先ドライブに十分な空き領域がありません"))
-		#self.results.append(self._make(random.randint(0,9999),"エラー","アクセスが拒否されました。"))
 
-	def _make(self,p1,p3,p4):
-		o=PastProgressItem()
-		o.Initialize("test%04d" % (p1),"full\\path\\test%04d" % (p1),p3,p4)
-		return o
-
-	def Append(self,elem):
-		self.results.append(elem)
-
-	def Update(self):
-		pass
+	def Update(self, confirmationManager=None):
+		if not confirmationManager: return
+		self.results=[]
+		for elem in confirmationManager.Iterate():
+			path=elem.GetElement().path
+			obj=PastProgressItem()
+			obj.Initialize(os.path.basename(path),path,_("確認"),elem.GetMessageString())
+			self.results.append(obj)
 
 	def SetHeaderPercentage(self,percentage):
 		"""ヘッダーのパーセント表示を更新する。複数ヘッダーは想定してない。"""
