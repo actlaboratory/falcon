@@ -39,8 +39,14 @@ class ConfirmationManager(object):
 	def Append(self,elem):
 		self.confirmations.append(elem)
 
+	def GetLastIndex(self):
+		return len(self)-1
+
 	def __len__(self):
 		return len(self.confirmations)
+
+	def GetAt(self,index):
+		return self.confirmations[index]
 
 	def Iterate(self):
 		for elem in self.confirmations:
