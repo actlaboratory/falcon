@@ -61,6 +61,7 @@ class PastProgressTab(base.FalconTabBase):
 
 	def SetFileOperator(self,operator):
 		"""ファイルオペレーターを設定して、オペレーション終了時のコールバックを登録する。"""
+		print("setFileOperator")
 		self.fileOperator=operator
 		operator.SetCallback("finished",self.OnOperationFinish)
 		operator.SetCallback("setPercentage",self.OnPercentageSet)
@@ -79,10 +80,12 @@ class PastProgressTab(base.FalconTabBase):
 		self._replaceElement(self.listObject.GetHeaderObject(),0)
 
 	def OnConfirm(self,op,parameters):
+		print("confirm captured")
 		path=parameters.GetElement().path
 		elem=browsableObjects.PastProgressItem()
 		elem.Initialize(os.path.basename(path),path,_("確認"),parameters.GetMessageString())
 		self.listObject.Append(elem)
+		print("called append")
 		self._AppendElement(elem)
 
 	def OpenContextMenu(self,event):
