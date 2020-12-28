@@ -162,7 +162,7 @@ class FalconListBase(object):
 		"""browsableObjectのListを取得"""
 		lst=[]
 		for l in self.lists:
-			lst.append(l)
+			lst.extend(l)
 		return lst
 
 	def GetItemPaths(self):
