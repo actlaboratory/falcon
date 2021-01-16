@@ -79,7 +79,7 @@ class BaseView(object):
 			#通常のメニューバーに戻す
 			self.hFrame.SetMenuBar(self.menu.hMenuBar)
 		else:
-			self.hFrame.SetMenuBar(self.menu.hDisableMenuBar)
+			self.hFrame.SetMenuBar(self.hDisableMenuBar)
 		#SetMenuBarの後に呼び出しが必要
 		self.creator.GetSizer().Layout()
 
