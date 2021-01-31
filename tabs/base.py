@@ -784,6 +784,7 @@ class FalconTabBase(object):
 			別途listObjectについては処理が必要
 		"""
 		self._cancelBackgroundTasks()
+		self.StopSound()
 		self.hListCtrl.DeleteAllItems()
 		self.checkedItem=set()
 		self.hilightIndex=-1
