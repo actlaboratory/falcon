@@ -182,7 +182,7 @@ class FalconTabBase(object):
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED,self.ItemSelected)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED,self.ItemDeSelected)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED,self.EnterItem)
-		self.hListCtrl.Bind(wx.EVT_KEY_DOWN,self.KeyDown)
+		self.hListCtrl.Bind(wx.EVT_KEY_DOWN,self.OnKeyDown)
 		self.hListCtrl.Bind(wx.EVT_MOUSE_EVENTS,self._MouseEvent)
 		self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_DRAG,self.BeginDrag)
 		self.hListCtrl.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,self.OpenContextMenu)
@@ -491,10 +491,15 @@ class FalconTabBase(object):
 		ret=self.Move(self.environment["history"].getPrevious(),addHistory=False)
 		return ret
 
-	def KeyDown(self,event):
-		"""キーが押されたらここにくる。"""
+	def OnKeyDown(self,event=None):
+		"""
+			キーが押されたらここにくる。
+			acceleratorにヒットしていた場合はevent=Noneでくる。
+			登録外のキーの場合はwx.KeyEventがくる
+		"""
 		self.StopSound()
-		event.Skip()
+		if event:
+			event.Skip()
 
 	def _IsItemChecked(self,elem):
 		"""

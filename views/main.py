@@ -467,6 +467,10 @@ class Events(BaseEvents):
 			event.Skip()
 			return
 
+		#プレビュー再生停止等のため、キー押下をタブへ通知
+		#ここにきている場合KeyDownイベントはとれないため
+		self.parent.activeTab.OnKeyDown()
+
 		selected=event.GetId()#メニュー識別しの数値が出る
 
 		#カラムソートは特別対応
