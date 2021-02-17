@@ -100,15 +100,18 @@ def GetDriveObject(index):
 	t=-1
 	n=""
 	try:
+		volumeInfo=win32api.GetVolumeInformation(path)
+		n=volumeInfo[0]
 		freeSpace=win32api.GetDiskFreeSpaceEx(path)
 		f=freeSpace[0]
 		t=freeSpace[1]
-		volumeInfo=win32api.GetVolumeInformation(path)
-		n=volumeInfo[0]
 	except pywintypes.error as err:
 		pass
 	#エラーは無視
 	d=browsableObjects.Drive()
-	ret, shfileinfo=shell.SHGetFileInfo(letter+":\\",0,shellcon.SHGFI_ICON)
-	d.Initialize(letter,f,t,type,n,shfileinfo[0])
+	if type!=win32file.DRIVE_REMOTE or t!=-1:
+		ret, shfileinfo=shell.SHGetFileInfo(letter+":\\",0,shellcon.SHGFI_ICON)
+		d.Initialize(letter,f,t,type,n,shfileinfo[0])
+	else:
+		d.Initialize(letter,f,t,type,n,-1)
 	return d
