@@ -68,7 +68,7 @@ def ValidationObjectName(path,pathType,path2=""):
 
 	#パス長の確認
 	if pathType==pathTypes.VOLUME_LABEL:
-		drive=GetFileSystemObject(os.path.splitdrive(path2)[0])
+		drive=GetFileSystemObject(path2)
 		#TODO
 	else:
 		drive=GetFileSystemObject(os.path.splitdrive(path)[0])

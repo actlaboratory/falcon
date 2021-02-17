@@ -84,12 +84,12 @@ class DriveListTab(base.FalconTabBase):
 		e=self.hListCtrl.GetEditControl()
 		f=self.listObject.GetElement(self.GetFocusedItem())
 		newName=e.GetLineText(0)
-		error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.VOLUME_LABEL)
+		error=fileSystemManager.ValidationObjectName(newName,fileSystemManager.pathTypes.VOLUME_LABEL,f.fullpath[0])
 		if error:
 			dialog(_("エラー"),error)
 			evt.Veto()
 			return
-		inst={"operation": "rename", "files": [f.fullpath], "to": [newName]}
+		inst={"operation": "rename", "files": [f.fullpath[0:1]], "to": [newName]}
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
 		if op.CheckSucceeded()==0:
