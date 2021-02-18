@@ -40,9 +40,9 @@ class Dialog(BaseDialog):
 
 	def add(self,title,content):
 		if content!=self.CALCURATING:
-			f,static=self.creator.inputbox(title,400,str(content),wx.TE_READONLY)
+			f,static=self.creator.inputbox(title,x=400,defaultValue=str(content),style=wx.TE_READONLY)
 		else:
-			f,static=self.creator.inputbox(title,400,_("計算中"),wx.TE_READONLY)
+			f,static=self.creator.inputbox(title,x=400,defaultValue=_("計算中"),style=wx.TE_READONLY)
 			self.calcuratingFields.append(f)
 
 	def Destroy(self):

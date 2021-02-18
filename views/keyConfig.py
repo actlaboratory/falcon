@@ -37,7 +37,7 @@ class Dialog(BaseDialog):
 		self.mainArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_CENTER)
 
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20)
-		self.creator.staticText(_("設定したいキーの組み合わせを押してください..."),_("設定したいキーの組み合わせを押してください..."))
+		self.creator.staticText(_("設定したいキーの組み合わせを押してください..."))
 		self.keyNameText=self.creator.staticText("")
 		self.errorText=self.creator.staticText("")
 

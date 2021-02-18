@@ -38,12 +38,12 @@ class Dialog(BaseDialog):
 		"""いろんなwidgetを設置する。"""
 
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20)
-		self.combo=self.creator.combobox(_("値の種類"),hashTypes,self.changeAlgo)
-		self.calcButton=self.creator.button(_("計算"),self.calcStart,wx.ALIGN_CENTER_VERTICAL )
+		self.combo,static=self.creator.combobox(_("値の種類"),hashTypes,self.changeAlgo)
+		self.calcButton=self.creator.button(_("計算"),self.calcStart,sizerFlag=wx.ALIGN_CENTER_VERTICAL )
 		self.calcButton.Enable(False)
 
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
-		self.resultFeeld,self.static=self.creator.inputbox(_("結果"),450,style=wx.TE_READONLY)
+		self.resultFeeld,self.static=self.creator.inputbox(_("結果"),x=450,style=wx.TE_READONLY)
 
 		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL,wx.ALIGN_RIGHT)
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)

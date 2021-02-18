@@ -75,7 +75,7 @@ class View(BaseView):
 
 		self.tabs=[]
 		self.activeTab=None#最初なので空
-		self.hTabCtrl=self.creator.tabCtrl(_("タブ選択"),self.ChangeTab,0,1,wx.EXPAND)
+		self.hTabCtrl=self.creator.tabCtrl(_("タブ選択"),self.ChangeTab,0,wx.EXPAND,1)
 		self.MakeFirstTab()
 		self.activeTab.hListCtrl.SetFocus()
 		self.hFrame.Bind(wx.EVT_CLOSE, self.OnClose)
