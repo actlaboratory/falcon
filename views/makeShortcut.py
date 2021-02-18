@@ -55,12 +55,12 @@ class Dialog(BaseDialog):
 		self.type.EnableItem(self.TYPE_SYNLINK,self.canMakeSynLink)
 
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,0,"",wx.EXPAND)
-		self.destination,tmp=self.creator.inputbox(_("作成先")+"：",-1,self.targetName+".lnk")
+		self.destination,tmp=self.creator.inputbox(_("作成先")+"：",x=-1,defaultValue=self.targetName+".lnk")
 
 		#詳細設定
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20)
-		self.parameter,tmp=self.creator.inputbox(_("パラメータ"),400)
-		self.directory,tmp=self.creator.inputbox(_("作業ディレクトリ"),400)
+		self.parameter,tmp=self.creator.inputbox(_("パラメータ"),x=400)
+		self.directory,tmp=self.creator.inputbox(_("作業ディレクトリ"),x=400)
 		self.linkType=self.creator.radiobox(_("リンクの種類"),[_("絶対"),_("相対")],None,1,wx.HORIZONTAL)
 
 		#ボタンエリア

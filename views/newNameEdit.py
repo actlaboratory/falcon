@@ -22,7 +22,7 @@ class Dialog(BaseDialog):
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
 		if detailText!="":
 		detail=self.creator.static
-		self.iName,self.static=self.creator.inputbox(_("新しい名前"),400)
+		self.iName,self.static=self.creator.inputbox(_("新しい名前"),x=400)
 
 		self.buttonArea=views.ViewCreator.BoxSizer(self.sizer,wx.HORIZONTAL, wx.ALIGN_RIGHT)
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.buttonArea,wx.HORIZONTAL,20)

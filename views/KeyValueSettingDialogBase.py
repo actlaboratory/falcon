@@ -35,7 +35,7 @@ class KeyValueSettingDialogBase(BaseDialog):
 	def InstallControls(self):
 		"""いろんなwidgetを設置する。"""
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
-		self.hListCtrl=self.creator.ListCtrl(0,wx.ALL|wx.ALIGN_CENTER_HORIZONTAL,size=(750,300),style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_SINGLE_SEL,name=_("現在の登録内容"))
+		self.hListCtrl,static=self.creator.listCtrl(_("現在の登録内容"),proportion=0,sizerFlag=wx.ALL|wx.ALIGN_CENTER_HORIZONTAL,size=(750,300),style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_SINGLE_SEL)
 
 		for i,info in enumerate(self.columnInfo):
 			self.hListCtrl.InsertColumn(i,info[0],format=info[1],width=info[2])
@@ -183,14 +183,14 @@ class SettingDialogBase(BaseDialog):
 
 		for i,name in enumerate(self.valueNames):
 			if name[1]:
-				self.edits[i],dummy=self.creator.inputbox(name[0],500,self.values[i])
+				self.edits[i],dummy=self.creator.inputbox(name[0],x=500,defaultValue=self.values[i])
 			else:
-				self.edits[i],dummy=self.creator.inputbox(name[0],500,self.values[i],style=wx.TE_READONLY)
+				self.edits[i],dummy=self.creator.inputbox(name[0],x=500,defaultValue=self.values[i],style=wx.TE_READONLY)
 			if name[1]==None:
 				dummy.Hide()
 				self.edits[i].Hide()
 			if self.buttons[i]:
-				dummy=self.creator.button(self.buttons[i][0],self.buttons[i][1],wx.ALIGN_RIGHT)
+				dummy=self.creator.button(self.buttons[i][0],self.buttons[i][1],sizerFlag=wx.ALIGN_RIGHT)
 
 		#ボタンエリア
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,"",wx.ALIGN_RIGHT)

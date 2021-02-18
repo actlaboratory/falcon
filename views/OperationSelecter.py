@@ -35,7 +35,7 @@ class Dialog(BaseDialog):
 		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.VERTICAL,20)
 		if self.message:
 			self.creator.staticText(self.message)
-		self.hListCtrl=self.creator.ListCtrl(0,wx.ALL|wx.ALIGN_CENTER_HORIZONTAL,size=(600,300),style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_SINGLE_SEL,name=_("アイテム情報"))
+		self.hListCtrl,static=self.creator.listCtrl(_("アイテム情報"),proportion=0,sizerFlag=wx.ALL|wx.ALIGN_CENTER_HORIZONTAL,size=(600,300),style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_SINGLE_SEL)
 
 		i=0
 		for i in range(len(self.info[0])):
