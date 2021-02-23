@@ -8,7 +8,7 @@ import browsableObjects
 import keymapHandlerBase
 import tabs
 
-#KeyConfigDialog‚Ì‚½‚ß‚ÌŠÖ”
+#KeyConfigDialogã®ãŸã‚ã®é–¢æ•°
 str2key = keymapHandlerBase.str2key
 def makeEntry(*pArgs, **kArgs):
 	return keymapHandlerBase.makeEntry(*pArgs,*kArgs)
@@ -19,15 +19,15 @@ class KeymapHandler(keymapHandlerBase.KeymapHandlerBase):
 		super().__init__(dict, filter, permitConfrict=permitConfrict)
 
 
-#•¡”ƒƒjƒ…[‚É‘Î‚·‚éƒL[‚ÌŠ„‚è“–‚Ä‚Ìd•¡‚ğ‹–‚·‚©”Û‚©‚ğ’²‚×‚é
-#items‚É‚Í’²‚×‚½‚¢AcceleratorEntry‚ÌƒŠƒXƒg‚ğ“ü‚ê‚é
+#è¤‡æ•°ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã«å¯¾ã™ã‚‹ã‚­ãƒ¼ã®å‰²ã‚Šå½“ã¦ã®é‡è¤‡ã‚’è¨±ã™ã‹å¦ã‹ã‚’èª¿ã¹ã‚‹
+#itemsã«ã¯èª¿ã¹ãŸã„AcceleratorEntryã®ãƒªã‚¹ãƒˆã‚’å…¥ã‚Œã‚‹
 def permitConfrict(items,log):
 	typeCondition=tabs.base.FalconTabBase.selectItemTypeMenuConditions
 	countCondition=tabs.base.selectItemMenuConditions;
 	flg=0
 	for i in [j.refName for j in items]:
 		iFlag=0
-		#ƒtƒ@ƒCƒ‹ƒŠƒXƒgƒ^ƒu
+		#ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã‚¿ãƒ–
 		if i not in tabs.fileList.FileListTab.blockMenuList:
 			if i not in typeCondition[browsableObjects.File]:
 				iFlag+=1
@@ -36,11 +36,11 @@ def permitConfrict(items,log):
 			if i not in countCondition[0]:
 				iFlag+=4
 
-		#ƒXƒgƒŠ[ƒ€ƒŠƒXƒgƒ^ƒu
+		#ã‚¹ãƒˆãƒªãƒ¼ãƒ ãƒªã‚¹ãƒˆã‚¿ãƒ–
 		if i not in tabs.streamList.StreamListTab.blockMenuList:
 			iFlag+=8
 
-		#ƒhƒ‰ƒCƒuƒŠƒXƒgƒ^ƒu
+		#ãƒ‰ãƒ©ã‚¤ãƒ–ãƒªã‚¹ãƒˆã‚¿ãƒ–
 		if i not in tabs.driveList.DriveListTab.blockMenuList:
 			if i not in tabs.base.FalconTabBase.selectItemTypeMenuConditions[browsableObjects.Drive]:
 				iFlag+=16
@@ -65,7 +65,7 @@ def permitConfrict(items,log):
 		if iFlag&flg==0:
 			flg+=iFlag
 		else:
-			#d•¡‚É‚æ‚éƒGƒ‰[
+			#é‡è¤‡ã«ã‚ˆã‚‹ã‚¨ãƒ©ãƒ¼
 			log.warn("key confricted. "+i+" is confrict in "+str(items))
 			return False
 	log.debug("key not confricted. "+i+" is not confrict in "+str(items))
