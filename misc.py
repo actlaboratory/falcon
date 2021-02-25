@@ -357,6 +357,7 @@ def analyzeUserInputPath(path,parent="C:\\"):
 		・相対パスの場合はparentからの絶対パスへ変換
 		・C:でもCでもC:\\にする
 	"""
+	path=os.path.expandvars(path)
 	if type(path)!=str:
 		return None
 	if len(path)==2 and path[0].upper()>='A' and path[0].upper()<='Z' and path[1]==':':
@@ -368,6 +369,6 @@ def analyzeUserInputPath(path,parent="C:\\"):
 	else:
 		#それ以外
 		if os.path.isabs(path):
-			return os.path.normpath(os.path.expandvars(path))
+			return os.path.normpath(path)
 		else:
-			return os.path.normpath(os.path.join(parent, os.path.expandvars(path)))
+			return os.path.normpath(os.path.join(parent, path))
