@@ -71,7 +71,8 @@ class DefaultSettings:
 		config["view"]={
 			"font": "bold 'ＭＳ ゴシック' 22 windows-932",
 			"colorMode":"normal",
-			"header_title_length":20
+			"header_title_length":20,
+			"textwrapping":"on"
 		}
 		config["mainView"]={
 			"sizeX": "800",
