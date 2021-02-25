@@ -29,13 +29,13 @@ class Dialog(BaseDialog):
 
 	def InstallControls(self,dic):
 		"""いろんなwidgetを設置する。"""
-		self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,views.ViewCreator.FlexGridSizer,20)
+		self.creator=views.ViewCreator.ViewCreator(self.viewMode,self.panel,self.sizer,views.ViewCreator.FlexGridSizer,20)
 
 		if dic:
 			for title,content in dic.items():
 				self.add(title,content)
 
-		self.buttonArea=views.ViewCreator.ViewCreator(1,self.panel,self.sizer,wx.HORIZONTAL,20,style=wx.ALIGN_RIGHT)
+		self.buttonArea=views.ViewCreator.ViewCreator(self.viewMode,self.panel,self.sizer,wx.HORIZONTAL,20,style=wx.ALIGN_RIGHT)
 		self.bOk=self.buttonArea.okbutton(_("ＯＫ"),None)
 
 	def add(self,title,content):

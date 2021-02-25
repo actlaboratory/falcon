@@ -78,8 +78,7 @@ def DebugBeep(taskState,param):
 
 def GetNetworkResources(taskState=None,param=None):
 	#同期処理でも呼び出し可能。パラメータ無しで呼ぶ。
-	sync_resources=None
-	if not taskState: sync_resources=[]
+	sync_resources=[]
 	try:
 		h=win32wnet.WNetOpenEnum(5,1,0,None)
 		#5=RESOURCE_CONTEXT
@@ -104,14 +103,16 @@ def GetNetworkResources(taskState=None,param=None):
 		s=browsableObjects.NetworkResource()
 		s.Initialize(l.lpRemoteName[2:],l.lpRemoteName,addr,shfileinfo[0])
 		if taskState and taskState.canceled: return False
-		if taskState:
-			wx.CallAfter(param["onAppend"],s)
-		else:
-			sync_resources.append(s)
+		sync_resources.append(s)
 		#end 同期処理
 	#end 追加ループ
 	if taskState and taskState.canceled: return False
 	if taskState:
+		if taskState:
+			while(not param["isReady"]()):
+				time.sleep(0.3)
+			for s in sync_resources:
+				wx.CallAfter(param["onAppend"],s)
 		wx.CallAfter(param["onFinish"],len(lst))
 		return True
 	else:
