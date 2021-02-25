@@ -14,6 +14,10 @@ class FalconVirtualListCtrl(virtualListCtrlBase.virtualListCtrl):
 	def SetItemBackgroundColour(self,item,colour):
 		self.lst[item].list_backgroundColour = colour
 
+	def SetItemImage(self,item,image,selImage=-1):
+		self.lst[item].list_imageIndex = image
+
+
 	def OnGetItemAttr(self,item):
 		ret = self.lst[item].list_backgroundColour
 		if ret:
@@ -21,3 +25,6 @@ class FalconVirtualListCtrl(virtualListCtrlBase.virtualListCtrl):
 			self.CheckedItemAttr.SetBackgroundColour(wx.Colour(ret))
 			return self.CheckedItemAttr
 		return None
+
+	def OnGetItemImage(self,item):
+		return self.lst[item].list_imageIndex

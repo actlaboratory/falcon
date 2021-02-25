@@ -56,7 +56,6 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         obj[column]=label
         self.RefreshItem(index)
         return True
-
     def DeleteAllItems(self):
         self.lst=[]
         return super().DeleteAllItems()
@@ -69,6 +68,9 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         raise NotImplementedError
 
     def SetItemBackgroundColour(self,index,colour):
+        raise NotImplementedError
+
+    def SetItemImage(self,item,image, selImage=-1):
         raise NotImplementedError
 
 
@@ -87,6 +89,9 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         self.tmp = wx.ItemAttr()
         self.tmp.SetBackgroundColour(super().GetItemBackgroundColour(item))
         return self.tmp
+
+    def OnGetItemImage(self,item):
+        return -1
 
     def onLabelEditEnd(self,event):
         if wx.wxEVT_LIST_END_LABEL_EDIT in self.bindFunctions:

@@ -15,7 +15,7 @@ import globalVars
 
 class FalconBrowsableBase():
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
-	__slots__=["attributes","attributesString","log","longAttributesString","canLnkTarget","canHardLinkTarget","canSynLinkTarget","list_backgroundColour"]
+	__slots__=["attributes","attributesString","log","longAttributesString","canLnkTarget","canHardLinkTarget","canSynLinkTarget","list_backgroundColour","list_imageIndex"]
 
 	def __init__(self):
 		self.log=logging.getLogger("falcon.browsableObjects")
@@ -23,6 +23,7 @@ class FalconBrowsableBase():
 		self.canHardLinkTarget=True
 		self.canSynLinkTarget=True
 		self.list_backgroundColour=None
+		self.list_imageIndex=-1
 
 	def GetAttributesString(self):
 		"""属性の文字列を設定する。"""
