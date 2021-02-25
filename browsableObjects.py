@@ -15,13 +15,14 @@ import globalVars
 
 class FalconBrowsableBase():
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
-	__slots__=["attributes","attributesString","log","longAttributesString","canLnkTarget","canHardLinkTarget","canSynLinkTarget"]
+	__slots__=["attributes","attributesString","log","longAttributesString","canLnkTarget","canHardLinkTarget","canSynLinkTarget","list_backgroundColour"]
 
 	def __init__(self):
 		self.log=logging.getLogger("falcon.browsableObjects")
 		self.canLnkTarget=True
 		self.canHardLinkTarget=True
 		self.canSynLinkTarget=True
+		self.list_backgroundColour=None
 
 	def GetAttributesString(self):
 		"""属性の文字列を設定する。"""
@@ -68,6 +69,19 @@ class FalconBrowsableBase():
 
 	def __repr__(self):
 		return "<"+self.__class__.__name__+" "+self.basename+">"
+
+	def GetListTuple(self):
+		raise NotImplementedError
+
+	def __getitem__(self,index):
+		return self.GetListTuple()[index]
+
+	def __len__(self):
+		return len(self.GetListTuple())
+
+	def __setitem__(self,index,obj):
+		raise NotImplementedError
+
 
 class File(FalconBrowsableBase):
 	"""ファイルを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""

@@ -165,7 +165,7 @@ class FalconTabBase(object):
 	def InstallListCtrl(self,creator,existing_listctrl=None):
 		"""指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
 		if existing_listctrl is None:
-			self.hListCtrl,static=creator.listCtrl("",proportion=1,sizerFlag=wx.EXPAND,style=wx.LC_REPORT | wx.LC_EDIT_LABELS | wx.LC_ALIGN_LEFT)
+			self.hListCtrl,static=creator.virtualListCtrl("",proportion=1,sizerFlag=wx.EXPAND,style=wx.LC_REPORT | wx.LC_EDIT_LABELS | wx.LC_ALIGN_LEFT)
 			creator.GetPanel().Layout()
 		else:
 			self.hListCtrl=existing_listctrl
@@ -334,13 +334,17 @@ class FalconTabBase(object):
 		#タブの名前変更を通知
 		globalVars.app.hMainView.UpdateTabName()
 
-	def UpdateListContent(self,content):
+	def UpdateListContent(self,content,soft=False):
 		"""
 			リストコントロールの中身を更新し、並び替え状況を示すアイコンを再配置する。
 			カラムの数やテキストは変更しない。
+			soft=Trueの場合は、同一リストの再描画。読み込んだアイコン画像とチェック状態が維持される。
 		"""
 		self.log.debug("Updating list control...")
-		self.DeleteAllItems()
+		if soft:
+			self.ClearAllItems()
+		else:
+			self.DeleteAllItems()
 
 		t=misc.Timer()
 		for elem in content:
@@ -354,13 +358,9 @@ class FalconTabBase(object):
 			indexは検索結果一覧でフォルダを正しい位置に挿入するために利用
 		"""
 		if index>=0:
-			index=self.hListCtrl.InsertItem(index,"")
-			i=0
-			for text in elem.GetListTuple():
-				self.hListCtrl.SetItem(index,i,text)
-				i+=1
+			self.hListCtrl.Insert(index,elem)
 		else:
-			index=self.hListCtrl.Append(elem.GetListTuple())
+			index=self.hListCtrl.Append(elem)
 		if elem.hIcon>=0:
 			iconIndex=self.GetIconIndex(elem.hIcon)
 			if iconIndex>=0:
@@ -680,14 +680,10 @@ class FalconTabBase(object):
 			self.hListCtrl.SetItemData(i,new.index(old[i]))
 
 		#リストをソートする
-		self.hListCtrl.SortItems(self._compare)
+		self.UpdateListContent(self.listObject.GetItemList(),True)
 
 		#画面上のソートアイコンを設定
 		self._SetSortIcon()
-
-	def _compare(self, item1, item2):
-		"""リストのソートでlistObjectから呼ばれる"""
-		return item1>item2
 
 	def _cancelBackgroundTasks(self):
 		"""フォルダ容量計算など、バックグラウンドで走っていて、ファイルリストが更新されるといらなくなるようなものをキャンセルする。"""
@@ -786,18 +782,27 @@ class FalconTabBase(object):
 	def DeleteAllItems(self):
 		"""
 			必用な調整を経て、リストビューを空にする
-			別途listObjectについては処理が必要
+			別リストへの移動用！
+			listObjectについては別途処理が必要
+		"""
+		self.checkedItem=set()
+		self._InitIconList()
+		self.ClearAllItems()
+
+	def ClearAllItems(self):
+		"""
+			必用な調整を経て、リストビューを空にする
+			並び替え等に伴う同一リストの再描画用
+			listObjectについては別途処理が必要
 		"""
 		self._cancelBackgroundTasks()
 		self.StopSound()
 		self.hListCtrl.DeleteAllItems()
-		self.checkedItem=set()
 		self.hilightIndex=-1
 		self.ItemSelected()			#メニューバーのアイテムの状態更新処理。選択中アイテムがいったん0になってるため必要
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),False)
 		globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"),True)
 		self.hilightIndex=-1
-		self._InitIconList()
 
 	def ItemFocused(self,event):
 		#チェック機能仕様中の複数選択は不可
