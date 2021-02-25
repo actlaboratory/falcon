@@ -59,11 +59,18 @@ class DriveListTab(base.FalconTabBase):
 			self.networkListTask.Cancel()
 			self.networkListTask=None
 		#end cancel previous
-		self.networkListTask=workerThreads.RegisterTask(workerThreadTasks.GetNetworkResources, {"onAppend": self.OnAppendNetworkResource, "onFinish": self.OnFinishNetworkResource})
+		self.networkListTask=workerThreads.RegisterTask(workerThreadTasks.GetNetworkResources, {"isReady": self.isReady, "onAppend": self.OnAppendNetworkResource, "onFinish": self.OnFinishNetworkResource})
+
+	def isReady(self):
+		return self.listObject!=None
 
 	def OnAppendNetworkResource(self,resource):
-		self.listObject.AppendNetworkResource(resource)
-		self._AppendElement(resource)
+		if self.listObject:
+			self.listObject.AppendNetworkResource(resource)
+			self._AppendElement(resource)
+			return True
+		else:
+			return False
 
 	def OnFinishNetworkResource(self,number):
 		if number==-1:
