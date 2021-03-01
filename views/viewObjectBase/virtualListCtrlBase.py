@@ -111,7 +111,6 @@ class virtualListCtrl(listCtrlBase.listCtrl):
     def SortItems(self,fnSortCallBack):
         raise NotImplementedError
 
-
     #
     # リスト部分
     #
