@@ -1,6 +1,6 @@
 #virtualListCtrlBase for ViewCreator
 #Copyright (C) 2019-2020 Hiroki Fujii <hfujii@hisystron.com>
-
+#Copyright (C) 2020-2021 yamahubuki <itiro.ishino@gmail.com>
 
 import wx
 from views.viewObjectBase import viewObjectUtil, listCtrlBase
@@ -56,6 +56,7 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         obj[column]=label
         self.RefreshItem(index)
         return True
+
     def DeleteAllItems(self):
         self.lst=[]
         return super().DeleteAllItems()
@@ -86,9 +87,7 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         return str(obj[column]) # イテレーション可能なオブジェクト
 
     def OnGetItemAttr(self,item):
-        self.tmp = wx.ItemAttr()
-        self.tmp.SetBackgroundColour(super().GetItemBackgroundColour(item))
-        return self.tmp
+        return None
 
     def OnGetItemImage(self,item):
         return -1
@@ -431,7 +430,7 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         if event in (wx.EVT_LIST_END_LABEL_EDIT,wx.EVT_LIST_COL_END_DRAG):
             self.bindFunctions[event.typeId]=handler
             #別途self内の関数をBind済み
-            return
+            return			#wx標準でも戻り値はNoneである
         return super().Bind(event, handler, source=source, id=id, id2=id2)
 
     def columnEvent(self,event):
