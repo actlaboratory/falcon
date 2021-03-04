@@ -9,6 +9,8 @@ import _winxptheme
 
 from views import ViewCreatorBase
 from views.ViewCreatorBase import *
+from views.viewObjects import FalconVirtualListCtrl
+
 
 class ViewCreator(ViewCreatorBase):
 	def __init__(self, *pArg, **kArg):
@@ -25,9 +27,9 @@ class ViewCreator(ViewCreatorBase):
 		:param int proportion: Set proportion.
 		:param int margin: Set viewCreator's margin.
 		"""
-		
-
 		super().__init__(*pArg, **kArg)
 
 		# 標準オブジェクトの変更が必要ならば記述
 		# self.winObject["object_name"] = newObject
+		self.winObject["virtualListCtrl"]=FalconVirtualListCtrl.FalconVirtualListCtrl
+
