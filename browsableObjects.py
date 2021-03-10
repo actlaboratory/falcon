@@ -13,6 +13,7 @@ import constants
 import misc
 import globalVars
 
+
 class FalconBrowsableBase():
 	"""全ての閲覧可能オブジェクトに共通する基本クラス。"""
 	__slots__=["attributes","attributesString","log","longAttributesString","canLnkTarget","canHardLinkTarget","canSynLinkTarget","list_backgroundColour","list_imageIndex"]
@@ -109,6 +110,12 @@ class File(FalconBrowsableBase):
 		"""表示に必要なタプルを返す。"""
 		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
+	def __setitem__(self,index,obj):
+		if index == 0:
+			self.basename = obj
+		else:
+			super().__setitem__(index,obj)
+
 	def GetNewAttributes(self,checks):
 		"""属性変更の時に使う。チェック状態のリストを受け取って、新しい属性値を帰す。変更の必要がなければ、-1を帰す。"""
 		attrib=self.attributes
@@ -127,6 +134,7 @@ class File(FalconBrowsableBase):
 	def GetRootDrivePath(self):
 		return misc.GetRootObject(self.fullpath).fullpath
 
+
 class Folder(File):
 	__slots__=["fileCount","dirCount"]
 
@@ -143,12 +151,14 @@ class Folder(File):
 		else:
 			return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 
+
 class SearchedFile(File):
 	__slots__=[]
 
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
 		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), self.fullpath, misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+
 
 class SearchedFolder(Folder):
 	__slots__=[]
@@ -159,6 +169,7 @@ class SearchedFolder(Folder):
 			return (self.basename, "<dir>", self.fullpath, misc.PTime2string(self.modDate), self.attributesString, self.typeString)
 		else:
 			return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), self.fullpath, misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+
 
 class GrepItem(File):
 	def Initialize(self,ln,preview,fileobject):
@@ -189,6 +200,7 @@ class GrepItem(File):
 	def GetListTuple(self):
 		"""表示に必要なタプルを返す。"""
 		return (self.basename, self.ln, self.preview, self.hits, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True), misc.PTime2string(self.modDate), self.attributesString, self.typeString)
+
 
 class Drive(FalconBrowsableBase):
 	"""ドライブを表す。"""
@@ -240,6 +252,13 @@ class Drive(FalconBrowsableBase):
 	def GetRootDrivePath(self):
 		return self.fullpath
 
+	def __setitem__(self,index,obj):
+		if index == 0:
+			self.basename = obj
+		else:
+			super().__setitem__(index,obj)
+
+
 class Stream(FalconBrowsableBase):
 	"""NTFS 副ストリームを表す。このオブジェクトは情報を保持するだけで、指し示すファイルにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
 	def Initialize(self,file="", basename="", fullpath="", size=-1):
@@ -254,8 +273,15 @@ class Stream(FalconBrowsableBase):
 		"""表示に必要なタプルを返す。"""
 		return (self.basename, misc.ConvertBytesTo(self.size,misc.UNIT_AUTO,True))
 
+	def __setitem__(self,index,obj):
+		if index == 0:
+			self.basename = obj
+		else:
+			super().__setitem__(index,obj)
+
 	def GetRootDrivePath(self):
 		return misc.GetRootObject(self.fullpath).fullpath
+
 
 class NetworkResource(FalconBrowsableBase):
 	"""ネットワーク上のディスクリソースを表す。このオブジェクトは情報を保持するだけで、指し示すリソースにアクセスすることはない。フルパスは計算可能なのだが、二重に値を生成したくはないので、あえて値を渡すようにしている。"""
@@ -289,6 +315,7 @@ class NetworkResource(FalconBrowsableBase):
 	def GetRootDrivePath(self):
 		return self.basename
 
+
 class PastProgressItem(FalconBrowsableBase):
 	"""貼り付けにおいて、渓谷/エラーになったファイルを表す。"""
 	def __init__(self):
@@ -313,6 +340,7 @@ class PastProgressItem(FalconBrowsableBase):
 
 	def __repr__(self):
 		return "<past progress item>"
+
 
 class PastProgressHeader(PastProgressItem):
 	def __init__(self):
