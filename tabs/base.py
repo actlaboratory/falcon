@@ -647,6 +647,8 @@ class FalconTabBase(object):
 		"""カラムのソート状態をconfigに保存する。"""
 		if listType==None:
 			listType=self.environment["listType"]
+		if listType==None:
+			return
 		value=self.hListCtrl.GetColumnsOrder()
 		if value==[]:return		#起動直後で、まだカラム生成前
 		key=listType.__name__

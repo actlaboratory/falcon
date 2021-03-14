@@ -24,7 +24,7 @@ from simpleDialog import dialog
 
 log=logging.getLogger("falcon.navigator")
 
-def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environment={}):
+def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environment=None):
 	"""
 		指定したパスにアクセスする。現在のタブと違う種類のタブが必要とされた場合に、新しいタブを返す。今のタブを再利用した場合は、Trueを返す。失敗時にはエラーコードを返す。
 		パスに空の文字を指定すると、ドライブリストへ行く。
@@ -36,6 +36,9 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 	hListCtrl=previous_tab.hListCtrl if previous_tab is not None else None
 	creator=create_new_tab_info[1] if create_new_tab_info is not None else None
 	targetItemIndex=-1
+	if environment==None:
+		environment={}
+
 	if isinstance(target,dict):
 		if target['action']=='search':
 			newtab=searchResult.SearchResultTab(environment)
@@ -43,7 +46,7 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'], target['isRegularExpression'])
 		#end 検索
 		if target['action']=='grep':
-			newtab=grepResult.GrepResultTab(environment)
+			newtab=grepResult.GrepResultTab({})
 			newtab.Initialize(parent,creator)
 			newtab.StartSearch(target['basePath'],target['out_lst'],target['keyword'], target['isRegularExpression'])
 		#end grep検索
