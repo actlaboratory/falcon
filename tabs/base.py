@@ -879,6 +879,8 @@ class FalconTabBase(object):
 			#チェック状態なら何もしない
 			if self.IsItemSelected(event.GetIndex()):
 				return
+			if event.GetIndex()<0:
+				return
 			elem=self.listObject.GetElement(event.GetIndex())
 		else:
 			elem=self.listObject.GetElement(index)
