@@ -515,7 +515,7 @@ class Events(BaseEvents):
 			else:
 				config=globalVars.app.config["originalAssociation"]["<default_dir>"]
 			config=misc.analyzeUserInputPath(config)
-			misc.RunFile(config,prm=elem.fullpath)
+			misc.RunFile(config,prm="\"%s\"" %(elem.fullpath))
 			return
 		if selected==menuItemsStore.getRef("ENV_KEY_CONFIG"):
 			keys=self.parent.menu.keymap.map[self.parent.identifier.upper()]
