@@ -306,6 +306,12 @@ class FileListTab(base.FalconTabBase):
 		op=fileOperator.FileOperator(inst)
 		ret=op.Execute()
 
+		# 今はテストで、常にダイアログを表示して処理刷る
+		nav={"action": "past", "operator": op}
+		globalVars.app.hMainView.Navigate(nav,as_new_tab=True)
+		return#このあとのことは新しいタブに任せる
+
+		# ここから先は今はリーチしない
 		#0.5秒待つ
 		time.sleep(0.5)
 

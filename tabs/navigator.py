@@ -54,8 +54,9 @@ def Navigate(target,cursor="",previous_tab=None,create_new_tab_info=None,environ
 			newtab=pastProgress.PastProgressTab(environment)
 			newtab.Initialize(parent,creator)
 			lst=lists.PastProgressList()
-			lst.Initialize()
+			lst.Initialize(header_directory=target["operator"].instructions["to"])
 			newtab.Update(lst)
+			newtab.SetFileOperator(target["operator"])
 		#end 貼り付け
 		#かならずviews.Main.Navigateを経由して呼び出されているはず
 		return newtab
