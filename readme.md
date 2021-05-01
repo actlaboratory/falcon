@@ -9,7 +9,10 @@ python -m pip install -r requirements.txt
 または make setup  
 
 
-.exeではなく.pyから実行する場合、一部機能を正しく実行するには.pyを *可変個引数を受け入れる形で* python.exeに関連付けしている必要がある。通常の関連付けではうまく動作しないので注意。
+.exeではなく.pyから実行する場合、一部機能を正しく実行するには.pyを *可変個引数を受け入れる形で* python.exeに関連付けしている必要がある。通常の関連付けではうまく動作しないので注意。  
+具体的には、.pyに対する関連付けを以下のようにする。pythonがD:\python\python.exeにある場合、  
+"D:\python\python.exe" "%1" %*
+
 
 ## 実行  
 python falcon.py  
