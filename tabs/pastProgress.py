@@ -92,6 +92,7 @@ class PastProgressTab(base.FalconTabBase):
 		m=wx.Menu()
 		m.Append(0,"詳細を表示")
 		item=self.hListCtrl.GetPopupMenuSelectionFromUser(m)
+		if item<0: return
 		m.Destroy()
 		print(item)
 		elem=self.GetFocusedElement()
