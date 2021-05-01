@@ -42,8 +42,6 @@ shutil.copytree(
         "*.pot",
         "*.po~"))
 shutil.copytree("fx\\", "dist\\falcon\\fx")
-if os.path.exists("dist\\falcon\\bass"):
-    os.rename("dist\\falcon\\bass", "dist\\falcon\\bass.dll")
 print("Building file operator...")
 runcmd("%s --windowed --log-level=ERROR fileop.py" % pyinstaller_path)
 distutils.dir_util.copy_tree("dist\\fileop", "dist\\falcon")
