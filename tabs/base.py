@@ -330,7 +330,9 @@ class FalconTabBase(object):
         self.DeleteAllItems()  # 先に消しておかないとカラム数が合わない画面がユーザに見えてしまう
         if not isinstance(lst, type(self.listObject)):
             self.SetListColumns(lst)
-        if hasattr(lst, "rootDirectory") and self.environment["history"].isEmpty():  # タブ作成時のみ
+        if hasattr(
+                lst,
+                "rootDirectory") and self.environment["history"].isEmpty():  # タブ作成時のみ
             self.environment["history"].add(lst.rootDirectory)
         self.listObject = lst
         self.environment["listType"] = type(lst)
@@ -768,7 +770,7 @@ class FalconTabBase(object):
         """選択中のフォルダやドライブに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
         index = self.GetFocusedItem()
         elem = self.listObject.GetElement(index)
-        if not stream and type(elem)==browsableObjects.File:  # このファイルを開く
+        if not stream and isinstance(elem, browsableObjects.File):  # このファイルを開く
             print("open")
             misc.RunFile(
                 elem.fullpath,
@@ -1123,6 +1125,10 @@ class FalconTabBase(object):
 
     def OnClose(self):
         """タブが閉じられる前に呼び出される。検索結果タブでは、検索中にタブが閉じられたとき、検索のための非同期処理のキャンセルを待機しなければならない。"""
+        pass
+
+    def onReactivate(self):
+        """別のタブからこのタブにフォーカスが移動し、アクティブ状態となった際に呼ばれる。今のところ、ctrl+wでタブを閉じたとき、閉じてアクティブになったタブに対してのみ呼ばれる。"""
         pass
 
     def _LostFocus(self, event=None):

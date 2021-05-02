@@ -420,3 +420,6 @@ class FileListTab(base.FalconTabBase):
     def GetRootObject(self):
         """ドライブ詳細情報表示で用いる"""
         return misc.GetRootObject(self.listObject.rootDirectory)
+
+    def onReactivate(self):
+        self.UpdateFilelist(silence=True)
