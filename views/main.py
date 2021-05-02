@@ -197,12 +197,14 @@ class View(BaseView):
         self.UpdateTabName()
     # end ReplaceCurrentTab
 
-    def ActivateTab(self, pageNo):
+    def ActivateTab(self, pageNo, triggerOnReactivate=False):
         """指定されたインデックスのタブをアクティブにする。"""
         self.UpdateMenuState(self.activeTab, self.tabs[pageNo])
         self.activeTab = self.tabs[pageNo]
         self.hTabCtrl.SetSelection(pageNo)
         self.menu.ApplyShortcut(self.activeTab.hListCtrl)
+        if triggerOnReactivate:
+            self.activeTab.onReactivate()
 
     def CloseTab(self, pageNo):
         """指定されたインデックスのタブを閉じる。閉じたタブがアクティブだった場合は、別のタブをアクティブ状態にする。全てのタブが閉じられた場合は、終了イベントを投げる。"""
@@ -219,6 +221,7 @@ class View(BaseView):
             pageNo = found
         # end ページ番号じゃなかったときの検索
 
+        active_tab = self.activeTab
         popped_tab = self.tabs.pop(pageNo)
         popped_tab.OnClose()
         if len(self.tabs) == 0:  # タブがなくなった
@@ -228,11 +231,13 @@ class View(BaseView):
         # この時点で、 noteBook がリストコントロールをデリートするらしいので、他の場所で明示的に消してはいけないとリファレンスに書いてある
         self.hTabCtrl.DeletePage(pageNo)
         self.hTabCtrl.SendSizeEvent()
-        if self.activeTab is popped_tab:  # アクティブなタブを閉じた
+        if active_tab is popped_tab:  # アクティブなタブを閉じた
+            print("popped tab")
             new_pageNo = pageNo
             if new_pageNo >= len(self.tabs):
                 new_pageNo = len(self.tabs) - 1
-            self.ActivateTab(new_pageNo)
+            print("trigger")
+            self.ActivateTab(new_pageNo, triggerOnReactivate=True)
         # end アクティブタブを閉じた場合に後ろのタブを持って来る
     # end closeTab
 
