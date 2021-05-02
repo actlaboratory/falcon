@@ -477,3 +477,15 @@ class PastProgressHeader(PastProgressItem):
         return (
             self.fullpath, self.status, "%s(%s%%)" %
             (self.details, self.percentage))
+
+    def __setitem__(self, index, obj):
+        if index == 0:
+            self.basename = obj
+        elif index == 1:
+            self.fullpath = obj
+        elif index == 2:
+            self.status = obj
+        elif index == 3:
+            self.details = obj
+        elif index == 4:
+            self.SetPercentage(obj)
