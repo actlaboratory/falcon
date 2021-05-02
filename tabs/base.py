@@ -768,7 +768,8 @@ class FalconTabBase(object):
         """選択中のフォルダやドライブに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
         index = self.GetFocusedItem()
         elem = self.listObject.GetElement(index)
-        if (not stream) and (isinstance(elem, browsableObjects.File)):  # このファイルを開く
+        if not stream and type(elem)==browsableObjects.File:  # このファイルを開く
+            print("open")
             misc.RunFile(
                 elem.fullpath,
                 admin,
