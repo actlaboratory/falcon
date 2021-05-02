@@ -330,7 +330,7 @@ class FalconTabBase(object):
         self.DeleteAllItems()  # 先に消しておかないとカラム数が合わない画面がユーザに見えてしまう
         if not isinstance(lst, type(self.listObject)):
             self.SetListColumns(lst)
-        if self.environment["history"].isEmpty():  # タブ作成時のみ
+        if hasattr(lst, "rootDirectory") and self.environment["history"].isEmpty():  # タブ作成時のみ
             self.environment["history"].add(lst.rootDirectory)
         self.listObject = lst
         self.environment["listType"] = type(lst)
