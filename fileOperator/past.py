@@ -32,6 +32,7 @@ class Element(object):
 
 def Execute(op, resume=False):
     """実行処理。リトライが必要になった項目数を返す。"""
+    print("start resume=%s" % resume)
     if resume:
         log.debug("Starting as resume mode...")
     retry = 0
