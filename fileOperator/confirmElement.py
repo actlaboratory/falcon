@@ -28,10 +28,10 @@ class ConfirmElement(object):
         return self.response
 
     def IsResponded(self):
-        return self.Response is not None
+        return self.response is not None
 
     def __str__(self):
-        return "[%s] %s (%s)" % (self.msg_number, self.msg_str, self.elem)
+        return "[%s] %s (%s)" % (self.msg_number, self.msg_string, self.elem)
 
 
 class ConfirmationManager(object):
@@ -42,7 +42,7 @@ class ConfirmationManager(object):
         self.confirmations.append(elem)
 
     def Remove(self, elem):
-        self.confirmations.Remove(elem)
+        self.confirmations.remove(elem)
 
     def __len__(self):
         return len(self.confirmations)
@@ -55,9 +55,13 @@ class ConfirmationManager(object):
             yield elem
 
     def IterateNotResponded(self):
+        print("iterate not responded")
+        print("len %s" % len(self.confirmations))
+        idx = 0
         for elem in self.confirmations:
             if not elem.IsResponded():
-                yield elem
+                yield idx, elem
+            idx += 1
 
     def IterateResponded(self):
         for elem in self.confirmations:

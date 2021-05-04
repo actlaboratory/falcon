@@ -8,6 +8,7 @@
 コピー/貼り付けの進捗状況を表示するタブ。
 """
 
+import datetime
 import os
 import wx
 
@@ -101,15 +102,13 @@ class PastProgressTab(base.FalconTabBase):
         if item < 0:
             return
         m.Destroy()
-        print(item)
         elem = self.GetFocusedElement()
-        index = elem.GetConfirmationManagerIndex()
+        index = elem.getConfirmationManagerIndex()
         confs = self.fileOperator.GetConfirmationManager()
         confirmElem = confs.GetAt(index)
         e = confirmElem.GetElement()
         from_path = e.path
         dest_path = e.destpath
-        print(dest_path)
         from_stat = os.stat(from_path)
         dest_stat = os.stat(dest_path)
         info = [
@@ -129,9 +128,12 @@ class PastProgressTab(base.FalconTabBase):
         if val['all'] is True:  # 「以降も同様に処理」がオン
             confs.RespondAll(confirmElem, val['response'])
         else:  # この1件だけ
-            confirmElem.SetResponse(d.GetValue())  # 渓谷に対して、文字列でレスポンスする
+            confirmElem.Respond(d.GetValue()['response'])  # 渓谷に対して、文字列でレスポンスする
         # end これ以降全てかこれだけか
         self.fileOperator.UpdateConfirmation()  # これで繁栄する
+        print("before update")
+        self.listObject.Update(confs)
+        self.Update(self.listObject)
         self.fileOperator.Execute()  # これでコピーを再実行
 
     def ReadCurrentFolder(self):

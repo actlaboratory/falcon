@@ -440,6 +440,12 @@ class PastProgressItem(FalconBrowsableBase):
         self.details = details
         self.hIcon = 0
 
+    def setConfirmationManagerIndex(self, idx):
+        self.confirmationManagerIndex = idx
+
+    def getConfirmationManagerIndex(self):
+        return self.confirmationManagerIndex
+
     def GetListTuple(self):
         """表示に必要なタプルを返す。"""
         return (self.fullpath, self.status, self.details)

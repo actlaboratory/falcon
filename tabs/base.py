@@ -38,53 +38,8 @@ from simpleDialog import *
 # 各インスタンスで追加は許されるが減らすことは許されない
 selectItemMenuConditions = []
 selectItemMenuConditions.append([])
-selectItemMenuConditions[0].extend([
-    "FILE_RENAME",
-    "FILE_CHANGEATTRIBUTE",
-    "FILE_MAKESHORTCUT",
-    "FILE_TRASH",
-    "FILE_DELETE",
-    "FILE_VIEW_DETAIL",
-    "FILE_SHOWPROPERTIES",
-    "EDIT_COPY",
-    "EDIT_CUT",
-    "EDIT_NAMECOPY",
-    "EDIT_FULLPATHCOPY",
-    "EDIT_OPENCONTEXTMENU",
-    "EDIT_MARKITEM",
-    "MOVE_FORWARD",
-    "MOVE_FORWARD_ADMIN",
-    "MOVE_FORWARD_TAB",
-    "MOVE_FORWARD_STREAM",
-    "MOVE_EXEC_ORIGINAL_ASSOCIATION",
-    "TOOL_DIRCALC",
-    "TOOL_HASHCALC",
-    "TOOL_ADDPATH",
-    "TOOL_EJECT_DRIVE",
-    "TOOL_EJECT_DEVICE",
-    "READ_CONTENT_PREVIEW",
-    "READ_CONTENT_READHEADER",
-    "READ_CONTENT_READFOOTER",
-])
 selectItemMenuConditions.append([])
 selectItemMenuConditions.append([])
-selectItemMenuConditions[2].extend([
-    "FILE_RENAME",
-    "FILE_MAKESHORTCUT",
-    "FILE_VIEW_DETAIL",
-    "FILE_SHOWPROPERTIES",
-    "MOVE_FORWARD",
-    "MOVE_FORWARD_ADMIN",
-    "MOVE_FORWARD_TAB",
-    "MOVE_FORWARD_STREAM",
-    "MOVE_EXEC_ORIGINAL_ASSOCIATION",
-    "TOOL_HASHCALC",
-    "TOOL_EJECT_DRIVE",
-    "TOOL_EJECT_DEVICE",
-    "READ_CONTENT_PREVIEW",
-    "READ_CONTENT_READHEADER",
-    "READ_CONTENT_READFOOTER",
-])
 
 
 class FalconTabBase(object):
@@ -770,7 +725,7 @@ class FalconTabBase(object):
         """選択中のフォルダやドライブに入るか、選択中のファイルを実行する。stream=True の場合、ファイルの NTFS 副ストリームを開く。"""
         index = self.GetFocusedItem()
         elem = self.listObject.GetElement(index)
-        if not stream and isinstance(elem, browsableObjects.File):  # このファイルを開く
+        if not stream and type(elem) == browsableObjects.File:  # このファイルを開く
             print("open")
             misc.RunFile(
                 elem.fullpath,

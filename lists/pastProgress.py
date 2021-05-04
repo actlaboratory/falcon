@@ -53,10 +53,10 @@ class PastProgressList(FalconListBase):
         self.headers.append(head)
 
     def Update(self, confirmationManager=None):
-        if not confirmationManager:
+        if confirmationManager is None:
             return
         self.results.clear()
-        for elem in confirmationManager.Iterate():
+        for idx, elem in confirmationManager.IterateNotResponded():
             path = elem.GetElement().path
             obj = PastProgressItem()
             obj.Initialize(
@@ -64,6 +64,7 @@ class PastProgressList(FalconListBase):
                 path,
                 _("確認"),
                 elem.GetMessageString())
+            obj.setConfirmationManagerIndex(idx)
             self.results.append(obj)
         # end 追加
 

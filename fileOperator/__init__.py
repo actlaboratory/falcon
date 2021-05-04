@@ -75,14 +75,11 @@ class FileOperator(object):
         ファイルオペレーションを実行。threaded=True にすると、バックグラウンドで実行される。
         この関数自体は、ファイルオペレーションが開始できたかどうかを帰すだけで、結果は通知しない。
         """
+        print("op exec")
         if not self.instructions:
             self.log.error("No instructions specified.")
             return False
         # end 命令がない
-        if self.started:
-            self.log.error("This operation is already started.")
-            return False
-        # end すでに実行した
         try:
             op = self.instructions["operation"]
         except KeyError:
@@ -154,7 +151,7 @@ class FileOperator(object):
         if self.threaded:
             wx.CallAfter(self.callbacks[identifier], self, parameters)
         else:
-            self.callbacks[identifier](self)
+            self.callbacks[identifier](self, parameters)
         # end スレッド実行の場合はcallAfter
 # end _doCallback
 
@@ -234,6 +231,7 @@ class FileOperator(object):
     def UpdateConfirmation(self):
         self.resume = True
         responded = list(self.output["need_to_confirm"].IterateResponded())
+        print("responded list: %s" % responded)
         for elem in responded:
             if elem.GetResponse() == "overwrite":
                 self.instructions["target"].append(elem.elem.path)
