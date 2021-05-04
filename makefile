@@ -5,7 +5,7 @@ setup:
 	py -m pip install -r requirements.txt
 
 fmt:
-	py -m autopep8 -r -i -a -a --ignore=E402 .
+	py -m autopep8 -r -i -a -a --ignore=E402,E721 .
 
 .PHONY: clear-keymap
 clear-keymap:
