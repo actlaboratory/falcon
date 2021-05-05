@@ -119,9 +119,9 @@ initialValues["favorite_directories_shortcut"] = {
     "デスクトップ": "alt+2"
 }
 initialValues["open_here"] = {
-    "Explorer": r"%windir%\explorer.exe \"%1\"",
-    "コマンド プロンプト": r"%windir%\system32\cmd.exe /K cd /d  \"%1\"",
-    "Windows Power Shell": r"%windir%\System32\WindowsPowerShell\\v1.0\powershell.exe -NoExit -command cd \'%1\'"
+    "Explorer": "%windir%\\explorer.exe \"%1\"",
+    "コマンド プロンプト": "%windir%\\system32\\cmd.exe /K cd /d  \"%1\"",
+    "Windows Power Shell": "%windir%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoExit -command cd '%1'"
 }
 initialValues["open_here_shortcut"] = {
     "Explorer": "ctrl+e",
