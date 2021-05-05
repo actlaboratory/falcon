@@ -542,10 +542,9 @@ class Events(BaseEvents):
             return
 
         # 選択された(ショートカットで押された)メニューが無効状態なら何もしない
-        if self.parent.menu.blockCount[selected] > 0:
+        if selected in views.menuBlocker.testMenu(self.parent.activeTab):
             if not event.GetExtraLong() == EVENT_FROM_SELF:
-                globalVars.app.PlaySound(
-                    globalVars.app.config["sounds"]["boundary"])
+                globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
             event.Skip()
             return
 
