@@ -126,7 +126,11 @@ def Execute(op, resume=False):
         # end 移動モード
         op.output["succeeded"] += 1
         pasted_size += elem.size
-        op.SetPercentage(int(pasted_size / total * 100))
+        if total == 0:
+            percentage = 0
+        else:
+            percentage = int(pasted_size / total * 100)
+        op.SetPercentage(percentage)
     # end 削除処理
     if len(op.output["retry"]["target"]) > 0:
         op.output["retry"]["operation"] = VERB
