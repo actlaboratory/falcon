@@ -232,11 +232,9 @@ class View(BaseView):
         self.hTabCtrl.DeletePage(pageNo)
         self.hTabCtrl.SendSizeEvent()
         if active_tab is popped_tab:  # アクティブなタブを閉じた
-            print("popped tab")
             new_pageNo = pageNo
             if new_pageNo >= len(self.tabs):
                 new_pageNo = len(self.tabs) - 1
-            print("trigger")
             self.ActivateTab(new_pageNo, triggerOnReactivate=True)
         # end アクティブタブを閉じた場合に後ろのタブを持って来る
     # end closeTab

@@ -49,10 +49,6 @@ class FalconTabBase(object):
         self.sortTargetColumnNo = None  # 並び替え対象としてアイコン表示中のカラム番号
         if self.environment == {}:
             self.environment["markedPlace"] = None  # マークフォルダ
-            # 選択中のアイテム数。0or1or2=2以上。
-            self.environment["selectedItemCount"] = None
-            # 選択中アイテムの種類(browsableObjects)毎の個数
-            self.environment["selectingItemCount"] = {}
             self.environment["listType"] = None  # 表示中のリストタイプ(listObject)
             self.environment["history"] = history.History()  # ディレクトリ移動の履歴
 
@@ -88,8 +84,6 @@ class FalconTabBase(object):
             self.OnLabelEditStart)
         self.hListCtrl.Bind(wx.EVT_LIST_END_LABEL_EDIT, self.OnLabelEditEnd)
         self.hListCtrl.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.ItemFocused)
-        self.hListCtrl.Bind(wx.EVT_LIST_ITEM_SELECTED, self.ItemSelected)
-        self.hListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.ItemDeSelected)
         self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.EnterItem)
         self.hListCtrl.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
         self.hListCtrl.Bind(wx.EVT_MOUSE_EVENTS, self._MouseEvent)
@@ -795,14 +789,6 @@ class FalconTabBase(object):
             globalVars.app.PlaySound(
                 globalVars.app.config["sounds"]["checked"])
         event.Skip()
-
-    def ItemSelected(self, event=None):
-        """リストビューのアイテムの選択時に呼ばれる"""
-        pass
-
-    def ItemDeSelected(self, event=None, index=0):
-        """リストビューのアイテムの選択解除時に呼ばれる"""
-        pass
 
     def _appendContextMenu(self, hMenu, elem):
         if elem['type'] == "separator":
