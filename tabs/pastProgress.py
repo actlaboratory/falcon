@@ -27,39 +27,6 @@ from . import base
 class PastProgressTab(base.FalconTabBase):
     def Initialize(self, parent, creator, existing_listctrl=None):
         super().Initialize(parent, creator, existing_listctrl)
-    blockMenuList = [
-        "FILE_RENAME",
-        "FILE_CHANGEATTRIBUTE",
-        "FILE_MAKESHORTCUT",
-        "FILE_TRASH",
-        "FILE_DELETE",
-        "FILE_MKDIR",
-        "EDIT_COPY",
-        "EDIT_CUT",
-        "EDIT_PAST",
-        "EDIT_SEARCH",
-        "EDIT_UPDATEFILELIST",
-        "MOVE_FORWARD",
-        "MOVE_FORWARD_ADMIN",
-        "MOVE_EXEC_ORIGINAL_ASSOCIATION",
-        "MOVE_FORWARD_TAB",
-        "MOVE_FORWARD_STREAM",
-        "MOVE_BACKWARD",
-        "MOVE_TOPFILE",
-        "MOVE_HIST_NEXT",
-        "MOVE_HIST_PREV",
-        "MOVE_MARKSET",
-        "MOVE_MARK",
-        "READ_CONTENT_PREVIEW",
-        "READ_CONTENT_READHEADER",
-        "READ_CONTENT_READFOOTER",
-        "TOOL_DIRCALC",
-        "TOOL_HASHCALC",
-        "TOOL_ADDPATH",
-        "TOOL_EJECT_DRIVE",
-        "TOOL_EJECT_DEVICE",
-        "VIEW_DRIVE_INFO",
-    ]
 
     def SetFileOperator(self, operator):
         """ファイルオペレーターを設定して、オペレーション終了時のコールバックを登録する。"""

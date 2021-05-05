@@ -30,26 +30,6 @@ from . import base
 class StreamListTab(base.FalconTabBase):
     """副ストリームリストが表示されているタブ。"""
 
-    blockMenuList = [
-        "FILE_CHANGEATTRIBUTE",
-        "FILE_MKDIR",
-        "FILE_TRASH",
-        "EDIT_SEARCH",
-        "MOVE_FORWARD_TAB",
-        "MOVE_FORWARD_STREAM",
-        "MOVE_TOPFILE",
-        "MOVE_OPEN_HERE_",
-        "TOOL_DIRCALC",
-        "TOOL_HASHCALC",
-        "TOOL_ADDPATH",
-        "TOOL_EJECT_DRIVE",
-        "TOOL_EJECT_DEVICE",
-        "TOOL_EXEC_PROGRAM",
-        "READ_CONTENT_PREVIEW",
-        "READ_CONTENT_READHEADER",
-        "READ_CONTENT_READFOOTER",
-    ]
-
     def OnLabelEditEnd(self, evt):
         self.isRenaming = False
         self.parent.SetShortcutEnabled(True)

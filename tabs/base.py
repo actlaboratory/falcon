@@ -32,62 +32,10 @@ from win32com.shell import shell, shellcon
 from . import navigator
 from simpleDialog import *
 
-
-# 選択中のアイテム個数によるブロック
-# ここに定義したものが__init__でコピーされる
-# 各インスタンスで追加は許されるが減らすことは許されない
-selectItemMenuConditions = []
-selectItemMenuConditions.append([])
-selectItemMenuConditions.append([])
-selectItemMenuConditions.append([])
-
-
 class FalconTabBase(object):
     """全てのタブに共通する基本クラス。"""
 
-    selectItemTypeMenuConditions = {}
-    selectItemTypeMenuConditions[browsableObjects.File] = []
-    selectItemTypeMenuConditions[browsableObjects.File].extend([
-        "TOOL_DIRCALC",
-        "MOVE_FORWARD_TAB",
-        "TOOL_ADDPATH",
-        "MOVE_FORWARD_TAB",
-        "TOOL_EJECT_DRIVE",
-        "TOOL_EJECT_DEVICE"
-    ])
-
-    selectItemTypeMenuConditions[browsableObjects.Folder] = []
-    selectItemTypeMenuConditions[browsableObjects.Folder].extend([
-        "TOOL_HASHCALC",
-        "READ_CONTENT_PREVIEW",
-        "READ_CONTENT_READHEADER",
-        "READ_CONTENT_READFOOTER",
-        "TOOL_EJECT_DRIVE",
-        "TOOL_EJECT_DEVICE"
-    ])
-    selectItemTypeMenuConditions[browsableObjects.NetworkResource] = []
-    selectItemTypeMenuConditions[browsableObjects.NetworkResource].extend([
-        "FILE_RENAME",
-        "TOOL_EJECT_DRIVE",
-        "TOOL_EJECT_DEVICE",
-        "READ_CONTENT_PREVIEW"
-    ])
-
-    # それぞれFile・Folderと同期
-    selectItemTypeMenuConditions[browsableObjects.SearchedFile] = selectItemTypeMenuConditions[browsableObjects.File]
-    selectItemTypeMenuConditions[browsableObjects.SearchedFolder] = selectItemTypeMenuConditions[browsableObjects.Folder]
-
-    # 以下３つは専用のタブになってるのでこの機能でやる必要はない。KeyErrorにならないようにしとくだけ。
-    selectItemTypeMenuConditions[browsableObjects.GrepItem] = []
-    selectItemTypeMenuConditions[browsableObjects.Drive] = []
-    selectItemTypeMenuConditions[browsableObjects.Stream] = []
-    selectItemTypeMenuConditions[browsableObjects.PastProgressItem] = []
-    selectItemTypeMenuConditions[browsableObjects.PastProgressHeader] = []
-
     def __init__(self, environment):
-        self.selectItemMenuConditions = []
-        for i in selectItemMenuConditions:
-            self.selectItemMenuConditions.append(copy.copy(i))
         self.task = None
         self.colums = []  # タブに表示されるカラムの一覧。外からは読み取りのみ。
         self.listObject = None  # リストの中身を保持している listObjects のうちのどれかのオブジェクト・インスタンス
@@ -850,85 +798,11 @@ class FalconTabBase(object):
 
     def ItemSelected(self, event=None):
         """リストビューのアイテムの選択時に呼ばれる"""
-
-        # 個数ベースでのメニューのロック・アンロック
-        c = self.GetSelectedItemCount()
-        if c > 2:
-            c = 2
-        # print(str(self.environment["selectedItemCount"])+"=>"+str(c))
-        if self.environment["selectedItemCount"] != c:
-            if self.environment["selectedItemCount"] is not None:
-                globalVars.app.hMainView.menu.UnBlock(
-                    self.selectItemMenuConditions[self.environment["selectedItemCount"]])
-            globalVars.app.hMainView.menu.Block(
-                self.selectItemMenuConditions[c])
-            self.environment["selectedItemCount"] = c
-
-        # 種類ベースでのメニューのロック
-        if event:  # アイテムが選択された
-            # チェック済みアイテムなら何もしない
-            if self._IsItemChecked(
-                self.listObject.GetElement(
-                    event.GetIndex())):
-                return
-            elem = self.listObject.GetElement(event.GetIndex())
-            try:
-                self.environment["selectingItemCount"][elem.__class__] += 1
-            except KeyError:
-                self.environment["selectingItemCount"][elem.__class__] = 1
-            if self.environment["selectingItemCount"][elem.__class__] == 1:  # 新規ブロック
-                globalVars.app.hMainView.menu.Block(
-                    self.selectItemTypeMenuConditions[elem.__class__])
-        else:  # ビューを再描画した場合など
-            # 全部の選択をなかったことにする
-            for i, v in self.environment["selectingItemCount"].items():
-                if v > 0:
-                    self.environment["selectingItemCount"][i] = 0
-                    globalVars.app.hMainView.menu.UnBlock(
-                        self.selectItemTypeMenuConditions[i])
-            # 選択中アイテムの状況を取得して処理する
-            if not self.IsItemSelected():
-                return
-            for elem in self.GetSelectedItems():
-                try:
-                    self.environment["selectingItemCount"][elem.__class__] += 1
-                except KeyError:
-                    self.environment["selectingItemCount"][elem.__class__] = 1
-                if self.environment["selectingItemCount"][elem.__class__] == 1:  # 新規ブロック
-                    globalVars.app.hMainView.menu.Block(
-                        self.selectItemTypeMenuConditions[elem.__class__])
+        pass
 
     def ItemDeSelected(self, event=None, index=0):
-        # 個数ベースでのメニューのロック・アンロック
-        c = self.GetSelectedItemCount()
-        if c > 2:
-            c = 2
-        # print(str(self.environment["selectedItemCount"])+"=>"+str(c))
-        if self.environment["selectedItemCount"] != c:
-            if self.environment["selectedItemCount"] is not None:
-                globalVars.app.hMainView.menu.UnBlock(
-                    self.selectItemMenuConditions[self.environment["selectedItemCount"]])
-            globalVars.app.hMainView.menu.Block(
-                self.selectItemMenuConditions[c])
-            self.environment["selectedItemCount"] = c
-
-        # 種類ベースでのメニューのアンロック
-        if event:
-            # チェック状態なら何もしない
-            if self.IsItemSelected(event.GetIndex()):
-                return
-            if event.GetIndex() < 0:
-                return
-            elem = self.listObject.GetElement(event.GetIndex())
-        else:
-            elem = self.listObject.GetElement(index)
-        try:
-            self.environment["selectingItemCount"][elem.__class__] -= 1
-            if self.environment["selectingItemCount"][elem.__class__] == 0:  # ブロック解除
-                globalVars.app.hMainView.menu.UnBlock(
-                    self.selectItemTypeMenuConditions[elem.__class__])
-        except KeyError:
-            self.environment["selectingItemCount"][elem.__class__] = 0
+        """リストビューのアイテムの選択解除時に呼ばれる"""
+        pass
 
     def _appendContextMenu(self, hMenu, elem):
         if elem['type'] == "separator":

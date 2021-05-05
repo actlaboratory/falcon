@@ -20,31 +20,6 @@ from . import base
 class NetworkResourceListTab(base.FalconTabBase):
     """ネットワークリソースリストが表示されているタブ。"""
 
-    blockMenuList = [
-        "FILE_RENAME",
-        "FILE_CHANGEATTRIBUTE",
-        "FILE_TRASH",
-        "FILE_DELETE",
-        "FILE_MKDIR",
-        "EDIT_CUT",
-        "EDIT_PAST",
-        "EDIT_SEARCH",
-        "MOVE_FORWARD_STREAM",
-        "MOVE_TOPFILE",
-        "MOVE_OPEN_HERE_",
-        "TOOL_DIRCALC",
-        "TOOL_HASHCALC",
-        "TOOL_ADDPATH",
-        "TOOL_EXEC_PROGRAM",
-        "TOOL_EJECT_DRIVE",
-        "TOOL_EJECT_DEVICE",
-        "READ_CONTENT_PREVIEW",
-        "READ_CONTENT_READHEADER",
-        "READ_CONTENT_READFOOTER",
-    ]
-
-    # end Update
-
     def GoBackward(self):
         """ドライブ一覧へ戻る"""
         target = ""

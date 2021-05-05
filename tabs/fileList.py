@@ -34,11 +34,6 @@ from . import base
 class FileListTab(base.FalconTabBase):
     """ファイル/フォルダリストが表示されているタブ。"""
 
-    blockMenuList = [
-        "TOOL_EJECT_DRIVE",
-        "TOOL_EJECT_DEVICE"
-    ]
-
     def OnLabelEditEnd(self, evt):
         """
                 ファイル名変更の入力終了イベント

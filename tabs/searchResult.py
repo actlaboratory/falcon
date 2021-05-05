@@ -17,9 +17,6 @@ from . import searchResultTabBase
 class SearchResultTab(searchResultTabBase.SearchResultTabBase):
     """検索結果が表示されているタブ。"""
 
-    blockMenuList = searchResultTabBase.SearchResultTabBase.blockMenuList + [
-    ]
-
     # 内部で利用するリストの種類を定義
     listType = lists.SearchResultList
 

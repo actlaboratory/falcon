@@ -17,11 +17,6 @@ from . import searchResultTabBase
 class GrepResultTab(searchResultTabBase.SearchResultTabBase):
     """grepの検索結果が表示されているタブ。"""
 
-    blockMenuList = searchResultTabBase.SearchResultTabBase.blockMenuList + [
-        "MOVE_FORWARD_TAB",
-        "MOVE_TOPFILE",
-    ]
-
     # 内部で利用するリストの種類を定義
     listType = lists.GrepResultList
 

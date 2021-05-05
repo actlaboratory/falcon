@@ -273,25 +273,11 @@ class View(BaseView):
 
     def UpdateMenuState(self, old, new):
         # メニューのブロック状態を変更
-        if old:
-            self.menu.UnBlock(old.blockMenuList)
-        self.menu.Block(new.blockMenuList)
         self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"), new.IsMarked())
-        self.menu.Enable(
-            menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),
-            new.hasCheckedItem())
-        self.menu.Enable(
-            menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(
-                new.checkedItem) != len(
-                new.listObject))
-        self.menu.Enable(
-            menuItemsStore.getRef("MOVE_HIST_NEXT"),
-            new.environment["history"].hasNext())
-        self.menu.Enable(
-            menuItemsStore.getRef("MOVE_HIST_PREV"),
-            new.environment["history"].hasPrevious())
-
-        new.ItemSelected()  # メニューのブロック情報を選択中アイテム数の状況に合わせるために必用
+        self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"), new.hasCheckedItem())
+        self.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(new.checkedItem) != len(new.listObject))
+        self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"), new.environment["history"].hasNext())
+        self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"), new.environment["history"].hasPrevious())
 
     def UpdateTabName(self):
         """タブ名変更の可能性があるときにtabsからたたかれる"""
@@ -525,7 +511,6 @@ class Menu(BaseMenu):
 
 
 class Events(BaseEvents):
-
     def OnMenuSelect(self, event):
         """メニュー項目が選択されたときのイベントハンドら。"""
         # ショートカットキーが無効状態のときは何もしない
@@ -940,7 +925,12 @@ class Events(BaseEvents):
         return
 
     def OnMenuOpen(self, event):
-        # カラムソートメニューの場合のみ
+        # メニューの有効・無効を切り替える
+        disableMenuIdSet = views.menuBlocker.testMenu(self.parent.activeTab)
+        for i in event.GetEventObject().GetMenuItems():
+            i.Enable(not i.GetId() in disableMenuIdSet)
+
+        # カラムソートメニューの場合、中身の描画をする
         if event.GetMenu() == self.parent.menu.hMenuBar.FindItemById(
                 menuItemsStore.getRef("VIEW_SORT_COLUMN")).GetSubMenu():
             menu = self.parent.menu.hMenuBar.FindItemById(

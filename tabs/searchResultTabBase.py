@@ -25,21 +25,6 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
         super().__init__(environment)
         self.folderCount = 0
 
-    blockMenuList = [
-        "FILE_MKDIR",
-        "EDIT_PAST",
-        "EDIT_SEARCH",
-        "MOVE_BACKWARD",
-        "MOVE_HIST_PREV",
-        "MOVE_HIST_NEXT",
-        "MOVE_MARKSET",
-        "MOVE_MARK",
-        "TOOL_ADDPATH",
-        "TOOL_EJECT_DRIVE",
-        "TOOL_EJECT_DEVICE",
-        "TOOL_EXEC_PROGRAM"
-    ]
-
     def StartSearch(self, rootPath, searches, keyword, isRegularExpression):
         self.listObject = self.listType()
         self.listObject.Initialize(
