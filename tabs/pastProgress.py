@@ -112,7 +112,7 @@ class PastProgressTab(base.FalconTabBase):
         from_stat = os.stat(from_path)
         dest_stat = os.stat(dest_path)
         info = [
-            (_("名前"), "test.txt", "", ""), (_("サイズ"), misc.ConvertBytesTo(
+            (_("名前"), os.path.basename(from_path), "", ""), (_("サイズ"), misc.ConvertBytesTo(
                 dest_stat.st_size, misc.UNIT_AUTO, True), "→", misc.ConvertBytesTo(
                 from_stat.st_size, misc.UNIT_AUTO, True)), (_("更新日時"), datetime.datetime.fromtimestamp(
                     dest_stat.st_mtime), "→", datetime.datetime.fromtimestamp(
