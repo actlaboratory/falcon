@@ -250,7 +250,7 @@ def GetDirectorySize(path, fileCount=0, dirCount=0):
                     dirCount = r[2]
     except OSError as er:
         log.error("GetDirectorySize failed (%s" % er)
-        return -1, -1, -1
+        return constants.DIR_SIZE_CHECK_FAILED, -1, -1
     # end except
     return total, fileCount, dirCount
 

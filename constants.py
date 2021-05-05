@@ -148,3 +148,7 @@ SUPPORTED_AUDIO_FORMATS = {
     'm4r',
     "mp4"
 }
+# browsableObjects.FOLDERで利用
+DIR_SIZE_UNKNOWN = -1
+DIR_SIZE_CALCURATING = -2
+DIR_SIZE_CHECK_FAILED = -3

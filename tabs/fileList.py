@@ -10,22 +10,24 @@
 
 import datetime
 import os
-import gettext
 import time
 import wx
-import clipboard
-import errorCodes
-import lists
+
 import browsableObjects
-import globalVars
+import clipboard
+import constants
+import errorCodes
 import fileOperator
+import fileSystemManager
+import globalVars
+import lists
 import misc
+import StringUtil
+import tabs.streamList
 import views.OperationSelecter
 import workerThreads
 import workerThreadTasks
-import fileSystemManager
-import tabs.streamList
-import StringUtil
+
 
 from simpleDialog import *
 from . import base
@@ -203,15 +205,12 @@ class FileListTab(base.FalconTabBase):
         lst = []
         for i in self.GetSelectedItems(index_mode=True):
             elem = self.listObject.GetElement(i)
-            if isinstance(elem, browsableObjects.Folder):
-                self.hListCtrl.SetItem(index=i, column=1, label=_("<計算中>"))
-                lst.append((i, elem.fullpath))
-            # end フォルダだったら
+            elem.size = constants.DIR_SIZE_CALCURATING
+            self.hListCtrl.RefreshItem(i)
+            lst.append((i, elem.fullpath))
         # end for
         param = {'lst': lst, 'callback': self._dirCalc_receive}
-        self.background_tasks.append(
-            workerThreads.RegisterTask(
-                workerThreadTasks.DirCalc, param))
+        self.background_tasks.append(workerThreads.RegisterTask(workerThreadTasks.DirCalc, param))
 
     def _dirCalc_receive(self, results, taskState):
         """DirCalc の結果を受ける。"""
@@ -220,11 +219,7 @@ class FileListTab(base.FalconTabBase):
             if elem[1][0] >= 0:
                 self.listObject.GetElement(elem[0]).fileCount = elem[1][1]
                 self.listObject.GetElement(elem[0]).dirCount = elem[1][2]
-                self.hListCtrl.SetItem(
-                    index=elem[0], column=1, label=misc.ConvertBytesTo(
-                        elem[1][0], misc.UNIT_AUTO, True))
-            else:
-                self.hListCtrl.SetItem(index=elem[0], column=1, label="<取得失敗>")
+            self.hListCtrl.RefreshItem(elem[0])
         # end for
         self.background_tasks.remove(taskState)
 
