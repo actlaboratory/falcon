@@ -7,7 +7,7 @@ import browsableObjects
 import tabs
 import menuItemsStore
 
-# �^�u�̎�ނɂ��u���b�N
+# タブの種類によるブロック
 tabTypeBlockList={
 	tabs.driveList.DriveListTab : [
         "FILE_CHANGEATTRIBUTE",
@@ -115,7 +115,7 @@ tabTypeBlockList={
 	]
 }
 
-# �������ʃ^�u���ʂ̃u���b�N�v�f��K�p
+# 検索結果タブ共通のブロック要素を適用
 for t in (tabs.searchResult.SearchResultTab,tabs.grepResult.GrepResultTab):
 	tabTypeBlockList[t] += [
         "FILE_MKDIR",
@@ -132,7 +132,7 @@ for t in (tabs.searchResult.SearchResultTab,tabs.grepResult.GrepResultTab):
         "TOOL_EXEC_PROGRAM"
 	]
 
-# �I�𒆂̃A�C�e���̌��ɂ��u���b�N
+# 選択中のアイテムの個数によるブロック
 selectedItemCountBlockList={
 	0 : [
 		"FILE_RENAME",
@@ -164,7 +164,7 @@ selectedItemCountBlockList={
 	],
 	1 : [
 	],
-	2 : [		# 2�ȏ�̏ꍇ�͂��ׂ�2��K�p
+	2 : [		# 2以上の場合はすべて2を適用
 		"FILE_RENAME",
 		"FILE_MAKESHORTCUT",
 		"FILE_VIEW_DETAIL",
@@ -184,8 +184,8 @@ selectedItemCountBlockList={
 	]
 }
 
-# �I�𒆂̃A�C�e���̎�ނɂ��u���b�N
-# �^�u�̃^�C�v�ɂ��u���b�N�ł͕s������ꍇ�ɂ̂ݗ��p����
+# 選択中のアイテムの種類によるブロック
+# タブのタイプによるブロックでは不足する場合にのみ利用する
 selectedItemTypeBlockList={
 	browsableObjects.File : [
         "TOOL_DIRCALC",
@@ -212,12 +212,12 @@ selectedItemTypeBlockList={
         "READ_CONTENT_PREVIEW"
 	],
 }
-# �������ʂ̃t�H���_�E�t�@�C���͒ʏ�̃t�@�C���E�t�H���_�Ɠ����ɂ���
+# 検索結果のフォルダ・ファイルは通常のファイル・フォルダと同じにする
 selectedItemTypeBlockList[browsableObjects.SearchedFile] = selectedItemTypeBlockList[browsableObjects.File]
 selectedItemTypeBlockList[browsableObjects.SearchedFolder] = selectedItemTypeBlockList[browsableObjects.Folder]
 
 
-# ��L�����refName��ref�ɂ��ĕۑ����Ă���
+# 上記を基にrefName→refにして保存しておく
 l1 = {}
 for k,l in tabTypeBlockList.items():
 	l1[k]=[]
@@ -234,26 +234,26 @@ for k,l in selectedItemTypeBlockList.items():
 	for r in l:
 		l3[k].append(menuItemsStore.getRef(r))
 
-# �w�肳�ꂽactiveTab�ɂ����Ė����ȃ��j���[�̈ꗗ��Ԃ�
+# 指定されたactiveTabにおいて無効なメニューの一覧を返す
 def testMenu(tab):
-	# ���ʂ̊i�[�p
+	# 結果の格納用
 	ret = set()
 
-	# l1 �^�u�̎�ނɂ��u���b�N
+	# l1 タブの種類によるブロック
 	try:
 		ret |= set(l1[type(tab)])
 	except KeyError:
 		pass
 
-	# L2/L3 �ɗ��p������̏���
+	# L2/L3 に利用する情報の準備
 	lst =  tab.GetSelectedItems(False)
 	count = len(lst)
 	if count > 2 : count = 2
 
-	# L2 �I�����ڐ��ɂ��u���b�N
+	# L2 選択項目数によるブロック
 	ret |= set(l2[count])
 
-	# L3 �I�𒆂̍��ڂ̎�ނɂ��u���b�N
+	# L3 選択中の項目の種類によるブロック
 	selectedTypes = set()
 	for i in lst:
 		selectedTypes.add(type(i))
@@ -263,5 +263,5 @@ def testMenu(tab):
 		except KeyError:
 			pass
 
-	# ���ʂ�ԋp
+	# 結果を返却
 	return ret
