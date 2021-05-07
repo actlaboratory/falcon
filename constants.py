@@ -100,6 +100,7 @@ SUPPORTED_DOCUMENT_FORMATS = {
     'sxc',
     'sxi',
     'sxd',
+    'po',
 
 
     # programing languages
@@ -117,6 +118,7 @@ SUPPORTED_DOCUMENT_FORMATS = {
     'php',
     'sql',
     'manifest',
+    "vbs",
 
     #configuration and logs
     'ini',
@@ -135,6 +137,32 @@ SUPPORTED_DOCUMENT_FORMATS = {
     # git
     'gitconfig',
     'gitignore',
+
+    # JAWS for Windows configuration files
+    'jbd', # JAWS Braille Display
+    'jbs', # JAWS Braille Structure
+    'jcf', # JAWS Configuration File
+    'jsi', # JAWS Script Initialization
+    'jdf', # JAWS Dictionary File
+    'jgf', # JAWS Graphics File
+    'jfd', # JAWS Frame Definition
+    'jff', # JAWS Frame File
+    'jkm', # JAWS Key Map
+    'jsd', # JAWS Script Documentation
+    'jss', # JAWS Script Source
+    'hss', # Hidden Script Source
+    'jsh', # JAWS Script Header
+    'hsh', # Hidden Script Header
+    'jsm', # JAWS Script Message
+    'his', # History
+    'qs', # Quick Settings
+    'qsm', # quick Settings Message
+    'sbl', # Speech Symbols File
+    'chr', # Character Substitution
+    'vpf', # Voice Profile
+    'jbt', # JAWS Braille Table
+    'rul', # Research-It Rule
+    'qry', # Research-It Query
 }
 
 SUPPORTED_AUDIO_FORMATS = {
@@ -146,6 +174,8 @@ SUPPORTED_AUDIO_FORMATS = {
     'aac',
     'm4a',
     'm4r',
+    'wmv',
+    'mpg',
     "mp4"
 }
 # browsableObjects.FOLDERで利用
