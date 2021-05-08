@@ -32,6 +32,7 @@ from win32com.shell import shell, shellcon
 from . import navigator
 from simpleDialog import *
 
+
 class FalconTabBase(object):
     """全てのタブに共通する基本クラス。"""
 
