@@ -75,8 +75,7 @@ class View(BaseView):
 
         self.tabs = []
         self.activeTab = None  # 最初なので空
-        self.hTabCtrl = self.creator.tabCtrl(
-            _("タブ選択"), self.ChangeTab, 0, wx.EXPAND, 1)
+        self.hTabCtrl = self.creator.tabCtrl(_("タブ選択"), self.ChangeTab, 0, wx.EXPAND, 1)
         self.MakeFirstTab()
         self.activeTab.hListCtrl.SetFocus()
         self.hFrame.Bind(wx.EVT_CLOSE, self.OnClose)
@@ -100,8 +99,7 @@ class View(BaseView):
         if num > 1:
             dlg = wx.MessageDialog(
                 self.hFrame,
-                _("%(tabs)d個のタブが開いています。これらのタブを全て閉じて、Falconを終了してもよろしいですか？") % {
-                    'tabs': num},
+                _("%(tabs)d個のタブが開いています。これらのタブを全て閉じて、Falconを終了してもよろしいですか？") % {'tabs': num},
                 _("終了確認"),
                 wx.YES_NO | wx.ICON_QUESTION)
             ret = dlg.ShowModal()
@@ -117,41 +115,25 @@ class View(BaseView):
         """最初のタブを作成する。"""
 
         if len(sys.argv) > 1:
-            result = self.Navigate(
-                misc.analyzeUserInputPath(
-                    sys.argv[1],
-                    os.getcwd()),
-                as_new_tab=True)
+            result = self.Navigate(misc.analyzeUserInputPath(sys.argv[1], os.getcwd()), as_new_tab=True)
             if result == errorCodes.OK:
                 return
             else:
-                dialog(
-                    "Error",
-                    _("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {
-                        "dir": sys.argv[1]})
+                dialog("Error", _("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
         if self.app.config["browse"]["startPath"] != "":
-            result = self.Navigate(
-                misc.analyzeUserInputPath(
-                    self.app.config["browse"]["startPath"],
-                    os.getcwd()),
-                as_new_tab=True)
+            result = self.Navigate(misc.analyzeUserInputPath(self.app.config["browse"]["startPath"], os.getcwd()), as_new_tab=True)
         else:  # ドライブ一覧を表示
             result = self.Navigate("", as_new_tab=True)
         if result == errorCodes.OK:
             return
         else:
-            if os.path.abspath(
-                os.path.expandvars(
-                    self.app.config["browse"]["startPath"])) != "":
-                dialog("Error", _("設定された起動時ディレクトリ '%(dir)s' は存在しません。") %
-                       {"dir": self.app.config["browse"]["startPath"]})
+            if os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"])) != "":
+                dialog("Error", _("設定された起動時ディレクトリ '%(dir)s' は存在しません。") % {"dir": self.app.config["browse"]["startPath"]})
             result = self.Navigate("", as_new_tab=True)
         if result == errorCodes.OK:
             return
         else:
-            dialog(
-                "Error",
-                _("ドライブ一覧の読み込みに失敗しました。大変お手数ですが、ログファイルを添付して開発者までお問い合わせください。"))
+            dialog("Error", _("ドライブ一覧の読み込みに失敗しました。大変お手数ですが、ログファイルを添付して開発者までお問い合わせください。"))
     # end makeFirstTab
 
     def Navigate(self, target, as_new_tab=False):
@@ -164,14 +146,12 @@ class View(BaseView):
         wx.CallLater(200, self._sayNewTab)
         hPanel = views.ViewCreator.makePanel(self.hTabCtrl)
         creator = views.ViewCreator.ViewCreator(1, hPanel, None)
-        newtab = tabs.navigator.Navigate(
-            target, create_new_tab_info=(self, creator))
+        newtab = tabs.navigator.Navigate(target, create_new_tab_info=(self, creator))
         if isinstance(newtab, int):  # Error
             return newtab
         self.tabs.append(newtab)
-        #self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
-        self.hTabCtrl.InsertPage(len(self.tabs) -
-                                 1, hPanel, newtab.GetTabName(), False)
+        # self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
+        self.hTabCtrl.InsertPage(len(self.tabs) - 1, hPanel, newtab.GetTabName(), False)
 
         self.ActivateTab(len(self.tabs) - 1)
         return errorCodes.OK
@@ -272,19 +252,10 @@ class View(BaseView):
     def UpdateMenuState(self, old, new):
         # メニューのブロック状態を変更
         self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"), new.IsMarked())
-        self.menu.Enable(
-            menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),
-            new.hasCheckedItem())
-        self.menu.Enable(
-            menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(
-                new.checkedItem) != len(
-                new.listObject))
-        self.menu.Enable(
-            menuItemsStore.getRef("MOVE_HIST_NEXT"),
-            new.environment["history"].hasNext())
-        self.menu.Enable(
-            menuItemsStore.getRef("MOVE_HIST_PREV"),
-            new.environment["history"].hasPrevious())
+        self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"), new.hasCheckedItem())
+        self.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(new.checkedItem) != len(new.listObject))
+        self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"), new.environment["history"].hasNext())
+        self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"), new.environment["history"].hasPrevious())
 
     def UpdateTabName(self):
         """タブ名変更の可能性があるときにtabsからたたかれる"""
@@ -297,12 +268,10 @@ class View(BaseView):
         for target in (globalVars.app.userCommandManagers):
             for v in target.keyMap:
                 if target.keyMap[v] != "":  # キーが指定されていない場合は無視
-                    self.menu.keymap.add(
-                        self.identifier, target.refHead + v, target.keyMap[v])
+                    self.menu.keymap.add(self.identifier, target.refHead + v, target.keyMap[v])
         errors = self.menu.keymap.GetError(self.identifier)
         if errors:
-            tmp = _(
-                "お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
+            tmp = _("お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
             for v in errors:
                 tmp += v + "\n"
             dialog(_("エラー"), tmp)
@@ -310,8 +279,7 @@ class View(BaseView):
     def AddUserCommandMenu(self):
         for m in globalVars.app.userCommandManagers:
             # 既に登録済みならインデックスを取得していったん削除する
-            item = self.menu.hMoveMenu.FindItemById(
-                menuItemsStore.getRef(m.refHead))
+            item = self.menu.hMoveMenu.FindItemById(menuItemsStore.getRef(m.refHead))
             if item:
                 index = self.menu.hMoveMenu.GetMenuItems().index(item)
                 self.menu.hMoveMenu.DestroyItem(item)
@@ -334,15 +302,13 @@ class View(BaseView):
                     "MOVE_SETTING_OPEN_HERE"
                 ))
             title = globalVars.app.userCommandManagers[m]
-            self.menu.RegisterMenuCommand(
-                self.menu.hMoveMenu, m.refHead, title, subMenu, index)
+            self.menu.RegisterMenuCommand(self.menu.hMoveMenu, m.refHead, title, subMenu, index)
             self.hFrame.SetMenuBar(self.menu.hMenuBar)
 
     def UpdateUserCommand(self):
         self.menu.InitShortcut()  # キーマップを再取得
         self.AddUserCommandKey()  # ユーザコマンドを登録
-        self.menu.ApplyShortcut(
-            self.activeTab.hListCtrl)  # acceleratorTable再取得
+        self.menu.ApplyShortcut(self.activeTab.hListCtrl)  # acceleratorTable再取得
         self.AddUserCommandMenu()  # メニューバーの登録更新
         return
 
@@ -539,20 +505,16 @@ class Events(BaseEvents):
         # キー重複対応のためのIDの場合には、イベントを投げ直す
         # 複数投げられるが、有効状態の者は１つだけなはず
         if globalVars.app.hMainView.menu.keymap.isRefHit(selected):
-            for ref in globalVars.app.hMainView.menu.keymap.GetOriginalRefs(
-                    selected):
+            for ref in globalVars.app.hMainView.menu.keymap.GetOriginalRefs(selected):
                 newEvent = wx.CommandEvent(event.GetEventType(), ref)
                 newEvent.SetExtraLong(EVENT_FROM_SELF)  # キー操作無効を示す音を鳴らさない
-                wx.PostEvent(
-                    globalVars.app.hMainView.hFrame.GetEventHandler(),
-                    newEvent)
+                wx.PostEvent(self.parent.hFrame.GetEventHandler(), newEvent)
             return
 
         # 選択された(ショートカットで押された)メニューが無効状態なら何もしない
         if selected in views.menuBlocker.testMenu(self.parent.activeTab):
             if not event.GetExtraLong() == EVENT_FROM_SELF:
-                globalVars.app.PlaySound(
-                    globalVars.app.config["sounds"]["boundary"])
+                globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
             event.Skip()
             return
 
@@ -568,8 +530,8 @@ class Events(BaseEvents):
             return
         if selected == menuItemsStore.getRef("MOVE_EXEC_ORIGINAL_ASSOCIATION"):
             elem = self.parent.activeTab.GetFocusedElement()
-            if (not isinstance(elem, browsableObjects.Folder)) and isinstance(
-                    elem, (browsableObjects.File, browsableObjects.Stream, browsableObjects.GrepItem)):
+            if ((not isinstance(elem, browsableObjects.Folder)) and
+                    isinstance(elem, (browsableObjects.File, browsableObjects.Stream, browsableObjects.GrepItem))):
                 extention = os.path.splitext(elem.fullpath)[1][1:].lower()
                 if extention in globalVars.app.config["originalAssociation"]:
                     config = globalVars.app.config["originalAssociation"][extention]
@@ -584,8 +546,7 @@ class Events(BaseEvents):
             keys = self.parent.menu.keymap.map[self.parent.identifier.upper()]
             keyData = {}
             menuData = {}
-            for refName in defaultKeymap.defaultKeymap["MainView".upper()].keys(
-            ):
+            for refName in defaultKeymap.defaultKeymap["MainView".upper()].keys():
                 title = menuItemsDic.dic[refName]
                 if refName in keys:
                     keyData[title] = keys[refName]
@@ -674,18 +635,11 @@ class Events(BaseEvents):
             d.Initialize()
             if d.Show() == wx.ID_CANCEL:
                 return
-            self.parent.activeTab.Move(
-                misc.analyzeUserInputPath(
-                    d.GetValue(),
-                    self.parent.activeTab.listObject.rootDirectory))
+            self.parent.activeTab.Move(misc.analyzeUserInputPath(d.GetValue(), self.parent.activeTab.listObject.rootDirectory))
             return
         if selected == menuItemsStore.getRef("MOVE_ADD_FAVORITE"):
-            d = views.favoriteDirectory.SettingDialog(
-                self.parent.hFrame,
-                os.path.basename(
-                    self.parent.activeTab.listObject.rootDirectory),
-                self.parent.activeTab.listObject.rootDirectory,
-                "")
+            rootDir = self.parent.activeTab.listObject.rootDirectory
+            d = views.favoriteDirectory.SettingDialog(self.parent.hFrame, os.path.basename(rootDir), rootDir, "")
             d.Initialize()
             ret = d.Show()
             if ret == wx.ID_CANCEL:
@@ -711,9 +665,8 @@ class Events(BaseEvents):
             return
         if selected == menuItemsStore.getRef("MOVE_SETTING_FAVORITE"):
             d = views.favoriteDirectory.Dialog(
-                dict(
-                    globalVars.app.favoriteDirectory.paramMap.items()), dict(
-                    globalVars.app.favoriteDirectory.keyMap.items()))
+                dict(globalVars.app.favoriteDirectory.paramMap.items()),
+                dict(globalVars.app.favoriteDirectory.keyMap.items()))
             d.Initialize()
             ret = d.Show()
             if ret == wx.ID_CANCEL:
@@ -726,9 +679,8 @@ class Events(BaseEvents):
             return
         if selected == menuItemsStore.getRef("MOVE_SETTING_OPEN_HERE"):
             d = views.openHere.Dialog(
-                dict(
-                    globalVars.app.openHereCommand.paramMap.items()), dict(
-                    globalVars.app.openHereCommand.keyMap.items()))
+                dict(globalVars.app.openHereCommand.paramMap.items()),
+                dict(globalVars.app.openHereCommand.keyMap.items()))
             d.Initialize()
             ret = d.Show()
             if ret == wx.ID_CANCEL:
@@ -783,8 +735,7 @@ class Events(BaseEvents):
             self.parent.activeTab.MakeShortcut(d.GetValue())
             return
         if selected == menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
-            d = views.changeAttribute.Dialog(
-                self.parent.activeTab.GetSelectedItems().GetAttributeCheckState())
+            d = views.changeAttribute.Dialog(self.parent.activeTab.GetSelectedItems().GetAttributeCheckState())
             d.Initialize()
             ret = d.Show()
             if ret == wx.ID_CANCEL:
@@ -840,8 +791,7 @@ class Events(BaseEvents):
             self.parent.activeTab.DirCalc()
             return
         if selected == menuItemsStore.getRef("TOOL_HASHCALC"):
-            d = views.makeHash.Dialog(
-                self.parent.activeTab.GetFocusedElement().fullpath)
+            d = views.makeHash.Dialog(self.parent.activeTab.GetFocusedElement().fullpath)
             d.Initialize()
             d.Show()
             return
@@ -857,8 +807,7 @@ class Events(BaseEvents):
                 dialog(_("パスの追加"), _("追加に失敗しました。"))
             return
         if selected == menuItemsStore.getRef("TOOL_EJECT_DRIVE"):
-            ret = deviceCtrl.ejectDrive(
-                self.parent.activeTab.GetFocusedElement().letter)
+            ret = deviceCtrl.ejectDrive(self.parent.activeTab.GetFocusedElement().letter)
             if ret == errorCodes.OK:
                 dialog(_("成功"), _("ドライブは安全に切断されました。"))
                 self.UpdateFilelist(False)
@@ -871,8 +820,7 @@ class Events(BaseEvents):
                 dialog(_("エラー"), _("取り外しに失敗しました。") + _("このドライブは使用中の可能性があります。"))
             return
         if selected == menuItemsStore.getRef("TOOL_EJECT_DEVICE"):
-            ret = deviceCtrl.EjectDevice(
-                self.parent.activeTab.GetFocusedElement().letter)
+            ret = deviceCtrl.EjectDevice(self.parent.activeTab.GetFocusedElement().letter)
             if ret == errorCodes.OK:
                 dialog(_("成功"), _("デバイスは安全に取り外せる状態になりました。"))
                 self.UpdateFilelist(False)
@@ -886,8 +834,7 @@ class Events(BaseEvents):
                 return
             self.ShowDetail(elem)
             return
-        if selected == menuItemsStore.getRef(
-                "ENV_REGIST_ORIGINAL_ASSOCIATION"):
+        if selected == menuItemsStore.getRef("ENV_REGIST_ORIGINAL_ASSOCIATION"):
             config = globalVars.app.config["originalAssociation"]
             d = views.registerOriginalAssociation.Dialog(dict(config.items()))
             d.Initialize()
@@ -917,14 +864,12 @@ class Events(BaseEvents):
         for m in globalVars.app.userCommandManagers:
             if m.isRefHit(selected):
                 if m == globalVars.app.favoriteDirectory:
-                    ret = self.parent.activeTab.Move(misc.analyzeUserInputPath(
-                        m.get(selected), self.parent.activeTab.listObject.rootDirectory))
-                    #TODO: エラー処理する
+                    ret = self.parent.activeTab.Move(misc.analyzeUserInputPath(m.get(selected), self.parent.activeTab.listObject.rootDirectory))
+                    # TODO: エラー処理する
                 else:  # ここで開く
                     path = m.get(selected)
                     path, prm = misc.PathParamSplit(path)
-                    prm = prm.replace(
-                        "%1", self.parent.activeTab.listObject.rootDirectory)
+                    prm = prm.replace("%1", self.parent.activeTab.listObject.rootDirectory)
                     misc.RunFile(path, False, prm)
                 return
 
@@ -938,10 +883,8 @@ class Events(BaseEvents):
             i.Enable(not i.GetId() in disableMenuIdSet)
 
         # カラムソートメニューの場合、中身の描画をする
-        if event.GetMenu() == self.parent.menu.hMenuBar.FindItemById(
-                menuItemsStore.getRef("VIEW_SORT_COLUMN")).GetSubMenu():
-            menu = self.parent.menu.hMenuBar.FindItemById(
-                menuItemsStore.getRef("VIEW_SORT_COLUMN")).GetSubMenu()
+        if event.GetMenu() == self.parent.menu.hMenuBar.FindItemById(menuItemsStore.getRef("VIEW_SORT_COLUMN")).GetSubMenu():
+            menu = self.parent.menu.hMenuBar.FindItemById(menuItemsStore.getRef("VIEW_SORT_COLUMN")).GetSubMenu()
             # 一旦全て削除
             for i in range(menu.GetMenuItemCount()):
                 menu.DestroyItem(menu.FindItemByPosition(0))
@@ -951,8 +894,7 @@ class Events(BaseEvents):
             for title in self.parent.activeTab.GetListColumns():
                 subMenu = wx.Menu()
                 subMenu.Append(constants.MENU_ID_SORT_COLUMN + 2 * i, "前へ")
-                subMenu.Append(
-                    constants.MENU_ID_SORT_COLUMN + 2 * i + 1, "後ろへ")
+                subMenu.Append(constants.MENU_ID_SORT_COLUMN + 2 * i + 1, "後ろへ")
                 menu.AppendSubMenu(subMenu, title)
                 i += 1
             menu.Enable(constants.MENU_ID_SORT_COLUMN, False)
@@ -1009,8 +951,7 @@ class Events(BaseEvents):
         """back アクションを実行"""
         ret = self.parent.activeTab.GoBackward()
         if ret == errorCodes.BOUNDARY:
-            globalVars.app.PlaySound(
-                globalVars.app.config["sounds"]["boundary"])
+            globalVars.app.PlaySound(self.parent.app.config["sounds"]["boundary"])
 
     def OpenNewTab(self):
         """選択中のディレクトリを新しいタブで開く"""
@@ -1021,29 +962,18 @@ class Events(BaseEvents):
         self.parent.CloseTab(self.parent.activeTab)
 
     def NewTab(self):
-        if os.path.isdir(
-            os.path.expandvars(
-                globalVars.app.config["browse"]["startPath"])):
-            self.parent.Navigate(
-                os.path.expandvars(
-                    globalVars.app.config["browse"]["startPath"]),
-                as_new_tab=True)
+        if os.path.isdir(os.path.expandvars(globalVars.app.config["browse"]["startPath"])):
+            self.parent.Navigate(os.path.expandvars(globalVars.app.config["browse"]["startPath"]), as_new_tab=True)
         else:
             self.parent.Navigate("", as_new_tab=True)
 
     def Search(self):
         basePath = self.parent.activeTab.listObject.rootDirectory
         out_lst = []  # 入力画面が出てるときに、もうファイルリスト取得を開始してしまう
-        task = workerThreads.RegisterTask(
-            workerThreadTasks.GetRecursiveFileList, {
-                'path': basePath, 'out_lst': out_lst, 'eol': True})
+        task = workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList, {'path': basePath, 'out_lst': out_lst, 'eol': True})
 
-        searchHistory = history.History(
-            globalVars.app.config.getint(
-                "search", "history_count", 0, 0, 100), False)
-        grepHistory = history.History(
-            globalVars.app.config.getint(
-                "search", "history_count", 0, 0, 100), False)
+        searchHistory = history.History(globalVars.app.config.getint("search", "history_count", 0, 0, 100), False)
+        grepHistory = history.History(globalVars.app.config.getint("search", "history_count", 0, 0, 100), False)
         hist = {}
         try:
             with open(constants.HISTORY_FILE_NAME, 'rb') as f:
@@ -1055,12 +985,7 @@ class Events(BaseEvents):
         except BaseException:
             pass
 
-        d = views.search.Dialog(
-            basePath, list(
-                reversed(
-                    searchHistory.getList())), list(
-                reversed(
-                    grepHistory.getList())))
+        d = views.search.Dialog(basePath, list(reversed(searchHistory.getList())), list(reversed(grepHistory.getList())))
         d.Initialize()
         canceled = False
         while(True):
@@ -1074,10 +999,7 @@ class Events(BaseEvents):
             if val['isRegularExpression']:
                 ret = misc.ValidateRegularExpression(val['keyword'])
                 if ret != "OK":
-                    dialog(
-                        _("エラー"),
-                        _("正規表現の文法が間違っています。\nエラー内容: %(error)s") % {
-                            'error': ret})
+                    dialog(_("エラー"), _("正規表現の文法が間違っています。\nエラー内容: %(error)s") % {'error': ret})
                     continue
                 # end 正規表現違う
             # end 正規表現モードがオンかどうか
@@ -1137,32 +1059,18 @@ class Events(BaseEvents):
         d.Initialize()
         d.add(_("名前"), elem.basename)
         d.add(_("パス"), elem.fullpath)
-        if isinstance(
-                elem,
-                browsableObjects.File) or isinstance(
-                elem,
-                browsableObjects.Stream):
+        if isinstance(elem, browsableObjects.File) or isinstance(elem, browsableObjects.Stream):
             if elem.size >= 0:
-                d.add(
-                    _("サイズ"),
-                    misc.ConvertBytesTo(
-                        elem.size,
-                        misc.UNIT_AUTO,
-                        True))
+                d.add(_("サイズ"), misc.ConvertBytesTo(elem.size, misc.UNIT_AUTO, True))
                 d.add(_("サイズ(バイト)"), elem.size)
                 if isinstance(elem, browsableObjects.Folder):
-                    d.add(
-                        _("内容"), _("ファイル数： %d サブディレクトリ数： %d") %
-                        (elem.fileCount, elem.dirCount))
+                    d.add(_("内容"), _("ファイル数： %d サブディレクトリ数： %d") % (elem.fileCount, elem.dirCount))
             elif isinstance(elem, browsableObjects.Folder):
                 d.add(_("サイズ"), d.CALCURATING)
                 d.add(_("サイズ(バイト)"), d.CALCURATING)
                 d.add(_("内容"), d.CALCURATING)
-                param = {'lst': [(0, elem.fullpath)],
-                         'callback': d.setDirCalcResult}
-                d.setTask(
-                    workerThreads.RegisterTask(
-                        workerThreadTasks.DirCalc, param))
+                param = {'lst': [(0, elem.fullpath)], 'callback': d.setDirCalcResult}
+                d.setTask(workerThreads.RegisterTask(workerThreadTasks.DirCalc, param))
         if isinstance(elem, browsableObjects.File):
             d.add(_("作成日時"), elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
             d.add(_("更新日時"), elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
@@ -1181,59 +1089,31 @@ class Events(BaseEvents):
                 win32file.OPEN_EXISTING,
                 win32file.FILE_FLAG_BACKUP_SEMANTICS,  # これがないとディレクトリを開けない
                 0)
-            info = win32file.GetFileInformationByHandleEx(
-                h, win32file.FileStandardInfo)
+            info = win32file.GetFileInformationByHandleEx(h, win32file.FileStandardInfo)
             if info:
                 d.add(_("消費ディスク領域"),
-                      misc.ConvertBytesTo(info["AllocationSize"],
-                                          misc.UNIT_AUTO,
-                                          True) + " (" + str(info["AllocationSize"]) + " bytes)")
+                      misc.ConvertBytesTo(info["AllocationSize"], misc.UNIT_AUTO, True) + " (" + str(info["AllocationSize"]) + " bytes)")
                 tmp = ""
                 if info["DeletePending"]:
                     tmp += _("削除予約済 ")
                 if info["NumberOfLinks"] > 1:
-                    tmp += _("ハードリンクにより他の%d 箇所から参照 " %
-                             (info["NumberOfLinks"] - 1))
+                    tmp += _("ハードリンクにより他の %d 箇所から参照" % info["NumberOfLinks"] - 1)
                 if tmp == "":
                     tmp = _("なし")
                 d.add(_("追加情報"), tmp)
 
         if isinstance(elem, browsableObjects.Drive):
             if elem.free >= 0:
-                d.add(
-                    _("フォーマット"),
-                    fileSystemManager.GetFileSystemObject(
-                        elem.letter))
+                d.add(_("フォーマット"), fileSystemManager.GetFileSystemObject(elem.letter))
                 if elem.total > 0:
-                    d.add(
-                        _("空き容量"),
-                        "%s (%s%%)" %
-                        (misc.ConvertBytesTo(
-                            elem.free,
-                            misc.UNIT_AUTO,
-                            True),
-                            elem.free *
-                            100 //
-                            elem.total))
+                    d.add(_("空き容量"), "%s (%s%%)" % (misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO, True), elem.free * 100 // elem.total))
                 else:
-                    d.add(
-                        _("空き容量"),
-                        misc.ConvertBytesTo(
-                            elem.free,
-                            misc.UNIT_AUTO,
-                            True))
-                d.add(
-                    _("総容量"),
-                    misc.ConvertBytesTo(
-                        elem.total,
-                        misc.UNIT_AUTO,
-                        True))
+                    d.add(_("空き容量"), misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO, True))
+                d.add(_("総容量"), misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True))
             else:
                 d.add(_("フォーマット"), _("未挿入"))
             d.add(_("種類"), elem.typeString)
-        if isinstance(
-                elem,
-                browsableObjects.NetworkResource) and elem.address != "":
+        if isinstance(elem, browsableObjects.NetworkResource) and elem.address != "":
             d.add(_("IPアドレス"), elem.address)
         d.Show()
         return

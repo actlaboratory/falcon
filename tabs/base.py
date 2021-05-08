@@ -68,8 +68,7 @@ class FalconTabBase(object):
     def InstallListCtrl(self, creator, existing_listctrl=None):
         """指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
         if existing_listctrl is None:
-            self.hListCtrl, static = creator.virtualListCtrl(
-                "", proportion=1, sizerFlag=wx.EXPAND, style=wx.LC_REPORT | wx.LC_EDIT_LABELS | wx.LC_ALIGN_LEFT)
+            self.hListCtrl, static = creator.virtualListCtrl("", proportion=1, sizerFlag=wx.EXPAND, style=wx.LC_REPORT | wx.LC_EDIT_LABELS)
             creator.GetPanel().Layout()
         else:
             self.hListCtrl = existing_listctrl
@@ -80,9 +79,7 @@ class FalconTabBase(object):
 
         self.hListCtrl.Bind(wx.EVT_LIST_COL_CLICK, self.col_click)
         self.hListCtrl.Bind(wx.EVT_LIST_COL_END_DRAG, self.col_resize)
-        self.hListCtrl.Bind(
-            wx.EVT_LIST_BEGIN_LABEL_EDIT,
-            self.OnLabelEditStart)
+        self.hListCtrl.Bind(wx.EVT_LIST_BEGIN_LABEL_EDIT, self.OnLabelEditStart)
         self.hListCtrl.Bind(wx.EVT_LIST_END_LABEL_EDIT, self.OnLabelEditEnd)
         self.hListCtrl.Bind(wx.EVT_LIST_ITEM_FOCUSED, self.ItemFocused)
         self.hListCtrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.EnterItem)
@@ -145,7 +142,7 @@ class FalconTabBase(object):
 
     def _GetSelectedItems(self, index_mode=False):
         """
-                チェックを加味せず、リストで選択されているアイテムを取得
+            チェックを加味せず、リストで選択されているアイテムを取得
         """
         lst = []
         next = self.hListCtrl.GetFirstSelected()
@@ -167,9 +164,9 @@ class FalconTabBase(object):
 
     def GetSelectedItems(self, index_mode=False):
         """
-                選択中のアイテムを、 ListObject で帰す
-                index_mode が true の場合、 リスト上での index のリストを返す
-                チェックされているアイテムがあればチェック中のアイテム、なければ選択状態の項目を取得
+            選択中のアイテムを、 ListObject で帰す
+            index_mode が true の場合、 リスト上での index のリストを返す
+            チェックされているアイテムがあればチェック中のアイテム、なければ選択状態の項目を取得
         """
         if self.hasCheckedItem():  # 選択は加味されず、チェックのみ
             lst = []
@@ -204,8 +201,7 @@ class FalconTabBase(object):
         i = 0
         for elem, format in col.items():
             # カラム幅の設定を取得
-            w = globalVars.app.config.getint(
-                lst.__class__.__name__, "column_width_" + str(i), 100, 0, 1500)
+            w = globalVars.app.config.getint(lst.__class__.__name__, "column_width_" + str(i), 100, 0, 1500)
 
             # カラムを作成
             self.hListCtrl.InsertColumn(i, elem, format=format, width=w)
@@ -217,8 +213,7 @@ class FalconTabBase(object):
 
         # カラムの並び替え設定を反映
         try:
-            self.hListCtrl.SetColumnsOrder(json.loads(
-                globalVars.app.config[lst.__class__.__name__]["columns_order"]))
+            self.hListCtrl.SetColumnsOrder(json.loads(globalVars.app.config[lst.__class__.__name__]["columns_order"]))
         except (json.decoder.JSONDecodeError, TypeError):
             self._updateColumnConfig(type(lst))  # configが壊れているので初期値リセット
     # end SetListColumns
@@ -228,9 +223,7 @@ class FalconTabBase(object):
         self.DeleteAllItems()  # 先に消しておかないとカラム数が合わない画面がユーザに見えてしまう
         if not isinstance(lst, type(self.listObject)):
             self.SetListColumns(lst)
-        if hasattr(
-                lst,
-                "rootDirectory") and self.environment["history"].isEmpty():  # タブ作成時のみ
+        if hasattr(lst, "rootDirectory") and self.environment["history"].isEmpty():  # タブ作成時のみ
             self.environment["history"].add(lst.rootDirectory)
         self.listObject = lst
         self.environment["listType"] = type(lst)
@@ -243,9 +236,9 @@ class FalconTabBase(object):
 
     def UpdateListContent(self, content, soft=False):
         """
-                リストコントロールの中身を更新し、並び替え状況を示すアイコンを再配置する。
-                カラムの数やテキストは変更しない。
-                soft=Trueの場合は、同一リストの再描画。読み込んだアイコン画像とチェック状態が維持される。
+            リストコントロールの中身を更新し、並び替え状況を示すアイコンを再配置する。
+            カラムの数やテキストは変更しない。
+            soft=Trueの場合は、同一リストの再描画。読み込んだアイコン画像とチェック状態が維持される。
         """
         self.log.debug("Updating list control...")
         if soft:
@@ -261,8 +254,8 @@ class FalconTabBase(object):
 
     def _AppendElement(self, elem, index=-1):
         """
-                browsableObjectを指定して、リストに追加する
-                indexは検索結果一覧でフォルダを正しい位置に挿入するために利用
+            browsableObjectを指定して、リストに追加する
+            indexは検索結果一覧でフォルダを正しい位置に挿入するために利用
         """
         if index >= 0:
             self.hListCtrl.Insert(index, elem)
@@ -305,14 +298,12 @@ class FalconTabBase(object):
             self.hListCtrl.SetColumnImage(self.sortTargetColumnNo, 0)
 
         # 並び替え状況に応じてアイコン設定
-        self.hListCtrl.SetColumnImage(
-            self.listObject.sortCursor,
-            1 + self.listObject.sortDescending)
+        self.hListCtrl.SetColumnImage(self.listObject.sortCursor, 1 + self.listObject.sortDescending)
         self.sortTargetColumnNo = self.listObject.sortCursor
 
     def _replaceElement(self, elem, index):
         """
-                インデックスとbrowsableObjectを指定して、指定したインデックスの内容をbrowsableObjectsの内容に入れ替える。
+            インデックスとbrowsableObjectを指定して、指定したインデックスの内容をbrowsableObjectsの内容に入れ替える。
         """
         i = 0
         for text in elem.GetListTuple():
@@ -328,16 +319,12 @@ class FalconTabBase(object):
         target = self.GetFocusedElement().fullpath
         dest = option["destination"]
         if not os.path.isabs(dest):  # 早退の場合は絶対に直す
-            dest = os.path.normpath(
-                os.path.join(
-                    os.path.dirname(target),
-                    dest))
+            dest = os.path.normpath(os.path.join(os.path.dirname(target), dest))
 
         # シンボリックリンクはNTFSにしか作成できない
         if option["type"] == "symbolicLink":
             tmp = misc.GetRootObject(dest)
-            if (not tmp) or not isinstance(fileSystemManager.GetFileSystemObject(
-                    tmp.fullpath), fileSystemManager.NTFS):
+            if (not tmp) or not isinstance(fileSystemManager.GetFileSystemObject(tmp.fullpath), fileSystemManager.NTFS):
                 dialog(_("エラー"), _("NTFSドライブ以外の場所にシンボリックリンクを作成することはできません。"))
                 return False
 
@@ -349,14 +336,9 @@ class FalconTabBase(object):
                 return False
 
         if option["type"] == "shortcut":
-            inst = {"operation": option["type"], "target": [
-                (dest, target, prm, dir, option["linkType"] == 1)]}
+            inst = {"operation": option["type"], "target": [(dest, target, prm, dir, option["linkType"] == 1)]}
         else:
-            inst = {
-                "operation": option["type"],
-                "from": [target],
-                "to": [dest],
-                "relative": option["linkType"]}
+            inst = {"operation": option["type"], "from": [target], "to": [dest], "relative": option["linkType"]}
         # end ショートカットかそれ以外
         op = fileOperator.FileOperator(inst)
         ret = op.Execute()
@@ -394,11 +376,7 @@ class FalconTabBase(object):
     def ShowProperties(self):
         index = self.GetFocusedItem()
         try:
-            shell.ShellExecuteEx(
-                shellcon.SEE_MASK_INVOKEIDLIST,
-                0,
-                "properties",
-                self.listObject.GetElement(index).fullpath)
+            shell.ShellExecuteEx(shellcon.SEE_MASK_INVOKEIDLIST, 0, "properties", self.listObject.GetElement(index).fullpath)
         except pywintypes.error as e:
             if e.winerror == 1223:  # 'この操作はユーザーによって取り消されました。'で、ネットワーク接続失敗などで発生
                 pass
@@ -428,9 +406,9 @@ class FalconTabBase(object):
 
     def OnKeyDown(self, event=None):
         """
-                キーが押されたらここにくる。
-                acceleratorにヒットしていた場合はevent=Noneでくる。
-                登録外のキーの場合はwx.KeyEventがくる
+            キーが押されたらここにくる。
+            acceleratorにヒットしていた場合はevent=Noneでくる。
+            登録外のキーの場合はwx.KeyEventがくる
         """
         self.StopSound()
         if event:
@@ -438,8 +416,8 @@ class FalconTabBase(object):
 
     def _IsItemChecked(self, elem):
         """
-                browsableObjectsから、そのアイテムがチェック状態か否かを調べる
-                外からはSelectと合わせて調べる必要性以外にないはずなのでprivate
+            browsableObjectsから、そのアイテムがチェック状態か否かを調べる
+            外からはSelectと合わせて調べる必要性以外にないはずなのでprivate
         """
         return elem in self.checkedItem
 
@@ -461,13 +439,12 @@ class FalconTabBase(object):
 
     def ItemMarkProcess(self, items, strict=None):
         """
-                itemsをチェック・チェック解除する。現在状態と比べて反転させる
-                strict!=Noneの時は、全アイテムのチェック状態をstrictに合わせる
+            itemsをチェック・チェック解除する。現在状態と比べて反転させる
+            strict!=Noneの時は、全アイテムのチェック状態をstrictに合わせる
         """
         for item in items:
             index = self.listObject.GetItemIndex(item)
-            if strict == False or (
-                    strict == None and self._IsItemChecked(item)):
+            if strict == False or (strict == None and self._IsItemChecked(item)):
                 # チェック解除
                 self.checkedItem.discard(item)
                 if len(items) == 1 and strict is None:
@@ -477,33 +454,28 @@ class FalconTabBase(object):
                 if len(items) == 1:
                     globalVars.app.say(_("チェック"), interrupt=True)
                     if not strict:
-                        globalVars.app.PlaySound(
-                            globalVars.app.config["sounds"]["check"])
+                        globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
                 self.checkedItem.add(item)
                 self.hListCtrl.SetItemBackgroundColour(index, "#0000FF")
                 self.hListCtrl.RefreshItem(index)
             # カーソルを１つ下へ移動
-            if len(items) == 1 and index != len(
-                    self.listObject) - 1:  # カーソルが一番下以外にある時
+            if len(items) == 1 and index != len(self.listObject) - 1:  # カーソルが一番下以外にある時
                 # self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_SELECTED)
                 self.Focus(index + 1, True)
         self.hListCtrl.Update()
         globalVars.app.hMainView.menu.Enable(
             menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),
             self.hasCheckedItem())
-        globalVars.app.hMainView.menu.Enable(
-            menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(
-                self.checkedItem) != len(
-                self.listObject))
+        globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(self.checkedItem) != len(self.listObject))
 
     def BeginDrag(self, event):
         data = wx.FileDataObject()
         for f in self.GetSelectedItems():
             data.AddFile(f.fullpath)
 
-        itemImage = self.hListCtrl.GetImageList(wx.IMAGE_LIST_SMALL).GetBitmap(
-            self.hListCtrl.GetItem(self.GetSelectedItems(True)[0]).GetImage()
-        ).ConvertToImage().Scale(128, 128).ConvertToBitmap()
+        itemImage = self.hListCtrl.GetImageList(wx.IMAGE_LIST_SMALL)\
+            .GetBitmap(self.hListCtrl.GetItem(self.GetSelectedItems(True)[0]).GetImage())\
+            .ConvertToImage().Scale(128, 128).ConvertToBitmap()
 
         i = wx.DragImage(itemImage)
         i.BeginDrag((16, 16), globalVars.app.hMainView.hFrame, True, None)
@@ -517,8 +489,7 @@ class FalconTabBase(object):
 
     def SelectAll(self):
         if self.hasCheckedItem():  # チェックアイテムがある場合は実行不可
-            globalVars.app.PlaySound(
-                globalVars.app.config["sounds"]["boundary"])
+            globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
             return errorCodes.BOUNDARY
         globalVars.app.say(_("全て選択"), interrupt=True)
         for i in range(self.hListCtrl.GetItemCount()):
@@ -564,8 +535,7 @@ class FalconTabBase(object):
 
     def SortCycleAd(self):
         """昇順と降順を交互に切り替える。"""
-        self.listObject.SetSortDescending(
-            self.listObject.GetSortDescending() == 0)
+        self.listObject.SetSortDescending(self.listObject.GetSortDescending() == 0)
         self.ApplySort()
 
     def SortSelect(self):
@@ -586,8 +556,7 @@ class FalconTabBase(object):
         """ソートの設定をconfigに反映する。"""
         s = self.listObject.__class__.__name__
         globalVars.app.config[s]["sorting"] = self.listObject.GetSortCursor()
-        globalVars.app.config[s]["descending"] = int(
-            self.listObject.GetSortDescending())
+        globalVars.app.config[s]["descending"] = int(self.listObject.GetSortDescending())
 
     def _updateColumnConfig(self, listType=None):
         """カラムのソート状態をconfigに保存する。"""
@@ -610,8 +579,7 @@ class FalconTabBase(object):
     def col_click(self, event):
         no = event.GetColumn()
         if self.listObject.GetSortCursor() == no:
-            self.listObject.SetSortDescending(
-                self.listObject.GetSortDescending() == 0)
+            self.listObject.SetSortDescending(self.listObject.GetSortDescending() == 0)
         else:
             self.listObject.SetSortCursor(no)
         self.ApplySort()
@@ -651,17 +619,9 @@ class FalconTabBase(object):
         """指定の場所へ移動する。"""
         if addHistory:
             self.environment["history"].add(path)
-            self.parent.menu.Enable(
-                menuItemsStore.getRef("MOVE_HIST_NEXT"),
-                self.environment["history"].hasNext())
-            self.parent.menu.Enable(
-                menuItemsStore.getRef("MOVE_HIST_PREV"),
-                self.environment["history"].hasPrevious())
-        r = navigator.Navigate(
-            path,
-            cursor,
-            previous_tab=self,
-            environment=self.environment)
+            self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"), self.environment["history"].hasNext())
+            self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"), self.environment["history"].hasPrevious())
+        r = navigator.Navigate(path, cursor, previous_tab=self, environment=self.environment)
         return errorCodes.OK if r is self else r
 
     def GoForward(self, stream, admin=False):
@@ -669,12 +629,7 @@ class FalconTabBase(object):
         index = self.GetFocusedItem()
         elem = self.listObject.GetElement(index)
         if not stream and type(elem) == browsableObjects.File:  # このファイルを開く
-            print("open")
-            misc.RunFile(
-                elem.fullpath,
-                admin,
-                "",
-                self.listObject.rootDirectory)
+            misc.RunFile(elem.fullpath, admin, "", self.listObject.rootDirectory)
             return
         else:
             # TODO: 管理者権限が要求され、自身が管理者権限を有していないなら、別のfalconが昇格して開くように
@@ -719,10 +674,7 @@ class FalconTabBase(object):
         """現在開いている場所をマークする"""
         globalVars.app.say(_("マーク設定"), interrupt=True)
         self.environment["markedPlace"] = self.listObject.rootDirectory
-        self.log.debug(
-            "markset at \"" +
-            self.environment["markedPlace"] +
-            "\"")
+        self.log.debug("markset at \"%s\"" % self.environment["markedPlace"])
 
     def GoToMark(self):
         """マークした場所へ移動する"""
@@ -748,9 +700,9 @@ class FalconTabBase(object):
 
     def DeleteAllItems(self):
         """
-                必用な調整を経て、リストビューを空にする
-                別リストへの移動用！
-                listObjectについては別途処理が必要
+            必用な調整を経て、リストビューを空にする
+            別リストへの移動用！
+            listObjectについては別途処理が必要
         """
         self.checkedItem = set()
         self._InitIconList()
@@ -758,22 +710,19 @@ class FalconTabBase(object):
 
     def ClearAllItems(self):
         """
-                必用な調整を経て、リストビューを空にする
-                並び替え等に伴う同一リストの再描画用
-                listObjectについては別途処理が必要
+            必用な調整を経て、リストビューを空にする
+            並び替え等に伴う同一リストの再描画用
+            listObjectについては別途処理が必要
         """
         self._cancelBackgroundTasks()
         self.StopSound()
         self.hListCtrl.DeleteAllItems()
         self.hilightIndex = -1
-        globalVars.app.hMainView.menu.Enable(
-            menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"), False)
-        globalVars.app.hMainView.menu.Enable(
-            menuItemsStore.getRef("EDIT_MARKITEM_ALL"), True)
-        self.hilightIndex = -1
+        globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"), False)
+        globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"), True)
 
     def ItemFocused(self, event):
-        # チェック機能仕様中の複数選択は不可
+        # チェック機能使用中の複数選択は不可
         if self.hasCheckedItem() and self.hListCtrl.GetSelectedItemCount() > 1:
             selectedItems = self._GetSelectedItems(True)
             for i in selectedItems:
@@ -786,8 +735,7 @@ class FalconTabBase(object):
                     # print("--------")
         # チェック状態のアイテムなら音を鳴らす
         if self._IsItemChecked(self.listObject.GetElement(event.GetIndex())):
-            globalVars.app.PlaySound(
-                globalVars.app.config["sounds"]["checked"])
+            globalVars.app.PlaySound(globalVars.app.config["sounds"]["checked"])
         event.Skip()
 
     def _appendContextMenu(self, hMenu, elem):
@@ -846,23 +794,13 @@ class FalconTabBase(object):
             ret = globalVars.app.PlaySound(
                 self.GetFocusedElement().fullpath,
                 custom_location=True,
-                volume=globalVars.app.config.getint(
-                    "preview",
-                    "audio_volume",
-                    100,
-                    1,
-                    300))
+                volume=globalVars.app.config.getint("preview", "audio_volume", 100, 1, 300))
             if ret == -1:
-                dialog(
-                    _("エラー"),
-                    _("再生に失敗しました。ファイルにアクセスができないか、ファイルが壊れている可能性があります。"))
+                dialog(_("エラー"), _("再生に失敗しました。ファイルにアクセスができないか、ファイルが壊れている可能性があります。"))
                 return errorCodes.FILE_NOT_FOUND
             self.stopSoundHandle = ret
         elif misc.isDocumentExt(ext):
-            globalVars.app.say(
-                misc.ExtractText(
-                    self.GetFocusedElement().fullpath),
-                interrupt=True)
+            globalVars.app.say(misc.ExtractText(self.GetFocusedElement().fullpath), interrupt=True)
         else:
             globalVars.app.say(_("プレビューに対応していないファイル形式です。"), interrupt=True)
 
@@ -886,8 +824,7 @@ class FalconTabBase(object):
             globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
             return
         # end 非対応
-        ln = globalVars.app.config.getint(
-            "preview", "footer_line_count", 10, 1, 100)
+        ln = globalVars.app.config.getint("preview", "footer_line_count", 10, 1, 100)
         s = misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
         if len(s) > 10:
             s = s[-10:]
@@ -905,27 +842,13 @@ class FalconTabBase(object):
         m.AppendCheckItem(0, _("フォルダ階層を読み上げ"))
         m.AppendCheckItem(1, _("フォルダ名を読み上げ"))
         m.AppendCheckItem(2, _("項目数を読み上げ"))
-        m.Check(
-            0,
-            globalVars.app.config.getboolean(
-                'on_list_moved',
-                'read_directory_level',
-                True))
-        m.Check(
-            1,
-            globalVars.app.config.getboolean(
-                'on_list_moved',
-                'read_directory_name',
-                True))
-        m.Check(2, globalVars.app.config.getboolean(
-            'on_list_moved', 'read_item_count', True))
+        m.Check(0, globalVars.app.config.getboolean('on_list_moved', 'read_directory_level', True))
+        m.Check(1, globalVars.app.config.getboolean('on_list_moved', 'read_directory_name', True))
+        m.Check(2, globalVars.app.config.getboolean('on_list_moved', 'read_item_count', True))
         item = self.hListCtrl.GetPopupMenuSelectionFromUser(m)
-        globalVars.app.config['on_list_moved']['read_directory_level'] = m.IsChecked(
-            0)
-        globalVars.app.config['on_list_moved']['read_directory_name'] = m.IsChecked(
-            1)
-        globalVars.app.config['on_list_moved']['read_item_count'] = m.IsChecked(
-            2)
+        globalVars.app.config['on_list_moved']['read_directory_level'] = m.IsChecked(0)
+        globalVars.app.config['on_list_moved']['read_directory_name'] = m.IsChecked(1)
+        globalVars.app.config['on_list_moved']['read_item_count'] = m.IsChecked(2)
 
     def ExecProgram(self, val):
         argv = misc.CommandLineToArgv(val)
@@ -967,26 +890,20 @@ class FalconTabBase(object):
     def Hilight(self, index):
         if index == -1:
             if self.hilightIndex >= 0:
-                self.hListCtrl.SetItemState(
-                    index, 0, wx.LIST_STATE_DROPHILITED)
+                self.hListCtrl.SetItemState(index, 0, wx.LIST_STATE_DROPHILITED)
                 self.hilightIndex = -1
         elif self.hilightIndex != index:
-            self.hListCtrl.SetItemState(
-                self.hilightIndex, 0, wx.LIST_STATE_DROPHILITED)
-            if isinstance(
-                self.listObject.GetElement(index),
-                (browsableObjects.Folder,
-                 browsableObjects.Drive)):
-                self.hListCtrl.SetItemState(
-                    index, wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
+            self.hListCtrl.SetItemState(self.hilightIndex, 0, wx.LIST_STATE_DROPHILITED)
+            if isinstance(self.listObject.GetElement(index), (browsableObjects.Folder, browsableObjects.Drive)):
+                self.hListCtrl.SetItemState(index, wx.LIST_STATE_DROPHILITED, wx.LIST_STATE_DROPHILITED)
                 self.hilightIndex = index
             else:
                 self.hilightIndex = -1
 
     def _findFocusAfterDeletion(self, paths, focus_index):
         """
-                ゴミ箱/削除して、ファイルリストを更新した後に呼び出す。
-                削除語のカーソル位置を見つける。
+            ゴミ箱/削除して、ファイルリストを更新した後に呼び出す。
+            削除語のカーソル位置を見つける。
         """
         # カーソルをどこに動かすかを決定、まずはもともとフォーカスしてた項目があるかどうか
         if os.path.exists(paths[focus_index]):
@@ -1025,9 +942,7 @@ class FalconTabBase(object):
 
 class DropSource(wx.DropSource):
     def GiveFeedback(self, effect):
-        self.hImage.Move(
-            globalVars.app.hMainView.hFrame.ScreenToClient(
-                wx.GetMousePosition()))
+        self.hImage.Move(globalVars.app.hMainView.hFrame.ScreenToClient(wx.GetMousePosition()))
         return False
 
 
@@ -1070,8 +985,7 @@ class DropTarget(wx.DropTarget):
         i, flg = self.parent.hListCtrl.HitTest((x, y))
         if flg & wx.LIST_HITTEST_ONITEM != 0:
             index = i
-        if index >= 0 and isinstance(self.parent.listObject.GetElement(
-                index), (browsableObjects.Folder, browsableObjects.Drive)):
+        if index >= 0 and isinstance(self.parent.listObject.GetElement(index), (browsableObjects.Folder, browsableObjects.Drive)):
             # カーソルのあるオブジェクトの中に入れる
             dest = self.parent.listObject.GetElement(index).fullpath
         else:
