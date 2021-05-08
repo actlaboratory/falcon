@@ -127,7 +127,7 @@ def Execute(op, resume=False):
         op.output["succeeded"] += 1
         pasted_size += elem.size
         if total == 0:
-            percentage = 0
+            percentage = 100
         else:
             percentage = int(pasted_size / total * 100)
         op.SetPercentage(percentage)
