@@ -16,3 +16,10 @@ def dialog(title, message):
         str = "display dialog \"%s\" with title \"%s\" with icon note buttons {\"OK\"}" % (
             re.sub(r'"\'', " ", message), re.sub(r'"\'', " ", title))  # escaping ' and " on mac
         subprocess.call("osascript -e '{}'".format(str), shell=True)
+
+
+def errorDialog(message, parent=None):
+    dialog = wx.MessageDialog(parent, message, "error", wx.OK | wx.ICON_ERROR)
+    dialog.ShowModal()
+    dialog.Destroy()
+    return

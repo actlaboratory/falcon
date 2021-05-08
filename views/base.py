@@ -145,9 +145,6 @@ class BaseMenu(object):
                 メニュー項目の利用をブロックし、無効状態にする
                 refはlist(str)
         """
-        # todo: 全面的に利ファクタする
-        # 今はバグってる
-        pass
         for i in ref:
             try:
                 self.blockCount[menuItemsStore.getRef(i)] += 1

@@ -27,31 +27,8 @@ from . import base
 class DriveListTab(base.FalconTabBase):
     """ドライブリストが表示されているタブ。"""
 
-    blockMenuList = [
-        "FILE_CHANGEATTRIBUTE",
-        "FILE_TRASH",
-        "FILE_DELETE",
-        "FILE_MKDIR",
-        "EDIT_CUT",
-        "EDIT_PAST",
-        "EDIT_SEARCH",
-        "MOVE_BACKWARD",
-        "MOVE_TOPFILE",
-        "MOVE_OPEN_HERE_",
-        "TOOL_DIRCALC",
-        "TOOL_HASHCALC",
-        "TOOL_ADDPATH",
-        "TOOL_EXEC_PROGRAM",
-        "READ_CONTENT_PREVIEW",
-        "READ_CONTENT_READHEADER",
-        "READ_CONTENT_READFOOTER",
-    ]
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.selectItemMenuConditions[2].extend([
-            "EDIT_OPENCONTEXTMENU"
-        ])
         self.networkListTask = None
         self._getNetworkList()
 

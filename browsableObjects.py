@@ -147,12 +147,6 @@ class File(FalconBrowsableBase):
             self.attributesString,
             self.typeString)
 
-    def __setitem__(self, index, obj):
-        if index == 0:
-            self.basename = obj
-        else:
-            super().__setitem__(index, obj)
-
     def GetNewAttributes(self, checks):
         """属性変更の時に使う。チェック状態のリストを受け取って、新しい属性値を帰す。変更の必要がなければ、-1を帰す。"""
         attrib = self.attributes
@@ -189,19 +183,21 @@ class Folder(File):
 
     def GetListTuple(self):
         """表示に必要なタプルを返す。フォルダなのでサイズ不明(-1)の場合があり、この場合は <dir> にする。"""
-        if self.size < 0:
-            return (
-                self.basename,
-                "<dir>",
-                misc.PTime2string(
-                    self.modDate),
-                self.attributesString,
-                self.typeString)
+        if self.size == constants.DIR_SIZE_CALCURATING:
+            sizeString = "<計算中>"
+        elif self.size == constants.DIR_SIZE_CHECK_FAILED:
+            sizeString = "<取得失敗>"
+        elif self.size < 0:
+            sizeString = "<dir>"
         else:
-            return (
-                self.basename, misc.ConvertBytesTo(
-                    self.size, misc.UNIT_AUTO, True), misc.PTime2string(
-                    self.modDate), self.attributesString, self.typeString)
+            sizeString = misc.ConvertBytesTo(self.size, misc.UNIT_AUTO, True)
+        return (
+            self.basename,
+            sizeString,
+            misc.PTime2string(self.modDate),
+            self.attributesString,
+            self.typeString
+        )
 
 
 class SearchedFile(File):

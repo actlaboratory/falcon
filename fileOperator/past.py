@@ -125,7 +125,8 @@ def Execute(op, resume=False):
             # end except
         # end 移動モード
         op.output["succeeded"] += 1
-        pasted_size += elem.size
+        if elem.size != -1:
+            pasted_size += elem.size
         if total == 0:
             percentage = 100
         else:

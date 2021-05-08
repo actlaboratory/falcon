@@ -11,6 +11,7 @@ import views.ViewCreator
 
 from logging import getLogger
 from views.baseDialog import *
+import simpleDialog
 
 TIMER_INTERVAL = 100
 
@@ -35,30 +36,35 @@ class Dialog(BaseDialog):
 
     def InstallControls(self):
         """いろんなwidgetを設置する。"""
-        self.mainArea = views.ViewCreator.BoxSizer(
-            self.sizer, wx.HORIZONTAL, wx.ALIGN_CENTER)
+        self.creator = views.ViewCreator.ViewCreator(
+            self.viewMode,
+            self.panel,
+            self.sizer,
+            wx.VERTICAL,
+            20,
+            style=wx.ALL,
+            margin=20)
+        self.creator.staticText(
+            _("設定するには、使用したいキーの組み合わせを押します。\n設定を解除するには、Escキーを押します。"))
+        self.keyNameText = self.creator.staticText(
+            "", sizerFlag=wx.ALIGN_CENTER | wx.ALL, margin=20)
+        self.errorText = self.creator.staticText("", sizerFlag=wx.ALIGN_CENTER)
 
         self.creator = views.ViewCreator.ViewCreator(
-            1, self.panel, self.mainArea, wx.VERTICAL, 20)
-        self.creator.staticText(_("設定したいキーの組み合わせを押してください..."))
-        self.keyNameText = self.creator.staticText("")
-        self.errorText = self.creator.staticText("")
-
-        self.buttonArea = views.ViewCreator.BoxSizer(
-            self.sizer, wx.HORIZONTAL, wx.ALIGN_RIGHT)
-        self.creator = views.ViewCreator.ViewCreator(
-            1, self.panel, self.buttonArea, wx.HORIZONTAL, 20)
-        self.bCancel = self.creator.cancelbutton(_("設定解除"), None)
+            self.viewMode, self.panel, self.sizer, wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
+        self.bCancel = self.creator.cancelbutton(_("設定解除"), self.cancelButton)
 
     def Show(self):
         self.panel.Layout()
         self.sizer.Fit(self.wnd)
         self.wnd.Centre()
         self.timer = wx.Timer(self.wnd)
-        self.timer.Start(TIMER_INTERVAL)
+        self.timer.StartOnce(TIMER_INTERVAL)
         result = self.wnd.ShowModal()
         if result != wx.ID_CANCEL:
             self.value = self.GetData()
+        else:
+            self.value = _("なし")
         self.Destroy()
         return result
 
@@ -70,20 +76,23 @@ class Dialog(BaseDialog):
 
         # キーの判定
         hits = []
-        for name in self.filter.GetUsableKeys():
+        keyNames = self.filter.GetUsableKeys()
+        if "WINDOWS" not in keyNames:
+            keyNames.append("WINDOWS")
+        for name in keyNames:
             # マウス関連は利用不可
             code = keymap.str2key[name]
             if code <= 4:
                 continue
             # カテゴリキーは取得不可、NumLockとCapsLockは押し下げ状態ではなく現在のON/OFFを返してしまうので
-            if isinstance(
-                    code,
-                    wx.KeyCategoryFlags) or name == "NUMLOCK" or name == "SCROLL":
+            if type(
+                    code) == wx.KeyCategoryFlags or name == "NUMLOCK" or name == "SCROLL":
                 continue
             if wx.GetKeyState(code):
                 hits.append(name)
 
         if hits:
+            self.bCancel.Disable()  # こうしないとEnterで反応してEnterがショートカットに使えない
             self.key = ""
             for i, key in enumerate(hits):
                 self.key += key
@@ -92,16 +101,24 @@ class Dialog(BaseDialog):
             if len(self.result) < len(self.key):
                 self.result = self.key
             self.keyNameText.SetLabel(self.result)
+            self.panel.Layout()
         else:  # キーが放されたら前の入力を検証する
-            if self.result != "":
+            self.bCancel.Enable()
+            if self.result != "" and self.result != "SPACE":
                 if self.filter.Check(self.result):
                     self.wnd.EndModal(wx.ID_OK)  # 正しい入力なのでダイアログを閉じる
                     return
                 else:
                     self.errorText.SetLabel(self.filter.GetLastError())
-                    globalVars.app.say(self.filter.GetLastError(), True)
-
+                    self.panel.Layout()
+                    simpleDialog.errorDialog(
+                        self.filter.GetLastError(), self.wnd)
                 self.key = ""
                 self.result = ""
         self.timer.Start(TIMER_INTERVAL)
         return
+
+    def cancelButton(self, event):
+        self.bCancel.Disable()
+        self.timer.Stop()
+        self.wnd.EndModal(wx.ID_CANCEL)
