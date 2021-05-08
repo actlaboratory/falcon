@@ -272,10 +272,19 @@ class View(BaseView):
     def UpdateMenuState(self, old, new):
         # メニューのブロック状態を変更
         self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"), new.IsMarked())
-        self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"), new.hasCheckedItem())
-        self.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(new.checkedItem) != len(new.listObject))
-        self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"), new.environment["history"].hasNext())
-        self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"), new.environment["history"].hasPrevious())
+        self.menu.Enable(
+            menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),
+            new.hasCheckedItem())
+        self.menu.Enable(
+            menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(
+                new.checkedItem) != len(
+                new.listObject))
+        self.menu.Enable(
+            menuItemsStore.getRef("MOVE_HIST_NEXT"),
+            new.environment["history"].hasNext())
+        self.menu.Enable(
+            menuItemsStore.getRef("MOVE_HIST_PREV"),
+            new.environment["history"].hasPrevious())
 
     def UpdateTabName(self):
         """タブ名変更の可能性があるときにtabsからたたかれる"""
@@ -542,7 +551,8 @@ class Events(BaseEvents):
         # 選択された(ショートカットで押された)メニューが無効状態なら何もしない
         if selected in views.menuBlocker.testMenu(self.parent.activeTab):
             if not event.GetExtraLong() == EVENT_FROM_SELF:
-                globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
+                globalVars.app.PlaySound(
+                    globalVars.app.config["sounds"]["boundary"])
             event.Skip()
             return
 

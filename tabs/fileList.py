@@ -210,7 +210,9 @@ class FileListTab(base.FalconTabBase):
             lst.append((i, elem.fullpath))
         # end for
         param = {'lst': lst, 'callback': self._dirCalc_receive}
-        self.background_tasks.append(workerThreads.RegisterTask(workerThreadTasks.DirCalc, param))
+        self.background_tasks.append(
+            workerThreads.RegisterTask(
+                workerThreadTasks.DirCalc, param))
 
     def _dirCalc_receive(self, results, taskState):
         """DirCalc の結果を受ける。"""
