@@ -226,6 +226,27 @@ def IteratePaths(path, append_eol=False):
     if append_eol:
         yield "eol"
 
+def IteratePaths_dirFirst(path, append_eol=False):
+    """FindFirstFile 系を使って、パス名をイテレートする。append_eol=True にすると、最後に "eol" という1行をリストに入れるので、検索の終了判定などに使える。こっちは貼り付けのファイル計算で使う用で、フォルダが先に来る。"""
+    try:
+        for elem in win32file.FindFilesIterator(os.path.join(path, "*")):
+            if elem[8] == "." or elem[8] == "..":
+                continue
+            #end ./ や ../ を除外
+            yield os.path.join(path, elem[8])
+            if elem[0] & win32file.FILE_ATTRIBUTE_DIRECTORY:
+                yield from IteratePaths(os.path.join(path, elem[8]))
+            # end ディレクトリ
+        # end iterate
+    except pywintypes.error as e:
+        log.error(
+            "Access denied while searching paths at %s (%s)." %
+            (path, e))
+    # end except
+    # EOL挿入
+    if append_eol:
+        yield "eol"
+
 
 def GetDirectorySize(path, fileCount=0, dirCount=0):
     """ディレクトリのサイズをバイト数で返す。"""
