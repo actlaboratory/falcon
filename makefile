@@ -5,7 +5,7 @@ setup:
 	py -m pip install -r requirements.txt
 
 fmt:
-	py -m autopep8 -r -i -a -a --ignore=E402,E721 .
+	py -m autopep8 -r -i -a -a --ignore=E402,E721 --max-line-length 150 .
 
 .PHONY: clear-keymap
 clear-keymap:
