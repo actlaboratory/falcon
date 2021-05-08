@@ -125,7 +125,7 @@ def Execute(op, resume=False):
             # end except
         # end 移動モード
         op.output["succeeded"] += 1
-        pasted_size += elem.size
+        if elem.size != -1: pasted_size += elem.size
         op.SetPercentage(int(pasted_size / total * 100))
     # end 削除処理
     if len(op.output["retry"]["target"]) > 0:
