@@ -223,9 +223,9 @@ class FalconTabBase(object):
         self.DeleteAllItems()  # 先に消しておかないとカラム数が合わない画面がユーザに見えてしまう
         if not isinstance(lst, type(self.listObject)):
             self.SetListColumns(lst)
+        self.listObject = lst
         if hasattr(lst, "rootDirectory") and self.environment["history"].isEmpty():  # タブ作成時のみ
             self.environment["history"].add(lst.rootDirectory)
-        self.listObject = lst
         self.environment["listType"] = type(lst)
         self.UpdateListContent(self.listObject.GetItemList())
 
@@ -734,7 +734,8 @@ class FalconTabBase(object):
                     # print(self._GetSelectedItems(True))
                     # print("--------")
         # チェック状態のアイテムなら音を鳴らす
-        if self._IsItemChecked(self.listObject.GetElement(event.GetIndex())):
+        # リスト描画前に呼ばれる可能性があるため、self.listObject==Noneの対策でhasCheckedItem()を入れている
+        if self.hasCheckedItem() and self._IsItemChecked(self.listObject.GetElement(event.GetIndex())):
             globalVars.app.PlaySound(globalVars.app.config["sounds"]["checked"])
         event.Skip()
 
