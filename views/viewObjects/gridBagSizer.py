@@ -13,10 +13,10 @@ class GridBagSizer(wx.GridBagSizer):
 
     def __init__(self, vgap=0, hgap=0, p3=None):
         if p3 is None:
-            if not isinstance(hgap, wx.Size):  # GridBagSizer標準を利用
+            if type(hgap) != wx.Size:  # GridBagSizer標準を利用
                 super().__init__(vgap, hgap)
                 self.SetCols(2)
-            elif isinstance(hgap, wx.Size):  # FlexGridSizer互換の(cols,gap)を利用
+            elif type(hgap) == wx.Size:  # FlexGridSizer互換の(cols,gap)を利用
                 super().__init__(hgap.width, hgap.height)
                 self.SetCols(vgap)
             else:
@@ -37,14 +37,9 @@ class GridBagSizer(wx.GridBagSizer):
             raise TypeError
         elif isset(args, kwargs, 0, "window", wx.Window) or isset(args, kwargs, 0, "sizer", wx.Sizer):
             if len(args) == 2 and len(kwargs) == 0:
-                super().Add(
-                    args[0],
-                    self.getNextPos(),
-                    wx.GBSpan(),
-                    flag=args[1])
+                super().Add(args[0], self.getNextPos(), wx.GBSpan(), flag=args[1])
             elif len(args) >= 3:
-                super().Add(args[0], self.getNextPos(),
-                            wx.GBSpan(), *(args[2:]), **kwargs)
+                super().Add(args[0], self.getNextPos(), wx.GBSpan(), *(args[2:]), **kwargs)
             else:
                 super().Add(args[0], self.getNextPos(), wx.GBSpan(), **kwargs)
         else:

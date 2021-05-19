@@ -36,22 +36,12 @@ class Dialog(BaseDialog):
 
     def InstallControls(self):
         """いろんなwidgetを設置する。"""
-        self.creator = views.ViewCreator.ViewCreator(
-            self.viewMode,
-            self.panel,
-            self.sizer,
-            wx.VERTICAL,
-            20,
-            style=wx.ALL,
-            margin=20)
-        self.creator.staticText(
-            _("設定するには、使用したいキーの組み合わせを押します。\n設定を解除するには、Escキーを押します。"))
-        self.keyNameText = self.creator.staticText(
-            "", sizerFlag=wx.ALIGN_CENTER | wx.ALL, margin=20)
+        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20, style=wx.ALL, margin=20)
+        self.creator.staticText(_("設定するには、使用したいキーの組み合わせを押します。\n設定を解除するには、Escキーを押します。"))
+        self.keyNameText = self.creator.staticText("", sizerFlag=wx.ALIGN_CENTER | wx.ALL, margin=20)
         self.errorText = self.creator.staticText("", sizerFlag=wx.ALIGN_CENTER)
 
-        self.creator = views.ViewCreator.ViewCreator(
-            self.viewMode, self.panel, self.sizer, wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
+        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
         self.bCancel = self.creator.cancelbutton(_("設定解除"), self.cancelButton)
 
     def Show(self):
@@ -85,8 +75,7 @@ class Dialog(BaseDialog):
             if code <= 4:
                 continue
             # カテゴリキーは取得不可、NumLockとCapsLockは押し下げ状態ではなく現在のON/OFFを返してしまうので
-            if type(
-                    code) == wx.KeyCategoryFlags or name == "NUMLOCK" or name == "SCROLL":
+            if type(code) == wx.KeyCategoryFlags or name == "NUMLOCK" or name == "SCROLL":
                 continue
             if wx.GetKeyState(code):
                 hits.append(name)
@@ -111,8 +100,7 @@ class Dialog(BaseDialog):
                 else:
                     self.errorText.SetLabel(self.filter.GetLastError())
                     self.panel.Layout()
-                    simpleDialog.errorDialog(
-                        self.filter.GetLastError(), self.wnd)
+                    simpleDialog.errorDialog(self.filter.GetLastError(), self.wnd)
                 self.key = ""
                 self.result = ""
         self.timer.Start(TIMER_INTERVAL)

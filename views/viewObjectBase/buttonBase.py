@@ -8,8 +8,7 @@ from views.viewObjectBase import viewObjectUtil, toolTipBase, controlBase
 
 class button(controlBase.controlBase, wx.Button):
     def __init__(self, *pArg, **kArg):
-        self.focusFromKbd = viewObjectUtil.popArg(
-            kArg, "enableTabFocus", True)  # キーボードフォーカスの初期値
+        self.focusFromKbd = viewObjectUtil.popArg(kArg, "enableTabFocus", True)  # キーボードフォーカスの初期値
         super().__init__(*pArg, **kArg)
         self.Bind(wx.EVT_ENTER_WINDOW, self.onMouseEnter)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.onMouseLeave)
@@ -45,14 +44,8 @@ class button(controlBase.controlBase, wx.Button):
                     self.GetForegroundColour(),
                     self.GetFont())
             else:
-                self.toolTip = self.toolTipObject(
-                    self,
-                    self.ClientToScreen(
-                        evt.GetPosition()),
-                    self.toolTipLabel,
-                    self.GetBackgroundColour(),
-                    self.GetForegroundColour(),
-                    self.GetFont())
+                self.toolTip = self.toolTipObject(self, self.ClientToScreen(evt.GetPosition()), self.toolTipLabel,
+                                                  self.GetBackgroundColour(), self.GetForegroundColour(), self.GetFont())
 
     def onMouseLeave(self, evt):
         if self.enableToolTip and self.toolTip is not None:

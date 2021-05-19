@@ -345,12 +345,12 @@ class KeymapHandlerBase():
         read = configparser.ConfigParser()
         read.read_dict(dict)
         for identifier in read.sections():
-            if (sections and (identifier.upper() not in sections)) or (
-                    (not sections) and "HOTKEY" in identifier):
+            if (sections and (identifier.upper() not in sections)) or ((not sections) and "HOTKEY" in identifier):
                 self.log.debug("skip section %s" % identifier)
                 continue
 
             self.log.debug("read section %s" % identifier)
+            self.entries[identifier] = []
             for elem in read.items(identifier):
                 if elem[1] != "":  # 空白のものは無視する
                     self.add(identifier, elem[0], elem[1])
@@ -377,8 +377,7 @@ class KeymapHandlerBase():
 
         # newKeysの情報を、検証しながらaddしていく
         for identifier in newKeys.sections():
-            if (sections and (identifier.upper() not in sections)) or (
-                    (not sections) and "HOTKEY" in identifier):
+            if (sections and (identifier.upper() not in sections)) or ((not sections) and "HOTKEY" in identifier):
                 self.log.debug("skip section %s" % identifier)
                 continue
 
@@ -409,9 +408,7 @@ class KeymapHandlerBase():
                 return c.write(f)
             return errorCodes.OK
         except Exception as e:
-            self.log.warning(
-                "keymap save (fn=%s) failed. %s" %
-                (fileName, str(e)))
+            self.log.warning("keymap save (fn=%s) failed. %s" % (fileName, str(e)))
             return errorCodes.ACCESS_DENIED
 
     def GetError(self, identifier):
@@ -444,7 +441,10 @@ class KeymapHandlerBase():
                 アクセラレーターテーブルを取得する。
                 identifier で、どのビューでのテーブルを取得するかを指定する。
         """
-        return wx.AcceleratorTable(self.entries[identifier.upper()])
+        if identifier.upper() in self.entries:
+            return wx.AcceleratorTable(self.entries[identifier.upper()])
+        else:
+            return wx.AcceleratorTable([])
 
     def GetEntries(self, identifier):
         """
@@ -492,8 +492,7 @@ class KeymapHandlerBase():
                     checkList.append(i)
             if checkList:
                 checkList.append(entry)
-                if self.permitConfrict and self.permitConfrict(
-                        checkList, self.log):
+                if self.permitConfrict and self.permitConfrict(checkList, self.log):
                     self.replaceOriginalRef(checkList, identifier)
                     entry = None
                 else:
@@ -516,9 +515,7 @@ class KeymapHandlerBase():
 
     def addError(self, identifier, ref, key, reason=""):
         """エラー発生時、情報を記録する。"""
-        self.log.warning(
-            "Cannot add %s=%s in %s reason=%s" %
-            (ref, key, identifier, reason))
+        self.log.warning("Cannot add %s=%s in %s reason=%s" % (ref, key, identifier, reason))
         try:
             self.errors[identifier][ref] = key
         except KeyError:
@@ -543,12 +540,7 @@ class KeymapHandlerBase():
         # refを差し替えて再登録し、元のrefを記録
         for i in items:
             self.refMap[newref].append(i.GetCommand())
-            self.entries[identifier].append(
-                AcceleratorEntry(
-                    i.GetFlags(),
-                    i.GetKeyCode(),
-                    newref,
-                    i.GetRefName()))
+            self.entries[identifier].append(AcceleratorEntry(i.GetFlags(), i.GetKeyCode(), newref, i.GetRefName()))
         return True
 
     def isRefHit(self, ref):
@@ -592,12 +584,7 @@ def makeEntry(ref, key, filter, log):
     if filter and not filter.Check(key):
         log.warning("%s(%s): %s" % (ref, key, filter.GetLastError()))
         return False
-    return AcceleratorEntry(
-        flags,
-        str2key[codestr],
-        menuItemsStore.getRef(
-            ref.upper()),
-        ref.upper())
+    return AcceleratorEntry(flags, str2key[codestr], menuItemsStore.getRef(ref.upper()), ref.upper())
 
 
 class AcceleratorEntry(wx.AcceleratorEntry):
@@ -610,7 +597,7 @@ class AcceleratorEntry(wx.AcceleratorEntry):
 
     def __eq__(self, other):
         # isinstance(other, Person)を除去
-        if other is None or not isinstance(self, type(other)):
+        if other is None or type(self) != type(other):
             return False
         if self.GetFlags() == other.GetFlags() and self.GetKeyCode() == other.GetKeyCode():
             return True
@@ -639,8 +626,7 @@ class KeyFilterBase:
         self.modifierKey = set()  # 有効な修飾キー
         self.functionKey = set()  # 有効なファンクションキー。単独または修飾キーとの組み合わせで利用可能
         self.enableKey = set()  # 修飾キーとの組み合わせで利用可能
-        # SHIFTキー以外の修飾キーとの組み合わせで利用可能(modifierKeyにSHIFTを指定していない場合は無視される)
-        self.noShiftEnableKey = set()
+        self.noShiftEnableKey = set()  # SHIFTキー以外の修飾キーとの組み合わせで利用可能(modifierKeyにSHIFTを指定していない場合は無視される)
         self.disablePattern = []  # 無効なキーの組み合わせ
         self.AddDisablePattern("CTRL+ESCAPE")  # スタートメニュー
         self.AddDisablePattern("CTRL+SHIFT+ESCAPE")  # タスクマネージャ
@@ -656,7 +642,7 @@ class KeyFilterBase:
                 フィルタを一般的な設定に構成する。
 
                 supportInputCharには、そのウィンドウでの文字入力の可否を設定する。
-                ここでTrueを設定すると、Home,BS,Enterなど文字入力と競合する修飾キーを単体でショートカットとして利用可能になる
+                ここでFalseを設定すると、Home,BS,Enterなど文字入力と競合する修飾キーを単体でショートカットとして利用可能になる
 
                 isSystemには、システム内部で設定する場合にはTrue、ユーザが独自で設定する場合にはFalseを指定する。
                 ユーザが独自にキーをカスタマイズする場合に、指定することが望ましくないキーの組み合わせをブロックする。
@@ -701,6 +687,7 @@ class KeyFilterBase:
             self.AddDisablePattern("F10")  # ALTキーの代わり
             self.AddDisablePattern("ESCAPE")  # 操作の取り消し
             self.AddDisablePattern("ALT+F4")  # アプリケーションの終了
+            self.AddDisablePattern("SPACE")  # ボタンの押下
             self.AddDisablePattern("ALT+SPACE")  # リストビュー等で全ての選択を解除
             self.enableKey |= str2StandaloneKey.keys()
 
@@ -720,25 +707,25 @@ class KeyFilterBase:
         self.disablePattern.append(set(patterns))
 
     def AddEnableKey(self, keys):
-        if isinstance(keys, str):
+        if type(keys) == str:
             return self._SetKeyGroup(keys, self.enableKey)
         for key in keys:
             self._SetKeyGroup(key, self.enableKey)
 
     def AddFunctionKey(self, keys):
-        if isinstance(keys, str):
+        if type(keys) == str:
             return self._SetKeyGroup(keys, self.functionKey)
         for key in keys:
             self._SetKeyGroup(key, self.functionKey)
 
     def AddModifierKey(self, keys):
-        if isinstance(keys, str):
+        if type(keys) == str:
             return self._SetKeyGroup(keys, self.modifierKey)
         for key in keys:
             self._SetKeyGroup(key, self.modifierKey)
 
     def AddNoShiftEnableKey(self, keys):
-        if isinstance(keys, str):
+        if type(keys) == str:
             return self._SetKeyGroup(keys, noShiftEnableKey)
         for key in keys:
             self._SetKeyGroup(key, self.noShiftEnableKey)
@@ -828,6 +815,5 @@ class KeyFilterBase:
 
     def GetUsableKeys(self):
         ret = []
-        ret.extend([*self.modifierKey, *self.functionKey,
-                    *self.enableKey, *self.noShiftEnableKey])
+        ret.extend([*self.modifierKey, *self.functionKey, *self.enableKey, *self.noShiftEnableKey])
         return ret

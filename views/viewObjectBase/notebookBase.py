@@ -8,6 +8,5 @@ from views.viewObjectBase import viewObjectUtil, controlBase
 
 class notebook(controlBase.controlBase, wx.Notebook):
     def __init__(self, *pArg, **kArg):
-        self.focusFromKbd = viewObjectUtil.popArg(
-            kArg, "enableTabFocus", True)  # キーボードフォーカスの初期値
+        self.focusFromKbd = viewObjectUtil.popArg(kArg, "enableTabFocus", True)  # キーボードフォーカスの初期値
         return super().__init__(*pArg, **kArg)

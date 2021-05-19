@@ -79,11 +79,12 @@ class SAPI5(Output):
         self.object.Volume = value
 
     def speak(self, text, interrupt=False):
+        if "aquestalk" in self.get_voice().lower():
+            text = self.fix_aqtk(text)
         if interrupt:
             self.silence()
         # We need to do the pitch in XML here
-        textOutput = "<pitch absmiddle=\"%d\">%s</pitch>" % (
-            round(self._pitch), text.replace("<", "&lt;"))
+        textOutput = "<pitch absmiddle=\"%d\">%s</pitch>" % (round(self._pitch), text.replace("<", "&lt;"))
         self.object.Speak(textOutput, SVSFlagsAsync | SVSFIsXML)
 
     def silence(self):
@@ -93,6 +94,11 @@ class SAPI5(Output):
         if self.object:
             return True
         return False
+
+    def fix_aqtk(self, text):
+        import re
+        ret = re.sub("[っッ]+([^\u3041-\u3096\u30A1-\u30FA\u3400-\u9FFF\uF900-\uFAFF\uD840-\uD87F\uDC00-\uDFFF])", "、\\1", text)
+        return ret
 
 
 output_class = SAPI5

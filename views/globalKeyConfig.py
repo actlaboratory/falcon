@@ -43,8 +43,7 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
                 設定されたキーが重複している場合はエラーとする
         """
         # 他のビューとの重複調査
-        if not views.KeyValueSettingDialogBase.KeySettingValidation(
-                self.oldKeyConfig, self.values[0], self.log, self.checkEntries, True):
+        if not views.KeyValueSettingDialogBase.KeySettingValidation(self.oldKeyConfig, self.values[0], self.log, self.checkEntries, True):
             return
 
         # このビュー内での重複調査
@@ -58,19 +57,9 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
             if len(names) >= 2:
                 entries = []
                 for name in names:
-                    entries.append(
-                        keymap.makeEntry(
-                            self.values[1][name],
-                            key,
-                            None,
-                            self.log))
+                    entries.append(keymap.makeEntry(self.values[1][name], key, None, self.log))
                 if not keymap.permitConfrict(entries, self.log):
-                    dialog(
-                        _("エラー"),
-                        _("以下の項目において、重複するキー %(key)s が設定されています。\n\n%(command)s") % {
-                            "key": key,
-                            "command": names},
-                        self.wnd)
+                    dialog(_("エラー"), _("以下の項目において、重複するキー %(key)s が設定されています。\n\n%(command)s") % {"key": key, "command": names}, self.wnd)
                     return
         event.Skip()
 
@@ -84,39 +73,10 @@ class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
             keys.append(_("なし"))
         super().__init__(
             parent,
-            ((_("名前"),
-              False),
-             (_("ショートカット1"),
-              False),
-                (_("ショートカット2"),
-                 False),
-                (_("ショートカット3"),
-                 False),
-                (_("ショートカット4"),
-                 False),
-                (_("ショートカット5"),
-                 False),
-                (_("識別子"),
-                 None)),
-            (None,
-             (_("設定"),
-              self.SetKey1),
-                (_("設定"),
-                 self.SetKey2),
-                (_("設定"),
-                 self.SetKey3),
-                (_("設定"),
-                 self.SetKey4),
-                (_("設定"),
-                 self.SetKey5),
-                None),
-            name,
-            keys[0],
-            keys[1],
-            keys[2],
-            keys[3],
-            keys[4],
-            id)
+            ((_("名前"), False), (_("ショートカット1"), False), (_("ショートカット2"), False), (_("ショートカット3"), False), (_("ショートカット4"), False), (_("ショートカット5"), False), (_("識別子"), None)),
+            (None, (_("設定"), self.SetKey1), (_("設定"), self.SetKey2), (_("設定"), self.SetKey3), (_("設定"), self.SetKey4), (_("設定"), self.SetKey5), None),
+            name, keys[0], keys[1], keys[2], keys[3], keys[4], id
+        )
 
     def Initialize(self):
         return super().Initialize(_("登録内容の入力"))
@@ -178,8 +138,7 @@ class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
         lst = []
         for i in range(1, 6):
             if self.edits[i].GetLineText(0) != _("なし"):
-                entry = keymap.makeEntry(self.edits[0].GetLineText(
-                    0), self.edits[i].GetLineText(0), None, self.log)
+                entry = keymap.makeEntry(self.edits[0].GetLineText(0), self.edits[i].GetLineText(0), None, self.log)
                 if entry not in lst:
                     lst.append(entry)
                 else:

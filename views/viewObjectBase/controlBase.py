@@ -11,10 +11,7 @@ class controlBase():
         return self.focusFromKbd
 
     def hideScrollBar(self, orient=wx.VERTICAL):
-        assert orient in (
-            wx.VERTICAL,
-            wx.HORIZONTAL,
-            wx.VERTICAL | wx.HORIZONTAL)
+        assert orient in (wx.VERTICAL, wx.HORIZONTAL, wx.VERTICAL | wx.HORIZONTAL)
         if orient & wx.VERTICAL == wx.VERTICAL:
             ctypes.windll.user32.ShowScrollBar(self.GetHandle(), 1, 0)
         if orient & wx.HORIZONTAL == wx.HORIZONTAL:
@@ -27,7 +24,7 @@ class controlBase():
             return super().PopupMenu(menu, p2)  # menu,point
         else:
             pos = wx.DefaultPosition
-            if isinstance(p2, wx.ContextMenuEvent):
+            if type(p2) == wx.ContextMenuEvent:
                 pos = p2.GetPosition()
             if pos == wx.DefaultPosition:
                 pos = self.getPopupMenuPosition()

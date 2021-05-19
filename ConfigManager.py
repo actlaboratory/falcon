@@ -42,122 +42,63 @@ class ConfigManager(configparser.ConfigParser):
             return self.__getitem__(key)
 
     def getboolean(self, section, key, default=True):
-        if not isinstance(default, bool):
+        if type(default) != bool:
             raise ValueError("default value must be boolean")
         try:
             return super().getboolean(section, key)
         except ValueError:
-            self.log.debug(
-                "value is not boolean.  return default " +
-                str(default) +
-                " at section " +
-                section +
-                ", key " +
-                key)
+            self.log.debug("value is not boolean.  return default " + str(default) + " at section " + section + ", key " + key)
             self[section][key] = str(default)
             return int(default)
         except configparser.NoOptionError as e:
-            self.log.debug(
-                "add new boolval " +
-                str(default) +
-                " at section " +
-                section +
-                ", key " +
-                key)
+            self.log.debug("add new boolval " + str(default) + " at section " + section + ", key " + key)
             self[section][key] = default
             return default
         except configparser.NoSectionError as e:
-            self.log.debug(
-                "add new section and boolval " +
-                str(default) +
-                " at section " +
-                section +
-                ", key " +
-                key)
+            self.log.debug("add new section and boolval " + str(default) + " at section " + section + ", key " + key)
             self.add_section(section)
             self.__getitem__(section).__setitem__(key, default)
             return default
 
     def getint(self, section, key, default=0, min=None, max=None):
-        if not isinstance(default, int):
+        if type(default) != int:
             raise ValueError("default value must be int")
-        if (min is not None and not isinstance(min, int)) or (
-                max is not None and not isinstance(max, int)):
+        if (min is not None and type(min) != int) or (max is not None and type(max) != int):
             raise ValueError("min/max value must be int")
         try:
             ret = super().getint(section, key)
-            if (min is not None and ret < min) or (
-                    max is not None and ret > max):
-                self.log.debug(
-                    "intvalue " +
-                    str(ret) +
-                    " out of range.  at section " +
-                    section +
-                    ", key " +
-                    key)
+            if (min is not None and ret < min) or (max is not None and ret > max):
+                self.log.debug("intvalue " + str(ret) + " out of range.  at section " + section + ", key " + key)
                 self[section][key] = str(default)
                 return int(default)
             return ret
         except (configparser.NoOptionError, ValueError) as e:
-            self.log.debug(
-                "add new intval " +
-                str(default) +
-                " at section " +
-                section +
-                ", key " +
-                key)
+            self.log.debug("add new intval " + str(default) + " at section " + section + ", key " + key)
             self[section][key] = str(default)
             return int(default)
         except configparser.NoSectionError as e:
-            self.log.debug(
-                "add new section and intval " +
-                str(default) +
-                " at section " +
-                section +
-                ", key " +
-                key)
+            self.log.debug("add new section and intval " + str(default) + " at section " + section + ", key " + key)
             self.add_section(section)
             self.__getitem__(section).__setitem__(key, str(default))
             return int(default)
 
-    def getstring(
-            self,
-            section,
-            key,
-            default="",
-            selection=None,
-            *,
-            raw=False,
-            vars=None,
-            fallback=None):
+    def getstring(self, section, key, default="", selection=None, *, raw=False, vars=None, fallback=None):
         if selection is not None and not hasattr(selection, "__iter__"):
-            raise TypeError(
-                "selection must be iterable. %s were given." %
-                type(selection))
+            raise TypeError("selection must be iterable. %s were given." % type(selection))
         ret = self.__getitem__(section)[key]
         if ret == "":
             if default == "":
                 self[section][key] = ""
                 return ""
             else:
-                self.log.debug(
-                    "add default value.  at section " +
-                    section +
-                    ", key " +
-                    key)
+                self.log.debug("add default value.  at section " + section + ", key " + key)
                 self[section][key] = default
                 ret = default
                 if selection is None:
                     return ret
 
         if selection is not None and ret not in selection:
-            self.log.debug(
-                "value " +
-                ret +
-                " not in selection.  at section " +
-                section +
-                ", key " +
-                key)
+            self.log.debug("value " + ret + " not in selection.  at section " + section + ", key " + key)
             self[section][key] = default
             ret = default
         return ret

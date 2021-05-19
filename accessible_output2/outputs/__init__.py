@@ -15,11 +15,7 @@ if platform.system() == 'Windows':
             for module in [m.__name__ for m in sys.modules.values()]:
                 if module.startswith("win32com.gen_py."):
                     del sys.modules[module]
-            shutil.rmtree(
-                os.path.join(
-                    os.environ.get('LOCALAPPDATA'),
-                    'Temp',
-                    'gen_py'))
+            shutil.rmtree(os.path.join(os.environ.get('LOCALAPPDATA'), 'Temp', 'gen_py'))
             # try again
             return load_com(*names)
     com.load_com = _load_com
@@ -35,6 +31,7 @@ if platform.system() == 'Windows':
     #import sapi4
     from . import clipboard
     from . import nospeech
+
 if platform.system() == 'Darwin':
     from . import nsSpeechSynth
     from . import voiceover

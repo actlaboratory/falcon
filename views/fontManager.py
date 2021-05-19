@@ -21,20 +21,11 @@ class FontManager():
         # 設定ファイルの情報を基にfontを生成
         self.font = wx.Font()
         if self.app:
-            if not self.font.SetNativeFontInfoUserDesc(
-                    self.app.config.get("view", "font")):
+            if not self.font.SetNativeFontInfoUserDesc(self.app.config.get("view", "font")):
                 dialog(_("エラー"), _("設定されているフォント情報が不正です。デフォルトのフォントを適用します。"))
-                self.log.warning(
-                    "fontString error. SetNativeFontInfoUserDesc(" +
-                    self.app.config.get(
-                        "view",
-                        "font") +
-                    ") returned false.")
-                self.font.SetNativeFontInfoUserDesc(
-                    DefaultSettings.get("view", "font"))
-                self.app.config.set(
-                    "view", "font", DefaultSettings.get(
-                        "view", "font"))
+                self.log.warning("fontString error. SetNativeFontInfoUserDesc(" + self.app.config.get("view", "font") + ") returned false.")
+                self.font.SetNativeFontInfoUserDesc(DefaultSettings.get("view", "font"))
+                self.app.config.set("view", "font", DefaultSettings.get("view", "font"))
                 with open(constants.SETTING_FILE_NAME, "w") as f:
                     self.config.write(f)
         else:

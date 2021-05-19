@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 # View CreatorBase
-# Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
+# Copyright (C) 2019-2021 yamahubuki <itiro.ishino@gmail.com>
 # Copyright (C) 2019-2020 Hiroki Fujii <hfujii@hisystron.com>
 
 import ctypes
@@ -48,17 +48,7 @@ MODE_WRAPPING = 2
 
 
 class ViewCreatorBase():
-    def __init__(
-            self,
-            mode,
-            parent,
-            parentSizer=None,
-            orient=wx.HORIZONTAL,
-            space=0,
-            label="",
-            style=0,
-            proportion=0,
-            margin=20):
+    def __init__(self, mode, parent, parentSizer=None, orient=wx.HORIZONTAL, space=0, label="", style=0, proportion=0, margin=20):
         # wxオブジェクトを辞書に格納
         self.winObject = {
             "button": buttonBase.button,
@@ -79,9 +69,9 @@ class ViewCreatorBase():
         }
 
         # 表示モード
-        if isinstance(mode, int):
+        if type(mode) == int:
             self.mode = mode
-        elif isinstance(mode, str):
+        elif type(mode) == str:
             if mode.lower() == "dark":
                 self.mode = MODE_DARK
             else:
@@ -102,8 +92,7 @@ class ViewCreatorBase():
             self._setFace(self.parent)
             parent.InsertPage(parent.GetPageCount(), self.parent, label)
             label = ""
-            parentSizer = self.BoxSizer(
-                parentSizer, wx.VERTICAL, "", margin, style, proportion)
+            parentSizer = self.BoxSizer(parentSizer, wx.VERTICAL, "", margin, style, proportion)
         else:
             raise ValueError("ViewCreatorの親はパネルまたはブックコントロールである必要があります。")
 
@@ -115,8 +104,7 @@ class ViewCreatorBase():
         elif orient == GridBagSizer:
             self.sizer = self.GridBagSizer(parentSizer, margin, style, label)
         else:
-            self.sizer = self.BoxSizer(
-                parentSizer, orient, label, margin, style, proportion)
+            self.sizer = self.BoxSizer(parentSizer, orient, label, margin, style, proportion)
 
         self.space = space
 
@@ -130,14 +118,7 @@ class ViewCreatorBase():
             return self.sizer.AddSpacer(space)
 
     # parentで指定したsizerの下に、新たなBoxSizerを設置
-    def BoxSizer(
-            self,
-            parent,
-            orient=wx.VERTICAL,
-            label="",
-            space=0,
-            style=0,
-            proportion=0):
+    def BoxSizer(self, parent, orient=wx.VERTICAL, label="", space=0, style=0, proportion=0):
         if label == "":
             sizer = wx.BoxSizer(orient)
         else:
@@ -152,7 +133,7 @@ class ViewCreatorBase():
         return sizer
 
     def GridSizer(self, parent, space=0, style=0, x=2):
-        if not isinstance(x, int):
+        if type(x) != int:
             x = 2
         sizer = wx.GridSizer(x, space, space)
         if type(parent) in (wx.Panel, wx.Window):
@@ -164,7 +145,7 @@ class ViewCreatorBase():
         return sizer
 
     def FlexGridSizer(self, parent, space=0, style=0, x=2):
-        if not isinstance(x, int):
+        if type(x) != int:
             x = 2
         sizer = wx.FlexGridSizer(x, space, space)
         if type(parent) in (wx.Panel, wx.Window):
@@ -176,7 +157,7 @@ class ViewCreatorBase():
         return sizer
 
     def GridBagSizer(self, parent, space=0, style=0, x=2):
-        if not isinstance(x, int):
+        if type(x) != int:
             x = 2
         sizer = gridBagSizer.GridBagSizer(x, space, space)
         if type(parent) in (wx.Panel, wx.Window):
@@ -187,16 +168,8 @@ class ViewCreatorBase():
             parent.Add(sizer, 0, wx.ALL | style, space)
         return sizer
 
-    def button(self, text, event=None, style=wx.BORDER_RAISED, size=(-1, -1),
-               sizerFlag=wx.ALL, proportion=0, margin=5, enableTabFocus=True):
-        hButton = self.winObject["button"](
-            self.parent,
-            wx.ID_ANY,
-            label=text,
-            name=text,
-            style=style,
-            size=size,
-            enableTabFocus=enableTabFocus)
+    def button(self, text, event=None, style=wx.BORDER_RAISED, size=(-1, -1), sizerFlag=wx.ALL, proportion=0, margin=5, enableTabFocus=True):
+        hButton = self.winObject["button"](self.parent, wx.ID_ANY, label=text, name=text, style=style, size=size, enableTabFocus=enableTabFocus)
         hButton.Bind(wx.EVT_BUTTON, event)
         self._setFace(hButton, mode=BUTTON_COLOUR)
         Add(self.sizer, hButton, proportion, sizerFlag, margin)
@@ -205,13 +178,7 @@ class ViewCreatorBase():
 
     def okbutton(self, text, event=None, style=wx.BORDER_RAISED, size=(-1, -1),
                  sizerFlag=wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL, proportion=1, margin=5):
-        hButton = self.winObject["button"](
-            self.parent,
-            wx.ID_OK,
-            label=text,
-            name=text,
-            style=style,
-            size=size)
+        hButton = self.winObject["button"](self.parent, wx.ID_OK, label=text, name=text, style=style, size=size)
         hButton.Bind(wx.EVT_BUTTON, event)
         self._setFace(hButton, mode=BUTTON_COLOUR)
         Add(self.sizer, hButton, proportion, sizerFlag, margin)
@@ -221,30 +188,15 @@ class ViewCreatorBase():
 
     def cancelbutton(self, text, event=None, style=wx.BORDER_RAISED, size=(-1, -1),
                      sizerFlag=wx.ALIGN_BOTTOM | wx.ALIGN_RIGHT | wx.ALL, proportion=1, margin=5):
-        hButton = self.winObject["button"](
-            self.parent,
-            wx.ID_CANCEL,
-            label=text,
-            name=text,
-            style=style,
-            size=size)
+        hButton = self.winObject["button"](self.parent, wx.ID_CANCEL, label=text, name=text, style=style, size=size)
         hButton.Bind(wx.EVT_BUTTON, event)
         self._setFace(hButton, mode=BUTTON_COLOUR)
         Add(self.sizer, hButton, proportion, sizerFlag, margin)
         self.AddSpace()
         return hButton
 
-    def staticText(
-            self,
-            text,
-            style=0,
-            x=-1,
-            sizerFlag=wx.ALIGN_CENTER_VERTICAL,
-            proportion=0,
-            margin=5):
-        hStatic = self.winObject["staticText"](
-            self.parent, wx.ID_ANY, label=text, name=text, size=(
-                x, -1), style=style)
+    def staticText(self, text, style=0, x=-1, sizerFlag=wx.ALIGN_CENTER_VERTICAL, proportion=0, margin=5):
+        hStatic = self.winObject["staticText"](self.parent, wx.ID_ANY, label=text, name=text, size=(x, -1), style=style)
         self._setFace(hStatic)
         Add(self.sizer, hStatic, proportion, sizerFlag, margin)
         return hStatic
@@ -257,20 +209,18 @@ class ViewCreatorBase():
             state=-1,
             style=wx.CB_READONLY,
             x=-1,
-            sizerFlag=wx.ALL,
+            sizerFlag=wx.ALL | wx.ALIGN_CENTER_VERTICAL,
             proportion=0,
             margin=5,
             textLayout=wx.DEFAULT,
             enableTabFocus=True):
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
         v = ""
         if state >= 0:
             v = selection[state]
-        hCombo = self.winObject["comboBox"](
-            parent, wx.ID_ANY, value=v, choices=selection, style=wx.BORDER_RAISED | style, name=text, size=(
-                x, -1), enableTabFocus=enableTabFocus)
+        hCombo = self.winObject["comboBox"](parent, wx.ID_ANY, value=v, choices=selection, style=wx.BORDER_RAISED |
+                                            style, name=text, size=(x, -1), enableTabFocus=enableTabFocus)
         hCombo.Bind(wx.EVT_TEXT, event)
         self._setFace(hCombo)
         Add(sizer, hCombo, proportion, sizerFlag, margin)
@@ -290,51 +240,28 @@ class ViewCreatorBase():
             margin=5,
             textLayout=wx.DEFAULT,
             enableTabFocus=True):
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
-        hCombo = self.winObject["comboBox"](
-            parent,
-            wx.ID_ANY,
-            value=defaultValue,
-            choices=selection,
-            style=wx.BORDER_RAISED | style,
-            name=text,
-            size=(
-                x,
-                -1),
-            enableTabFocus=enableTabFocus)
+        hCombo = self.winObject["comboBox"](parent, wx.ID_ANY, value=defaultValue, choices=selection,
+                                            style=wx.BORDER_RAISED | style, name=text, size=(x, -1), enableTabFocus=enableTabFocus)
         hCombo.Bind(wx.EVT_TEXT, event)
         if defaultValue in selection:
             hCombo.SetSelection(selection.index(defaultValue))
         self._setFace(hCombo)
         if x == -1:  # 幅を拡張
-            Add(sizer, hCombo, proportion, sizerFlag,
-                margin, expandFlag=wx.HORIZONTAL)
+            Add(sizer, hCombo, proportion, sizerFlag, margin, expandFlag=wx.HORIZONTAL)
         else:
             Add(sizer, hCombo, proportion, sizerFlag, margin)
         self.AddSpace()
         return hCombo, hStaticText
 
-    def checkbox(
-            self,
-            text,
-            event=None,
-            state=False,
-            style=0,
-            x=-1,
-            sizerFlag=0,
-            proportion=0,
-            margin=5,
-            enableTabFocus=True):
+    def checkbox(self, text, event=None, state=False, style=0, x=-1, sizerFlag=0, proportion=0, margin=5, enableTabFocus=True):
         hPanel = wx.Panel(self.parent, wx.ID_ANY)
         self._setFace(hPanel, mode=SKIP_COLOUR)
         hSizer = self.BoxSizer(hPanel, self.getParentOrientation())
 
         if (isinstance(text, str)):  # 単純に一つを作成
-            hCheckBox = self.winObject["checkBox"](
-                hPanel, wx.ID_ANY, label=text, name=text, size=(
-                    x, -1), style=style, enableTabFocus=enableTabFocus)
+            hCheckBox = self.winObject["checkBox"](hPanel, wx.ID_ANY, label=text, name=text, size=(x, -1), style=style, enableTabFocus=enableTabFocus)
             hCheckBox.SetValue(state)
             hCheckBox.Bind(wx.EVT_CHECKBOX, event)
             self._setFace(hCheckBox, mode=SKIP_COLOUR)
@@ -347,9 +274,7 @@ class ViewCreatorBase():
         elif (isinstance(text, list)):  # 複数同時作成
             hCheckBoxes = []
             for s in text:
-                hCheckBox = self.winObject["checkBox"](
-                    hPanel, wx.ID_ANY, label=s, name=s, size=(
-                        x, -1), style=style, enableTabFocus=enableTabFocus)
+                hCheckBox = self.winObject["checkBox"](hPanel, wx.ID_ANY, label=s, name=s, size=(x, -1), style=style, enableTabFocus=enableTabFocus)
                 hCheckBox.SetValue(state)
                 hCheckBox.Bind(wx.EVT_CHECKBOX, event)
                 self._setFace(hCheckBox, mode=SKIP_COLOUR)
@@ -364,17 +289,7 @@ class ViewCreatorBase():
             raise ValueError("ViewCreatorはCheckboxの作成に際し正しくない型の値を受け取りました。")
 
     # 3stateチェックボックス
-    def checkbox3(
-            self,
-            text,
-            event=None,
-            state=None,
-            style=0,
-            x=-1,
-            sizerFlag=0,
-            proportion=0,
-            margin=0,
-            enableTabFocus=True):
+    def checkbox3(self, text, event=None, state=None, style=0, x=-1, sizerFlag=0, proportion=0, margin=0, enableTabFocus=True):
         hPanel = wx.Panel(self.parent, wx.ID_ANY)
         self._setFace(hPanel, mode=SKIP_COLOUR)
         hSizer = self.BoxSizer(hPanel, self.getParentOrientation())
@@ -467,29 +382,13 @@ class ViewCreatorBase():
         self.AddSpace()
         return hRadioBox
 
-    def radio(
-            self,
-            text,
-            event=None,
-            state=False,
-            style=0,
-            x=-1,
-            sizerFlag=0,
-            proportion=0,
-            margin=5,
-            enableTabFocus=True):
+    def radio(self, text, event=None, state=False, style=0, x=-1, sizerFlag=0, proportion=0, margin=5, enableTabFocus=True):
         hPanel = wx.Panel(self.parent, wx.ID_ANY)
         self._setFace(hPanel, mode=SKIP_COLOUR)
         hSizer = self.BoxSizer(hPanel, self.getParentOrientation())
 
-        if isinstance(text, str):
-            hRadio = self.winObject["radioButton"](
-                hPanel,
-                id=wx.ID_ANY,
-                label=text,
-                style=style,
-                name=text,
-                enableTabFocus=enableTabFocus)
+        if type(text) == str:
+            hRadio = self.winObject["radioButton"](hPanel, id=wx.ID_ANY, label=text, style=style, name=text, enableTabFocus=enableTabFocus)
             hRadio.SetValue(state)
             hRadio.Bind(wx.EVT_RADIOBUTTON, event)
             self._setFace(hRadio, mode=SKIP_COLOUR)
@@ -505,26 +404,15 @@ class ViewCreatorBase():
             radios = []
             for s in text:
                 if len(radios) == 0:  # 最初の１つのみ追加のスタイルが必要
-                    hRadio = self.winObject["radioButton"](
-                        hPanel,
-                        id=wx.ID_ANY,
-                        label=s,
-                        style=wx.RB_GROUP | style,
-                        name=s,
-                        enableTabFocus=enableTabFocus)
+                    hRadio = self.winObject["radioButton"](hPanel, id=wx.ID_ANY, label=s, style=wx.RB_GROUP |
+                                                           style, name=s, enableTabFocus=enableTabFocus)
                 else:
-                    hRadio = self.winObject["radioButton"](
-                        hPanel,
-                        id=wx.ID_ANY,
-                        label=s,
-                        style=style,
-                        name=s,
-                        enableTabFocus=enableTabFocus)
+                    hRadio = self.winObject["radioButton"](hPanel, id=wx.ID_ANY, label=s, style=style, name=s, enableTabFocus=enableTabFocus)
                 hRadio.Bind(wx.EVT_RADIOBUTTON, event)
                 self._setFace(hRadio, mode=SKIP_COLOUR)
                 Add(hSizer, hRadio)
                 radios.append(hRadio)
-            if isinstance(state, int):
+            if type(state) == int:
                 radios[state].SetValue(True)
             Add(self.sizer, hPanel, proportion, sizerFlag, margin)
             self.AddSpace()
@@ -538,17 +426,9 @@ class ViewCreatorBase():
 
     def listbox(self, text, choices=[], event=None, state=-1, style=0, size=(-1, -1),
                 sizerFlag=wx.ALL, proportion=0, margin=5, textLayout=wx.DEFAULT, enableTabFocus=True):
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
-        hListBox = self.winObject["listBox"](
-            parent,
-            wx.ID_ANY,
-            name=text,
-            choices=choices,
-            size=size,
-            style=style,
-            enableTabFocus=enableTabFocus)
+        hListBox = self.winObject["listBox"](parent, wx.ID_ANY, name=text, choices=choices, size=size, style=style, enableTabFocus=enableTabFocus)
         hListBox.Bind(wx.EVT_LISTBOX, event)
         hListBox.SetSelection(state)
         self._setFace(hListBox)
@@ -569,27 +449,14 @@ class ViewCreatorBase():
             margin=5,
             textLayout=wx.DEFAULT,
             enableTabFocus=True):
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
-        hListCtrl = self.winObject["listCtrl"](
-            parent,
-            wx.ID_ANY,
-            style=style | wx.BORDER_RAISED,
-            size=size,
-            enableTabFocus=enableTabFocus)
+        hListCtrl = self.winObject["listCtrl"](parent, wx.ID_ANY, style=style | wx.BORDER_RAISED, size=size, enableTabFocus=enableTabFocus)
         hListCtrl.Bind(wx.EVT_LIST_ITEM_FOCUSED, event)
         self._setFace(hListCtrl)
         self._setFace(hListCtrl.GetMainWindow())
         try:
-            _winxptheme.SetWindowTheme(
-                win32api.SendMessage(
-                    hListCtrl.GetHandle(),
-                    0x101F,
-                    0,
-                    0),
-                "",
-                "")  # ヘッダーのウィンドウテーマを引っぺがす
+            _winxptheme.SetWindowTheme(win32api.SendMessage(hListCtrl.GetHandle(), 0x101F, 0, 0), "", "")  # ヘッダーのウィンドウテーマを引っぺがす
         except pywintypes.error:
             pass
         Add(sizer, hListCtrl, proportion, sizerFlag, margin)
@@ -609,49 +476,22 @@ class ViewCreatorBase():
             margin=5,
             textLayout=wx.DEFAULT,
             enableTabFocus=True):
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
-        hListCtrl = self.winObject["virtualListCtrl"](
-            parent,
-            wx.ID_ANY,
-            style=style | wx.BORDER_RAISED,
-            size=size,
-            enableTabFocus=enableTabFocus)
+        hListCtrl = self.winObject["virtualListCtrl"](parent, wx.ID_ANY, style=style | wx.BORDER_RAISED, size=size, enableTabFocus=enableTabFocus)
         hListCtrl.Bind(wx.EVT_LIST_ITEM_FOCUSED, event)
         self._setFace(hListCtrl)
         self._setFace(hListCtrl.GetMainWindow())
-        _winxptheme.SetWindowTheme(
-            win32api.SendMessage(
-                hListCtrl.GetHandle(),
-                0x101F,
-                0,
-                0),
-            "",
-            "")  # ヘッダーのウィンドウテーマを引っぺがす
+        _winxptheme.SetWindowTheme(win32api.SendMessage(hListCtrl.GetHandle(), 0x101F, 0, 0), "", "")  # ヘッダーのウィンドウテーマを引っぺがす
         Add(sizer, hListCtrl, proportion, sizerFlag, margin)
         self.AddSpace()
         return hListCtrl, hStaticText
 
-    def tabCtrl(
-            self,
-            title,
-            event=None,
-            style=wx.NB_NOPAGETHEME,
-            sizerFlag=0,
-            proportion=0,
-            margin=5,
-            enableTabFocus=True):
-        htab = self.winObject["notebook"](
-            self.parent,
-            wx.ID_ANY,
-            name=title,
-            style=style,
-            enableTabFocus=enableTabFocus)
+    def tabCtrl(self, title, event=None, style=wx.NB_NOPAGETHEME, sizerFlag=0, proportion=0, margin=5, enableTabFocus=True):
+        htab = self.winObject["notebook"](self.parent, wx.ID_ANY, name=title, style=style, enableTabFocus=enableTabFocus)
         htab.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, event)
         self._setFace(htab)
-        Add(self.sizer, htab, proportion, sizerFlag,
-            margin, expandFlag=wx.HORIZONTAL)
+        Add(self.sizer, htab, proportion, sizerFlag, margin, expandFlag=wx.HORIZONTAL)
         self.sizer.Layout()
         return htab
 
@@ -669,24 +509,14 @@ class ViewCreatorBase():
             enableTabFocus=True):
         if self.mode & MODE_WRAPPING == MODE_NOWRAP:
             style |= wx.TE_DONTWRAP
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
-        hTextCtrl = self.winObject["textCtrl"](
-            parent,
-            wx.ID_ANY,
-            size=(
-                x,
-                -1),
-            name=text,
-            value=defaultValue,
-            style=style | wx.BORDER_RAISED,
-            enableTabFocus=enableTabFocus)
+        hTextCtrl = self.winObject["textCtrl"](parent, wx.ID_ANY, size=(x, -1), name=text, value=defaultValue,
+                                               style=style | wx.BORDER_RAISED, enableTabFocus=enableTabFocus)
         hTextCtrl.Bind(wx.EVT_TEXT, event)
         self._setFace(hTextCtrl)
         if x == -1:
-            Add(sizer, hTextCtrl, proportion, sizerFlag,
-                margin, expandFlag=wx.HORIZONTAL)
+            Add(sizer, hTextCtrl, proportion, sizerFlag, margin, expandFlag=wx.HORIZONTAL)
         else:
             Add(sizer, hTextCtrl, proportion, sizerFlag, margin)
         self.AddSpace()
@@ -703,16 +533,12 @@ class ViewCreatorBase():
             proportion=0,
             margin=5,
             textLayout=wx.DEFAULT):
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
-        hGauge = self.winObject["gauge"](
-            parent, wx.ID_ANY, size=(
-                x, -1), style=style, name=text,)
+        hGauge = self.winObject["gauge"](parent, wx.ID_ANY, size=(x, -1), style=style, name=text,)
         self._setFace(hGauge)
         if x == -1:
-            Add(sizer, hGauge, proportion, sizerFlag,
-                margin, expandFlag=wx.HORIZONTAL)
+            Add(sizer, hGauge, proportion, sizerFlag, margin, expandFlag=wx.HORIZONTAL)
         else:
             Add(sizer, hGauge, proportion, sizerFlag, margin)
         self.AddSpace()
@@ -727,17 +553,15 @@ class ViewCreatorBase():
             defaultValue=0,
             style=wx.SP_ARROW_KEYS,
             x=-1,
-            sizerFlag=wx.ALL,
+            sizerFlag=wx.ALL | wx.ALIGN_CENTER_VERTICAL,
             proportion=0,
             margin=5,
             textLayout=wx.DEFAULT,
             enableTabFocus=True):
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
-        hSpinCtrl = self.winObject["spinCtrl"](
-            parent, wx.ID_ANY, min=min, max=max, initial=defaultValue, style=wx.BORDER_RAISED | style, size=(
-                x, -1), enableTabFocus=enableTabFocus)
+        hSpinCtrl = self.winObject["spinCtrl"](parent, wx.ID_ANY, min=min, max=max, initial=defaultValue,
+                                               style=wx.BORDER_RAISED | style, size=(x, -1), enableTabFocus=enableTabFocus)
         hSpinCtrl.Bind(wx.EVT_TEXT, event)
         self._setFace(hSpinCtrl)
         Add(sizer, hSpinCtrl, proportion, sizerFlag, margin)
@@ -758,25 +582,14 @@ class ViewCreatorBase():
             margin=5,
             textLayout=wx.DEFAULT,
             enableTabFocus=True):
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
-        hSlider = self.winObject["slider"](
-            parent,
-            wx.ID_ANY,
-            size=(
-                x,
-                -1),
-            value=defaultValue,
-            minValue=min,
-            maxValue=max,
-            style=style,
-            enableTabFocus=enableTabFocus)
+        hSlider = self.winObject["slider"](parent, wx.ID_ANY, size=(x, -1), value=defaultValue, minValue=min,
+                                           maxValue=max, style=style, enableTabFocus=enableTabFocus)
         hSlider.Bind(wx.EVT_SCROLL_CHANGED, event)
         self._setFace(hSlider)
         if x == -1:  # 幅を拡張
-            Add(sizer, hSlider, proportion, sizerFlag,
-                margin, expandFlag=wx.HORIZONTAL)
+            Add(sizer, hSlider, proportion, sizerFlag, margin, expandFlag=wx.HORIZONTAL)
         else:
             Add(sizer, hSlider, proportion, sizerFlag, margin)
         self.AddSpace()
@@ -796,25 +609,14 @@ class ViewCreatorBase():
             margin=5,
             textLayout=wx.DEFAULT,
             enableTabFocus=True):
-        hStaticText, sizer, parent = self._addDescriptionText(
-            text, textLayout, sizerFlag, proportion, margin)
+        hStaticText, sizer, parent = self._addDescriptionText(text, textLayout, sizerFlag, proportion, margin)
 
-        hSlider = self.winObject["clear_slider"](
-            parent,
-            wx.ID_ANY,
-            size=(
-                x,
-                -1),
-            value=defaultValue,
-            minValue=min,
-            maxValue=max,
-            style=style,
-            enableTabFocus=enableTabFocus)
+        hSlider = self.winObject["clear_slider"](parent, wx.ID_ANY, size=(x, -1), value=defaultValue,
+                                                 minValue=min, maxValue=max, style=style, enableTabFocus=enableTabFocus)
         hSlider.Bind(wx.EVT_SCROLL_CHANGED, event)
         self._setFace(hSlider)
         if x == -1:  # 幅を拡張
-            Add(sizer, hSlider, proportion, sizerFlag,
-                margin, expandFlag=wx.HORIZONTAL)
+            Add(sizer, hSlider, proportion, sizerFlag, margin, expandFlag=wx.HORIZONTAL)
         else:
             Add(sizer, hSlider, proportion, sizerFlag, margin)
         self.AddSpace()
@@ -861,71 +663,35 @@ class ViewCreatorBase():
     def GetSizer(self):
         return self.sizer
 
-    def _addDescriptionText(
-            self,
-            text,
-            textLayout,
-            sizerFlag=0,
-            proportion=0,
-            margin=0):
+    def _addDescriptionText(self, text, textLayout, sizerFlag=0, proportion=0, margin=0):
         if textLayout not in (None, wx.HORIZONTAL, wx.VERTICAL, wx.DEFAULT):
-            raise ValueError(
-                "textLayout must be (None,wx.HORIZONTAL,wx.VIRTICAL,wx.DEFAULT)")
-        if type(
-                self.sizer) in (
-                wx.BoxSizer,
-                wx.StaticBoxSizer) and textLayout not in (
-                None,
-                self.sizer.GetOrientation(),
-                wx.DEFAULT):
+            raise ValueError("textLayout must be (None,wx.HORIZONTAL,wx.VIRTICAL,wx.DEFAULT)")
+        if type(self.sizer) in (wx.BoxSizer, wx.StaticBoxSizer) and textLayout not in (None, self.sizer.GetOrientation(), wx.DEFAULT):
             panel = makePanel(self.parent)
             if textLayout is not None:
-                hStaticText = wx.StaticText(
-                    panel, wx.ID_ANY, label=text, name=text)
+                hStaticText = wx.StaticText(panel, wx.ID_ANY, label=text, name=text)
             else:
-                hStaticText = wx.StaticText(
-                    panel,
-                    wx.ID_ANY,
-                    label=text,
-                    name=text,
-                    size=(
-                        0,
-                        0))
+                hStaticText = wx.StaticText(panel, wx.ID_ANY, label=text, name=text, size=(0, 0))
             self._setFace(hStaticText)
             sizer = self.BoxSizer(panel, orient=textLayout)
             Add(sizer, hStaticText, 0, wx.ALIGN_CENTER_VERTICAL)
             Add(self.sizer, panel, proportion, sizerFlag, margin)
             return hStaticText, sizer, panel
         elif isinstance(self.sizer, (wx.GridSizer, wx.FlexGridSizer, wx.GridBagSizer)) and textLayout is None:
-            hStaticText = wx.StaticText(
-                self.parent,
-                wx.ID_ANY,
-                label=text,
-                name=text,
-                size=(
-                    0,
-                    0))
+            hStaticText = wx.StaticText(self.parent, wx.ID_ANY, label=text, name=text, size=(0, 0))
             self._setFace(hStaticText)
-            sizer = self.BoxSizer(self.sizer, style=sizerFlag & (
-                wx.ALIGN_LEFT | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_BOTTOM | wx.EXPAND))
+            sizer = self.BoxSizer(self.sizer, style=sizerFlag & (wx.ALIGN_LEFT | wx.ALIGN_RIGHT |
+                                  wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_TOP | wx.ALIGN_BOTTOM | wx.EXPAND))
             Add(sizer, hStaticText)
             return hStaticText, sizer, self.parent
         else:
             if textLayout is not None:
-                hStaticText = wx.StaticText(
-                    self.parent, wx.ID_ANY, label=text, name=text)
+                hStaticText = wx.StaticText(self.parent, wx.ID_ANY, label=text, name=text)
             else:
-                hStaticText = wx.StaticText(
-                    self.parent,
-                    wx.ID_ANY,
-                    label=text,
-                    name=text,
-                    size=(
-                        0,
-                        0))
+                hStaticText = wx.StaticText(self.parent, wx.ID_ANY, label=text, name=text, size=(0, 0))
             self._setFace(hStaticText)
-            Add(self.sizer, hStaticText, 0, sizerFlag & (wx.ALIGN_LEFT |
-                                                         wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_BOTTOM | wx.EXPAND))
+            Add(self.sizer, hStaticText, 0, sizerFlag & (wx.ALIGN_LEFT | wx.ALIGN_RIGHT |
+                wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_TOP | wx.ALIGN_BOTTOM | wx.EXPAND))
             return hStaticText, self.sizer, self.parent
 
     def _setFace(self, target, mode=NORMAL):
@@ -957,7 +723,7 @@ class ViewCreatorBase():
 
     # configから読み取った値からmodeの整数値を生成して返す
     def config2modeValue(color="white", wrapping="off"):
-        if not isinstance(color, str) or not isinstance(wrapping, str):
+        if type(color) != str or type(wrapping) != str:
             raise ValueError
         mode = 0
         if color.lower() == "dark":
@@ -983,17 +749,11 @@ def Add(sizer, window, proportion=0, flag=0, border=0, expandFlag=None):
                 if flag & i == i:
                     flag -= i
         else:
-            for i in (
-                    wx.ALIGN_LEFT,
-                    wx.ALIGN_RIGHT,
-                    wx.ALIGN_CENTER_HORIZONTAL,
-                    wx.ALIGN_CENTER):
+            for i in (wx.ALIGN_LEFT, wx.ALIGN_RIGHT, wx.ALIGN_CENTER_HORIZONTAL, wx.ALIGN_CENTER):
                 if flag & i == i:
                     flag -= i
     if expandFlag == wx.HORIZONTAL:  # 幅を拡張
-        if type(sizer) in (
-                wx.BoxSizer,
-                wx.StaticBoxSizer) and sizer.GetOrientation() == wx.VERTICAL:
+        if type(sizer) in (wx.BoxSizer, wx.StaticBoxSizer) and sizer.GetOrientation() == wx.VERTICAL:
             sizer.Add(window, proportion, flag | wx.EXPAND, border)
         else:
             sizer.Add(window, 1, flag, border)

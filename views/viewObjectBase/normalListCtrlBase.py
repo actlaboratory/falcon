@@ -10,6 +10,5 @@ from views.viewObjectBase import viewObjectUtil, listCtrlBase
 
 class listCtrl(listCtrlBase.listCtrl):
     def __init__(self, *pArg, **kArg):
-        self.focusFromKbd = viewObjectUtil.popArg(
-            kArg, "enableTabFocus", True)  # キーボードフォーカスの初期値
+        self.focusFromKbd = viewObjectUtil.popArg(kArg, "enableTabFocus", True)  # キーボードフォーカスの初期値
         return super().__init__(*pArg, **kArg)

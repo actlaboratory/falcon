@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 # views base class
 # Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
-# Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
+# Copyright (C) 2020-2021 yamahubuki <itiro.ishino@gmail.com>
 
 import _winxptheme
 import wx
@@ -27,35 +27,23 @@ class BaseView(object):
         self.log = getLogger("%s.%s" % (constants.LOG_PREFIX, self.identifier))
         self.shortcutEnable = True
         self.viewMode = views.ViewCreator.ViewCreator.config2modeValue(
-            globalVars.app.config.getstring(
-                "view", "colorMode", "white", ("white", "dark")), globalVars.app.config.getstring(
-                "view", "textWrapping", "off", ("on", "off")))
+            globalVars.app.config.getstring("view", "colorMode", "white", ("white", "dark")),
+            globalVars.app.config.getstring("view", "textWrapping", "off", ("on", "off"))
+        )
         self.app = globalVars.app
 
-    def Initialize(
-            self,
-            ttl,
-            x,
-            y,
-            px,
-            py,
-            style=wx.DEFAULT_FRAME_STYLE,
-            space=0):
+    def Initialize(self, ttl, x, y, px, py, style=wx.DEFAULT_FRAME_STYLE, space=0):
         """タイトルとウィンドウサイズとポジションを指定して、ウィンドウを初期化する。"""
-        self.hFrame = wx.Frame(
-            None, wx.ID_ANY, ttl, size=(
-                x, y), pos=(
-                px, py), name=ttl, style=style)
+        self.hFrame = wx.Frame(None, wx.ID_ANY, ttl, size=(x, y), pos=(px, py), name=ttl, style=style)
         _winxptheme.SetWindowTheme(self.hFrame.GetHandle(), "", "")
         self.hFrame.Bind(wx.EVT_MOVE_END, self.events.WindowMove)
         self.hFrame.Bind(wx.EVT_SIZE, self.events.WindowResize)
-        self.hFrame.Bind(wx.EVT_CLOSE, self.events.Exit)
+        self.hFrame.Bind(wx.EVT_CLOSE, self.events.OnExit)
         self.MakePanel(space)
 
     def MakePanel(self, space=0):
         self.hPanel = views.ViewCreator.makePanel(self.hFrame)
-        self.creator = views.ViewCreator.ViewCreator(
-            self.viewMode, self.hPanel, None, wx.VERTICAL, style=wx.ALL, space=space)
+        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.hPanel, None, wx.VERTICAL, style=wx.ALL, space=space)
         self.hFrame.Layout()
 
     def Clear(self):
@@ -124,9 +112,7 @@ class BaseMenu(object):
             self.keymap.SaveFile(constants.KEYMAP_FILE_NAME)
         errors = self.keymap.GetError(self.keymap_identifier)
         if errors:
-            tmp = _(
-                constants.KEYMAP_FILE_NAME +
-                "で設定されたショートカットキーが正しくありません。キーの重複、存在しないキー名の指定、使用できないキーパターンの指定などが考えられます。以下のキーの設定内容をご確認ください。\n\n")
+            tmp = _(constants.KEYMAP_FILE_NAME + "で設定されたショートカットキーが正しくありません。キーの重複、存在しないキー名の指定、使用できないキーパターンの指定などが考えられます。以下のキーの設定内容をご確認ください。\n\n")
             for v in errors:
                 tmp += v + "\n"
             dialog(_("エラー"), tmp)
@@ -167,8 +153,7 @@ class BaseMenu(object):
                 self.blockCount[menuItemsStore.getRef(i)] = 0
 
             # ブロック解除
-            if self.blockCount[menuItemsStore.getRef(
-                    i)] == 0 and i not in self.desableItems:
+            if self.blockCount[menuItemsStore.getRef(i)] == 0 and i not in self.desableItems:
                 self.hMenuBar.Enable(menuItemsStore.getRef(i), True)
 
     def Enable(self, ref, enable):
@@ -180,35 +165,30 @@ class BaseMenu(object):
             self.desableItems.discard(ref)
         else:
             self.desableItems.add(ref)
-        return self.hMenuBar.Enable(
-            ref, self.blockCount[ref] == 0 and ref not in self.desableItems)
+        return self.hMenuBar.Enable(ref, self.blockCount[ref] == 0 and ref not in self.desableItems)
 
     def IsEnable(self, ref):
-        if isinstance(ref, str):
+        if type(ref) == str:
             ref = menuItemsStore.getRef(ref)
         if ref not in self.blockCount:
             self.blockCount[ref] = 0
         return self.blockCount[ref] <= 0 and (ref not in self.desableItems)
 
-    def RegisterMenuCommand(
-            self,
-            menu_handle,
-            ref_id,
-            title="",
-            subMenu=None,
-            index=-1):
-        if isinstance(ref_id, dict):
+    def RegisterMenuCommand(self, menu_handle, ref_id, title="", subMenu=None, index=-1):
+        if type(ref_id) == dict:
             for k, v in ref_id.items():
                 self._RegisterMenuCommand(menu_handle, k, v, None, index)
-        elif not isinstance(ref_id, str) and hasattr(ref_id, "__iter__"):
+                if index >= 0:
+                    index += 1
+        elif type(ref_id) != str and hasattr(ref_id, "__iter__"):
             for k in ref_id:
-                self._RegisterMenuCommand(
-                    menu_handle, k, menuItemsDic.dic[k], None, index)
+                self._RegisterMenuCommand(menu_handle, k, menuItemsDic.dic[k], None, index)
+                if index >= 0:
+                    index += 1
         else:
             if not title:
                 title = menuItemsDic.dic[ref_id]
-            return self._RegisterMenuCommand(
-                menu_handle, ref_id, title, subMenu, index)
+            return self._RegisterMenuCommand(menu_handle, ref_id, title, subMenu, index)
 
     def _RegisterMenuCommand(self, menu_handle, ref_id, title, subMenu, index):
         if ref_id == "" and title == "":
@@ -226,44 +206,45 @@ class BaseMenu(object):
                 menu_handle.Append(menuItemsStore.getRef(ref_id), s)
         else:
             if index >= 0:
-                menu_handle.Insert(
-                    index, menuItemsStore.getRef(ref_id), s, subMenu)
+                menu_handle.Insert(index, menuItemsStore.getRef(ref_id), s, subMenu)
             else:
                 menu_handle.Append(menuItemsStore.getRef(ref_id), s, subMenu)
         self.blockCount[menuItemsStore.getRef(ref_id)] = 0
 
-    def RegisterCheckMenuCommand(
-            self,
-            menu_handle,
-            ref_id,
-            title=None,
-            index=-1):
+    def RegisterCheckMenuCommand(self, menu_handle, ref_id, title="", index=-1):
+        if type(ref_id) == dict:
+            for k, v in ref_id.items():
+                self._RegisterCheckMenuCommand(menu_handle, k, v, index)
+                if index >= 0:
+                    index += 1
+        elif type(ref_id) != str and hasattr(ref_id, "__iter__"):
+            for k in ref_id:
+                self._RegisterCheckMenuCommand(menu_handle, k, menuItemsDic.dic[k], index)
+                if index >= 0:
+                    index += 1
+        else:
+            if not title:
+                title = menuItemsDic.dic[ref_id]
+            return self._RegisterCheckMenuCommand(menu_handle, ref_id, title, index)
+
+    def _RegisterCheckMenuCommand(self, menu_handle, ref_id, title, index=-1):
         """チェックメニューアイテム生成補助関数"""
         shortcut = self.keymap.GetKeyString(self.keymap_identifier, ref_id)
-        if not title:
-            title = menuItemsDic.dic[ref_id]
         s = title if shortcut is None else "%s\t%s" % (title, shortcut)
         if index >= 0:
-            menu_handle.InsertCheckItem(
-                index, menuItemsStore.getRef(ref_id), s)
+            menu_handle.InsertCheckItem(index, menuItemsStore.getRef(ref_id), s)
         else:
             menu_handle.AppendCheckItem(menuItemsStore.getRef(ref_id), s)
         self.blockCount[menuItemsStore.getRef(ref_id)] = 0
 
-    def RegisterRadioMenuCommand(
-            self,
-            menu_handle,
-            ref_id,
-            title=None,
-            index=-1):
+    def RegisterRadioMenuCommand(self, menu_handle, ref_id, title=None, index=-1):
         """ラジオメニューアイテム生成補助関数"""
         shortcut = self.keymap.GetKeyString(self.keymap_identifier, ref_id)
         if not title:
             title = menuItemsDic.dic[ref_id]
         s = title if shortcut is None else "%s\t%s" % (title, shortcut)
         if index >= 0:
-            menu_handle.InsertRadioItem(
-                index, menuItemsStore.getRef(ref_id), s)
+            menu_handle.InsertRadioItem(index, menuItemsStore.getRef(ref_id), s)
         else:
             menu_handle.AppendRadioItem(menuItemsStore.getRef(ref_id), s)
         self.blockCount[menuItemsStore.getRef(ref_id)] = 0
@@ -275,11 +256,18 @@ class BaseMenu(object):
         s = label if shortcut is None else "%s\t%s" % (label, shortcut)
         self.hMenuBar.SetLabel(menuItemsStore.getRef(ref_id), s)
 
-    def CheckMenu(ref_id, state=True):
-        return self.menu.Check(menuItemsStore.getRef(ref_id), state)
+    def CheckMenu(self, ref_id, state=True):
+        return self.hMenuBar.Check(menuItemsStore.getRef(ref_id), state)
 
     def EnableMenu(self, ref_id, enable=True):
-        if isinstance(ref_id, int):
+        if type(ref_id) != str and hasattr(ref_id, "__iter__"):
+            for i in ref_id:
+                self._EnableMenu(i, enable)
+        else:
+            self._EnableMenu(ref_id, enable)
+
+    def _EnableMenu(self, ref_id, enable):
+        if type(ref_id) == int:
             return self.Enable(ref_id, enable)
         else:
             return self.Enable(menuItemsStore.getRef(ref_id), enable)
@@ -297,7 +285,7 @@ class BaseMenu(object):
         return ret
 
     def _addMenuItemList(self, menu, ret):
-        if isinstance(menu, wx.Menu):
+        if type(menu) == wx.Menu:
             items = menu.GetMenuItems()
         else:
             items = menu.GetSubMenu().GetMenuItems()
@@ -315,17 +303,16 @@ class BaseEvents(object):
     def __init__(self, parent, identifier):
         self.parent = parent
         self.identifier = identifier
+        self.log = getLogger("%s.%s" % (constants.LOG_PREFIX, self.identifier))
 
-    def Exit(self, event=None):
+    def OnExit(self, event):
         event.Skip()
 
     # wx.EVT_MOVE_END→wx.MoveEvent
     def WindowMove(self, event):
         # 設定ファイルに位置を保存
-        globalVars.app.config[self.identifier]["positionX"] = self.parent.hFrame.GetPosition(
-        ).x
-        globalVars.app.config[self.identifier]["positionY"] = self.parent.hFrame.GetPosition(
-        ).y
+        globalVars.app.config[self.identifier]["positionX"] = self.parent.hFrame.GetPosition().x
+        globalVars.app.config[self.identifier]["positionY"] = self.parent.hFrame.GetPosition().y
 
     # wx.EVT_SIZE→wx.SizeEvent
     def WindowResize(self, event):
@@ -333,14 +320,11 @@ class BaseEvents(object):
         if self.parent.hFrame.IsActive():
             # 最大化状態でなければ、設定ファイルにサイズを保存
             if not self.parent.hFrame.IsMaximized():
-                globalVars.app.config[self.identifier]["sizeX"] = event.GetSize(
-                ).x
-                globalVars.app.config[self.identifier]["sizeY"] = event.GetSize(
-                ).y
+                globalVars.app.config[self.identifier]["sizeX"] = event.GetSize().x
+                globalVars.app.config[self.identifier]["sizeY"] = event.GetSize().y
 
             # 設定ファイルに最大化状態か否かを保存
-            globalVars.app.config[self.identifier]["maximized"] = self.parent.hFrame.IsMaximized(
-            )
+            globalVars.app.config[self.identifier]["maximized"] = self.parent.hFrame.IsMaximized()
 
         # sizerを正しく機能させるため、Skipの呼出が必須
         event.Skip()

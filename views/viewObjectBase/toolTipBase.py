@@ -8,10 +8,7 @@ class toolTip():
         cursorPos.x += 10
         cursorPos.y += 10
         self.parent = parent
-        self.dialog = wx.Dialog(
-            parent.GetTopLevelParent(),
-            style=wx.BORDER_RAISED,
-            pos=cursorPos)
+        self.dialog = wx.Dialog(parent.GetTopLevelParent(), style=wx.BORDER_RAISED, pos=cursorPos)
         self.dialog.SetBackgroundColour(bgColor)
         self.dialog.SetForegroundColour(fgColor)
         self.dialog.SetFont(font)
@@ -27,9 +24,7 @@ class toolTip():
             self.dialog.Show()
         else:
             log = logging.getLogger("%s.toolTip" % (constants.LOG_PREFIX,))
-            log.warning(
-                "The window size is too small to show. - %s" %
-                (label,))
+            log.warning("The window size is too small to show. - %s" % (label,))
 
     def refresh(self, cursorPos=None, label=None):
         if label is not None:
@@ -52,16 +47,11 @@ class toolTip():
             self.destroy()
 
     def _fixPos(self, cursorPos=None):
-        borderW = (self.parent.GetTopLevelParent().GetScreenRect().GetWidth(
-        ) - self.parent.GetTopLevelParent().GetClientSize()[0] + 2) / 2
-        borderT = (self.parent.GetTopLevelParent().GetScreenRect().GetHeight(
-        ) - self.parent.GetTopLevelParent().GetClientSize()[1] - borderW - 1)
+        borderW = (self.parent.GetTopLevelParent().GetScreenRect().GetWidth() - self.parent.GetTopLevelParent().GetClientSize()[0] + 2) / 2
+        borderT = (self.parent.GetTopLevelParent().GetScreenRect().GetHeight() - self.parent.GetTopLevelParent().GetClientSize()[1] - borderW - 1)
         clientRect = self.dialog.GetScreenRect()
         if cursorPos is not None:
-            clientRect.SetPosition(
-                wx.Point(
-                    cursorPos.x + 10,
-                    cursorPos.y + 10))
+            clientRect.SetPosition(wx.Point(cursorPos.x + 10, cursorPos.y + 10))
         clientBR = clientRect.GetBottomRight()
         clientH = clientRect.GetHeight()
         maxBR = self.parent.GetTopLevelParent().GetScreenRect().GetBottomRight()

@@ -28,11 +28,9 @@ class langDialog(BaseDialog):
 
     def InstallControls(self):
         """いろんなwidgetを設置する。"""
-        self.creator = views.ViewCreator.ViewCreator(
-            self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20)
+        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20)
         # 翻訳
-        self.langSelect, static = self.creator.combobox(
-            "select language", self.lang_name, None, state=0)
+        self.langSelect, static = self.creator.combobox("select language", self.lang_name, None, state=0)
         self.ok = self.creator.okbutton("OK", None)
 
     def Destroy(self, events=None):

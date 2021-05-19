@@ -3,6 +3,9 @@
 # Copyright (C) 2020-2021 yamahubuki <itiro.ishino@gmail.com>
 
 import wx
+
+import globalVars
+
 from views.viewObjectBase import viewObjectUtil, listCtrlBase
 
 
@@ -20,6 +23,7 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         self.focusFromKbd = viewObjectUtil.popArg(kArg, "enableTabFocus", True)
         self.columns = []
         self.bindFunctions = {}  # カラム関係のイベントのバインドを保存する辞書
+        self.printColumn = True
         super().__init__(*lPArg, **kArg)
         super().Bind(wx.EVT_LIST_END_LABEL_EDIT, self.onLabelEditEnd)
         super().Bind(wx.EVT_LIST_COL_END_DRAG, self.onColumnDragEnd)
@@ -46,16 +50,12 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         return self.GetItemCount() - 1
 
     def InsertItem(self, index, label=None):
-        if label is None or not isinstance(label, str):
+        if label is None or type(label) != str:
             raise NotImplementedError
         return self.insert(index, [label])
 
     def SetItem(self, index, column=0, label=None, imageId=-1):
-        if not isinstance(
-                index,
-                int) or label is None or not isinstance(
-                label,
-                str) or imageId != -1:
+        if type(index) != int or label is None or type(label) != str or imageId != -1:
             raise NotImplementedError
         if column < 0:
             raise ValueError
@@ -105,18 +105,14 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         if wx.wxEVT_LIST_END_LABEL_EDIT in self.bindFunctions:
             self.bindFunctions[wx.wxEVT_LIST_END_LABEL_EDIT](event)
         if (not event.IsEditCancelled()) and event.IsAllowed():
-            self.lst[self.GetFocusedItem()][self.getColFromWx(
-                0).col] = self.GetEditControl().GetLineText(0)
+            self.lst[self.GetFocusedItem()][self.getColFromWx(0).col] = self.GetEditControl().GetLineText(0)
 
     def onColumnDragEnd(self, event):
         event.SetColumn(self.getColFromWx(event.GetColumn()).col)
         if wx.wxEVT_LIST_COL_END_DRAG in self.bindFunctions:
             self.bindFunctions[wx.wxEVT_LIST_COL_END_DRAG](event)
         if event.IsAllowed():
-            self.getCol(
-                event.GetColumn()).width = super().GetColumnWidth(
-                self.getCol(
-                    event.GetColumn()).wx_col)
+            self.getCol(event.GetColumn()).width = super().GetColumnWidth(self.getCol(event.GetColumn()).wx_col)
 
     #
     # 非対応関数
@@ -127,6 +123,7 @@ class virtualListCtrl(listCtrlBase.listCtrl):
     #
     # リスト部分
     #
+
     def append(self, object):
         self.lst.append(object)
         super().SetItemCount(len(self.lst))
@@ -243,7 +240,7 @@ class virtualListCtrl(listCtrlBase.listCtrl):
             self.__setSelectionFromList(l)
             self.Show()
             self.SetFocus()
-        elif isinstance(key, int):
+        elif type(key) == int:
             super().DeleteItem(key)
             self.lst.pop(key)
             self.RefreshItems(0, len(self.lst) - 1)
@@ -376,57 +373,52 @@ class virtualListCtrl(listCtrlBase.listCtrl):
             return
         return tmp[0]
 
+    def isPrintColumn(self):
+        return self.printColumn
+
+    def setPrintColumn(self, v):
+        assert type(v) == bool
+        self.printColumn = v
+
+    def loadColumnInfo(self, section, key):
+        self.printColumn = self._needSaveColumnInfo and globalVars.app.config.getboolean(self.sectionName, self.keyName + "_print_column_name", True)
+        super().loadColumnInfo(section, key)
+
+    def saveColumnInfo(self):
+        super().saveColumnInfo()
+        globalVars.app.config[self.sectionName][self.keyName + "_print_column_name"] = self.printColumn
+
     def AppendColumn(self, heading, format=wx.LIST_FORMAT_LEFT, width=-1):
-        result = super().AppendColumn(heading, format, width)
-        ret = Column(len(self.columns), result, super(
-        ).GetColumnOrder(result), format, width, heading)
+        if self.isPrintColumn():
+            result = super().AppendColumn(heading, format, width)
+        else:
+            result = super().AppendColumn("", format, width)
+        ret = Column(len(self.columns), result, super().GetColumnOrder(result), format, width, heading)
         self.columns.append(ret)
         return ret.col
 
-    def InsertColumn(
-            self,
-            col,
-            heading,
-            format=wx.LIST_FORMAT_LEFT,
-            width=wx.LIST_AUTOSIZE):
+    def InsertColumn(self, col, heading, format=wx.LIST_FORMAT_LEFT, width=wx.LIST_AUTOSIZE):
         if col == 0:
             next = self.getCol(col)
             if next is not None:
-                insertedColumn = Column(
-                    col,
-                    next.wx_col - 1,
-                    next.disp_col - 1,
-                    format,
-                    width,
-                    heading)
+                insertedColumn = Column(col, next.wx_col - 1, next.disp_col - 1, format, width, heading)
             else:
                 insertedColumn = Column(0, 0, 0, format, width, heading)
         elif col <= self.GetColumnCount():
             prev = self.getCol(col - 1)
-            insertedColumn = Column(
-                col,
-                prev.wx_col + 1,
-                prev.disp_col + 1,
-                format,
-                width,
-                heading)
+            insertedColumn = Column(col, prev.wx_col + 1, prev.disp_col + 1, format, width, heading)
         else:
-            insertedColumn = Column(
-                self.GetColumnCount(),
-                GetShowingColumnCount(),
-                GetShowingColumnCount(),
-                format,
-                width,
-                heading)
+            insertedColumn = Column(self.GetColumnCount(), GetShowingColumnCount(), GetShowingColumnCount(), format, width, heading)
         for i in [j for j in self.columns if j.col >= insertedColumn.col]:
             i.col += 1
-        for i in [j for j in self.columns if j.wx_col >=
-                  insertedColumn.wx_col]:
+        for i in [j for j in self.columns if j.wx_col >= insertedColumn.wx_col]:
             i.wx_col += 1
-        for i in [j for j in self.columns if j.disp_col >=
-                  insertedColumn.disp_col]:
+        for i in [j for j in self.columns if j.disp_col >= insertedColumn.disp_col]:
             i.disp_col += 1
-        super().InsertColumn(insertedColumn.wx_col, heading, format, width)
+        if self.isPrintColumn():
+            super().InsertColumn(insertedColumn.wx_col, heading, format, width)
+        else:
+            super().InsertColumn(insertedColumn.wx_col, "", format, width)
         self.columns.append(insertedColumn)
         for i in self.lst:
             i.insert(insertedColumn.col, "")
@@ -438,14 +430,21 @@ class virtualListCtrl(listCtrlBase.listCtrl):
             i.col -= 1
         for i in [j for j in self.columns if j.wx_col > removedColumn.wx_col]:
             i.wx_col -= 1
-        for i in [j for j in self.columns if j.disp_col >
-                  removedColumn.disp_col]:
+        for i in [j for j in self.columns if j.disp_col > removedColumn.disp_col]:
             i.disp_col -= 1
         for i in self.lst:
             del i[col]
         result = super().DeleteColumn(removedColumn.wx_col)
         self.columns.remove(removedColumn)
         return result
+
+    def GetColumn(self, col):
+        info = wx.ListItem()
+        info.SetText(self.getCol(col).heading)
+        info.SetWidth(self.getCol(col).width)
+        info.SetAlign(self.getCol(col).format)
+        info.SetColumn(col)
+        return info
 
     def SetColumnsOrder(self, orders):
         super().DeleteAllColumns()
@@ -464,6 +463,19 @@ class virtualListCtrl(listCtrlBase.listCtrl):
             data.disp_col = -1
             data.display = False
         self.RefreshItems(0, self.GetItemCount())
+
+        # カラム名の表示・非表示を切替
+        if self._needSaveColumnInfo:
+            for i in list(range(len(self.columns))):
+                col = self.getCol(i)
+                if not col.display:
+                    continue
+                wxCol = self.GetColumn(i)
+                if self.isPrintColumn():
+                    wxCol.SetText(col.heading)
+                else:
+                    wxCol.SetText("")
+                self.SetColumn(col.wx_col, wxCol)
 
     def GetColumnsOrder(self):
         ret = []
@@ -485,15 +497,9 @@ class virtualListCtrl(listCtrlBase.listCtrl):
         return super().SetColumnWidth(tmp.wx_col, width)
 
     def Bind(self, event, handler, source=None, id=wx.ID_ANY, id2=wx.ID_ANY):
-        if not isinstance(
-                event,
-                wx.PyEventBinder) or source is not None or id != wx.ID_ANY or id2 != wx.ID_ANY:
+        if type(event) != wx.PyEventBinder or source is not None or id != wx.ID_ANY or id2 != wx.ID_ANY:
             raise NotImplementedError
-        if event in (
-                wx.EVT_LIST_COL_CLICK,
-                wx.EVT_LIST_COL_RIGHT_CLICK,
-                wx.EVT_LIST_COL_BEGIN_DRAG,
-                wx.EVT_LIST_COL_DRAGGING):
+        if event in (wx.EVT_LIST_COL_CLICK, wx.EVT_LIST_COL_RIGHT_CLICK, wx.EVT_LIST_COL_BEGIN_DRAG, wx.EVT_LIST_COL_DRAGGING):
             self.bindFunctions[event.typeId] = handler
             return super().Bind(event, self.columnEvent, source=source, id=id, id2=id2)
         if event in (wx.EVT_LIST_END_LABEL_EDIT, wx.EVT_LIST_COL_END_DRAG):

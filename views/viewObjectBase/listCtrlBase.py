@@ -34,32 +34,22 @@ class listCtrl(controlBase.controlBase, wx.ListCtrl):
                 保存するには、このウィンドウが破棄される前にsaveColumnInfo(引数不要)を呼ぶ必要があるので注意する。
                 これは、トップレベル以外のウィンドウでは終了イベントを得る方法がないためである。
         """
-        assert isinstance(section, str)
-        assert isinstance(key, str)
+        assert type(section) == str
+        assert type(key) == str
         self.sectionName = section
         self.keyName = key
         self._needSaveColumnInfo = True
 
         # カラムの並び替え設定を反映
         try:
-            self.SetColumnsOrder(json.loads(
-                globalVars.app.config[section][key + "_columns_order"]))
+            self.SetColumnsOrder(json.loads(globalVars.app.config[section][key + "_columns_order"]))
             self.Refresh()
         except (json.decoder.JSONDecodeError, TypeError):
             self.saveColumnInfo()  # configが壊れているので初期値リセット
             return
 
         for i in range(0, self.GetColumnCount()):
-            self.SetColumnWidth(
-                i,
-                globalVars.app.config.getint(
-                    self.sectionName,
-                    self.keyName +
-                    "_column_width_" +
-                    str(i),
-                    100,
-                    0,
-                    1500))
+            self.SetColumnWidth(i, globalVars.app.config.getint(self.sectionName, self.keyName + "_column_width_" + str(i), 100, 0, 1500))
 
     def saveColumnInfo(self):
         """
@@ -68,13 +58,11 @@ class listCtrl(controlBase.controlBase, wx.ListCtrl):
         value = self.GetColumnsOrder()
         if value == []:
             return  # 起動直後で、まだカラム生成前の場合など
-        globalVars.app.config[self.sectionName][self.keyName +
-                                                "_columns_order"] = str(value)
+        globalVars.app.config[self.sectionName][self.keyName + "_columns_order"] = str(value)
 
         for i in range(0, self.GetColumnCount()):
             width = self.GetColumnWidth(i)
-            globalVars.app.config[self.sectionName][self.keyName +
-                                                    "_column_width_" + str(i)] = str(width)
+            globalVars.app.config[self.sectionName][self.keyName + "_column_width_" + str(i)] = str(width)
 
     def getItemSelections(self):
         """

@@ -51,21 +51,13 @@ class KeyValueSettingDialogBase(BaseDialog):
 
     def InstallControls(self):
         """いろんなwidgetを設置する。"""
-        self.creator = views.ViewCreator.ViewCreator(
-            self.viewMode,
-            self.panel,
-            self.sizer,
-            wx.VERTICAL,
-            20,
-            style=wx.ALL,
-            proportion=20)
+        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20, style=wx.ALL, proportion=20)
         self.hListCtrl, dummy = self.creator.virtualListCtrl(
             _("現在の登録内容"), proportion=0, sizerFlag=wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, size=(
                 750, 300), style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
 
         for i, info in enumerate(self.columnInfo):
-            self.hListCtrl.InsertColumn(
-                i, info[0], format=info[1], width=info[2])
+            self.hListCtrl.InsertColumn(i, info[0], format=info[1], width=info[2])
             self.columnNames.append(info[0])
 
         for key in self.values[0]:
@@ -77,17 +69,9 @@ class KeyValueSettingDialogBase(BaseDialog):
         self.hListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.ItemSelected)
 
         # 処理ボタン
-        self.creator = views.ViewCreator.ViewCreator(
-            self.viewMode,
-            self.panel,
-            self.creator.GetSizer(),
-            wx.HORIZONTAL,
-            20,
-            "",
-            wx.EXPAND)
+        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.creator.GetSizer(), wx.HORIZONTAL, 20, "", wx.EXPAND)
         for i in range(len(self.specialButtons)):
-            self.specialButtons[i] = self.creator.button(
-                self.specialButtons[i][0], self.specialButtons[i][1])
+            self.specialButtons[i] = self.creator.button(self.specialButtons[i][0], self.specialButtons[i][1])
             self.specialButtons[i].Enable(False)
 
         self.creator.AddSpace(-1)
@@ -98,15 +82,7 @@ class KeyValueSettingDialogBase(BaseDialog):
         self.deleteButton.Enable(False)
 
         # ボタンエリア
-        self.creator = views.ViewCreator.ViewCreator(
-            self.viewMode,
-            self.panel,
-            self.sizer,
-            wx.HORIZONTAL,
-            20,
-            "",
-            wx.ALIGN_RIGHT | wx.ALL,
-            margin=20)
+        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.HORIZONTAL, 20, "", wx.ALIGN_RIGHT | wx.ALL, margin=20)
         self.bOk = self.creator.okbutton(_("ＯＫ"), self.OkButtonEvent)
         self.bCancel = self.creator.cancelbutton(_("キャンセル"), None)
 
@@ -118,12 +94,10 @@ class KeyValueSettingDialogBase(BaseDialog):
                 self.specialButtons[i].Enable(False)
         else:  # 選択追加の通知
             self.editButton.Enable(True)
-            key = self.hListCtrl.GetItemText(
-                self.hListCtrl.GetFocusedItem(), 0)
+            key = self.hListCtrl.GetItemText(self.hListCtrl.GetFocusedItem(), 0)
             self.deleteButton.Enable(self.DeleteValidation(key))
             for i in range(len(self.specialButtons)):
-                self.specialButtons[i].Enable(
-                    self.SpecialButtonValidation(key))
+                self.specialButtons[i].Enable(self.SpecialButtonValidation(key))
 
     def DeleteValidation(self, key):
         """
@@ -151,12 +125,7 @@ class KeyValueSettingDialogBase(BaseDialog):
             return
         v = d.GetValue()
         if v[0] in self.values[0]:
-            dlg = wx.MessageDialog(
-                self.wnd,
-                _("この%sは既に登録されています。登録を上書きしますか？") %
-                self.columnNames[0],
-                _("上書き確認"),
-                wx.YES_NO | wx.ICON_QUESTION)
+            dlg = wx.MessageDialog(self.wnd, _("この%sは既に登録されています。登録を上書きしますか？") % self.columnNames[0], _("上書き確認"), wx.YES_NO | wx.ICON_QUESTION)
             if dlg.ShowModal() == wx.ID_NO:
                 return
             index = self.hListCtrl.FindItem(-1, v[0])
@@ -186,12 +155,7 @@ class KeyValueSettingDialogBase(BaseDialog):
         v = d.GetValue()
         if oldKey != v[0]:
             if v[0] in self.values[0]:
-                dlg = wx.MessageDialog(
-                    self.wnd,
-                    _("この%sは既に登録されています。登録を上書きしますか？") %
-                    self.columnInfo[0][0],
-                    _("上書き確認"),
-                    wx.YES_NO | wx.ICON_QUESTION)
+                dlg = wx.MessageDialog(self.wnd, _("この%sは既に登録されています。登録を上書きしますか？") % self.columnInfo[0][0], _("上書き確認"), wx.YES_NO | wx.ICON_QUESTION)
                 if dlg.ShowModal() == wx.ID_NO:
                     return
 
@@ -268,8 +232,7 @@ class SettingDialogBase(BaseDialog):
         """
         super().__init__("valueSettingDialog")
         if len(valueNames) != len(v):
-            raise ValueError(
-                "Specified initial values did not match value names.")
+            raise ValueError("Specified initial values did not match value names.")
         self.parent = parent
         self.valueNames = valueNames
         self.buttons = buttons
@@ -278,66 +241,41 @@ class SettingDialogBase(BaseDialog):
         self.buttonObjects = [None] * len(self.valueNames)
 
     def Initialize(self, title):
-        super().Initialize(
-            self.parent,
-            title,
-            style=wx.WS_EX_VALIDATE_RECURSIVELY | wx.DEFAULT_FRAME_STYLE)
+        super().Initialize(self.parent, title, style=wx.WS_EX_VALIDATE_RECURSIVELY | wx.DEFAULT_FRAME_STYLE)
         self.InstallControls()
         return True
 
     def InstallControls(self):
         """いろんなwidgetを設置する。"""
-        self.baseCreator = views.ViewCreator.ViewCreator(
-            self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20, style=wx.ALL, margin=20)
+        self.baseCreator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20, style=wx.ALL, margin=20)
 
         for i, name in enumerate(self.valueNames):
-            self.creator = views.ViewCreator.ViewCreator(
-                self.viewMode,
-                self.baseCreator.GetPanel(),
-                self.baseCreator.GetSizer(),
-                wx.HORIZONTAL,
-                10)
+            self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.baseCreator.GetPanel(), self.baseCreator.GetSizer(), wx.HORIZONTAL, 10)
             if type(name[1]) == str:
-                self.edits[i] = self.creator.checkbox(
-                    name[1], state=self.values[i], x=500)
+                self.edits[i] = self.creator.checkbox(name[1], state=self.values[i], x=500)
             elif name[1]:
-                self.edits[i], dummy = self.creator.inputbox(
-                    name[0], x=500, defaultValue=self.values[i], textLayout=wx.VERTICAL)
+                self.edits[i], dummy = self.creator.inputbox(name[0], x=500, defaultValue=self.values[i], textLayout=wx.VERTICAL)
                 self.edits[i].hideScrollBar(wx.HORIZONTAL)
             elif name[1] == False:
-                self.edits[i], dummy = self.creator.inputbox(
-                    name[0], x=500, defaultValue=self.values[i], style=wx.TE_READONLY, textLayout=wx.VERTICAL)
+                self.edits[i], dummy = self.creator.inputbox(name[0], x=500, defaultValue=self.values[i],
+                                                             style=wx.TE_READONLY, textLayout=wx.VERTICAL)
                 self.edits[i].hideScrollBar(wx.HORIZONTAL)
             elif hasattr(name[1], "__iter__"):
                 state = 0
                 if self.values[i] in name[1]:
                     state = name[1].index(self.values[i])
-                self.edits[i], dummy = self.creator.combobox(
-                    name[0], name[1], state=state, x=500, textLayout=wx.VERTICAL)
+                self.edits[i], dummy = self.creator.combobox(name[0], name[1], state=state, x=500, textLayout=wx.VERTICAL)
             elif name[1] is None:
-                self.edits[i], dummy = self.creator.inputbox(
-                    name[0], x=500, defaultValue=self.values[i], style=wx.TE_READONLY, textLayout=wx.VERTICAL)
+                self.edits[i], dummy = self.creator.inputbox(name[0], x=500, defaultValue=self.values[i],
+                                                             style=wx.TE_READONLY, textLayout=wx.VERTICAL)
                 self.edits[i].GetParent().Hide()
             else:
-                raise TypeError(
-                    "object type must be str,bool,None, or iterable.")
+                raise TypeError("object type must be str,bool,None, or iterable.")
             if self.buttons[i]:
-                self.buttonObjects[i] = self.creator.button(
-                    self.buttons[i][0],
-                    self.buttons[i][1],
-                    sizerFlag=wx.ALIGN_BOTTOM | wx.BOTTOM,
-                    margin=10)
+                self.buttonObjects[i] = self.creator.button(self.buttons[i][0], self.buttons[i][1], sizerFlag=wx.ALIGN_BOTTOM | wx.BOTTOM, margin=10)
 
         # ボタンエリア
-        self.creator = views.ViewCreator.ViewCreator(
-            self.viewMode,
-            self.panel,
-            self.sizer,
-            wx.HORIZONTAL,
-            20,
-            "",
-            wx.ALIGN_RIGHT | wx.TOP,
-            10)
+        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.HORIZONTAL, 20, "", wx.ALIGN_RIGHT | wx.TOP, 10)
         self.bOk = self.creator.okbutton(_("ＯＫ"), self.OkButtonEvent)
         self.bCancel = self.creator.cancelbutton(_("キャンセル"), None)
 
@@ -347,8 +285,7 @@ class SettingDialogBase(BaseDialog):
             if isinstance(self.edits[i], wx.CheckBox):
                 ret[i] = self.edits[i].GetValue()
             elif isinstance(self.edits[i], wx.ComboBox):
-                ret[i] = self.edits[i].GetString(
-                    self.edits[i].GetCurrentSelection())
+                ret[i] = self.edits[i].GetString(self.edits[i].GetCurrentSelection())
             else:
                 ret[i] = self.edits[i].GetLineText(0)
         ret[0] = ret[0].lower()  # iniファイルへの保存の為キーは小文字に統一
@@ -362,10 +299,7 @@ class SettingDialogBase(BaseDialog):
         """
         key = self.edits[0].GetLineText(0)
         if key == "" or "=" in key:
-            dialog(
-                _("エラー"),
-                _("%sを空白や半角の=を含む値に設定することはできません。") %
-                self.valueNames[0][0])
+            dialog(_("エラー"), _("%sを空白や半角の=を含む値に設定することはできません。") % self.valueNames[0][0])
             return
         return self.Validation(event)
 
@@ -378,12 +312,7 @@ class SettingDialogBase(BaseDialog):
         event.Skip()
 
 
-def KeySettingValidation(
-        oldKeyConfig,
-        newKeyConfig,
-        logger,
-        entries=None,
-        AllowNewKeyDuplication=False):
+def KeySettingValidation(oldKeyConfig, newKeyConfig, logger, entries=None, AllowNewKeyDuplication=False):
     """
             oldKeyConfig:	{name:key}	設定変更前
             newKeyConfig:	{name:key}	設定変更後
@@ -392,9 +321,7 @@ def KeySettingValidation(
             AllowNewKeyDuplication	bool	newKey内での重複を許すならTrue
     """
     if logger is None:
-        logger = getLogger(
-            "%s.%s" %
-            (constants.LOG_PREFIX, "KeySettingValidation"))
+        logger = getLogger("%s.%s" % (constants.LOG_PREFIX, "KeySettingValidation"))
     errors = ""
     oldKeys = {}
     for k, vs in oldKeyConfig.items():
@@ -412,19 +339,16 @@ def KeySettingValidation(
             continue
         if not AllowNewKeyDuplication:
             if len(v) == 2:
-                errors += _("%(v1)sと%(v2)sに同じショートカットキー%(key)sが設定されています。\n") % {
-                    "v1": v[0], "v2": v[1], "key": k}
+                errors += _("%(v1)sと%(v2)sに同じショートカットキー%(key)sが設定されています。\n") % {"v1": v[0], "v2": v[1], "key": k}
                 continue
             elif len(v) > 2:
-                errors += _("%(v1)s、%(v2)sなど計%(count)d箇所に同じショートカットキー%(key)sが設定されています。\n") % {
-                    "v1": v[0], "v2": v[1], "count": len(v), "key": k}
+                errors += _("%(v1)s、%(v2)sなど計%(count)d箇所に同じショートカットキー%(key)sが設定されています。\n") % {"v1": v[0], "v2": v[1], "count": len(v), "key": k}
                 continue
         e = keymap.makeEntry("DUMMY", k, None, logger)
         if e is None:
             errors += _("設定されたショートカット%sが認識できません。お手数ですが、このエラーメッセージを作者へご連絡ください。\n") % k
         elif e in entries and (k not in oldKeys):
-            errors += _("%(command)sに設定されたショートカットキー%(key)sは、別の場所で利用されています。\n") % {
-                "command": v[0], "key": k}
+            errors += _("%(command)sに設定されたショートカットキー%(key)sは、別の場所で利用されています。\n") % {"command": v[0], "key": k}
     if errors != "":
         dialog(_("エラー"), errors)
         return False

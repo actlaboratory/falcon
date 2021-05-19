@@ -17,7 +17,8 @@ class DefaultSettings:
         config["general"] = {
             "language": "ja-JP",
             "fileVersion": "100",
-            "locale": "ja-JP"
+            "locale": "ja-JP",
+			"log_level": "0",
         }
         config["speech"] = {
             "reader": "AUTO",

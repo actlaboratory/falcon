@@ -11,26 +11,11 @@ import types
 def load_library(libname, cdll=False):
     if hasattr(sys, "frozen"):
         if sys.version_info.major >= 3 and sys.version_info.minor >= 8:
-            os.add_dll_directory(
-                os.path.join(
-                    os.path.abspath(
-                        os.path.dirname(
-                            sys.executable)),
-                    'accessible_output2',
-                    'lib'))
-        libfile = os.path.join(
-            os.path.abspath(
-                os.path.dirname(
-                    sys.executable)),
-            'accessible_output2',
-            'lib',
-            libname)
+            os.add_dll_directory(os.path.join(os.path.abspath(os.path.dirname(sys.executable)), 'accessible_output2', 'lib'))
+        libfile = os.path.join(os.path.abspath(os.path.dirname(sys.executable)), 'accessible_output2', 'lib', libname)
     else:
         import inspect
-        module_path = os.path.abspath(
-            os.path.dirname(
-                inspect.getmodule(
-                    inspect.stack()[0][0]).__file__))
+        module_path = os.path.abspath(os.path.dirname(inspect.getmodule(inspect.stack()[0][0]).__file__))
         if sys.version_info.major >= 3 and sys.version_info.minor >= 8:
             os.add_dll_directory(os.path.join(module_path, 'lib'))
         libfile = os.path.join(module_path, 'lib', libname)
@@ -43,10 +28,7 @@ def load_library(libname, cdll=False):
 def get_output_classes():
     from . import outputs
     module_type = types.ModuleType
-    classes = [
-        m.output_class for m in outputs.__dict__.values() if isinstance(
-            m, module_type) and hasattr(
-            m, 'output_class')]
+    classes = [m.output_class for m in outputs.__dict__.values() if type(m) == module_type and hasattr(m, 'output_class')]
     return sorted(classes, key=lambda c: c.priority)
 
 
