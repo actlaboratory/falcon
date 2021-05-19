@@ -37,10 +37,11 @@ class StreamListTab(base.FalconTabBase):
             return
         e = self.hListCtrl.GetEditControl()
         f = self.listObject.GetElement(self.GetFocusedItem())
-        if error:
-            dialog(_("エラー"), error)
-            evt.Veto()
-            return
+        # TODO: 名前の検証
+        #if error:
+        #    dialog(_("エラー"), error)
+        #    evt.Veto()
+        #    return
         inst = {"operation": "rename", "files": [f.fullpath], "to": [newName]}
         op = fileOperator.FileOperator(inst)
         ret = op.Execute()
@@ -49,8 +50,6 @@ class StreamListTab(base.FalconTabBase):
             evt.Veto()
             return
         # end fail
-        f.basename = e.GetLineText(0)
-        f.fullpath = f.file + f.basename
     # end onLabelEditEnd
 
     def FileOperationTest(self):

@@ -171,6 +171,13 @@ class File(FalconBrowsableBase):
     def GetRootDrivePath(self):
         return misc.GetRootObject(self.fullpath).fullpath
 
+    def __setitem__(self, index, obj):
+        if index == 0:
+            self.basename = obj
+            self.fullpath = os.path.join(self.directory, self.basename)
+        else:
+            super().__setitem__(index, obj)
+
 
 class Folder(File):
     __slots__ = ["fileCount", "dirCount"]
@@ -380,6 +387,7 @@ class Stream(FalconBrowsableBase):
     def __setitem__(self, index, obj):
         if index == 0:
             self.basename = obj
+            self.fullpath = self.file + ":" + self.basename
         else:
             super().__setitem__(index, obj)
 

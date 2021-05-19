@@ -89,7 +89,6 @@ class DriveListTab(base.FalconTabBase):
             evt.Veto()
             return
         # end fail
-        f.basename = e.GetLineText(0)
     # end onLabelEditEnd
 
     def FileOperationTest(self):

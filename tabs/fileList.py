@@ -69,10 +69,6 @@ class FileListTab(base.FalconTabBase):
             return
         # end fail
         f.basename = e.GetLineText(0)
-        if isinstance(f, browsableObjects.File):
-            f.fullpath = os.path.join(f.directory, f.basename)
-        if isinstance(f, browsableObjects.Stream):
-            f.fullpath = f.file + f.basename
     # end onLabelEditEnd
 
     def ChangeAttribute(self, attrib_checks):
