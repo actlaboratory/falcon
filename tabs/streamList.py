@@ -38,7 +38,7 @@ class StreamListTab(base.FalconTabBase):
         e = self.hListCtrl.GetEditControl()
         f = self.listObject.GetElement(self.GetFocusedItem())
         # TODO: 名前の検証
-        #if error:
+        # if error:
         #    dialog(_("エラー"), error)
         #    evt.Veto()
         #    return
