@@ -42,7 +42,7 @@ after_test:
   - ren falcon-snapshot.zip falcon.zip
 
 artifacts:
-  - path: falcon-*.zip
+  - path: falcon.zip
 
 deploy:
   - provider: FTP
