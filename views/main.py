@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 # Falcon app main view
 # Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
-# Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
+# Copyright (C) 2019-2021 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
 import copy
@@ -39,6 +39,7 @@ import views.objectDetail
 import views.openHere
 import views.search
 import views.registerOriginalAssociation
+import views.versionDialog
 
 import workerThreads
 import workerThreadTasks
@@ -466,7 +467,8 @@ class Menu(BaseMenu):
 
         # ヘルプメニューの中身
         self.RegisterMenuCommand(self.hHelpMenu, (
-            "HELP_VERINFO"
+            "HELP_VERINFO",
+            "HELP_UPDATE",
         ))
 
         # メニューバー
@@ -858,7 +860,10 @@ class Events(BaseEvents):
             self.parent.hFrame.Close()
             return
         if selected == menuItemsStore.getRef("HELP_VERINFO"):
-            self.ShowVersionInfo()
+            views.versionDialog.versionDialog()
+            return
+        if selected == menuItemsStore.getRef("HELP_UPDATE"):
+            globalVars.update.update()
             return
 
         for m in globalVars.app.userCommandManagers:
@@ -928,16 +933,6 @@ class Events(BaseEvents):
         else:
             later = wx.CallLater(200, callable)
     # end delaiedCall
-
-    def ShowVersionInfo(self):
-        """バージョン情報を表示する。"""
-        dialog(
-            _("バージョン情報"),
-            _("%(app)s Version %(ver)s.\nCopyright (C) %(year)s %(names)s") % {
-                "app": constants.APP_NAME,
-                "ver": constants.APP_VERSION,
-                "year": constants.APP_COPYRIGHT_YEAR,
-                "names": constants.APP_DEVELOPERS})
 
     def ExecProgram(self):
         d = views.SympleImputDialog.Dialog(_("ファイル名を指定して実行"), _("コマンドライン"))

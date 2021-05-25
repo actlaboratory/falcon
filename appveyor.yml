@@ -41,7 +41,7 @@ after_test:
   - "%PYTHON%\\python.exe tools\\build.py --appveyor"
 
 artifacts:
-  - path: falcon.zip
+  - path: falcon-*.zip
 
 deploy:
   - provider: FTP

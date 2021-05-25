@@ -23,3 +23,11 @@ def errorDialog(message, parent=None):
     dialog.ShowModal()
     dialog.Destroy()
     return
+
+
+def winDialog(title, message):
+    ctypes.windll.user32.MessageBoxW(0, message, title, 0x00000040)
+
+
+def simpleDialog(title, message):
+    ctypes.windll.user32.MessageBoxW(0, message, title, 0x00000040)

@@ -8,3 +8,4 @@
 
 
 app = None
+update = None

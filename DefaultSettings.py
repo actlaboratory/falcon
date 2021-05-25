@@ -18,11 +18,17 @@ class DefaultSettings:
             "language": "ja-JP",
             "fileVersion": "100",
             "locale": "ja-JP",
-			"log_level": "0",
+            "log_level": "0",
+            "update": True,
         }
         config["speech"] = {
             "reader": "AUTO",
             "fx_volume": 100
+        }
+        config["proxy"] = {
+            "usemanualsetting": False,
+            "server": "localhost",
+            "port": 8080,
         }
         config["FileList"] = {
             "sorting": 0,
@@ -106,8 +112,8 @@ class DefaultSettings:
 
 initialValues = {}
 """
-	この辞書には、ユーザによるキーの削除が許されるが、初回起動時に組み込んでおきたい設定のデフォルト値を設定する。
-	ここでの設定はユーザの環境に設定ファイルがなかった場合のみ適用され、初期値として保存される。
+    この辞書には、ユーザによるキーの削除が許されるが、初回起動時に組み込んでおきたい設定のデフォルト値を設定する。
+    ここでの設定はユーザの環境に設定ファイルがなかった場合のみ適用され、初期値として保存される。
 """
 
 

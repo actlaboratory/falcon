@@ -4,15 +4,19 @@
 # Note: All comments except these top lines will be written in Japanese.
 
 import os
+import proxyUtil
 import wx
-import UserCommandManager
-from soundPlayer import pybass
-from simpleDialog import *
 
 import AppBase
 import constants
+import globalVars
 import misc
+import update
+import UserCommandManager
 import workerThreads
+
+from falconSoundPlayer import pybass
+from simpleDialog import *
 
 
 class falconAppMain(AppBase.MaiｎBase):
@@ -21,6 +25,14 @@ class falconAppMain(AppBase.MaiｎBase):
 
     def initialize(self):
         """アプリを初期化する。"""
+        self.initUpdater()
+        # プロキシの設定を適用
+        self.proxyEnviron = proxyUtil.virtualProxyEnviron()
+        self.setProxyEnviron()
+        # アップデートを実行
+        if self.config.getboolean("general", "update"):
+            globalVars.update.update(True)
+
         t = misc.Timer()
 
         wx.DisableAsserts()
@@ -104,6 +116,16 @@ class falconAppMain(AppBase.MaiｎBase):
         if ret != 1:
             self.log.error("BASS sound system could not be initialized.")
 
+    def initUpdater(self):
+        globalVars.update = update.update()
+        return
+
+    def setProxyEnviron(self):
+        if self.config.getboolean("proxy", "usemanualsetting", False):
+            self.proxyEnviron.set_environ(self.config["proxy"]["server"], self.config.getint("proxy", "port", 8080, 0, 65535))
+        else:
+            self.proxyEnviron.set_environ()
+
     def InitCaches(self):
         """起動中に使用するキャッシュデータを初期化する。"""
         self.filetypes_cach = {}  # これほんとに使うかどうか検討中
@@ -144,6 +166,8 @@ class falconAppMain(AppBase.MaiｎBase):
         del self.config["open_here"]
         self.config["open_here"] = self.openHereCommand.paramMap
         self.config["open_here_shortcut"] = self.openHereCommand.keyMap
+
+        globalVars.update.runUpdate()
 
         return wx.App.OnExit(self)
 

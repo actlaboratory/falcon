@@ -6,14 +6,19 @@
 import win32file
 import wx
 
-APP_NAME = "Falcon test"
-APP_VERSION = "0.01"
-APP_COPYRIGHT_YEAR = "2019-2020"
-APP_DEVELOPERS = "Yukio Nozawa and Yuki Kochi"
+APP_FULL_NAME = "Falcon test"
+APP_NAME = "Falcon"
+APP_ICON = None
+APP_VERSION = "0.0.1"
+APP_LAST_RELEASE_DATE = "2022-01-01"
+APP_COPYRIGHT_YEAR = "2019-2021"
+APP_LICENSE = "Apache License 2.0"
+APP_DEVELOPERS = "Yukio Nozawa, yamahubuki, ACT Laboratory"
+APP_DEVELOPERS_URL = "https://actlab.org/"
+APP_DETAILS_URL = "https://actlab.org/software/falcon"
+APP_COPYRIGHT_MESSAGE = "Copyright (c) %s %s All lights reserved." % (APP_COPYRIGHT_YEAR, APP_DEVELOPERS)
 
 SUPPORTING_LANGUAGE = {"ja-JP": "日本語", "en-US": "English"}  # 対応言語一覧
-DISPLAY_LANGUAGE = ("日本語", "English")  # 言語選択表示用の文字列
-
 
 SETTING_FILE_NAME = "settings.ini"
 LOG_PREFIX = "falcon"
@@ -33,10 +38,24 @@ ARROW_RIGHT = 1
 ARROW_DOWN = 2
 ARROW_LEFT = 3
 
+# build関連定数
+BASE_PACKAGE_URL = None
+PACKAGE_CONTAIN_ITEMS = ("xd2txlib.dll", "fx")  # パッケージに含めたいファイルやfolderがあれば指定
+NEED_HOOKS = ()  # pyinstallerのhookを追加したい場合は指定
+STARTUP_FILE = "falcon.py"  # 起動用ファイルを指定
+UPDATER_URL = "https://github.com/actlaboratory/updater/releases/download/1.0.0/updater.zip"
+
+# update情報
+UPDATE_URL = "https://actlab.org/api/checkUpdate"
+UPDATER_VERSION = "1.0.0"
+UPDATER_WAKE_WORD = "hello"
+
+
 # menuId
 MENU_ID_FROM_FALCON = 5000
 MENU_ID_SORT_COLUMN = 6000
 
+# xdoc関連
 SUPPORTED_DOCUMENT_FORMATS = {
     # document
     'txt',
@@ -178,6 +197,7 @@ SUPPORTED_AUDIO_FORMATS = {
     'mpg',
     "mp4"
 }
+
 # browsableObjects.FOLDERで利用
 DIR_SIZE_UNKNOWN = -1
 DIR_SIZE_CALCURATING = -2
