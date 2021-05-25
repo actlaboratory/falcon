@@ -39,6 +39,7 @@ after_test:
   # 64-bit Python 3.3/3.4. And you need to use %PYTHON% to get the correct
   # interpreter
   - "%PYTHON%\\python.exe tools\\build.py --appveyor"
+  - ren falcon-snapshot.zip falcon.zip
 
 artifacts:
   - path: falcon-*.zip
