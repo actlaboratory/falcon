@@ -6,6 +6,8 @@
 import os
 import proxyUtil
 import wx
+import threading
+import sys
 
 import AppBase
 import constants
@@ -59,6 +61,22 @@ class falconAppMain(AppBase.MaiｎBase):
             "Finished mainView setup (%f seconds from start)" %
             t.elapsed)
         return True
+
+    def installThreadExcepthook(self):
+        _init = threading.Thread.__init__
+
+        def init(self, *args, **kwargs):
+            _init(self, *args, **kwargs)
+            _run = self.run
+
+            def run(*args, **kwargs):
+                try:
+                    _run(*args, **kwargs)
+                except:
+                    sys.excepthook(*sys.exc_info())
+            self.run = run
+
+        threading.Thread.__init__ = init
 
     def LoadUserCommandSettings(self):
         """お気に入りフォルダと「ここで開く」の設定を読み込む"""
