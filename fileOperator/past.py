@@ -23,8 +23,9 @@ class Element(object):
         self.path = path
         self.isfile = os.path.isfile(path)
         self.size = os.path.getsize(path) if self.isfile else -1
-        if basepath is None or destpath is None:
-            return  # どっちかがNoneだったら、移動するときのフォルダ削除用エントリとして取り扱うことにする
+        self.destpath = destpath
+        if destpath is None:
+            return  # destpathがNoneだったら、移動するときのフォルダ削除用エントリとして取り扱うことにする
         self.destpath = path.replace(basepath, destpath)  # これがコピー先
     # end __init__
 # end Element
@@ -70,9 +71,10 @@ def Execute(op, resume=False):
             e = Element(elem, basepath, destpath)
             if os.path.isdir(e.destpath) and not resume:
                 # フォルダがもうあれば、その時点で確認に入れる(中のフォルダを展開しない)
+                # コピー先にディレクトリがあった時点で、「ディレクトリを上書きしますか？」の確認を出したいので。
                 _processExistingFolder(op.output, elem, basepath, destpath)
-            else:  # まだないか、確認済みなので追加
-                _expandFolder(lst, elem, e, basepath, destpath)
+            else:  # まだないか、ユーザーに確認済みなので追加
+                _expandFolder(lst, elem, e, basepath, destpath, copy_move_flag)
             # end フォルダを展開するかしないか
         # end フォルダだった
     # end ファイルリスト作るループ
@@ -93,6 +95,8 @@ def Execute(op, resume=False):
     pasted_size = 0
     for elem in f:
         if elem.destpath is None:  # フォルダ削除用
+            # 移動するとき、 destpath が空のエントリーは、フォルダを消すという命令代わりに使っている。
+            log.debug("deleting folder %s" % elem.path)
             try:
                 win32file.RemoveDirectory(elem.path, None)
             except win32file.error as err:
@@ -100,6 +104,7 @@ def Execute(op, resume=False):
                     "Error encountered when trying to delete moved folder: %s" %
                     str(err))
             # end except
+            continue  # エラーにならないように逃げる
         # end フォルダ消す
         try:
             if elem.isfile:
@@ -170,11 +175,19 @@ def _processExistingFolder(output, elem, basepath, destpath):
         Element(elem, basepath, destpath), 80, _("このフォルダはすでに存在します。")))
 
 
-def _expandFolder(lst, path, e, basepath, destpath):
+def _expandFolder(lst, path, e, basepath, destpath, copy_move_flag):
     """フォルダを展開して、指定されたリストに入れる。"""
-    print("expand")
+    print("e: %s" % e)
     lst.append(e)  # イテレーションの最初に親フォルダ追加
     for elem in misc.IteratePaths_dirFirst(path):
         lst.append(Element(elem, basepath, destpath))
     # end フォルダからファイルリスト
+    # 移動モードの時、フォルダの最後に、そのフォルダを削除するためのエレメントを挿入する
+    if copy_move_flag == MOVE:
+        lst.append(Element(e.path, basepath, None))
+        print("delete elem added")
+        for elem in lst:
+            print("%s, %s" % (elem.path, elem.destpath))
+        print("end")
+    # end
 # end _expandFolder
