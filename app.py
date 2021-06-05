@@ -31,6 +31,8 @@ class falconAppMain(AppBase.MaiｎBase):
         # プロキシの設定を適用
         self.proxyEnviron = proxyUtil.virtualProxyEnviron()
         self.setProxyEnviron()
+        # スレッドで例外が起きてもsys.exceptHookが呼ばれるようにする
+        self.installThreadExcepthook()
         # アップデートを実行
         if self.config.getboolean("general", "update"):
             globalVars.update.update(True)
