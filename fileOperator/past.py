@@ -28,12 +28,15 @@ class Element(object):
             return  # destpathがNoneだったら、移動するときのフォルダ削除用エントリとして取り扱うことにする
         self.destpath = path.replace(basepath, destpath)  # これがコピー先
     # end __init__
+
+    def __str__(self):
+        return "past element (path=%s, destpath=%s, size=%d)" % (self.path, self.destpath, self.size)
+    # end __str__
 # end Element
 
 
 def Execute(op, resume=False):
     """実行処理。リトライが必要になった項目数を返す。"""
-    print("start resume=%s" % resume)
     if resume:
         log.debug("Starting as resume mode...")
     retry = 0
@@ -75,11 +78,13 @@ def Execute(op, resume=False):
                 _processExistingFolder(op.output, elem, basepath, destpath)
             else:  # まだないか、ユーザーに確認済みなので追加
                 _expandFolder(lst, elem, e, basepath, destpath, copy_move_flag)
+                print("expanded folder %s" % elem)
             # end フォルダを展開するかしないか
         # end フォルダだった
     # end ファイルリスト作るループ
     # ファイルリスト作ったので、もともとの target に上書き
     f = lst
+    print("made list: %s" % [str(e) for e in f])
     log.debug("%d items found." % len(f))
     # コピーサイズの合計を計算
     total = 0
@@ -177,17 +182,27 @@ def _processExistingFolder(output, elem, basepath, destpath):
 
 def _expandFolder(lst, path, e, basepath, destpath, copy_move_flag):
     """フォルダを展開して、指定されたリストに入れる。"""
-    print("e: %s" % e)
     lst.append(e)  # イテレーションの最初に親フォルダ追加
-    for elem in misc.IteratePaths_dirFirst(path):
-        lst.append(Element(elem, basepath, destpath))
-    # end フォルダからファイルリスト
+    # 再帰的にディレクトリを掘っていく。切り取りモードの時にフォルダ削除マークを入れたいので、iteratePaths計で一気に取得することはできない。
+    for elem in os.listdir(path):
+        p = os.path.join(path, elem)
+        innerElem = Element(p, basepath, destpath)
+        if os.path.isdir(p):
+            # フォルダなので、再帰的に中身を転回
+            _expandFolder(lst, p, innerElem, basepath,
+                          destpath, copy_move_flag)
+            _handleFolderDeleteRecord(lst, innerElem, basepath, copy_move_flag)
+        else:
+            # ファイルなのでそのまま追加
+            lst.append(innerElem)
+        # end フォルダかファイルか
+    # end 追加処理
     # 移動モードの時、フォルダの最後に、そのフォルダを削除するためのエレメントを挿入する
-    if copy_move_flag == MOVE:
-        lst.append(Element(e.path, basepath, None))
-        print("delete elem added")
-        for elem in lst:
-            print("%s, %s" % (elem.path, elem.destpath))
-        print("end")
+    _handleFolderDeleteRecord(lst, e, basepath, copy_move_flag)
     # end
 # end _expandFolder
+
+
+def _handleFolderDeleteRecord(lst, e, basepath, copy_move_flag):
+    if copy_move_flag == MOVE:
+        lst.append(Element(e.path, basepath, None))
