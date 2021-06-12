@@ -47,9 +47,7 @@ class SearchResultList(SearchResultBase):
             isRegularExpression=False,
             silent=False):
         """与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
-        if isinstance(
-                rootDirectory,
-                list):  # パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
+        if isinstance(rootDirectory, list):  # パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
             for elem in rootDirectory:
                 if isinstance(elem, browsableObjects.SearchedFolder):
                     self.folders.append(elem)
