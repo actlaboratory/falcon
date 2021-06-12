@@ -27,16 +27,17 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 
     def StartSearch(self, rootPath, searches, keyword, isRegularExpression):
         self.listObject = self.listType()
-        self.listObject.Initialize(
-            rootPath, searches, keyword, isRegularExpression)
+        self.listObject.Initialize(rootPath, searches, keyword, isRegularExpression)
         self.tempListObject = self.listType()
-        self.tempListObject.Initialize(
-            rootPath, searches, keyword, isRegularExpression)
+        self.tempListObject.Initialize(rootPath, searches, keyword, isRegularExpression)
         self.SetListColumns(self.listObject)
         self._InitIconList()
         self.taskState = workerThreads.RegisterTask(
             workerThreadTasks.PerformSearch, {
-                'listObject': self.tempListObject, 'tabObject': self})
+                'listObject': self.tempListObject,
+                'tabObject': self
+            }
+        )
 
         # タブの名前変更を通知
         globalVars.app.hMainView.UpdateTabName()
