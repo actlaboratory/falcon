@@ -23,16 +23,20 @@ class Element(object):
         self.path = path
         self.isfile = os.path.isfile(path)
         self.size = os.path.getsize(path) if self.isfile else -1
-        if basepath is None or destpath is None:
-            return  # どっちかがNoneだったら、移動するときのフォルダ削除用エントリとして取り扱うことにする
+        self.destpath = destpath
+        if destpath is None:
+            return  # destpathがNoneだったら、移動するときのフォルダ削除用エントリとして取り扱うことにする
         self.destpath = path.replace(basepath, destpath)  # これがコピー先
     # end __init__
+
+    def __str__(self):
+        return "past element (path=%s, destpath=%s, size=%d)" % (self.path, self.destpath, self.size)
+    # end __str__
 # end Element
 
 
 def Execute(op, resume=False):
     """実行処理。リトライが必要になった項目数を返す。"""
-    print("start resume=%s" % resume)
     if resume:
         log.debug("Starting as resume mode...")
     retry = 0
@@ -70,14 +74,17 @@ def Execute(op, resume=False):
             e = Element(elem, basepath, destpath)
             if os.path.isdir(e.destpath) and not resume:
                 # フォルダがもうあれば、その時点で確認に入れる(中のフォルダを展開しない)
+                # コピー先にディレクトリがあった時点で、「ディレクトリを上書きしますか？」の確認を出したいので。
                 _processExistingFolder(op.output, elem, basepath, destpath)
-            else:  # まだないか、確認済みなので追加
-                _expandFolder(lst, elem, e, basepath, destpath)
+            else:  # まだないか、ユーザーに確認済みなので追加
+                _expandFolder(lst, elem, e, basepath, destpath, copy_move_flag)
+                print("expanded folder %s" % elem)
             # end フォルダを展開するかしないか
         # end フォルダだった
     # end ファイルリスト作るループ
     # ファイルリスト作ったので、もともとの target に上書き
     f = lst
+    print("made list: %s" % [str(e) for e in f])
     log.debug("%d items found." % len(f))
     # コピーサイズの合計を計算
     total = 0
@@ -93,6 +100,8 @@ def Execute(op, resume=False):
     pasted_size = 0
     for elem in f:
         if elem.destpath is None:  # フォルダ削除用
+            # 移動するとき、 destpath が空のエントリーは、フォルダを消すという命令代わりに使っている。
+            log.debug("deleting folder %s" % elem.path)
             try:
                 win32file.RemoveDirectory(elem.path, None)
             except win32file.error as err:
@@ -100,6 +109,7 @@ def Execute(op, resume=False):
                     "Error encountered when trying to delete moved folder: %s" %
                     str(err))
             # end except
+            continue  # エラーにならないように逃げる
         # end フォルダ消す
         try:
             if elem.isfile:
@@ -170,11 +180,29 @@ def _processExistingFolder(output, elem, basepath, destpath):
         Element(elem, basepath, destpath), 80, _("このフォルダはすでに存在します。")))
 
 
-def _expandFolder(lst, path, e, basepath, destpath):
+def _expandFolder(lst, path, e, basepath, destpath, copy_move_flag):
     """フォルダを展開して、指定されたリストに入れる。"""
-    print("expand")
     lst.append(e)  # イテレーションの最初に親フォルダ追加
-    for elem in misc.IteratePaths_dirFirst(path):
-        lst.append(Element(elem, basepath, destpath))
-    # end フォルダからファイルリスト
+    # 再帰的にディレクトリを掘っていく。切り取りモードの時にフォルダ削除マークを入れたいので、iteratePaths計で一気に取得することはできない。
+    for elem in os.listdir(path):
+        p = os.path.join(path, elem)
+        innerElem = Element(p, basepath, destpath)
+        if os.path.isdir(p):
+            # フォルダなので、再帰的に中身を転回
+            _expandFolder(lst, p, innerElem, basepath,
+                          destpath, copy_move_flag)
+            _handleFolderDeleteRecord(lst, innerElem, basepath, copy_move_flag)
+        else:
+            # ファイルなのでそのまま追加
+            lst.append(innerElem)
+        # end フォルダかファイルか
+    # end 追加処理
+    # 移動モードの時、フォルダの最後に、そのフォルダを削除するためのエレメントを挿入する
+    _handleFolderDeleteRecord(lst, e, basepath, copy_move_flag)
+    # end
 # end _expandFolder
+
+
+def _handleFolderDeleteRecord(lst, e, basepath, copy_move_flag):
+    if copy_move_flag == MOVE:
+        lst.append(Element(e.path, basepath, None))
