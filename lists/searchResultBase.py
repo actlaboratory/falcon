@@ -25,7 +25,12 @@ class SearchResultBase(FileListBase):
         super().__init__()
 
     def _performSearchStep(self, taskState):
-        """検索を1ステップ実行する。100県のファイルがヒットするか、リストが終わるまで検索し、終わったら関数から抜ける。途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。"""
+        """
+           検索を1ステップ実行する。
+           100件のファイルがヒットするか、リストが終わるまで検索し、終わったら関数から抜ける。
+           途中で EOL に当たったら、検索終了としてTrueを返し、そうでないときにFalseを帰す。
+           また、表示関数に渡しやすいように、今回のステップでヒットした要素のリストも返す。
+        """
         ret_list = []
         i = self.searched_index
         hit = 0
@@ -96,15 +101,24 @@ class SearchResultBase(FileListBase):
             size = -1
         else:
             size = stat.st_size
+
+        # エラー対策
+        mtime = 0
+        ctime = 0
+        if stat.st_mtime <= 32536799999:
+            mtime = stat.st_mtime
+        if stat.st_ctime <= 32536799999:
+            ctime = stat.st_ctime
+
         obj.Initialize(
             os.path.dirname(fullpath),  # directory
             os.path.basename(fullpath),  # basename
             fullpath,
             size,  # size
-            datetime.datetime.fromtimestamp(stat.st_mtime),  # modDate
+            datetime.datetime.fromtimestamp(mtime, datetime.timezone.utc),  # modDate
             win32file.GetFileAttributes(fullpath),  # attributes
             shfileinfo[4],  # typeString
-            datetime.datetime.fromtimestamp(stat.st_ctime),  # creationDate
+            datetime.datetime.fromtimestamp(ctime, datetime.timezone.utc),  # creationDate
             win32api.GetShortPathName(fullpath),  # shortName
             shfileinfo[0]  # hIcon
         )
