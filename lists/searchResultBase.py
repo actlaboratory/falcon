@@ -131,5 +131,7 @@ class SearchResultBase(FileListBase):
             self.keyword,
             True)
 
-    def RedoSearch(self):
+    def RedoSearch(self, searches):
+        self.searches = searches
         self._initSearch()
+

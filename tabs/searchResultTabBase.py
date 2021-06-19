@@ -54,8 +54,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
                 self._AppendElement(elem)
                 self.listObject.lists[-1].append(elem)
         # end 追加
-        if self.tempListObject.GetFinishedStatus(
-        ) and self.hListCtrl.GetItemCount() == len(self.tempListObject):
+        if self.tempListObject.GetFinishedStatus() and self.hListCtrl.GetItemCount() == len(self.tempListObject):
             # ここはcallAfterで実行されるため、検索修了時点でCallAfterのキューに２つ以上のこの関数が貯まってるとソートが２回発生して画面とリストがずれるので条件を二重にして対策した
             self.ApplySort()
 
@@ -69,10 +68,13 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
             globalVars.app.say(_("再建策"), interrupt=True)
         # end not silence
         self.DeleteAllItems()
-        self.listObject.RedoSearch()
-        workerThreads.RegisterTask(
-            workerThreadTasks.PerformSearch, {
-                'listObject': self.listObject, 'tabObject': self})
+        searches = []
+        self.listObject.RedoSearch(searches)
+        task = workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList, {'path': self.listObject.rootDirectory, 'out_lst': searches, 'eol': True})
+        self.tempListObject = self.listType()
+        self.tempListObject.Initialize(self.listObject.rootDirectory, searches, keyword, isRegularExpression)
+        workerThreads.RegisterTask(workerThreadTasks.PerformSearch, {
+            'listObject': self.tempListObject, 'tabObject': self})
 
     def GoForward(self, stream, admin=False):
         """検索結果表示では、フォルダを開くときに別タブを生成する。"""
