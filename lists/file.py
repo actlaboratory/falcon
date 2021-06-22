@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 # Falcon file list object
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
-# Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
+# Copyright (C) 2019-2021 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
 import os
@@ -49,6 +49,7 @@ class FileList(FileListBase):
 
     def Initialize(self, dir, silent=False):
         """ディレクトリからファイル情報を取得し、リストを初期化する。入力は絶対パスでなければならない。情報が取得できなかった場合、errorCodes.OK以外が返る。silentがTrueなら読み上げは行われない。"""
+        self.ClearCache()
         if isinstance(
                 dir, list):  # パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
             self._copyFromList(dir)
@@ -98,8 +99,7 @@ class FileList(FileListBase):
             if elem[8] == "." or elem[8] == "..":
                 continue
             fullpath = os.path.join(dir, elem[8])
-            ret, shfileinfo = shell.SHGetFileInfo(
-                fullpath, 0, shellcon.SHGFI_ICON | shellcon.SHGFI_TYPENAME)
+            shfileinfo=self.GetShellInfo(fullpath)
             if os.path.isfile(fullpath):
                 f = browsableObjects.File()
                 f.Initialize(
