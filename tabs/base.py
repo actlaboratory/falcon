@@ -258,7 +258,7 @@ class FalconTabBase(object):
             indexは検索結果一覧でフォルダを正しい位置に挿入するために利用
         """
         if index >= 0:
-            self.hListCtrl.Insert(index, elem)
+            self.hListCtrl.insert(index, elem)
         else:
             index = self.hListCtrl.Append(elem)
         if elem.hIcon >= 0:
