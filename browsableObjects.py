@@ -75,10 +75,16 @@ class FalconBrowsableBase():
         return self.attributes & win32con.FILE_ATTRIBUTE_REPARSE_POINT > 0
 
     def __str__(self):
-        return "<" + self.__class__.__name__ + " " + self.basename + ">"
+        try:
+	        return "<" + self.__class__.__name__ + " " + self.basename + ">"
+        except AttributeError:
+            return "<" + self.__class__.__name__ + "(unInitialized)>"
 
     def __repr__(self):
-        return "<" + self.__class__.__name__ + " " + self.basename + ">"
+        try:
+            return "<" + self.__class__.__name__ + " " + self.basename + ">"
+        except AttributeError:
+            return "<" + self.__class__.__name__ + "(unInitialized)>"
 
     def GetListTuple(self):
         raise NotImplementedError
@@ -117,8 +123,15 @@ class File(FalconBrowsableBase):
             typeString="",
             creationDate=None,
             shortName="",
-            hIcon=-1):
-        """必要な情報をセットする。継承しているクラスのうち、grepItemだけはここを通らないので注意。"""
+            hIcon=-1,
+            *,
+            relpath=""
+        ):
+        """
+            必要な情報をセットする。
+            継承しているクラスのうち、grepItemだけはここを通らないので注意。
+            互換性の為relpathを引数に取るが、使っていない。
+        """
         self.directory = directory
         self.basename = basename
         self.fullpath = os.path.join(directory, basename)
@@ -138,14 +151,11 @@ class File(FalconBrowsableBase):
         """表示に必要なタプルを返す。"""
         return (
             self.basename,
-            misc.ConvertBytesTo(
-                self.size,
-                misc.UNIT_AUTO,
-                True),
-            misc.PTime2string(
-                self.modDate),
+            misc.ConvertBytesTo(self.size, misc.UNIT_AUTO, True),
+            misc.PTime2string(self.modDate),
             self.attributesString,
-            self.typeString)
+            self.typeString
+        )
 
     def GetNewAttributes(self, checks):
         """属性変更の時に使う。チェック状態のリストを受け取って、新しい属性値を帰す。変更の必要がなければ、-1を帰す。"""
@@ -208,25 +218,30 @@ class Folder(File):
 
 
 class SearchedFile(File):
-    __slots__ = []
+    __slots__ = ["relpath"]
+
+    def Initialize(self, *args, relpath="", **kArgs):
+        super().Initialize(*args, **kArgs)
+        self.relpath = relpath
 
     def GetListTuple(self):
         """表示に必要なタプルを返す。"""
         return (
             self.basename,
-            misc.ConvertBytesTo(
-                self.size,
-                misc.UNIT_AUTO,
-                True),
-            self.fullpath,
-            misc.PTime2string(
-                self.modDate),
+            misc.ConvertBytesTo(self.size, misc.UNIT_AUTO, True),
+            self.relpath,
+            misc.PTime2string(self.modDate),
             self.attributesString,
-            self.typeString)
+            self.typeString
+        )
 
 
 class SearchedFolder(Folder):
-    __slots__ = []
+    __slots__ = ["relpath"]
+
+    def Initialize(self, *args, relpath="", **kArgs,):
+        super().Initialize(*args, **kArgs)
+        self.relpath = relpath
 
     def GetListTuple(self):
         """表示に必要なタプルを返す。フォルダなのでサイズ不明(-1)の場合があり、この場合は <dir> にする。"""
@@ -234,28 +249,27 @@ class SearchedFolder(Folder):
             return (
                 self.basename,
                 "<dir>",
-                self.fullpath,
-                misc.PTime2string(
-                    self.modDate),
+                self.relpath,
+                misc.PTime2string(self.modDate),
                 self.attributesString,
                 self.typeString)
         else:
             return (
                 self.basename,
-                misc.ConvertBytesTo(
-                    self.size,
-                    misc.UNIT_AUTO,
-                    True),
+                misc.ConvertBytesTo(self.size, misc.UNIT_AUTO, True),
                 self.fullpath,
-                misc.PTime2string(
-                    self.modDate),
+                misc.PTime2string(self.modDate),
                 self.attributesString,
                 self.typeString)
 
 
 class GrepItem(File):
-    def Initialize(self, ln, preview, fileobject):
-        """grepの結果は、ファイルの情報に加えて、行数・プレビュー・ヒット数を含む。ヒット数は、後から設定する。ファイル名などは、与えられたファイルオブジェクトからとる。"""
+    def Initialize(self, ln, preview, fileobject, *, relpath=""):
+        """
+           grepの結果は、ファイルの情報に加えて、行数・プレビュー・ヒット数を含む。ヒット数は、後から設定する。
+           ファイル名などは、与えられたファイルオブジェクトからとる。
+           互換性の為relpathを引数に取るが、使っていない。
+        """
         self.directory = fileobject.directory
         self.basename = fileobject.basename
         self.fullpath = fileobject.fullpath
@@ -286,12 +300,8 @@ class GrepItem(File):
             self.ln,
             self.preview,
             self.hits,
-            misc.ConvertBytesTo(
-                self.size,
-                misc.UNIT_AUTO,
-                True),
-            misc.PTime2string(
-                self.modDate),
+            misc.ConvertBytesTo(self.size, misc.UNIT_AUTO, True),
+            misc.PTime2string(self.modDate),
             self.attributesString,
             self.typeString)
 

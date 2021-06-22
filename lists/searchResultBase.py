@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 # Falcon searchResultBase Function
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
-# Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
+# Copyright (C) 2019-2021 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
 import datetime
@@ -120,7 +120,8 @@ class SearchResultBase(FileListBase):
             shfileinfo[4],  # typeString
             datetime.datetime.fromtimestamp(ctime, datetime.timezone.utc),  # creationDate
             win32api.GetShortPathName(fullpath),  # shortName
-            shfileinfo[0]  # hIcon
+            shfileinfo[0],  # hIcon
+            relpath = os.path.relpath(fullpath, self.rootDirectory)
         )
         return obj
 
