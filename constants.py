@@ -55,7 +55,7 @@ UPDATER_WAKE_WORD = "hello"
 MENU_ID_FROM_FALCON = 5000
 MENU_ID_SORT_COLUMN = 6000
 
-# xdoc関連
+# xdoc2txtでテキスト化できる形式
 SUPPORTED_DOCUMENT_FORMATS = {
     # document
     'txt',
@@ -79,7 +79,6 @@ SUPPORTED_DOCUMENT_FORMATS = {
     'mht',
     'htm',
     'html',
-    'xml',
     'yaml',
     'md',
 
@@ -183,6 +182,12 @@ SUPPORTED_DOCUMENT_FORMATS = {
     'rul',  # Research-It Rule
     'qry',  # Research-It Query
 }
+
+# xdocに書けると意図しない結果になるが、テキストとして読めるもの
+TEXT_READABLE_DOCUMENT_FORMATS = {
+	"xml"
+}
+
 
 SUPPORTED_AUDIO_FORMATS = {
     'wav',

@@ -190,13 +190,29 @@ def DestroyContextMenu():
 
 
 def ExtractText(path):
-    path_bytes = makeStringForFalconHelper(path)
-    ptr = falconHelper.extractText(path_bytes)
-    s = ctypes.c_char_p(ptr).value
-    falconHelper.releasePtr(ptr)
-    s2 = s.decode('UTF-8')
-    return s2
+    ext = os.path.splitext(path)[1].lower()[1:]
 
+    if ext not in constants.TEXT_READABLE_DOCUMENT_FORMATS:
+        try:
+            with open(path, 'r', encoding="UTF-8") as f:
+                data = f.read()
+                return data
+        except UnicodeDecodeError:
+            try:
+                with open(path, 'r', encoding="cp932") as f:
+                    data = f.read()
+                    return data
+            except Exception as e:
+                return ""
+        except Exception as e:
+            return ""
+    else:
+        path_bytes = makeStringForFalconHelper(path)
+        ptr = falconHelper.extractText(path_bytes)
+        s = ctypes.c_char_p(ptr).value
+        falconHelper.releasePtr(ptr)
+        s2 = s.decode('UTF-8')
+        return s2
 
 def disableWindowStyleFlag(hwnd, flag):
     """指定されたウィンドウハンドルの DWL_STYLE の値を撮って、指定されたフラグを折る。"""
@@ -349,7 +365,7 @@ def CommandLineToArgv(cmd):
 
 
 def isDocumentExt(ext):
-    return ext.lower() in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats
+    return ext.lower() in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats | constants.TEXT_READABLE_DOCUMENT_FORMATS
 
 
 def ResolveLocalIpAddress(name):
