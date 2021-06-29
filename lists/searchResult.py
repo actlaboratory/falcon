@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 # Falcon search results list object
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
-# Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
+# Copyright (C) 2019-2021 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
 import os
@@ -47,6 +47,7 @@ class SearchResultList(SearchResultBase):
             isRegularExpression=False,
             silent=False):
         """与えられたファイル名のリストから、条件に一致する項目を抽出する。"""
+        self.ClearCache()
         if isinstance(rootDirectory, list):  # パラメータがリストなら、browsableObjects のリストとして処理刷る(ファイルリストを取得しないでコピーする)
             for elem in rootDirectory:
                 if isinstance(elem, browsableObjects.SearchedFolder):
