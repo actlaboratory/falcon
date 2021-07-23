@@ -1092,7 +1092,7 @@ class Events(BaseEvents):
                 if info["DeletePending"]:
                     tmp += _("削除予約済 ")
                 if info["NumberOfLinks"] > 1:
-                    tmp += _("ハードリンクにより他の %d 箇所から参照" % info["NumberOfLinks"] - 1)
+                    tmp += _("ハードリンクにより他の %d 箇所から参照" % (info["NumberOfLinks"] - 1))
                 if tmp == "":
                     tmp = _("なし")
                 d.add(_("追加情報"), tmp)
