@@ -78,13 +78,11 @@ def Execute(op, resume=False):
                 _processExistingFolder(op.output, elem, basepath, destpath)
             else:  # まだないか、ユーザーに確認済みなので追加
                 _expandFolder(lst, elem, e, basepath, destpath, copy_move_flag)
-                print("expanded folder %s" % elem)
             # end フォルダを展開するかしないか
         # end フォルダだった
     # end ファイルリスト作るループ
     # ファイルリスト作ったので、もともとの target に上書き
     f = lst
-    print("made list: %s" % [str(e) for e in f])
     log.debug("%d items found." % len(f))
     # コピーサイズの合計を計算
     total = 0
@@ -113,8 +111,7 @@ def Execute(op, resume=False):
         # end フォルダ消す
         try:
             if elem.isfile:
-                win32file.CopyFileEx(
-                    elem.path, elem.destpath, None, None, False, overwrite)
+                copyOrMove(elem, copy_move_flag, overwrite)
             else:
                 if resume and os.path.isdir(elem.destpath):
                     continue  # 再開している場合はエラーになる前に逃げる
@@ -124,16 +121,6 @@ def Execute(op, resume=False):
             ProcessError(op, elem, str(err), resume)
             continue
         # end except
-        if copy_move_flag == MOVE:
-            try:
-                if elem.isfile:
-                    win32file.DeleteFile(elem.path)
-            except win32file.error as err:
-                log.debug(
-                    "Error encountered when deleting moved file: %s" %
-                    str(err))
-            # end except
-        # end 移動モード
         op.output["succeeded"] += 1
         if elem.size != -1:
             pasted_size += elem.size
@@ -151,6 +138,14 @@ def Execute(op, resume=False):
     op.instructions["target"] = []
     return retry
 
+def copyOrMove(elem, copy_move_flag, overwrite):
+    if copy_move_flag == COPY:
+        win32file.CopyFileEx(
+            elem.path, elem.destpath, None, None, False, overwrite
+        )
+    else:
+        f = win32file.MOVEFILE_COPY_ALLOWED | win32file.MOVEFILE_REPLACE_EXISTING if overwrite else win32file.MOVEFILE_COPY_ALLOWED
+        win32file.MoveFileEx(elem.path, elem.destpath, f)
 
 def ProcessError(op, elem, msg, resume):
     """アクセス拒否であれば、リトライするリストに追加する。昇格しても失敗するエラーであれば、 need_to_confirm に追加する。"""
