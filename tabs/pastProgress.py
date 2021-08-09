@@ -69,6 +69,9 @@ class PastProgressTab(base.FalconTabBase):
         if item < 0:
             return
         m.Destroy()
+        self.handleDetails()
+
+    def handleDetails(self):
         elem = self.GetFocusedElement()
         index = elem.getConfirmationManagerIndex()
         confs = self.fileOperator.GetConfirmationManager()
@@ -98,10 +101,12 @@ class PastProgressTab(base.FalconTabBase):
             confirmElem.Respond(d.GetValue()['response'])  # 渓谷に対して、文字列でレスポンスする
         # end これ以降全てかこれだけか
         self.fileOperator.UpdateConfirmation()  # これで繁栄する
-        print("before update")
         self.listObject.Update(confs)
         self.Update(self.listObject)
         self.fileOperator.Execute()  # これでコピーを再実行
+
+    def GoForward(self, stream, admin=False):
+        self.handleDetails()
 
     def ReadCurrentFolder(self):
         globalVars.app.say("貼り付けの結果を閲覧中")
