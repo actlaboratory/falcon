@@ -94,7 +94,7 @@ def Execute(op, resume=False):
     op.output['current_bytes'] = 0
     log.debug("Size: %d bbytes" % total)
     log.debug("Start copying...")
-    overwrite = 0 if resume else win32file.COPY_FILE_FAIL_IF_EXISTS
+    overwrite = resume
     pasted_size = 0
     for elem in f:
         if elem.destpath is None:  # フォルダ削除用
@@ -140,8 +140,9 @@ def Execute(op, resume=False):
 
 def copyOrMove(elem, copy_move_flag, overwrite):
     if copy_move_flag == COPY:
+        f = 0 if overwrite else win32file.COPY_FILE_FAIL_IF_EXISTS
         win32file.CopyFileEx(
-            elem.path, elem.destpath, None, None, False, overwrite
+            elem.path, elem.destpath, None, None, False, f
         )
     else:
         f = win32file.MOVEFILE_COPY_ALLOWED | win32file.MOVEFILE_REPLACE_EXISTING if overwrite else win32file.MOVEFILE_COPY_ALLOWED
