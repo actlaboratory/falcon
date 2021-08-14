@@ -46,7 +46,7 @@ class SearchResultBase(FileListBase):
             # end EOL
             result = self.HitTest(path, ret_list)
             hit += result
-            if hit = 100:
+            if hit == 100:
                 self.searched_index = i + 1  # 次の位置をキャッシュ
                 break
             # end 100県ヒット
