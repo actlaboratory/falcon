@@ -41,19 +41,17 @@ class SearchResultBase(FileListBase):
             if path == "eol":  # EOLで検索終了
                 self.finished = True
                 globalVars.app.PlaySound("complete.ogg")
-                globalVars.app.say(
-                    _("検索終了、%(item)d件ヒットしました。") % {
-                        'item': len(self)})
+                globalVars.app.say(_("検索終了、%(item)d件ヒットしました。") % {'item': len(self)})
                 return True, ret_list
             # end EOL
             result = self.HitTest(path, ret_list)
             hit += result
-            if hit == 100:
+            if hit = 100:
                 self.searched_index = i + 1  # 次の位置をキャッシュ
                 break
             # end 100県ヒット
             i += 1
-            if i >= len(self.searches):  # 検索は終わってないが、ファイルリスト取得が追いついてない
+            if i == len(self.searches):  # 検索は終わってないが、ファイルリスト取得が追いついてない
                 self.searched_index = len(self.searches)
                 break
             # end リストが追いついてない
