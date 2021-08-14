@@ -249,7 +249,11 @@ def GetDirectorySize(path, fileCount=0, dirCount=0):
     try:
         with os.scandir(path) as it:
             for entry in it:
-                if isLink(entry.path):
+                try:
+                    ret = isLink(entry.path)
+                except:
+                    continue
+                if ret:
                     print("Synlink skipped:" + entry.path)
                     log.debug("Synlink skipped:" + entry.path)
                     continue
@@ -436,6 +440,7 @@ def PathParamSplit(input):
 def isLink(path):
     """
             pathがシンボリックリンクまたはジャンクションならTrue
+            呼び出す際は権限がない場合等のエラーをキャッチすべき
     """
     attrs = win32api.GetFileAttributes(path)
     return attrs & win32con.FILE_ATTRIBUTE_REPARSE_POINT != 0
