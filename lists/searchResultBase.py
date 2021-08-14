@@ -34,7 +34,7 @@ class SearchResultBase(FileListBase):
         ret_list = []
         i = self.searched_index
         hit = 0
-        while(True):
+        while(i < len(self.searches)):
             if taskState.canceled:
                 return False, -1  # 途中でキャンセル
             path = self.searches[i]
@@ -51,11 +51,8 @@ class SearchResultBase(FileListBase):
                 break
             # end 100県ヒット
             i += 1
-            if i == len(self.searches):  # 検索は終わってないが、ファイルリスト取得が追いついてない
-                self.searched_index = len(self.searches)
-                break
-            # end リストが追いついてない
         # end 検索ループ
+        self.searched_index = len(self.searches) #次回はここから
         return False, ret_list
 
     def GetFinishedStatus(self):
