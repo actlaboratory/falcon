@@ -192,7 +192,7 @@ def DestroyContextMenu():
 def ExtractText(path):
     ext = os.path.splitext(path)[1].lower()[1:]
 
-    if ext not in constants.TEXT_READABLE_DOCUMENT_FORMATS:
+    if ext in constants.TEXT_READABLE_DOCUMENT_FORMATS:
         try:
             with open(path, 'r', encoding="UTF-8") as f:
                 data = f.read()
@@ -213,6 +213,7 @@ def ExtractText(path):
         falconHelper.releasePtr(ptr)
         s2 = s.decode('UTF-8')
         return s2
+
 
 def disableWindowStyleFlag(hwnd, flag):
     """指定されたウィンドウハンドルの DWL_STYLE の値を撮って、指定されたフラグを折る。"""
