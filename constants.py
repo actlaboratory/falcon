@@ -39,7 +39,7 @@ ARROW_DOWN = 2
 ARROW_LEFT = 3
 
 # build関連定数
-BASE_PACKAGE_URL = None
+BASE_PACKAGE_URL = "https://github.com/actlaboratory/falcon/releases/download/0.0.1/falcon-0.0.1.zip"
 PACKAGE_CONTAIN_ITEMS = ("xd2txlib.dll", "fx")  # パッケージに含めたいファイルやfolderがあれば指定
 NEED_HOOKS = ()  # pyinstallerのhookを追加したい場合は指定
 STARTUP_FILE = "falcon.py"  # 起動用ファイルを指定
