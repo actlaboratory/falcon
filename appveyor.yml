@@ -2,12 +2,14 @@ version: development.{build}-{branch}
 branches:
   only:
     - master
-    - release
 
 skip_branch_with_pr: true
 
 environment:
-
+  githubToken:
+    secure: iNSx8v6c+0TP9IyckinrvNWuX+hc7SKruOqRDl9GxdX59sZ2yqB8+UDAtqdPzKIg
+  SCRIPT_PASSWORD:
+    secure: 9RvVUKVQ8MsoG5LOZ86VyFQF19JXXS33tDzomLH/jZM=
   matrix:
 
     # For Python versions available on Appveyor, see
@@ -39,17 +41,30 @@ after_test:
   # 64-bit Python 3.3/3.4. And you need to use %PYTHON% to get the correct
   # interpreter
   - "%PYTHON%\\python.exe tools\\build.py --appveyor"
-  - ren falcon-snapshot.zip falcon.zip
+  - cmd: if defined APPVEYOR_PULL_REQUEST_NUMBER appveyor exit 0
+  - cmd: curl "https://actlab.org/git-release.php?repo_name=%APPVEYOR_REPO_NAME%&tag_name=FALCON-latestcommit&password=%SCRIPT_PASSWORD%"
+  - cmd: git tag -d FALCON-latestcommit
+  - cmd: git push -d https://actlab-auto:%githubToken%@github.com/actlaboratory/FALCON.git FALCON-latestcommit
+  - cmd: git tag FALCON-latestcommit
+  - cmd: git push https://actlab-auto:%githubToken%@github.com/actlaboratory/FALCON.git FALCON-latestcommit
 
 artifacts:
-  - path: falcon.zip
+  - path: falcon-*.zip
+  - path: falcon-*.info
 
 deploy:
-  - provider: FTP
-    protocol: ftp|ftps|sftp
-    host: nyanchangames.com
-    username: nyanchangames
-    password:
-      secure: DLAhdZUmNV7ONiHIulw73A==
-    folder: www/
-    debug: true
+  - provider: GitHub
+    release: FALCON-latestcommit
+    skip_tags: true
+    Force update: true
+    description: 'automatic build from master branch'
+    auth_token:
+      secure: iNSx8v6c+0TP9IyckinrvNWuX+hc7SKruOqRDl9GxdX59sZ2yqB8+UDAtqdPzKIg
+    artifact: /(falcon-.*\.zip)|(falcon-.*\.json)/                # upload all NuGet packages to release assets
+    draft: false
+    prerelease: false
+    on:
+      branch: master                 # release from master branch only
+
+after_deploy:
+  - cmd: echo import constants;print("https://actlab.org/api/addAlphaVersion?repo_name=%APPVEYOR_REPO_NAME%&commit_hash=%APPVEYOR_REPO_COMMIT%&version="+constants.APP_VERSION+"&password=%SCRIPT_PASSWORD%",end="") | C:\\Python38\python.exe | xargs -n1 curl
