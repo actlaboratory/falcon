@@ -686,7 +686,10 @@ class FalconTabBase(object):
 
     def StartRename(self):
         index = self.GetFocusedItem()
-        self.hListCtrl.EditLabel(index)
+        elem = self.listObject.GetElement(index)
+        ed = self.hListCtrl.EditLabel(index)
+        if isinstance(elem, browsableObjects.File) and not isinstance(elem, browsableObjects.Folder):
+            ed.SetSelection(0, len(os.path.splitext(ed.GetValue())[0]))
 
     def OnLabelEditStart(self, evt):
         self.isRenaming = True
