@@ -41,10 +41,9 @@ class Dialog(BaseDialog):
         self.creator = views.ViewCreator.ViewCreator(
             1, self.panel, self.sizer, wx.HORIZONTAL, 20)
         self.combo, static = self.creator.combobox(
-            _("値の種類"), hashTypes, self.changeAlgo)
-        self.calcButton = self.creator.button(
+            _("値の種類"), hashTypes, state=hashTypes.index('sha256'))
+        self.calcButton = self.creator.okbutton(
             _("計算"), self.calcStart, sizerFlag=wx.ALIGN_CENTER_VERTICAL)
-        self.calcButton.Enable(False)
 
         self.creator = views.ViewCreator.ViewCreator(
             1, self.panel, self.sizer, wx.VERTICAL, 20)
@@ -55,11 +54,9 @@ class Dialog(BaseDialog):
             self.sizer, wx.HORIZONTAL, wx.ALIGN_RIGHT)
         self.creator = views.ViewCreator.ViewCreator(
             1, self.panel, self.buttonArea, wx.HORIZONTAL, 20)
-        self.bOk = self.creator.okbutton(_("閉じる"), None)
+        self.bClose = self.creator.cancelbutton(_("閉じる"), None)
 
     def calcStart(self, event):
         hash = misc.calcHash(self.fileName, self.combo.GetStringSelection())
         self.resultFeeld.SetValue(hash)
-
-    def changeAlgo(self, event):
-        self.calcButton.Enable(True)
+        self.resultFeeld.SetFocus()
