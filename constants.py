@@ -7,7 +7,7 @@ import win32file
 import wx
 
 APP_FULL_NAME = "Falcon test"
-APP_NAME = "Falcon"
+APP_NAME = "falcon"
 APP_ICON = None
 APP_VERSION = "0.0.1"
 APP_LAST_RELEASE_DATE = "2022-01-01"
