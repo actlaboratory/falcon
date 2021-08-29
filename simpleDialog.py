@@ -1,21 +1,23 @@
 ﻿# -*- coding: utf-8 -*-
-# Simple cross-platform dialog
-# Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
-# Note: The current implementation only supports win32 and OSX.
+# Simple dialog
 
-import platform
+import wx
 import ctypes
-import subprocess
-import re
+import sys
 
 
-def dialog(title, message):
-    if platform.system() == "Windows":
-        ctypes.windll.user32.MessageBoxW(0, message, title, 0x00000040)
-    else:
-        str = "display dialog \"%s\" with title \"%s\" with icon note buttons {\"OK\"}" % (
-            re.sub(r'"\'', " ", message), re.sub(r'"\'', " ", title))  # escaping ' and " on mac
-        subprocess.call("osascript -e '{}'".format(str), shell=True)
+def dialog(title, message, parent=None):
+    dialog = wx.MessageDialog(parent, message, title, wx.OK)
+    dialog.ShowModal()
+    dialog.Destroy()
+    return
+
+
+def yesNoDialog(title, message, parent=None):
+    dialog = wx.MessageDialog(parent, message, title, wx.YES_NO)
+    result = dialog.ShowModal()
+    dialog.Destroy()
+    return result
 
 
 def errorDialog(message, parent=None):
@@ -23,6 +25,15 @@ def errorDialog(message, parent=None):
     dialog.ShowModal()
     dialog.Destroy()
     return
+
+
+def debugDialog(message):
+    if hasattr(sys, "frozen") == False:
+        import pprint
+        dialog = wx.MessageDialog(None, pprint.pformat(message), "debug", wx.OK)
+        dialog.ShowModal()
+        dialog.Destroy()
+        return
 
 
 def winDialog(title, message):
