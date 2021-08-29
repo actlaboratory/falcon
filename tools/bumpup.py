@@ -83,7 +83,7 @@ def bumpup(v, d):
 		json.dump(v,f)
 	print("Saved %s." % VERSION_FILE_NAME)
 	patch("public/readme.txt",r'バージョン:　　ver\.', r'リリース:　　　', v)
-	patch("constants.py",r'APP_VERSION="', r'APP_LAST_RELEASE_DATE="', v)
+	patch("constants.py",r'APP_VERSION ?= ?"', r'APP_LAST_RELEASE_DATE="', v)
 
 def patch(filename, version_regexp, release_date_regexp, version_object):
 	try:
