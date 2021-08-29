@@ -51,7 +51,7 @@ after_test:
 
 artifacts:
   - path: falcon-*.zip
-  - path: falcon-*.info
+  - path: falcon-*.json
 
 deploy:
   - provider: GitHub
