@@ -40,6 +40,7 @@ import views.openHere
 import views.search
 import views.registerOriginalAssociation
 import views.versionDialog
+import views.settingsDialog
 
 import workerThreads
 import workerThreadTasks
@@ -462,7 +463,8 @@ class Menu(BaseMenu):
             "ENV_KEY_CONFIG",
             "ENV_TESTDIALOG",
             "ENV_PASTTABTEST",
-            "ENV_FONTTEST"
+            "ENV_FONTTEST",
+            "ENV_SETTINGS",
         ))
 
         # ヘルプメニューの中身
@@ -852,6 +854,11 @@ class Events(BaseEvents):
         if selected == menuItemsStore.getRef("ENV_FONTTEST"):
             self.fonttest = views.fonttest.View()
             self.fonttest.Initialize()
+            return
+        if selected == menuItemsStore.getRef("ENV_SETTINGS"):
+            d = views.settingsDialog.Dialog()
+            d.Initialize()
+            d.Show()
             return
         if selected == menuItemsStore.getRef("FILE_RENAME"):
             self.StartRename()

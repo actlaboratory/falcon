@@ -73,6 +73,7 @@ dic = {
     "ENV_TESTDIALOG": _("テストダイアログを表示"),
     "ENV_PASTTABTEST": _("貼り付け状況ダイアログテスト"),
     "ENV_FONTTEST": _("フォントテストダイアログを表示"),
+    "ENV_SETTINGS": _("環境設定"),
 
     "HELP_VERINFO": _("バージョン情報(&V)") + "...",
     "HELP_UPDATE": _("最新バージョンを確認(&U)") + "...",
