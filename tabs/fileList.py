@@ -296,8 +296,10 @@ class FileListTab(base.FalconTabBase):
         # 自身のサブフォルダへの貼り付けはできない
         errors = []
         for i in target:
-            if i in dest:
+            if i in dest or os.path.dirname(i) == dest:
                 errors.append(i)
+            # end サブディレクトリ、あるいは、同じディレクトリへのコピー/貼り付け
+        # end 事前チェック
         if errors:
             info = [
                 (_("項目"), _("パス")),
