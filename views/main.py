@@ -891,7 +891,11 @@ class Events(BaseEvents):
     def OnMenuOpen(self, event):
         # メニューの有効・無効を切り替える
         disableMenuIdSet = views.menuBlocker.testMenu(self.parent.activeTab)
-        for i in event.GetEventObject().GetMenuItems():
+        obj = event.GetEventObject()
+        if obj is None:
+            # システムメニューを開いた
+            return
+        for i in obj.GetMenuItems():
             i.Enable(not i.GetId() in disableMenuIdSet)
 
         # カラムソートメニューの場合、中身の描画をする
