@@ -23,8 +23,6 @@ class Element(object):
         self.path = path
         self.isfile = os.path.isfile(path)
         self.size = os.path.getsize(path) if self.isfile else -1
-        if destpath is None:
-            return  # destpathがNoneだったら、移動するときのフォルダ削除用エントリとして取り扱うことにする
         self.destpath = destpath
     # end __init__
 
