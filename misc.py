@@ -252,7 +252,7 @@ def GetDirectorySize(path, fileCount=0, dirCount=0):
             for entry in it:
                 try:
                     ret = isLink(entry.path)
-                except:
+                except BaseException:
                     continue
                 if ret:
                     print("Synlink skipped:" + entry.path)

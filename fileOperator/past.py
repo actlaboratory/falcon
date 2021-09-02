@@ -138,6 +138,7 @@ def Execute(op, resume=False):
     op.instructions["target"] = []
     return retry
 
+
 def copyOrMove(elem, copy_move_flag, overwrite):
     if copy_move_flag == COPY:
         f = 0 if overwrite else win32file.COPY_FILE_FAIL_IF_EXISTS
@@ -147,6 +148,7 @@ def copyOrMove(elem, copy_move_flag, overwrite):
     else:
         f = win32file.MOVEFILE_COPY_ALLOWED | win32file.MOVEFILE_REPLACE_EXISTING if overwrite else win32file.MOVEFILE_COPY_ALLOWED
         win32file.MoveFileEx(elem.path, elem.destpath, f)
+
 
 def ProcessError(op, elem, msg, resume):
     """アクセス拒否であれば、リトライするリストに追加する。昇格しても失敗するエラーであれば、 need_to_confirm に追加する。"""

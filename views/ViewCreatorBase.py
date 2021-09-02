@@ -681,7 +681,7 @@ class ViewCreatorBase():
             hStaticText = wx.StaticText(self.parent, wx.ID_ANY, label=text, name=text, size=(0, 0))
             self._setFace(hStaticText)
             sizer = self.BoxSizer(self.sizer, style=sizerFlag & (wx.ALIGN_LEFT | wx.ALIGN_RIGHT |
-                                  wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_TOP | wx.ALIGN_BOTTOM | wx.EXPAND))
+                                                                 wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_TOP | wx.ALIGN_BOTTOM | wx.EXPAND))
             Add(sizer, hStaticText)
             return hStaticText, sizer, self.parent
         else:
@@ -691,7 +691,7 @@ class ViewCreatorBase():
                 hStaticText = wx.StaticText(self.parent, wx.ID_ANY, label=text, name=text, size=(0, 0))
             self._setFace(hStaticText)
             Add(self.sizer, hStaticText, 0, sizerFlag & (wx.ALIGN_LEFT | wx.ALIGN_RIGHT |
-                wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_TOP | wx.ALIGN_BOTTOM | wx.EXPAND))
+                                                         wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_TOP | wx.ALIGN_BOTTOM | wx.EXPAND))
             return hStaticText, self.sizer, self.parent
 
     def _setFace(self, target, mode=NORMAL):

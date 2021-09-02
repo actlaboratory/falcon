@@ -52,7 +52,7 @@ class SearchResultBase(FileListBase):
             # end 100県ヒット
             i += 1
         # end 検索ループ
-        self.searched_index = len(self.searches) #次回はここから
+        self.searched_index = len(self.searches)  # 次回はここから
         return False, ret_list
 
     def GetFinishedStatus(self):
@@ -116,7 +116,7 @@ class SearchResultBase(FileListBase):
             datetime.datetime.fromtimestamp(ctime, datetime.timezone.utc),  # creationDate
             win32api.GetShortPathName(fullpath),  # shortName
             shfileinfo[0],  # hIcon
-            relpath = os.path.relpath(fullpath, self.rootDirectory)
+            relpath=os.path.relpath(fullpath, self.rootDirectory)
         )
         return obj
 
@@ -130,4 +130,3 @@ class SearchResultBase(FileListBase):
     def RedoSearch(self, searches):
         self.searches = searches
         self._initSearch()
-
