@@ -283,7 +283,6 @@ class FileListTab(base.FalconTabBase):
         c = clipboard.ClipboardFile()
         # コピー元、コピー先をそれぞれ設定
         target = list(map(lambda x: (x, x.replace(os.path.dirname(x), dest)), c.GetFileList()))
-        print(target)
         if not target:
             dialog(_("エラー"), _("貼り付けるものがありません。"))
             return
@@ -333,7 +332,7 @@ class FileListTab(base.FalconTabBase):
                     if nn == "":
                         continue
                     # end 名前が入力されなかったらスキップ扱い
-                    target.append((i, os.path.join(os.path.dirname(i),nn)))
+                    target.append((i, os.path.join(dest,nn)))
                 # end rename
             # エラーの問い合わせ
         # end エラーがある場合
