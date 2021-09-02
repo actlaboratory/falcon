@@ -317,6 +317,7 @@ class FileListTab(base.FalconTabBase):
                         continue
                     # end 名前が入力されなかったらスキップ扱い
                     target.append((i, os.path.join(dest,nn)))
+                    continue
                 # 「以降も同様に処理」ででリネーム
                 info = [
                     (_("項目"), _("パス")),
