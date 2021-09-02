@@ -311,6 +311,13 @@ class FileListTab(base.FalconTabBase):
                 if all == "SKIP":
                     continue
                 # end 「以降も同様に処理」で全てスキップ
+                if all == "RENAME":
+                    nn = self.getNewNameForPast(os.path.dirname(i), os.path.basename(i))
+                    if nn == "":
+                        continue
+                    # end 名前が入力されなかったらスキップ扱い
+                    target.append((i, os.path.join(dest,nn)))
+                # 「以降も同様に処理」ででリネーム
                 info = [
                     (_("項目"), _("パス")),
                     (_("%s先") % op_str, dest),
@@ -344,7 +351,7 @@ class FileListTab(base.FalconTabBase):
         # ユーザに確認表示
         if len(target) == 1:
             msg = _("%(file)s\nこのファイルを、 %(dest)s に%(op)sしますか？") % {
-                'file': target[0], 'dest': dest, 'op': op_str}
+                'file': target[0][0], 'dest': target[0][1], 'op': op_str}
         else:
             msg = _("%(num)d 項目を、 %(dest)s に%(op)sしますか？") % {'num': len(
                 target), 'dest': self.listObject.rootDirectory, 'op': op_str}
