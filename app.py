@@ -74,7 +74,7 @@ class falconAppMain(AppBase.MaiｎBase):
             def run(*args, **kwargs):
                 try:
                     _run(*args, **kwargs)
-                except:
+                except BaseException:
                     sys.excepthook(*sys.exc_info())
             self.run = run
 

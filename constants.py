@@ -185,7 +185,7 @@ SUPPORTED_DOCUMENT_FORMATS = {
 
 # xdocに書けると意図しない結果になるが、テキストとして読めるもの
 TEXT_READABLE_DOCUMENT_FORMATS = {
-	"xml"
+    "xml"
 }
 
 

@@ -16,11 +16,11 @@ PARSING_FAILED = 4  # パーシングエラー
 FATAL = 5  # 続行不可能なエラー
 ACCESS_DENIED = 6  # アクセス拒否
 INVALID_PARAMETER = 7  # 引数が違う
-UPDATER_NEED_UPDATE = 200# アップデートが必要
-UPDATER_LATEST = 204# アップデートが無い
+UPDATER_NEED_UPDATE = 200  # アップデートが必要
+UPDATER_LATEST = 204  # アップデートが無い
 UPDATER_VISIT_SITE = 205
-UPDATER_BAD_PARAM = 400# パラメーターが不正
-UPDATER_NOT_FOUND = 404# アプリケーションが存在しない
+UPDATER_BAD_PARAM = 400  # パラメーターが不正
+UPDATER_NOT_FOUND = 404  # アプリケーションが存在しない
 
 
 UNKNOWN = 99999

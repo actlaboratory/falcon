@@ -70,7 +70,7 @@ def PerformSearch(taskState, param):
         if hits == -1:
             return False  # 検索処理からキャンセルで戻ってきた
         if len(hits) > 0:
-            wx.CallAfter(t._onSearchHitCallback, hits,taskState)
+            wx.CallAfter(t._onSearchHitCallback, hits, taskState)
         if finished:
             break  # 全て検索した
         time.sleep(0.1)

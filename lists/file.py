@@ -99,7 +99,7 @@ class FileList(FileListBase):
             if elem[8] == "." or elem[8] == "..":
                 continue
             fullpath = os.path.join(dir, elem[8])
-            shfileinfo=self.GetShellInfo(fullpath)
+            shfileinfo = self.GetShellInfo(fullpath)
             if os.path.isfile(fullpath):
                 f = browsableObjects.File()
                 f.Initialize(

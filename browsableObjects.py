@@ -76,7 +76,7 @@ class FalconBrowsableBase():
 
     def __str__(self):
         try:
-	        return "<" + self.__class__.__name__ + " " + self.basename + ">"
+            return "<" + self.__class__.__name__ + " " + self.basename + ">"
         except AttributeError:
             return "<" + self.__class__.__name__ + "(unInitialized)>"
 
@@ -113,20 +113,20 @@ class File(FalconBrowsableBase):
         "hIcon"]
 
     def Initialize(
-            self,
-            directory="",
-            basename="",
-            fullpath="",
-            size=-1,
-            modDate=None,
-            attributes=-1,
-            typeString="",
-            creationDate=None,
-            shortName="",
-            hIcon=-1,
-            *,
-            relpath=""
-        ):
+        self,
+        directory="",
+        basename="",
+        fullpath="",
+        size=-1,
+        modDate=None,
+        attributes=-1,
+        typeString="",
+        creationDate=None,
+        shortName="",
+        hIcon=-1,
+        *,
+        relpath=""
+    ):
         """
             必要な情報をセットする。
             継承しているクラスのうち、grepItemだけはここを通らないので注意。
