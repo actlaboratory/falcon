@@ -23,10 +23,9 @@ class Element(object):
         self.path = path
         self.isfile = os.path.isfile(path)
         self.size = os.path.getsize(path) if self.isfile else -1
-        self.destpath = destpath
         if destpath is None:
             return  # destpathがNoneだったら、移動するときのフォルダ削除用エントリとして取り扱うことにする
-        self.destpath = path.replace(basepath, destpath)  # これがコピー先
+        self.destpath = destpath
     # end __init__
 
     def __str__(self):
@@ -52,32 +51,23 @@ def Execute(op, resume=False):
         op.output["retry"]["target"] = []
         op.output["percentage"] = 0
         op.output["copy_move_flag"] = copy_move_flag
-        # ベースパスを決定
-        op.output["basepath"] = os.path.dirname(f[0])
-        op.output["destpath"] = op.instructions['to']
-        op.output["basepath"] = op.output["basepath"].rstrip("\\")
-        op.output["destpath"] = op.output["destpath"].rstrip("\\")
     # end 初期化
-    basepath = op.output["basepath"]
-    destpath = op.output["destpath"]
-    log.debug("Base path: %s dest path: %s" % (basepath, destpath))
     log.debug("Retrieving file list...")
     lst = []
-    for elem in f:
-        if basepath not in elem:
-            debug.log("Ummatched base path, skipping %s" % elem)
-            continue
-        # end ベースパスが合わない
+    for elemt in f:
+        elem = elemt[0]
+        dest = elemt[1]
+        basepath = os.path.dirname(elem)
         if os.path.isfile(elem):
-            lst.append(Element(elem, basepath, destpath))
+            lst.append(Element(elem, basepath, dest))
         else:
-            e = Element(elem, basepath, destpath)
+            e = Element(elem, basepath, dest)
             if os.path.isdir(e.destpath) and not resume:
                 # フォルダがもうあれば、その時点で確認に入れる(中のフォルダを展開しない)
                 # コピー先にディレクトリがあった時点で、「ディレクトリを上書きしますか？」の確認を出したいので。
                 _processExistingFolder(op.output, elem, basepath, destpath)
             else:  # まだないか、ユーザーに確認済みなので追加
-                _expandFolder(lst, elem, e, basepath, destpath, copy_move_flag)
+                _expandFolder(lst, elem, e, basepath, dest, copy_move_flag)
             # end フォルダを展開するかしないか
         # end フォルダだった
     # end ファイルリスト作るループ
@@ -182,11 +172,12 @@ def _expandFolder(lst, path, e, basepath, destpath, copy_move_flag):
     # 再帰的にディレクトリを掘っていく。切り取りモードの時にフォルダ削除マークを入れたいので、iteratePaths計で一気に取得することはできない。
     for elem in os.listdir(path):
         p = os.path.join(path, elem)
-        innerElem = Element(p, basepath, destpath)
+        innerDestpath = os.path.join(destpath,os.path.basename(p))
+        innerElem = Element(p, basepath, innerDestpath)
         if os.path.isdir(p):
             # フォルダなので、再帰的に中身を転回
             _expandFolder(lst, p, innerElem, basepath,
-                          destpath, copy_move_flag)
+                          innerDestpath, copy_move_flag)
             _handleFolderDeleteRecord(lst, innerElem, basepath, copy_move_flag)
         else:
             # ファイルなのでそのまま追加

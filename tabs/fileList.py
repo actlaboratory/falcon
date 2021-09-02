@@ -25,6 +25,7 @@ import misc
 import StringUtil
 import tabs.streamList
 import views.OperationSelecter
+import views.newNameForPast
 import workerThreads
 import workerThreadTasks
 
@@ -277,9 +278,12 @@ class FileListTab(base.FalconTabBase):
             interrupt=True)
 
     def Past(self):
+        dest = self.listObject.rootDirectory
         # クリップボードから情報取得し
         c = clipboard.ClipboardFile()
-        target = c.GetFileList()
+        # コピー元、コピー先をそれぞれ設定
+        target = list(map(lambda x: (x, x.replace(os.path.dirname(x), dest)), c.GetFileList()))
+        print(target)
         if not target:
             dialog(_("エラー"), _("貼り付けるものがありません。"))
             return
@@ -295,35 +299,44 @@ class FileListTab(base.FalconTabBase):
 
         # 自身のサブフォルダへの貼り付けはできない
         errors = []
-        for i in target:
+        for it in target:
+            i = it[0]
             if i in dest or os.path.dirname(i) == dest:
                 errors.append(i)
             # end サブディレクトリ、あるいは、同じディレクトリへのコピー/貼り付け
         # end 事前チェック
         if errors:
-            info = [
-                (_("項目"), _("パス")),
-                (_("%s先") % op_str, dest)
-            ]
+            all = ""
             for i in errors:
-                target.remove(i)
-                info.append((os.path.basename(i), i))
-            # end エラー情報構築
-
-            while(len(info) > 2): # 全てのエラーが解決するまで
+                target.remove((i, i))
+                if all == "SKIP":
+                    continue
+                # end 「以降も同様に処理」で全てスキップ
+                info = [
+                    (_("項目"), _("パス")),
+                    (_("%s先") % op_str, dest),
+                    (os.path.basename(i), i)
+                ]
                 d = views.OperationSelecter.Dialog(
                     _("自身のサブディレクトリへの%sはできません。") %
                     op_str, info, views.OperationSelecter.GetMethod("OWN_SUB_DIR"), False)
                 d.Initialize()
                 d.Show()
                 ret = d.GetValue()
+                if ret["all"]:
+                    all = ret["response"]
+                # end 「以降も同様に処理」が指定されていたら、そのレスポンスを覚える
                 if ret["response"] == "SKIP":
                     continue
                 elif ret["response"] == "RENAME":
-                    continue
+                    nn = self.getNewNameForPast(os.path.dirname(i), os.path.basename(i))
+                    if nn == "":
+                        continue
+                    # end 名前が入力されなかったらスキップ扱い
+                    target.append((i, os.path.join(os.path.dirname(i),nn)))
                 # end rename
-            # end 全てのエラーが解決するまで
-        # end エラーがあるときの処理
+            # エラーの問い合わせ
+        # end エラーがある場合
 
         # この時点でtargetが0ならおわり
         if len(target) == 0:
@@ -347,7 +360,7 @@ class FileListTab(base.FalconTabBase):
             "operation": "past",
             "target": target,
             "to": dest,
-            'copy_move_flag': op}
+            "copy_move_flag": op}
         op = fileOperator.FileOperator(inst)
         ret = op.Execute()
 
@@ -404,6 +417,32 @@ class FileListTab(base.FalconTabBase):
         # end failure
         self.UpdateFilelist(silence=True)
     # end past
+
+    def getNewNameForPast(self, existingDirname, existingName):
+        tp = fileSystemManager.pathTypes.DIRECTORY if os.path.isdir(os.path.join(existingDirname,existingName)) else fileSystemManager.pathTypes.FILE
+        ret = ""
+        input = existingName
+        while(True):
+            dlg = views.newNameForPast.Dialog()
+            dlg.Initialize(input)
+            r = dlg.Show()
+            if r == wx.ID_CANCEL:
+                break
+            # end キャンセル
+            input = dlg.GetData()
+            if input == existingName:
+                dialog(_("エラー"), _("新しい名前を入力してください。"))
+                continue
+            # end 同じファイル名
+            error = fileSystemManager.ValidationObjectName(os.path.join(existingDirname, input), tp, input)
+            if error:
+                dialog(_("エラー"), error)
+                continue
+            # end バリデーションエラー
+            ret = input
+            break
+        # end 有効なファイル名になるまで
+        return ret
 
     def GetTabName(self):
         """タブコントロールに表示する名前"""
