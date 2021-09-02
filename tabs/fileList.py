@@ -308,15 +308,22 @@ class FileListTab(base.FalconTabBase):
             for i in errors:
                 target.remove(i)
                 info.append((os.path.basename(i), i))
-            d = views.OperationSelecter.Dialog(
-                _("自身のサブディレクトリへの%sはできません。") %
-                op_str, info, views.OperationSelecter.GetMethod("OWN_SUB_DIR"), False)
-            d.Initialize()
-            d.Show()
-            ret = d.GetValue()["response"]
-            if ret == "CANCEL":
-                return
-        # TODO:同一ディレクトリなら別名を決めさせる
+            # end エラー情報構築
+
+            while(len(info) > 2): # 全てのエラーが解決するまで
+                d = views.OperationSelecter.Dialog(
+                    _("自身のサブディレクトリへの%sはできません。") %
+                    op_str, info, views.OperationSelecter.GetMethod("OWN_SUB_DIR"), False)
+                d.Initialize()
+                d.Show()
+                ret = d.GetValue()
+                if ret["response"] == "SKIP":
+                    continue
+                elif ret["response"] == "RENAME":
+                    continue
+                # end rename
+            # end 全てのエラーが解決するまで
+        # end エラーがあるときの処理
 
         # この時点でtargetが0ならおわり
         if len(target) == 0:

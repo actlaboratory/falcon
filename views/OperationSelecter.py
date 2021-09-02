@@ -80,7 +80,7 @@ def GetMethod(request):
         },
         "OWN_SUB_DIR": {
             _("スキップ"): "SKIP",
-            _("キャンセル"): "CANCEL"
+            _("名前を変える"): "RENAME",
         }
     }
     return methods[request]
