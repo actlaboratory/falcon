@@ -38,7 +38,7 @@ class Dialog(BaseDialog):
         "30": "WARNING",
         "20": "INFO",
         "10": "DEBUG",
-        "0": "NOTSET"
+        "0": "ALL"
     }
     textWrappingSelection = {
         "on": _("画面幅で折り返し"),
@@ -66,10 +66,23 @@ class Dialog(BaseDialog):
         self.tab = self.creator.tabCtrl(_("カテゴリ選択"))
 
         # general
-        creator = views.ViewCreator.ViewCreator(self.viewMode, self.tab, None, views.ViewCreator.GridBagSizer,
+        creator = views.ViewCreator.ViewCreator(self.viewMode, self.tab, None, wx.VERTICAL, space=20, label=_("一般"), style=wx.ALL, margin=20)
+        static = creator.staticText(_("起動時に開くフォルダ"))
+        horizontalCreator = views.ViewCreator.ViewCreator(
+            self.viewMode,
+            creator.GetPanel(),
+            creator.GetSizer(),
+            wx.HORIZONTAL,
+            space=0,
+            label="",
+            style=wx.ALL | wx.EXPAND,
+            margin=0)
+        self.startpath, static = horizontalCreator.inputbox(_("起動時に開く場所"), proportion=1, textLayout=None)
+        self.startpathBrowse = horizontalCreator.button(_("参照"), self.browseDir)
+
+        creator = views.ViewCreator.ViewCreator(self.viewMode, creator.GetPanel(), creator.GetSizer(), views.ViewCreator.GridBagSizer,
                                                 label=_("一般"), style=wx.ALL | wx.EXPAND, proportion=1, margin=20)
-        self.startpath, static = creator.inputbox(_("起動時に開くフォルダ"))
-        self.startpathBrowse = creator.button(_("参照"), self.browseDir,)
+
         self.logLevel, dummy = creator.combobox(_("ログ記録レベル(&L)"), list(self.logLevelSelection.values()))
         self.reader, static = creator.combobox(_("出力先(&O)"), list(self.readerSelection.values()))
         self.fxvolumeSpin, static = creator.spinCtrl(_("効果音の音量"), 0, 300, self.spinChanged)
