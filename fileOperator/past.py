@@ -172,7 +172,7 @@ def _expandFolder(lst, path, e, basepath, destpath, copy_move_flag):
     # 再帰的にディレクトリを掘っていく。切り取りモードの時にフォルダ削除マークを入れたいので、iteratePaths計で一気に取得することはできない。
     for elem in os.listdir(path):
         p = os.path.join(path, elem)
-        innerDestpath = os.path.join(destpath,os.path.basename(p))
+        innerDestpath = os.path.join(destpath, os.path.basename(p))
         innerElem = Element(p, basepath, innerDestpath)
         if os.path.isdir(p):
             # フォルダなので、再帰的に中身を転回

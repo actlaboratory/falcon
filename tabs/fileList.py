@@ -316,7 +316,7 @@ class FileListTab(base.FalconTabBase):
                     if nn == "":
                         continue
                     # end 名前が入力されなかったらスキップ扱い
-                    target.append((i, os.path.join(dest,nn)))
+                    target.append((i, os.path.join(dest, nn)))
                     continue
                 # 「以降も同様に処理」ででリネーム
                 info = [
@@ -340,7 +340,7 @@ class FileListTab(base.FalconTabBase):
                     if nn == "":
                         continue
                     # end 名前が入力されなかったらスキップ扱い
-                    target.append((i, os.path.join(dest,nn)))
+                    target.append((i, os.path.join(dest, nn)))
                 # end rename
             # エラーの問い合わせ
         # end エラーがある場合
@@ -426,7 +426,7 @@ class FileListTab(base.FalconTabBase):
     # end past
 
     def getNewNameForPast(self, existingDirname, existingName):
-        tp = fileSystemManager.pathTypes.DIRECTORY if os.path.isdir(os.path.join(existingDirname,existingName)) else fileSystemManager.pathTypes.FILE
+        tp = fileSystemManager.pathTypes.DIRECTORY if os.path.isdir(os.path.join(existingDirname, existingName)) else fileSystemManager.pathTypes.FILE
         ret = ""
         input = existingName
         while(True):
