@@ -86,7 +86,7 @@ class Dialog(BaseDialog):
         self.logLevel, dummy = creator.combobox(_("ログ記録レベル(&L)"), list(self.logLevelSelection.values()))
         self.reader, static = creator.combobox(_("出力先(&O)"), list(self.readerSelection.values()))
         self.fxvolumeSpin, static = creator.spinCtrl(_("効果音の音量"), 0, 300, self.spinChanged)
-        self.fxvolumeSlider, static = creator.slider(_("効果音の音量"), 0, 300, self.sliderChanged)
+        self.fxvolumeSlider, static = creator.slider(_("効果音の音量"), 0, 300, self.sliderChanged, enableTabFocus=False)
         self.historycount, static = creator.spinCtrl(_("検索履歴の保持件数"), 0, 100)
 
         # preview
@@ -95,7 +95,7 @@ class Dialog(BaseDialog):
         self.headerlinecount, static = creator.spinCtrl(_("テキストヘッダー行数"), 1, 100)
         self.footerlinecount, static = creator.spinCtrl(_("テキストフッター行数"), 1, 100)
         self.audiovolumeSpin, static = creator.spinCtrl(_("プレビューの音量"), 0, 300, self.spinChanged)
-        self.audiovolumeSlider, static = creator.slider(_("プレビューの音量"), 0, 300, self.sliderChanged)
+        self.audiovolumeSlider, static = creator.slider(_("プレビューの音量"), 0, 300, self.sliderChanged, enableTabFocus=False)
 
         # view
         creator = views.ViewCreator.ViewCreator(
