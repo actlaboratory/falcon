@@ -465,4 +465,4 @@ class FileListTab(base.FalconTabBase):
         return misc.GetRootObject(self.listObject.rootDirectory)
 
     def onReactivate(self):
-        self.UpdateFilelist(silence=True)
+        pass
