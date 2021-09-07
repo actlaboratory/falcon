@@ -55,8 +55,6 @@ class ConfirmationManager(object):
             yield elem
 
     def IterateNotResponded(self):
-        print("iterate not responded")
-        print("len %s" % len(self.confirmations))
         idx = 0
         for elem in self.confirmations:
             if not elem.IsResponded():
