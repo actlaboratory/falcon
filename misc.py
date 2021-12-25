@@ -291,7 +291,7 @@ def calcHash(path, algo):
             while BinaryData:
                 h.update(BinaryData)
                 BinaryData = f.read(len)
-                return h.hexdigest()
+            return h.hexdigest()
     except BaseException:
         return _("エラー")
 
