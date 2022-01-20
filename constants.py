@@ -82,6 +82,7 @@ SUPPORTED_DOCUMENT_FORMATS = {
     'yaml',
     'md',
     'rst',
+    'mediawiki',
 
     #email and adressbook
     'vmg',
