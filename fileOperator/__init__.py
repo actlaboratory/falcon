@@ -233,7 +233,7 @@ class FileOperator(object):
         responded = list(self.output["need_to_confirm"].IterateResponded())
         for elem in responded:
             if elem.GetResponse() == "overwrite":
-                self.instructions["target"].append((elem.elem.path,elem.elem.destpath))
+                self.instructions["target"].append((elem.elem.path, elem.elem.destpath))
                 self.output["need_to_confirm"].Remove(elem)
             # end overwrite なら追加
         # end for
