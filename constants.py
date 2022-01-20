@@ -81,7 +81,7 @@ SUPPORTED_DOCUMENT_FORMATS = {
     'html',
     'yaml',
     'md',
-    "rst",
+    'rst',
 
     #email and adressbook
     'vmg',
