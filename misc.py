@@ -16,6 +16,7 @@ import winreg
 import win32api
 import win32con
 import win32file
+import win32gui
 
 import constants
 import globalVars
@@ -309,6 +310,8 @@ def addPath(paths):
                 h, 'Path', 0, winreg.REG_SZ, winreg.QueryValueEx(
                     h, 'Path')[0] + ";" + path)
         winreg.CloseKey(h)
+        # Send WM_SETTINGCHANGE(#430)
+        win32gui.SendMessageTimeout(0xffff, 0x001A, 0, "Environment", 0x0002, 100)
         return True
     except BaseException:
         return False
