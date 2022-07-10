@@ -32,7 +32,7 @@ import views.changeAttribute
 import views.favoriteDirectory
 import views.fonttest
 import views.globalKeyConfig
-import views.SympleImputDialog
+import views.SimpleInputDialog
 import views.makeHash
 import views.makeShortcut
 import views.objectDetail
@@ -635,7 +635,7 @@ class Events(BaseEvents):
             self.parent.activeTab.GoToMark()
             return
         if selected == menuItemsStore.getRef("MOVE_INPUT_DIR"):
-            d = views.SympleImputDialog.Dialog(_("パスを指定して移動"), _("移動先"))
+            d = views.SimpleInputDialog.Dialog(_("パスを指定して移動"), _("移動先"))
             d.Initialize()
             if d.Show() == wx.ID_CANCEL:
                 return
@@ -748,7 +748,7 @@ class Events(BaseEvents):
             self.parent.activeTab.ChangeAttribute(val)
             return
         if selected == menuItemsStore.getRef("FILE_MKDIR"):
-            d = views.SympleImputDialog.Dialog(_("ディレクトリ作成"), _("ディレクトリ名"))
+            d = views.SimpleInputDialog.Dialog(_("ディレクトリ作成"), _("ディレクトリ名"))
             d.Initialize()
             if d.Show() == wx.ID_CANCEL:
                 return
@@ -946,7 +946,7 @@ class Events(BaseEvents):
     # end delaiedCall
 
     def ExecProgram(self):
-        d = views.SympleImputDialog.Dialog(_("ファイル名を指定して実行"), _("コマンドライン"))
+        d = views.SimpleInputDialog.Dialog(_("ファイル名を指定して実行"), _("コマンドライン"))
         d.Initialize()
         if d.Show() == wx.ID_CANCEL:
             return
