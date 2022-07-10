@@ -635,7 +635,8 @@ class Events(BaseEvents):
             self.parent.activeTab.GoToMark()
             return
         if selected == menuItemsStore.getRef("MOVE_INPUT_DIR"):
-            d = views.SimpleInputDialog.Dialog(_("パスを指定して移動"), _("移動先"))
+            rootDir = self.parent.activeTab.listObject.rootDirectory
+            d = views.SimpleInputDialog.Dialog(_("パスを指定して移動"), _("移動先"),defaultValue=rootDir)
             d.Initialize()
             if d.Show() == wx.ID_CANCEL:
                 return
