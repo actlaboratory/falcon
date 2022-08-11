@@ -183,6 +183,11 @@ SUPPORTED_DOCUMENT_FORMATS = {
     'jbt',  # JAWS Braille Table
     'rul',  # Research-It Rule
     'qry',  # Research-It Query
+
+    # 拡張子のないファイル
+    'readme',
+    'sconstruct',
+    'LICENSE',
 }
 
 # xdocに書けると意図しない結果になるが、テキストとして読めるもの
