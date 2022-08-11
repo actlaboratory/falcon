@@ -187,7 +187,7 @@ SUPPORTED_DOCUMENT_FORMATS = {
     # 拡張子のないファイル
     'readme',
     'sconstruct',
-    'LICENSE',
+    'license',
 }
 
 # xdocに書けると意図しない結果になるが、テキストとして読めるもの
