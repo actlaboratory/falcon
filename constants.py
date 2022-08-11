@@ -80,6 +80,7 @@ SUPPORTED_DOCUMENT_FORMATS = {
     'htm',
     'html',
     'yaml',
+    'yml'
     'md',
     'rst',
     'mediawiki',
