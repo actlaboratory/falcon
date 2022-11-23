@@ -14,8 +14,9 @@ APP_LAST_RELEASE_DATE = "2022-01-01"
 APP_COPYRIGHT_YEAR = "2019-2021"
 APP_LICENSE = "Apache License 2.0"
 APP_DEVELOPERS = "Yukio Nozawa, yamahubuki, ACT Laboratory"
+
 APP_DEVELOPERS_URL = "https://actlab.org/"
-APP_DETAILS_URL = "https://actlab.org/software/falcon"
+APP_DETAILS_URL = "https://actlab.org/software/FALCON"
 APP_COPYRIGHT_MESSAGE = "Copyright (c) %s %s All lights reserved." % (APP_COPYRIGHT_YEAR, APP_DEVELOPERS)
 
 SUPPORTING_LANGUAGE = {"ja-JP": "日本語", "en-US": "English"}  # 対応言語一覧
