@@ -84,6 +84,7 @@ SUPPORTED_DOCUMENT_FORMATS = {
     'md',
     'rst',
     'mediawiki',
+    'twig',
 
     #email and adressbook
     'vmg',
