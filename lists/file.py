@@ -68,13 +68,13 @@ class FileList(FileListBase):
                 if len(drive) == 2:
                     drive = drive[0]
                 if level == 0:
-                    r.append("%sルート" % drive)
+                    r.append(_("%sルート" % drive))
                 else:
-                    r.append("%sの%d " % (drive, level))
-                    if globalVars.app.config['on_list_moved']['read_directory_name'] == 'True':
-                        r.append(dir_spl[level - 1])
+                    r.append(_("%sの%d " % (drive, level)))
+            if globalVars.app.config['on_list_moved']['read_directory_name'] == 'True':
+                r.append(dir_spl[level - 1])
             if len(r) > 0:
-                globalVars.app.say("".join(r))
+                globalVars.app.say(" ".join(r))
         # end read
         self.rootDirectory = dir
         self.log.debug("Getting file list for %s..." % self.rootDirectory)

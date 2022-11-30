@@ -45,10 +45,15 @@ class StreamList(FalconListBase):
         self.streams.clear()
         file_spl = file.split("\\")
         self.rootDirectory = file
-        level = len(file_spl)
+        level = len(file_spl) - 1
         if not silent:
-            globalVars.app.say("%s%d %s" %
-                               (file[0], level, file_spl[level - 1]))
+            r = []
+            if globalVars.app.config['on_list_moved']['read_directory_level'] == 'True':
+                r.append(_("%sの%d" % (file[0], level)))
+            if globalVars.app.config['on_list_moved']['read_directory_name'] == 'True':
+                r.append(file_spl[level])
+            if len(r) > 0:
+                globalVars.app.say(" ".join(r))
         self.log.debug("Getting stream list for %s..." % file)
         try:
             lst = win32file.FindStreams(file)
