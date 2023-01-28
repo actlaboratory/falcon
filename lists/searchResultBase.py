@@ -52,7 +52,6 @@ class SearchResultBase(FileListBase):
             # end 100県ヒット
             i += 1
         # end 検索ループ
-        self.searched_index = len(self.searches)  # 次回はここから
         return False, ret_list
 
     def GetFinishedStatus(self):
