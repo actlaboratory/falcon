@@ -210,7 +210,8 @@ SUPPORTED_AUDIO_FORMATS = {
     'm4r',
     'wmv',
     'mpg',
-    "mp4"
+    "mp4",
+    "webm",
 }
 
 # browsableObjects.FOLDERで利用
