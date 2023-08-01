@@ -1,8 +1,8 @@
-﻿wxpython==4.1
+wxpython==4.1
 pywin32==301
 pyinstaller==5.3
 https://github.com/actlaboratory/proxyutil/archive/0.2.4.zip
 https://github.com/actlaboratory/diff_archiver/archive/v1.2.0.zip
 https://github.com/actlaboratory/history/archive/v1.0.3.zip
 autopep8
-pillow==9
+pillow==9.3.0
