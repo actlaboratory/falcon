@@ -41,6 +41,7 @@ ARROW_LEFT = 3
 BASE_PACKAGE_URL = "https://github.com/actlaboratory/falcon/releases/download/0.0.1/falcon-0.0.1.zip"
 PACKAGE_CONTAIN_ITEMS = ("xd2txlib.dll", "fx")  # パッケージに含めたいファイルやfolderがあれば指定
 NEED_HOOKS = ()  # pyinstallerのhookを追加したい場合は指定
+COLLECT_DATA_PACKAGES = ("viewkit",)  # データファイル(dllなど)も同梱する必要があるパッケージを指定
 STARTUP_FILE = "falcon.py"  # 起動用ファイルを指定
 UPDATER_URL = "https://github.com/actlaboratory/updater/releases/download/1.0.0/updater.zip"
 

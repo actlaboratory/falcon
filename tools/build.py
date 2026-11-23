@@ -127,11 +127,13 @@ class build:
         print("Building...")
         for hook in constants.NEED_HOOKS:
             shutil.copy(hook, hooks_path)
+        # パッケージに含まれるデータファイル(viewkitのviewHelper.dllなど)を同梱する
+        collect_options = " ".join("--collect-data %s" % package for package in constants.COLLECT_DATA_PACKAGES)
         if constants.APP_ICON is None:
-            ret = self.runcmd("%s --windowed --log-level=ERROR --version-file=version.txt %s" % (pyinstaller_path, constants.STARTUP_FILE))
+            ret = self.runcmd("%s --windowed --log-level=ERROR --version-file=version.txt %s %s" % (pyinstaller_path, collect_options, constants.STARTUP_FILE))
         else:
-            ret = self.runcmd("%s --windowed --log-level=ERROR --version-file=version.txt --icon=%s %s" %
-                              (pyinstaller_path, constants.APP_ICON, constants.STARTUP_FILE))
+            ret = self.runcmd("%s --windowed --log-level=ERROR --version-file=version.txt --icon=%s %s %s" %
+                              (pyinstaller_path, constants.APP_ICON, collect_options, constants.STARTUP_FILE))
         print("build finished with status %d" % ret)
         if ret != 0:
             sys.exit(ret)
