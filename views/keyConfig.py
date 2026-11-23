@@ -23,7 +23,7 @@ class KeyInputWindow(viewkit.SubWindow):
     def __init__(self, parent, ctx, title, parameters=None):
         super().__init__(parent, ctx, title, parameters)
         # キーフィルタ未指定ならデフォルトとしてメインビューで設定されたキーフィルタを適用
-        self.key_filter = parameters if parameters is not None else globalVars.app.main_window.menu.keymap.filter
+        self.key_filter = parameters if parameters is not None else globalVars.app.main_window.menu.keymap.key_filter
         self.input_key = ""  # 取得した入力キー(結果)
         self.pressing_key = ""  # 押下中のキー
 
@@ -47,12 +47,12 @@ class KeyInputWindow(viewkit.SubWindow):
 
         # キーの判定
         hits = []
-        key_names = self.key_filter.GetUsableKeys()
+        key_names = self.key_filter.get_usable_keys()
         if "WINDOWS" not in key_names:
             key_names.append("WINDOWS")
         for name in key_names:
             # マウス関連は利用不可
-            code = keymap.str2key[name]
+            code = keymap.KEY_CODES[name]
             if code <= 4:
                 continue
             # カテゴリキーは取得不可、NumLockとCapsLockは押し下げ状態ではなく現在のON/OFFを返してしまうので
@@ -71,12 +71,12 @@ class KeyInputWindow(viewkit.SubWindow):
         else:  # キーが放されたら前の入力を検証する
             self.cancel_button.Enable()
             if self.input_key != "" and self.input_key != "SPACE":
-                if self.key_filter.Check(self.input_key):
+                if self.key_filter.check(self.input_key):
                     self.EndModal(wx.ID_OK)  # 正しい入力なのでダイアログを閉じる
                     return
-                self.error_text.SetLabel(self.key_filter.GetLastError())
+                self.error_text.SetLabel(self.key_filter.last_error)
                 self.panel.Layout()
-                simpleDialog.errorDialog(self.key_filter.GetLastError(), self)
+                simpleDialog.errorDialog(self.key_filter.last_error, self)
                 self.pressing_key = ""
                 self.input_key = ""
         self.timer.Start(TIMER_INTERVAL)

@@ -183,7 +183,7 @@ def validate_key_settings(old_key_config: dict, new_key_config: dict, logger=Non
             elif len(v) > 2:
                 errors += _("%(v1)s、%(v2)sなど計%(count)d箇所に同じショートカットキー%(key)sが設定されています。\n") % {"v1": v[0], "v2": v[1], "count": len(v), "key": k}
                 continue
-        e = keymap.makeEntry("DUMMY", k, None, logger)
+        e = keymap.make_entry("DUMMY", k, None, logger)
         if e is None:
             errors += _("設定されたショートカット%sが認識できません。お手数ですが、このエラーメッセージを作者へご連絡ください。\n") % k
         elif e in entries and (k not in old_keys):

@@ -39,7 +39,7 @@ class GlobalKeyConfigParameters(keyValueSetting.KeyValueSettingConfig):
             delete_button_label=_("削除(&D)"),
         )
         self.check_entries = check_entries if check_entries is not None else []
-        self.key_filter = key_filter if key_filter is not None else globalVars.app.main_window.menu.keymap.filter
+        self.key_filter = key_filter if key_filter is not None else globalVars.app.main_window.menu.keymap.key_filter
 
 
 class GlobalKeyConfigWindow(FalconKeyValueSettingWindow):
@@ -71,8 +71,8 @@ class GlobalKeyConfigWindow(FalconKeyValueSettingWindow):
             if key == NO_KEY:
                 continue
             if len(key_names) >= 2:
-                entries = [keymap.makeEntry(identifiers[name], key, None, self.log) for name in key_names]
-                if not keymap.permitConfrict(entries, self.log):
+                entries = [keymap.make_entry(identifiers[name], key, None, self.log) for name in key_names]
+                if not keymap.permit_conflict(entries, self.log):
                     dialog(_("エラー"), _("以下の項目において、重複するキー %(key)s が設定されています。\n\n%(command)s") % {"key": key, "command": key_names}, self)
                     return False
         return True
@@ -84,7 +84,7 @@ class KeyEditWindow(EntryEditWindow):
     def __init__(self, parent, ctx, title, parameters):
         super().__init__(parent, ctx, title, parameters)
         self.log = getLogger("%s.%s" % (constants.LOG_PREFIX, self.__class__.__name__))
-        self.key_filter = globalVars.app.main_window.menu.keymap.filter
+        self.key_filter = globalVars.app.main_window.menu.keymap.key_filter
         keys = self.row.get("key", NO_KEY).split("/")
         keys += [NO_KEY] * (MAX_KEY_COUNT - len(keys))
         self.add_field("name", _("名前"), editable=False)
@@ -99,7 +99,7 @@ class KeyEditWindow(EntryEditWindow):
         field = self.fields["key%d" % no]
         # フィルタに引っかかるものが既に設定されている場合、その変更は許さない
         before = field.GetLineText(0)
-        if before != NO_KEY and not self.key_filter.Check(before):
+        if before != NO_KEY and not self.key_filter.check(before):
             errorDialog(_("このショートカットは変更できません。"), self)
             return
         key = self.input_key("key%d" % no, self.key_filter)
@@ -116,7 +116,7 @@ class KeyEditWindow(EntryEditWindow):
         for i in range(MAX_KEY_COUNT):
             field = self.fields["key%d" % i]
             if field.GetLineText(0) != NO_KEY:
-                entry = keymap.makeEntry(self.get_value("name"), field.GetLineText(0), None, self.log)
+                entry = keymap.make_entry(self.get_value("name"), field.GetLineText(0), None, self.log)
                 if entry in entries:
                     field.SetValue(NO_KEY)
                 else:

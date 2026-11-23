@@ -279,8 +279,8 @@ class MainWindow(viewkit.MainWindow):
 
         # キー重複対応のためのIDの場合には、イベントを投げ直す
         # 複数投げられるが、有効状態のものは１つだけなはず
-        if self.menu.keymap.isRefHit(selected):
-            for ref in self.menu.keymap.GetOriginalRefs(selected):
+        if self.menu.keymap.is_shared_ref(selected):
+            for ref in self.menu.keymap.get_original_refs(selected):
                 new_event = wx.CommandEvent(event.GetEventType(), ref)
                 new_event.SetExtraLong(EVENT_FROM_SELF)  # キー操作無効を示す音を鳴らさない
                 wx.PostEvent(self.GetEventHandler(), new_event)
@@ -470,8 +470,8 @@ class MainWindow(viewkit.MainWindow):
         for target in self.app.user_command_managers:
             for v in target.keyMap:
                 if target.keyMap[v] != "":  # キーが指定されていない場合は無視
-                    self.menu.keymap.add(KEYMAP_IDENTIFIER, target.refHead + v, target.keyMap[v])
-        errors = self.menu.keymap.GetError(KEYMAP_IDENTIFIER)
+                    self.menu.keymap.add(target.refHead + v, target.keyMap[v])
+        errors = self.menu.keymap.pop_errors()
         if errors:
             message = _("お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
             for v in errors:
@@ -493,7 +493,7 @@ class MainWindow(viewkit.MainWindow):
             self.set_shortcut_enabled(False)
 
     def get_key_entries(self):
-        return self.menu.keymap.GetEntries(KEYMAP_IDENTIFIER)
+        return self.menu.keymap.entries
 
     def _on_menu_open(self, event):
         # メニューの有効・無効を切り替える
@@ -853,7 +853,7 @@ class MainWindow(viewkit.MainWindow):
         self.app.settings.replace_section("originalAssociation", views.registerOriginalAssociation.rows_to_dict(result.user_object))
 
     def _on_key_config(self, event):
-        keys = self.menu.keymap.map[KEYMAP_IDENTIFIER.upper()]
+        keys = self.menu.keymap.key_strings
         rows = []
         for ref_name in defaultKeymap.defaultKeymap[KEYMAP_IDENTIFIER.upper()].keys():
             rows.append({
@@ -1010,11 +1010,6 @@ class FalconMenu:
 
         self.init_shortcut()
 
-    def _create_key_filter(self):
-        key_filter = keymap.KeyFilter().SetDefault(False, True)
-        key_filter.AddFunctionKey(("LEFTARROW", "RIGHTARROW", "NUMPAD_DIVIDE", "NUMPAD_MULTIPLY"))
-        return key_filter
-
     def init_shortcut(self):
         """設定ファイルからショートカットキーを読み込む"""
         settings = self.window.app_ctx.settings
@@ -1024,23 +1019,21 @@ class FalconMenu:
             shortcuts = dict(defaultKeymap.defaultKeymap[self.identifier.upper()])
             settings.changeSetting("shortcuts", shortcuts)
             settings.save()
-        self.keymap = keymap.KeymapHandler(None, self._create_key_filter())
-        self.keymap.addDict({self.identifier.upper(): shortcuts})
-        errors = self.keymap.GetError(self.identifier)
+        self.keymap = keymap.Keymap(keymap.create_main_window_filter())
+        self.keymap.load(shortcuts)
+        errors = self.keymap.pop_errors()
         if errors:
             message = _("設定されたショートカットキーが正しくありません。キーの重複、存在しないキー名の指定、使用できないキーパターンの指定などが考えられます。以下のキーの設定内容をご確認ください。\n\n")
             for v in errors:
                 message += v + "\n"
             dialog(_("エラー"), message)
-        # これ以降はユーザ設定の追加なのでフィルタを作り直す
-        self.keymap.filter = self._create_key_filter()
 
     def apply_shortcut(self, window):
         """指定されたウィンドウに、ショートカットキーを登録する"""
-        self.keymap.Set(self.identifier, window)
+        self.keymap.apply(window)
 
     def get_key_string(self, identifier):
-        return self.keymap.GetKeyString(self.identifier, identifier)
+        return self.keymap.get_key_string(identifier)
 
     def set_menu_bar(self, menu_bar):
         self.menu_bar = menu_bar

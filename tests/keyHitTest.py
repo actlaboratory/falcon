@@ -16,7 +16,7 @@ app = wx.App()
 while True:
     time.sleep(0.1)
     print("-----")
-    for name, code in keymap.str2key.items():
+    for name, code in keymap.KEY_CODES.items():
         # マウス関連は利用不可
         if code <= 4:
             continue
