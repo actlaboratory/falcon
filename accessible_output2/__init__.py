@@ -10,9 +10,12 @@ import types
 
 def load_library(libname, cdll=False):
     if hasattr(sys, "frozen"):
+        # PyInstaller 6以降はデータが_internal配下に置かれるため、_MEIPASSを基準にする
+        base_path = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+        lib_path = os.path.join(os.path.abspath(base_path), 'accessible_output2', 'lib')
         if sys.version_info.major >= 3 and sys.version_info.minor >= 8:
-            os.add_dll_directory(os.path.join(os.path.abspath(os.path.dirname(sys.executable)), 'accessible_output2', 'lib'))
-        libfile = os.path.join(os.path.abspath(os.path.dirname(sys.executable)), 'accessible_output2', 'lib', libname)
+            os.add_dll_directory(lib_path)
+        libfile = os.path.join(lib_path, libname)
     else:
         import inspect
         module_path = os.path.abspath(os.path.dirname(inspect.getmodule(inspect.stack()[0][0]).__file__))
