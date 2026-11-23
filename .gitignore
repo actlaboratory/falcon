@@ -3,6 +3,7 @@
 data/options.dat
 __pycache__
 settings.ini
+settings.json
 keymap.ini
 falcon.build/
 falcon.dist/

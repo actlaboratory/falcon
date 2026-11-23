@@ -21,10 +21,8 @@ APP_COPYRIGHT_MESSAGE = "Copyright (c) %s %s All lights reserved." % (APP_COPYRI
 
 SUPPORTING_LANGUAGE = {"ja-JP": "日本語", "en-US": "English"}  # 対応言語一覧
 
-SETTING_FILE_NAME = "settings.ini"
 LOG_PREFIX = "falcon"
 LOG_FILE_NAME = "falcon.log"
-KEYMAP_FILE_NAME = "keymap.ini"
 HISTORY_FILE_NAME = "history.dat"
 
 FONT_MIN_SIZE = 5

@@ -8,6 +8,8 @@
 
 import wx
 
+import globalVars
+
 from viewkit.creator import viewCreator
 from viewkit.creator.viewCreator import *  # BoxSizer, GridBagSizer, makePanel, MODE_* などの定数・関数を公開する
 from views import fontManager
@@ -30,21 +32,21 @@ class ViewCreator(viewCreator.ViewCreator):
         :param int margin: Set viewCreator's margin.
         """
         # フォントは設定ファイルの内容から生成する
-        font = fontManager.FontManager().GetFont()
+        font = fontManager.FontManager().getFont()
         super().__init__(mode, font, parent, parent_sizer, *pArg, **kArg)
 
         # 標準オブジェクトの変更が必要ならば記述
         # self.winObject["object_name"] = newObject
         self.winObject["virtualListCtrl"] = FalconVirtualListCtrl.FalconVirtualListCtrl
 
-    @staticmethod
-    def config2modeValue(color="white", wrapping="off"):
-        """configから読み取った値からmodeの整数値を生成して返す"""
-        if type(color) != str or type(wrapping) != str:
-            raise ValueError
-        mode = 0
-        if color.lower() == "dark":
-            mode += MODE_DARK
-        if wrapping.lower() == "on":
-            mode += MODE_WRAPPING
-        return mode
+
+
+def get_view_mode():
+    """viewkitの設定(view.is_dark, view.is_word_wrap)から、ViewCreatorに指定するmodeの整数値を返す"""
+    settings = globalVars.app.ctx.settings
+    mode = MODE_WHITE
+    if settings.getSetting("view.is_dark", False):
+        mode += MODE_DARK
+    if settings.getSetting("view.is_word_wrap", False):
+        mode += MODE_WRAPPING
+    return mode

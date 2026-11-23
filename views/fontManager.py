@@ -1,67 +1,61 @@
 ﻿# -*- coding: utf-8 -*-
 # Copyright (C) 2019 yamahubuki <itiro.ishino@gmail.com>
 
-import logging
+"""
+falconの画面で使うフォントを管理する。
+フォントの設定は viewkit の設定(view.font)に保存し、表示する文字列の解釈は viewkit の FontManager に任せる。
+"""
+
+import viewkit.fontManager
 import wx
+
 from logging import getLogger
-#from .base import *
+
 import constants
-import DefaultSettings
 import globalVars
-from simpleDialog import *
+from simpleDialog import dialog
 
 
-class FontManager():
+class FontManager(viewkit.fontManager.FontManager):
     def __init__(self):
-        self.identifier = "FontManager"
-        self.log = getLogger("%s.%s" % (constants.APP_NAME, self.identifier))
-        self.log.debug("created")
-        self.app = globalVars.app
-
+        super().__init__()
+        self.log = getLogger("%s.FontManager" % constants.LOG_PREFIX)
+        app = globalVars.app
+        if app is None:
+            return
         # 設定ファイルの情報を基にfontを生成
-        self.font = wx.Font()
-        if self.app:
-            if not self.font.SetNativeFontInfoUserDesc(self.app.config.get("view", "font")):
-                dialog(_("エラー"), _("設定されているフォント情報が不正です。デフォルトのフォントを適用します。"))
-                self.log.warning("fontString error. SetNativeFontInfoUserDesc(" + self.app.config.get("view", "font") + ") returned false.")
-                self.font.SetNativeFontInfoUserDesc(DefaultSettings.get("view", "font"))
-                self.app.config.set("view", "font", DefaultSettings.get("view", "font"))
-                with open(constants.SETTING_FILE_NAME, "w") as f:
-                    self.config.write(f)
-        else:
-            self.font.SetNativeFontInfoUserDesc("bold 'ＭＳ ゴシック' 22")
+        settings = app.ctx.settings
+        font_string = settings.getSetting("view.font", "")
+        if font_string and not self.setFontFromString(font_string):
+            dialog(_("エラー"), _("設定されているフォント情報が不正です。デフォルトのフォントを適用します。"))
+            settings.changeSetting("view.font", viewkit.fontManager.DEFAULT_FONT)
 
-    # フォント設定ダイアログを表示
-    # 引数に親ウィンドウを指定
-    def ShowSettingDialog(self, parent):
-        # FontDataを生成し、設定を行う
-        fontData = wx.FontData()
-        fontData.EnableEffects(False)  # 取り消し線などは設定できない
-        fontData.SetAllowSymbols(False)  # シンボルフォントの設定は認めない
-        fontData.SetRange(constants.FONT_MIN_SIZE, constants.FONT_MAX_SIZE)
-        fontData.SetInitialFont(self.font)
+    def show_setting_dialog(self, parent):
+        """フォント設定ダイアログを表示し、選ばれたフォントを設定に保存する"""
+        if not self.showSettingDialog(parent):
+            return False
+        globalVars.app.ctx.settings.changeSetting("view.font", self.getInfo())
+        return True
 
-        fontchooser = wx.FontDialog(parent, fontData)
-        if (fontchooser.ShowModal() == wx.ID_OK):
-            font = fontchooser.GetFontData().GetChosenFont()
-        else:
+    def showSettingDialog(self, parent):
+        # viewkitの実装はキャンセル時に例外となるため、falcon側で実装する
+        font_data = wx.FontData()
+        font_data.EnableEffects(False)  # 取り消し線などは設定できない
+        font_data.SetAllowSymbols(False)  # シンボルフォントの設定は認めない
+        font_data.SetRange(constants.FONT_MIN_SIZE, constants.FONT_MAX_SIZE)
+        font_data.SetInitialFont(self.font)
+
+        font_chooser = wx.FontDialog(parent, font_data)
+        if font_chooser.ShowModal() != wx.ID_OK:
             self.log.info("font change was canceled.")
+            font_chooser.Destroy()
+            return False
+        font = font_chooser.GetFontData().GetChosenFont()
+        font_chooser.Destroy()
         # アサーションエラーの対策
         if not font.IsOk():
             dialog(_("エラー"), _("原因不明のエラーにより、フォントの変更に失敗しました。"))
             self.log.warning("font change error. IsOK() returned False.")
-            return false
+            return False
         self.font = font
         return True
-
-    def GetFont(self):
-        return self.font
-
-    def GetName(self):
-        return self.font.GetFaceName()
-
-    def GetSize(self):
-        return self.font.GetPointSize()
-
-    def GetInfo(self):
-        return self.font.GetNativeFontInfoUserDesc()

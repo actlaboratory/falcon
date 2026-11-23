@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon key config view
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -22,7 +22,7 @@ class Dialog(BaseDialog):
         self.parent = parent  # 親ウィンドウ
         self.filter = filter  # キーフィルタ
         if self.filter is None:  # キーフィルタ未指定ならデフォルトとしてメインビューで設定されたキーフィルタを適用
-            self.filter = globalVars.app.hMainView.menu.keymap.filter
+            self.filter = globalVars.app.main_window.menu.keymap.filter
 
         self.result = ""  # 取得した入力キー(結果格納・外部参照用)
         self.key = ""  # 取得した入力キー(内部処理用)

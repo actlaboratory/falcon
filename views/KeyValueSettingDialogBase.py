@@ -332,7 +332,7 @@ def KeySettingValidation(oldKeyConfig, newKeyConfig, logger, entries=None, Allow
         for v in vs.split("/"):
             newKeys.setdefault(v, list()).append(k)
     if entries is None:
-        entries = globalVars.app.hMainView.GetKeyEntries()
+        entries = globalVars.app.main_window.get_key_entries()
 
     for k, v in newKeys.items():
         if k == _("なし"):

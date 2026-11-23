@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon Drive List tab
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
@@ -68,7 +68,7 @@ class DriveListTab(base.FalconTabBase):
 
     def OnLabelEditEnd(self, evt):
         self.isRenaming = False
-        self.parent.SetShortcutEnabled(True)
+        self.parent.set_shortcut_enabled(True)
         if evt.IsEditCancelled():  # ユーザによる編集キャンセル
             return
         e = self.hListCtrl.GetEditControl()
@@ -127,15 +127,15 @@ class DriveListTab(base.FalconTabBase):
     def OpenContextMenu(self, event):
         menu = wx.Menu()
         if isinstance(self.GetFocusedElement(), browsableObjects.Drive):
-            globalVars.app.hMainView.menu.RegisterMenuCommand(menu, (
+            globalVars.app.main_window.menu.register_menu_command(menu, (
                 "TOOL_EJECT_DRIVE",
                 "TOOL_EJECT_DEVICE",
             ))
-        globalVars.app.hMainView.menu.RegisterMenuCommand(menu, (
+        globalVars.app.main_window.menu.register_menu_command(menu, (
             "VIEW_DRIVE_INFO",
             "FILE_SHOWPROPERTIES"
         ))
-        globalVars.app.hMainView.PopupMenu(menu)
+        globalVars.app.main_window.PopupMenu(menu)
 
     def GetRootObject(self):
         """ドライブ詳細情報表示で用いる"""

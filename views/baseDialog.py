@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # dialogs base class
 # Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 
@@ -20,10 +20,7 @@ class BaseDialog(object):
         self.log = getLogger("%s.%s" % (constants.LOG_PREFIX, self.identifier))
         self.app = globalVars.app
         self.value = None
-        self.viewMode = views.ViewCreator.ViewCreator.config2modeValue(
-            globalVars.app.config.getstring("view", "colorMode", "white", ("white", "dark")),
-            globalVars.app.config.getstring("view", "textWrapping", "off", ("on", "off"))
-        )
+        self.viewMode = views.ViewCreator.get_view_mode()
 
     def Initialize(self, parent, ttl, style=wx.DEFAULT_DIALOG_STYLE | wx.BORDER_DEFAULT):
         """タイトルを指定して、ウィンドウを初期化し、親の中央に配置するように設定。"""

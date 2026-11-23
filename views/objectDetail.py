@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon object detail view
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -24,7 +24,7 @@ class Dialog(BaseDialog):
         self.calcuratingFields = []
 
     def Initialize(self, dic=None):
-        super().Initialize(globalVars.app.hMainView.hFrame, _("詳細情報"))
+        super().Initialize(globalVars.app.main_window, _("詳細情報"))
         self.InstallControls(dic)
         return True
 

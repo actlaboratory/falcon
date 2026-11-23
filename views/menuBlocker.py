@@ -4,7 +4,7 @@
 # Note: All comments except these top lines will be written in Japanese.
 
 import browsableObjects
-import tabs
+import tabs.navigator  # 全てのタブのモジュールを、循環importにならない順序で読み込む
 import menuItemsStore
 
 # タブの種類によるブロック

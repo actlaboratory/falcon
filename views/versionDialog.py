@@ -19,7 +19,7 @@ class dialog(baseDialog.BaseDialog):
 
     def Initialize(self):
         self.log.debug("created")
-        super().Initialize(self.app.hMainView.hFrame, _("バージョン情報"))
+        super().Initialize(self.app.main_window, _("バージョン情報"))
         self.InstallControls()
         return True
 

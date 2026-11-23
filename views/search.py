@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon search view
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -21,7 +21,7 @@ class Dialog(BaseDialog):
         self.grepHistory = grepHistory
 
     def Initialize(self):
-        super().Initialize(self.app.hMainView.hFrame, _("検索"))
+        super().Initialize(self.app.main_window, _("検索"))
         self.InstallControls()
         return True
 

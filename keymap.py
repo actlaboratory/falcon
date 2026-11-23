@@ -6,7 +6,7 @@
 
 import browsableObjects
 import keymapHandlerBase
-import tabs
+import tabs.navigator  # 全てのタブのモジュールを、循環importにならない順序で読み込む
 import views.menuBlocker
 
 # KeyConfigDialogのための関数

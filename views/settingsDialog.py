@@ -52,7 +52,7 @@ class Dialog(BaseDialog):
 
     def Initialize(self):
         self.log.debug("created")
-        super().Initialize(self.app.hMainView.hFrame, _("設定"))
+        super().Initialize(self.app.main_window, _("設定"))
         self.InstallControls()
         self.load()
         self.checkBoxStatusChanged()  # 初期値を反映する為一度呼び出しておく
@@ -139,8 +139,10 @@ class Dialog(BaseDialog):
         self.audiovolumeSlider.SetValue(self.audiovolumeSpin.GetValue())
         # view
         self._setValue(self.language, "general", "language", configType.DIC, self.languageSelection)
-        self._setValue(self.colormode, "view", "colormode", configType.DIC, self.colorModeSelection)
-        self._setValue(self.textwrapping, "view", "textwrapping", configType.DIC, self.textWrappingSelection)
+        # 表示モードはviewkitの設定として保存されている
+        viewkit_settings = self.app.ctx.settings
+        self.colormode.SetValue(self.colorModeSelection["dark" if viewkit_settings.getSetting("view.is_dark", False) else "white"])
+        self.textwrapping.SetValue(self.textWrappingSelection["on" if viewkit_settings.getSetting("view.is_word_wrap", False) else "off"])
 
         # network
         self._setValue(self.update, "general", "update", configType.BOOL)
@@ -164,37 +166,41 @@ class Dialog(BaseDialog):
         assert type(key) == str
         assert type(t) == configType
 
-        conf = self.app.config
+        settings = self.app.settings
 
         if t == configType.DIC:
             assert type(prm) == dict
             assert isinstance(obj, wx.ComboBox)
-            obj.SetValue(prm[conf.getstring(section, key, prm2, prm.keys())])
+            obj.SetValue(prm[settings.get_str(section, key, prm2 if prm2 is not None else list(prm.keys())[0], prm.keys())])
         elif t == configType.BOOL:
             if prm is None:
                 prm = True
             assert type(prm) == bool
-            obj.SetValue(conf.getboolean(section, key, prm))
+            obj.SetValue(settings.get_bool(section, key, prm))
         elif t == configType.STRING:
             if prm is None:
                 prm = ""
             assert type(prm) == str
-            obj.SetValue(conf.getstring(section, key, prm, prm2))
+            obj.SetValue(settings.get_str(section, key, prm, prm2))
         elif t == configType.INT:
             assert type(prm) == int
             assert type(prm2) == int
             assert type(prm3) == int
-            obj.SetValue(conf.getint(section, key, prm, prm2, prm3))
+            obj.SetValue(settings.get_int(section, key, prm, prm2, prm3))
         self.iniDic[obj] = (t, section, key, prm, prm2)
 
     def _save(self):
-        conf = self.app.config
+        settings = self.app.settings
         for obj, v in self.iniDic.items():
             if v[0] == configType.DIC:
-                conf[v[1]][v[2]] = list(v[3].keys())[obj.GetSelection()]
+                settings.set(v[1], v[2], list(v[3].keys())[obj.GetSelection()])
             else:
-                conf[v[1]][v[2]] = obj.GetValue()
-        conf.write()
+                settings.set(v[1], v[2], obj.GetValue())
+        # 表示モードはviewkitの設定として保存する
+        viewkit_settings = self.app.ctx.settings
+        viewkit_settings.changeSetting("view.is_dark", list(self.colorModeSelection.keys())[self.colormode.GetSelection()] == "dark")
+        viewkit_settings.changeSetting("view.is_word_wrap", list(self.textWrappingSelection.keys())[self.textwrapping.GetSelection()] == "on")
+        self.app.save_settings()
 
     def browseDir(self, event):
         target = self.startpath

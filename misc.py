@@ -373,7 +373,7 @@ def CommandLineToArgv(cmd):
 
 
 def isDocumentExt(ext):
-    return ext.lower() in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.documentFormats | constants.TEXT_READABLE_DOCUMENT_FORMATS
+    return ext.lower() in constants.SUPPORTED_DOCUMENT_FORMATS | globalVars.app.document_formats | constants.TEXT_READABLE_DOCUMENT_FORMATS
 
 
 def ResolveLocalIpAddress(name):

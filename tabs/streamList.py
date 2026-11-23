@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon stream list tab
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
@@ -32,7 +32,7 @@ class StreamListTab(base.FalconTabBase):
 
     def OnLabelEditEnd(self, evt):
         self.isRenaming = False
-        self.parent.SetShortcutEnabled(True)
+        self.parent.set_shortcut_enabled(True)
         if evt.IsEditCancelled():  # ユーザによる編集キャンセル
             return
         e = self.hListCtrl.GetEditControl()
@@ -225,7 +225,7 @@ class StreamListTab(base.FalconTabBase):
         if word == "":  # ルート
             word = self.listObject.rootDirectory
         word = StringUtil.GetLimitedString(
-            word, globalVars.app.config["view"]["header_title_length"])
+            word, globalVars.app.settings.get_int("view", "header_title_length", 20, 1))
         return word
 
     def GetRootObject(self):

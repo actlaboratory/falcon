@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon file list object
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 # Copyright (C) 2019-2021 yamahubuki <itiro.ishino@gmail.com>
@@ -63,7 +63,7 @@ class FileList(FileListBase):
             level -= 1
         if not silent:
             r = []
-            if globalVars.app.config['on_list_moved']['read_directory_level'] == 'True':
+            if globalVars.app.settings.get_bool("on_list_moved", "read_directory_level", True):
                 drive = os.path.splitdrive(dir)[0]
                 if len(drive) == 2:
                     drive = drive[0]
@@ -71,7 +71,7 @@ class FileList(FileListBase):
                     r.append(_("%sルート" % drive))
                 else:
                     r.append(_("%sの%d " % (drive, level)))
-            if globalVars.app.config['on_list_moved']['read_directory_name'] == 'True':
+            if globalVars.app.settings.get_bool("on_list_moved", "read_directory_name", True):
                 r.append(dir_spl[level - 1])
             if len(r) > 0:
                 globalVars.app.say(" ".join(r))

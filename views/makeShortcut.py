@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon make Shortcut view
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -42,7 +42,7 @@ class Dialog(BaseDialog):
         self.canMakeHardLink = canMakeHardLink
 
     def Initialize(self):
-        super().Initialize(self.app.hMainView.hFrame, _("ショートカットの作成"))
+        super().Initialize(self.app.main_window, _("ショートカットの作成"))
         self.InstallControls()
         return True
 

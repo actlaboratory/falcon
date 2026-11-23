@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon operation Selecter view
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -23,9 +23,9 @@ class Dialog(BaseDialog):
 
     def Initialize(self):
         if self.enableCancel:
-            super().Initialize(self.app.hMainView.hFrame, _("ファイル操作確認"))
+            super().Initialize(self.app.main_window, _("ファイル操作確認"))
         else:
-            super().Initialize(self.app.hMainView.hFrame, _("ファイル操作確認"), 0)
+            super().Initialize(self.app.main_window, _("ファイル操作確認"), 0)
         self.InstallControls()
         return True
 

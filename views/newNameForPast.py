@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon new file naming view
 # 同一ディレクトリに貼り付けしようとしたときに、名前を問い合わせるときのやつ
 # Copyright (C) 2021 Yukio Nozawa <personal@nyanchangames.com>
@@ -14,7 +14,7 @@ class Dialog(BaseDialog):
         super().__init__("newNameEditDialog")
 
     def Initialize(self, existingName):
-        super().Initialize(self.app.hMainView.hFrame, _("新しい名前を入力"))
+        super().Initialize(self.app.main_window, _("新しい名前を入力"))
         self.InstallControls(existingName)
         return True
 

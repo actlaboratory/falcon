@@ -70,7 +70,7 @@ class update(threading.Thread):
             "updater_version": constants.UPDATER_VERSION,
             "version": constants.APP_VERSION
         }
-        timeout = globalVars.app.config.getint("general", "timeout", 3)
+        timeout = globalVars.app.settings.get_int("general", "timeout", 3)
         try:
             response = requests.get(constants.UPDATE_URL, params, timeout=timeout)
         except requests.exceptions.ConnectTimeout:

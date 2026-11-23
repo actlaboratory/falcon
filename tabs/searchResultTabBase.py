@@ -40,11 +40,11 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
         )
 
         # タブの名前変更を通知
-        globalVars.app.hMainView.UpdateTabName()
+        globalVars.app.main_window.update_tab_name()
 
     def _onSearchHitCallback(self, hits, taskState):
         """コールバックで、ヒットしたオブジェクトのリストが降ってくるので、それをリストビューに追加していく。"""
-        globalVars.app.PlaySound("click.ogg")
+        globalVars.app.play_sound("click.ogg")
         for elem in hits:
             if taskState.canceled:
                 return
@@ -90,7 +90,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
             return
         else:
             # 新しいタブで開く
-            globalVars.app.hMainView.Navigate(elem.fullpath, as_new_tab=True)
+            globalVars.app.main_window.navigate(elem.fullpath, as_new_tab=True)
         # end ファイルを開くか移動するか
     # end GoForward
 
@@ -99,7 +99,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
 
     def OpenContextMenu(self, event):
         menu = wx.Menu()
-        globalVars.app.hMainView.menu.RegisterMenuCommand(menu, (
+        globalVars.app.main_window.menu.register_menu_command(menu, (
             "MOVE_FORWARD",
             "EDIT_FULLPATHCOPY",
             "EDIT_CUT",
@@ -112,7 +112,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
             "FILE_VIEW_DETAIL",
             "FILE_SHOWPROPERTIES"
         ))
-        globalVars.app.hMainView.PopupMenu(menu)
+        globalVars.app.main_window.PopupMenu(menu)
 
     def ReadCurrentFolder(self):
         state = _("検索完了") if self.tempListObject.GetFinishedStatus(
@@ -132,7 +132,7 @@ class SearchResultTabBase(tabs.fileList.FileListTab):
         """タブコントロールに表示する名前"""
         word = self.listObject.GetKeywordString()
         word = StringUtil.GetLimitedString(
-            word, globalVars.app.config["view"]["header_title_length"])
+            word, globalVars.app.settings.get_int("view", "header_title_length", 20, 1))
         word = _("%(word)sの検索") % {"word": word}
         return word
 

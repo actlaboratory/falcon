@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon favoriteDirectory setting view
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -26,7 +26,7 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
         self.oldKeyConfig = copy.copy(keyConfig)
 
     def Initialize(self):
-        return super().Initialize(self.app.hMainView.hFrame, _("お気に入りディレクトリの設定"))
+        return super().Initialize(self.app.main_window, _("お気に入りディレクトリの設定"))
 
     def OkButtonEvent(self, event):
         """

@@ -27,10 +27,10 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
         self.checkEntries = checkEntries
         self.filter = filter
         if filter is None:
-            self.filter = globalVars.app.hMainView.menu.keymap.filter
+            self.filter = globalVars.app.main_window.menu.keymap.filter
 
     def Initialize(self, title=_("ショートカットキーの設定")):
-        super().Initialize(self.app.hMainView.hFrame, title)
+        super().Initialize(self.app.main_window, title)
         self.addButton.Hide()
         self.deleteButton.Hide()
         return

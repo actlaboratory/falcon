@@ -25,7 +25,7 @@ class Dialog(BaseDialog):
         self.identifier = "registOriginalAssociationDialog"  # このビューを表す文字列
         self.log = getLogger("falcon.%s" % self.identifier)
         self.log.debug("created")
-        super().Initialize(self.app.hMainView.hFrame, _("拡張子の独自関連付け"))
+        super().Initialize(self.app.main_window, _("拡張子の独自関連付け"))
         self.InstallControls()
         self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
         return True

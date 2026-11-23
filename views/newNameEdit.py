@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon make directory view
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -14,7 +14,7 @@ class Dialog(BaseDialog):
         super().__init__("newNameEditDialog")
 
     def Initialize(self, detailText=""):
-        super().Initialize(self.app.hMainView.hFrame, _("新しい名前を入力"))
+        super().Initialize(self.app.main_window, _("新しい名前を入力"))
         self.InstallControls(detailText)
         return True
 

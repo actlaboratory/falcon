@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon searchResultBase Function
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 # Copyright (C) 2019-2021 yamahubuki <itiro.ishino@gmail.com>
@@ -40,7 +40,7 @@ class SearchResultBase(FileListBase):
             path = self.searches[i]
             if path == "eol":  # EOLで検索終了
                 self.finished = True
-                globalVars.app.PlaySound("complete.ogg")
+                globalVars.app.play_sound("complete.ogg")
                 globalVars.app.say(_("検索終了、%(item)d件ヒットしました。") % {'item': len(self)})
                 return True, ret_list
             # end EOL

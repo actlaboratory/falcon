@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon change file attribute view
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -19,7 +19,7 @@ class Dialog(BaseDialog):
         self.defaultAttributes = defaultAttributes
 
     def Initialize(self):
-        super().Initialize(self.app.hMainView.hFrame, _("属性変更"))
+        super().Initialize(self.app.main_window, _("属性変更"))
         self.InstallControls()
         return True
 

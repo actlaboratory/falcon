@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Simple input dialog view
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese. 
@@ -20,7 +20,7 @@ class Dialog(BaseDialog):
 		if parent!=None:
 			self.parent=parent
 		else:
-			self.parent=self.app.hMainView.hFrame
+			self.parent=self.app.main_window
 		self.validationPattern = validationPattern
 
 	def Initialize(self):

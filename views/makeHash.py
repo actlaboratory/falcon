@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon FileHash view
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -31,7 +31,7 @@ class Dialog(BaseDialog):
         self.fileName = fname
 
     def Initialize(self):
-        super().Initialize(self.app.hMainView.hFrame, _("ファイルハッシュの計算"))
+        super().Initialize(self.app.main_window, _("ファイルハッシュの計算"))
         self.InstallControls()
         return True
 

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon register originalAssociation view
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -23,7 +23,7 @@ class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
         super().__init__("registOriginalAssociationDialog", SettingDialog, info, config)
 
     def Initialize(self):
-        return super().Initialize(self.app.hMainView.hFrame, _("拡張子の独自関連付け"))
+        return super().Initialize(self.app.main_window, _("拡張子の独自関連付け"))
 
     def DeleteValidation(self, key):
         return "<default_" not in key

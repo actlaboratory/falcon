@@ -43,7 +43,7 @@ class PastProgressTab(base.FalconTabBase):
 
     def OnOperationFinish(self, op, parameters):
         if self.listObject.GetUnresolvedCount() == 0:
-            globalVars.app.hMainView.CloseTab(self)
+            globalVars.app.main_window.close_tab(self)
 
     def OnPercentageSet(self, op, parameters):
         self.listObject.SetHeaderPercentage(op.GetPercentage())
@@ -119,7 +119,7 @@ class PastProgressTab(base.FalconTabBase):
         """タブコントロールに表示する名前"""
         word = "ほにゃぺけからほにゃぺけへの貼り付け"
         word = StringUtil.GetLimitedString(
-            word, globalVars.app.config["view"]["header_title_length"])
+            word, globalVars.app.settings.get_int("view", "header_title_length", 20, 1))
         return word
 
     def DeleteAllItems(self):

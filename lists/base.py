@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon listObject base
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
@@ -20,9 +20,9 @@ class FalconListBase(object):
     def __init__(self):
         self.log = logging.getLogger("falcon." + self.__class__.__name__)
         self.supportedSorts = []
-        self.sortCursor = globalVars.app.config.getint(
+        self.sortCursor = globalVars.app.settings.get_int(
             self.__class__.__name__, "sorting", 0)
-        self.sortDescending = globalVars.app.config.getint(
+        self.sortDescending = globalVars.app.settings.get_int(
             self.__class__.__name__, "descending", 0)
         self.lists = []  # 内部のアイテムを保持するリストを表示順に格納
         self.columns = {}
