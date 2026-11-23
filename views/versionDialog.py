@@ -20,7 +20,6 @@ class VersionWindow(viewkit.SubWindow):
             text_list.append(_("アップデータバージョン") + ": " + update.getUpdaterVersion()[1])
         except BaseException:
             pass
-        text_list.append(_("viewkit バージョン") + ": " + viewkit.__version__)
         text_list.append(_("ライセンス") + ": " + constants.APP_LICENSE)
         text_list.append(_("開発元") + ": %s - %s" % (constants.APP_DEVELOPERS, constants.APP_DEVELOPERS_URL))
         text_list.append(_("ソフトウェア詳細情報") + ": " + constants.APP_DETAILS_URL)
