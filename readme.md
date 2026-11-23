@@ -6,6 +6,7 @@ Falcon Pythonで再スタートできればいいな。
 python:python 3.12 (32bit)  
 
 python -m pip install -r requirements.txt  
+python -m pip install --no-deps -r requirements-nodeps.txt  
 または make setup  
 
 

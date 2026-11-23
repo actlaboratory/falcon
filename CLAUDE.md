@@ -6,8 +6,9 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 ## 環境
 
 - Python 3.12 **32bit**（`py -3.12-32`）。仮想環境はリポジトリ直下の `.venv`（git 管理外）
-  - 作成: `py -3.12-32 -m venv .venv` → 有効化: `.\.venv\Scripts\Activate.ps1` → `python -m pip install -r requirements.txt`
+  - 作成: `py -3.12-32 -m venv .venv` → 有効化: `.\.venv\Scripts\Activate.ps1` → `python -m pip install -r requirements.txt` → `python -m pip install --no-deps -r requirements-nodeps.txt`
 - 依存パッケージのバージョンは viewkit の指定（wxPython 4.2.2 / Pillow 9.5 / PyInstaller 6.11.0）に合わせる。viewkit 本体は requirements.txt で GitHub のアーカイブ URL（コミット固定）から入れる
+- proxyUtil は `dukpy~=0.2.2` を指定しているが、dukpy 0.2 系には 32bit Python 3.12 向けのビルド済みファイルがなく CI でコンパイルにも失敗する。そのため proxyUtil は `requirements-nodeps.txt` に分けて `--no-deps` で入れ、依存パッケージ（dukpy 0.3.1 など）は requirements.txt に書く。proxyUtil は他の管理下なので変更しない
 - 実行: `python falcon.py`（`python -m falcon.py` ではない）
 - 起動時のドライブ一覧の取得は、接続できないネットワークドライブがあると数十秒かかる。エラーではない
 
