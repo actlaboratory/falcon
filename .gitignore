@@ -18,3 +18,6 @@ help.lnk
 *.spec
 history.dat
 falcon-snapshot.zip
+
+# virtual environment
+.venv/
