@@ -53,7 +53,7 @@ class KeyValueSettingDialogBase(BaseDialog):
         """いろんなwidgetを設置する。"""
         self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20, style=wx.ALL, proportion=20)
         self.hListCtrl, dummy = self.creator.virtualListCtrl(
-            _("現在の登録内容"), proportion=0, sizerFlag=wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, size=(
+            _("現在の登録内容"), proportion=0, sizer_flag=wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, size=(
                 750, 300), style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
 
         for i, info in enumerate(self.columnInfo):
@@ -69,7 +69,7 @@ class KeyValueSettingDialogBase(BaseDialog):
         self.hListCtrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.ItemSelected)
 
         # 処理ボタン
-        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.creator.GetSizer(), wx.HORIZONTAL, 20, "", wx.EXPAND)
+        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.creator.getSizer(), wx.HORIZONTAL, 20, "", wx.EXPAND)
         for i in range(len(self.specialButtons)):
             self.specialButtons[i] = self.creator.button(self.specialButtons[i][0], self.specialButtons[i][1])
             self.specialButtons[i].Enable(False)
@@ -250,29 +250,29 @@ class SettingDialogBase(BaseDialog):
         self.baseCreator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20, style=wx.ALL, margin=20)
 
         for i, name in enumerate(self.valueNames):
-            self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.baseCreator.GetPanel(), self.baseCreator.GetSizer(), wx.HORIZONTAL, 10)
+            self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.baseCreator.getPanel(), self.baseCreator.getSizer(), wx.HORIZONTAL, 10)
             if type(name[1]) == str:
                 self.edits[i] = self.creator.checkbox(name[1], state=self.values[i], x=500)
             elif name[1]:
-                self.edits[i], dummy = self.creator.inputbox(name[0], x=500, defaultValue=self.values[i], textLayout=wx.VERTICAL)
+                self.edits[i], dummy = self.creator.inputbox(name[0], x=500, default_value=self.values[i], text_layout=wx.VERTICAL)
                 self.edits[i].hideScrollBar(wx.HORIZONTAL)
             elif name[1] == False:
-                self.edits[i], dummy = self.creator.inputbox(name[0], x=500, defaultValue=self.values[i],
-                                                             style=wx.TE_READONLY, textLayout=wx.VERTICAL)
+                self.edits[i], dummy = self.creator.inputbox(name[0], x=500, default_value=self.values[i],
+                                                             style=wx.TE_READONLY, text_layout=wx.VERTICAL)
                 self.edits[i].hideScrollBar(wx.HORIZONTAL)
             elif hasattr(name[1], "__iter__"):
                 state = 0
                 if self.values[i] in name[1]:
                     state = name[1].index(self.values[i])
-                self.edits[i], dummy = self.creator.combobox(name[0], name[1], state=state, x=500, textLayout=wx.VERTICAL)
+                self.edits[i], dummy = self.creator.combobox(name[0], name[1], state=state, x=500, text_layout=wx.VERTICAL)
             elif name[1] is None:
-                self.edits[i], dummy = self.creator.inputbox(name[0], x=500, defaultValue=self.values[i],
-                                                             style=wx.TE_READONLY, textLayout=wx.VERTICAL)
+                self.edits[i], dummy = self.creator.inputbox(name[0], x=500, default_value=self.values[i],
+                                                             style=wx.TE_READONLY, text_layout=wx.VERTICAL)
                 self.edits[i].GetParent().Hide()
             else:
                 raise TypeError("object type must be str,bool,None, or iterable.")
             if self.buttons[i]:
-                self.buttonObjects[i] = self.creator.button(self.buttons[i][0], self.buttons[i][1], sizerFlag=wx.ALIGN_BOTTOM | wx.BOTTOM, margin=10)
+                self.buttonObjects[i] = self.creator.button(self.buttons[i][0], self.buttons[i][1], sizer_flag=wx.ALIGN_BOTTOM | wx.BOTTOM, margin=10)
 
         # ボタンエリア
         self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.HORIZONTAL, 20, "", wx.ALIGN_RIGHT | wx.TOP, 10)

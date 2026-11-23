@@ -38,8 +38,8 @@ class Dialog(BaseDialog):
         """いろんなwidgetを設置する。"""
         self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20, style=wx.ALL, margin=20)
         self.creator.staticText(_("設定するには、使用したいキーの組み合わせを押します。\n設定を解除するには、Escキーを押します。"))
-        self.keyNameText = self.creator.staticText("", sizerFlag=wx.ALIGN_CENTER | wx.ALL, margin=20)
-        self.errorText = self.creator.staticText("", sizerFlag=wx.ALIGN_CENTER)
+        self.keyNameText = self.creator.staticText("", sizer_flag=wx.ALIGN_CENTER | wx.ALL, margin=20)
+        self.errorText = self.creator.staticText("", sizer_flag=wx.ALIGN_CENTER)
 
         self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
         self.bCancel = self.creator.cancelbutton(_("設定解除"), self.cancelButton)

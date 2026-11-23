@@ -70,23 +70,23 @@ class Dialog(BaseDialog):
         static = creator.staticText(_("起動時に開くフォルダ"))
         horizontalCreator = views.ViewCreator.ViewCreator(
             self.viewMode,
-            creator.GetPanel(),
-            creator.GetSizer(),
+            creator.getPanel(),
+            creator.getSizer(),
             wx.HORIZONTAL,
             space=0,
             label="",
             style=wx.ALL | wx.EXPAND,
             margin=0)
-        self.startpath, static = horizontalCreator.inputbox(_("起動時に開く場所"), proportion=1, textLayout=None)
+        self.startpath, static = horizontalCreator.inputbox(_("起動時に開く場所"), proportion=1, text_layout=None)
         self.startpathBrowse = horizontalCreator.button(_("参照"), self.browseDir)
 
-        creator = views.ViewCreator.ViewCreator(self.viewMode, creator.GetPanel(), creator.GetSizer(), views.ViewCreator.GridBagSizer,
+        creator = views.ViewCreator.ViewCreator(self.viewMode, creator.getPanel(), creator.getSizer(), views.ViewCreator.GridBagSizer,
                                                 label=_("一般"), style=wx.ALL | wx.EXPAND, proportion=1, margin=20)
 
         self.logLevel, dummy = creator.combobox(_("ログ記録レベル(&L)"), list(self.logLevelSelection.values()))
         self.reader, static = creator.combobox(_("出力先(&O)"), list(self.readerSelection.values()))
         self.fxvolumeSpin, static = creator.spinCtrl(_("効果音の音量"), 0, 300, self.spinChanged)
-        self.fxvolumeSlider, static = creator.slider(_("効果音の音量"), 0, 300, self.sliderChanged, enableTabFocus=False)
+        self.fxvolumeSlider, static = creator.slider(_("効果音の音量"), 0, 300, self.sliderChanged, enable_tab_focus=False)
         self.historycount, static = creator.spinCtrl(_("検索履歴の保持件数"), 0, 100)
 
         # preview
@@ -95,7 +95,7 @@ class Dialog(BaseDialog):
         self.headerlinecount, static = creator.spinCtrl(_("テキストヘッダー行数"), 1, 100)
         self.footerlinecount, static = creator.spinCtrl(_("テキストフッター行数"), 1, 100)
         self.audiovolumeSpin, static = creator.spinCtrl(_("プレビューの音量"), 0, 300, self.spinChanged)
-        self.audiovolumeSlider, static = creator.slider(_("プレビューの音量"), 0, 300, self.sliderChanged, enableTabFocus=False)
+        self.audiovolumeSlider, static = creator.slider(_("プレビューの音量"), 0, 300, self.sliderChanged, enable_tab_focus=False)
 
         # view
         creator = views.ViewCreator.ViewCreator(
@@ -116,7 +116,7 @@ class Dialog(BaseDialog):
         self.usemanualsetting = creator.checkbox(_("プロキシサーバーの情報を手動で設定する(&M)"), self.checkBoxStatusChanged)
         self.server, static = creator.inputbox(_("サーバーURL"))
         self.server.hideScrollBar(wx.HORIZONTAL)
-        self.port, static = creator.spinCtrl(_("ポート番号"), 0, 65535, defaultValue=8080)
+        self.port, static = creator.spinCtrl(_("ポート番号"), 0, 65535, default_value=8080)
 
         # buttons
         creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.HORIZONTAL, style=wx.ALIGN_RIGHT)

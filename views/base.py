@@ -51,7 +51,7 @@ class BaseView(object):
         self.MakePanel()
 
     def Show(self):
-        self.creator.GetPanel().Layout()
+        self.creator.getPanel().Layout()
         self.hFrame.Show()
         self.app.SetTopWindow(self.hFrame)
         return True
@@ -85,7 +85,7 @@ class BaseView(object):
         else:
             self.hFrame.SetMenuBar(self.hDisableMenuBar)
         # SetMenuBarの後に呼び出しが必要
-        self.creator.GetSizer().Layout()
+        self.creator.getSizer().Layout()
 
         t = self.menu.acceleratorTable if en else wx.AcceleratorTable()
         target.SetAcceleratorTable(t)

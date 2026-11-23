@@ -249,7 +249,7 @@ class View(BaseView):
             # これがないとメニューバーの高さ分リストオブジェクトの大きさが変わってしまうために必要
             self.hFrame.SetMenuBar(self.menu.hDisableMenuBar)
         # SetMenuBarの後に呼び出しが必要
-        self.creator.GetSizer().Layout()
+        self.creator.getSizer().Layout()
 
     def UpdateMenuState(self, old, new):
         # メニューのブロック状態を変更

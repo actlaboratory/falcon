@@ -1,10 +1,10 @@
 
 import wx
 
-from views.viewObjectBase import virtualListCtrlBase
+from viewkit.creator.objects import virtual_listctrl
 
 
-class FalconVirtualListCtrl(virtualListCtrlBase.virtualListCtrl):
+class FalconVirtualListCtrl(virtual_listctrl.virtualListCtrl):
     def __init__(self, *pArg, **kArg):
         super().__init__(*pArg, **kArg)
 

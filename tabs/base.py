@@ -68,8 +68,8 @@ class FalconTabBase(object):
     def InstallListCtrl(self, creator, existing_listctrl=None):
         """指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
         if existing_listctrl is None:
-            self.hListCtrl, static = creator.virtualListCtrl("", proportion=1, sizerFlag=wx.EXPAND, style=wx.LC_REPORT | wx.LC_EDIT_LABELS)
-            creator.GetPanel().Layout()
+            self.hListCtrl, static = creator.virtualListCtrl("", proportion=1, sizer_flag=wx.EXPAND, style=wx.LC_REPORT | wx.LC_EDIT_LABELS)
+            creator.getPanel().Layout()
         else:
             self.hListCtrl = existing_listctrl
         # end リストコントロールを再利用する

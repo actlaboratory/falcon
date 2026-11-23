@@ -43,7 +43,7 @@ class Dialog(BaseDialog):
         self.combo, static = self.creator.combobox(
             _("値の種類"), hashTypes, state=hashTypes.index('sha256'))
         self.calcButton = self.creator.okbutton(
-            _("計算"), self.calcStart, sizerFlag=wx.ALIGN_CENTER_VERTICAL)
+            _("計算"), self.calcStart, sizer_flag=wx.ALIGN_CENTER_VERTICAL)
 
         self.creator = views.ViewCreator.ViewCreator(
             1, self.panel, self.sizer, wx.VERTICAL, 20)

@@ -67,7 +67,7 @@ class Dialog(BaseDialog):
         self.creator = views.ViewCreator.ViewCreator(
             1, self.panel, self.sizer, wx.HORIZONTAL, 0, "", wx.EXPAND)
         self.destination, tmp = self.creator.inputbox(
-            _("作成先") + "：", x=-1, defaultValue=self.targetName + ".lnk")
+            _("作成先") + "：", x=-1, default_value=self.targetName + ".lnk")
 
         # 詳細設定
         self.creator = views.ViewCreator.ViewCreator(

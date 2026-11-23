@@ -21,7 +21,7 @@ class Dialog(BaseDialog):
     def InstallControls(self, existingName):
         self.creator = views.ViewCreator.ViewCreator(
             1, self.panel, self.sizer, wx.VERTICAL, 20)
-        self.iName, self.static = self.creator.inputbox(_("新しい名前"), x=400, defaultValue=existingName)
+        self.iName, self.static = self.creator.inputbox(_("新しい名前"), x=400, default_value=existingName)
 
         self.buttonArea = views.ViewCreator.BoxSizer(
             self.sizer, wx.HORIZONTAL, wx.ALIGN_RIGHT)

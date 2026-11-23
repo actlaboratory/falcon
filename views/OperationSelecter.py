@@ -38,7 +38,7 @@ class Dialog(BaseDialog):
         if self.message:
             self.creator.staticText(self.message)
         self.hListCtrl, static = self.creator.listCtrl(
-            _("アイテム情報"), proportion=0, sizerFlag=wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, size=(
+            _("アイテム情報"), proportion=0, sizer_flag=wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, size=(
                 600, 300), style=wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_SINGLE_SEL)
 
         i = 0
