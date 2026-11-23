@@ -87,18 +87,13 @@ class PastProgressTab(base.FalconTabBase):
                 from_stat.st_size, misc.UNIT_AUTO, True)), (_("更新日時"), datetime.datetime.fromtimestamp(
                     dest_stat.st_mtime), "→", datetime.datetime.fromtimestamp(
                     from_stat.st_mtime))]
-        d = views.OperationSelecter.Dialog(
-            _("上書きしますか？"),
-            info,
-            views.OperationSelecter.GetMethod("ALREADY_EXISTS"),
-            False)
-        d.Initialize()
-        d.Show()
-        val = d.GetValue()
+        val = globalVars.app.main_window.showSubWindow(
+            views.OperationSelecter.OperationSelecterWindow, _("ファイル操作確認"),
+            views.OperationSelecter.OperationSelecterParameters(_("上書きしますか？"), info, views.OperationSelecter.GetMethod("ALREADY_EXISTS"), False)).user_object
         if val['all'] is True:  # 「以降も同様に処理」がオン
             confs.RespondAll(confirmElem, val['response'])
         else:  # この1件だけ
-            confirmElem.Respond(d.GetValue()['response'])  # 渓谷に対して、文字列でレスポンスする
+            confirmElem.Respond(val['response'])  # 渓谷に対して、文字列でレスポンスする
         # end これ以降全てかこれだけか
         self.fileOperator.UpdateConfirmation()  # これで繁栄する
         self.listObject.Update(confs)

@@ -3,144 +3,131 @@
 # Copyright (C) 2021 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
-import copy
-import os
+from logging import getLogger
+
+import viewkit.presets.keyValueSetting as keyValueSetting
 import wx
 
+import constants
 import globalVars
 import keymap
-import views.keyConfig
-import views.KeyValueSettingDialogBase
 
 from simpleDialog import dialog, errorDialog
+from views.key_value_setting import NO_KEY, EntryEditWindow, FalconKeyValueSettingWindow, validate_key_settings
+
+# 1つの機能に設定できるショートカットキーの数
+MAX_KEY_COUNT = 5
 
 
-class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
-    def __init__(self, keyConfig, menuIds, checkEntries=[], filter=None):
-        info = [
-            (_("名前"), wx.LIST_FORMAT_LEFT, 350),
-            (_("ショートカット"), wx.LIST_FORMAT_LEFT, 370),
-            (_("識別子"), wx.LIST_FORMAT_LEFT, 200)
-        ]
-        super().__init__("globalKeyConfigDialog", SettingDialog, info, keyConfig, menuIds)
-        self.oldKeyConfig = copy.copy(keyConfig)
-        self.checkEntries = checkEntries
-        self.filter = filter
-        if filter is None:
-            self.filter = globalVars.app.main_window.menu.keymap.filter
+class GlobalKeyConfigParameters(keyValueSetting.KeyValueSettingConfig):
+    """GlobalKeyConfigWindow に渡すパラメータ"""
 
-    def Initialize(self, title=_("ショートカットキーの設定")):
-        super().Initialize(self.app.main_window, title)
-        self.addButton.Hide()
-        self.deleteButton.Hide()
-        return
+    def __init__(self, rows: list, check_entries=None, key_filter=None):
+        """rowsには {"name": 表示名, "key": キー("/"区切り、無ければNO_KEY), "identifier": 機能の識別子} のリストを指定する"""
+        super().__init__(
+            listview_label=_("現在の登録内容"),
+            keys=[
+                keyValueSetting.KeyValueSettingKey("name", _("名前"), wx.LIST_FORMAT_LEFT, 350),
+                keyValueSetting.KeyValueSettingKey("key", _("ショートカット"), wx.LIST_FORMAT_LEFT, 370),
+                keyValueSetting.KeyValueSettingKey("identifier", _("識別子"), wx.LIST_FORMAT_LEFT, 200),
+            ],
+            values=rows,
+            allow_edit_rows=False,
+            editor_window_class=KeyEditWindow,
+            add_button_label=_("追加(&A)"),
+            edit_button_label=_("変更(&M)"),
+            delete_button_label=_("削除(&D)"),
+        )
+        self.check_entries = check_entries if check_entries is not None else []
+        self.key_filter = key_filter if key_filter is not None else globalVars.app.main_window.menu.keymap.filter
 
-    def SettingDialogHook(self, dialog):
-        dialog.SetFilter(self.filter)
 
-    def OkButtonEvent(self, event):
-        """
-                設定されたキーが重複している場合はエラーとする
-        """
+class GlobalKeyConfigWindow(FalconKeyValueSettingWindow):
+    """ショートカットキーの一覧を編集するウィンドウ。結果は一覧の行(辞書)のリスト。"""
+
+    def __init__(self, parent, ctx, title, parameters: GlobalKeyConfigParameters):
+        super().__init__(parent, ctx, title, parameters)
+        self._old_keys = {row["name"]: row["key"] for row in parameters.values}
+        # 行の追加・削除はできない
+        for label in (parameters.add_button_label, parameters.delete_button_label):
+            button = self.FindWindowByLabel(label, self)
+            if button is not None:
+                button.Hide()
+
+    def validate_rows(self, rows):
+        """設定されたキーが重複している場合はエラーとする"""
+        names = {row["name"]: row["key"] for row in rows}
         # 他のビューとの重複調査
-        if not views.KeyValueSettingDialogBase.KeySettingValidation(self.oldKeyConfig, self.values[0], self.log, self.checkEntries, True):
-            return
+        if not validate_key_settings(self._old_keys, names, self.log, self.config.check_entries, True):
+            return False
 
         # このビュー内での重複調査
-        newKeys = {}
-        for name, keys in self.values[0].items():
+        identifiers = {row["name"]: row["identifier"] for row in rows}
+        new_keys = {}
+        for name, keys in names.items():
             for key in keys.split("/"):
-                newKeys.setdefault(key.upper(), set()).add(name)
-        for key, names in newKeys.items():
-            if key == _("なし"):
+                new_keys.setdefault(key.upper(), set()).add(name)
+        for key, key_names in new_keys.items():
+            if key == NO_KEY:
                 continue
-            if len(names) >= 2:
-                entries = []
-                for name in names:
-                    entries.append(keymap.makeEntry(self.values[1][name], key, None, self.log))
+            if len(key_names) >= 2:
+                entries = [keymap.makeEntry(identifiers[name], key, None, self.log) for name in key_names]
                 if not keymap.permitConfrict(entries, self.log):
-                    dialog(_("エラー"), _("以下の項目において、重複するキー %(key)s が設定されています。\n\n%(command)s") % {"key": key, "command": names}, self.wnd)
-                    return
-        event.Skip()
+                    dialog(_("エラー"), _("以下の項目において、重複するキー %(key)s が設定されています。\n\n%(command)s") % {"key": key, "command": key_names}, self)
+                    return False
+        return True
 
 
-class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
-    """設定内容を入力するダイアログ"""
+class KeyEditWindow(EntryEditWindow):
+    """1つの機能のショートカットキーを設定するウィンドウ"""
 
-    def __init__(self, parent, name, key, id):
-        keys = key.split("/")
-        for i in range(len(keys), 5):
-            keys.append(_("なし"))
-        super().__init__(
-            parent,
-            ((_("名前"), False), (_("ショートカット1"), False), (_("ショートカット2"), False), (_("ショートカット3"), False), (_("ショートカット4"), False), (_("ショートカット5"), False), (_("識別子"), None)),
-            (None, (_("設定"), self.SetKey1), (_("設定"), self.SetKey2), (_("設定"), self.SetKey3), (_("設定"), self.SetKey4), (_("設定"), self.SetKey5), None),
-            name, keys[0], keys[1], keys[2], keys[3], keys[4], id
-        )
+    def __init__(self, parent, ctx, title, parameters):
+        super().__init__(parent, ctx, title, parameters)
+        self.log = getLogger("%s.%s" % (constants.LOG_PREFIX, self.__class__.__name__))
+        self.key_filter = globalVars.app.main_window.menu.keymap.filter
+        keys = self.row.get("key", NO_KEY).split("/")
+        keys += [NO_KEY] * (MAX_KEY_COUNT - len(keys))
+        self.add_field("name", _("名前"), editable=False)
+        for i in range(MAX_KEY_COUNT):
+            self.row["key%d" % i] = keys[i]
+            self.add_field("key%d" % i, _("ショートカット%d") % (i + 1), editable=False,
+                           button=(_("設定"), lambda event, no=i: self._on_set_key(no)))
+        self.add_field("identifier", _("識別子"), editable=False, hidden=True)
+        self.add_footer()
 
-    def Initialize(self):
-        return super().Initialize(_("登録内容の入力"))
-
-    def SetKey1(self, event):
-        self.keyDialog(1)
-
-    def SetKey2(self, event):
-        self.keyDialog(2)
-
-    def SetKey3(self, event):
-        self.keyDialog(3)
-
-    def SetKey4(self, event):
-        self.keyDialog(4)
-
-    def SetKey5(self, event):
-        self.keyDialog(5)
-
-    def GetData(self):
-        ret = [None] * 3
-        ret[0] = self.edits[0].GetLineText(0)
-        ret[1] = ""
-        for i in range(1, 6):
-            if self.edits[i].GetLineText(0) != _("なし"):
-                if ret[1] != "":
-                    ret[1] += "/"
-                ret[1] += self.edits[i].GetLineText(0)
-        if ret[1] == "":
-            ret[1] = _("なし")
-        ret[2] = self.edits[6].GetLineText(0)
-        return ret
-
-    def SetFilter(self, filter):
-        """
-                SettingDialogHookから呼び出され、フィルタを登録する
-        """
-        self.filter = filter
-
-    def keyDialog(self, no):
+    def _on_set_key(self, no):
+        field = self.fields["key%d" % no]
         # フィルタに引っかかるものが既に設定されている場合、その変更は許さない
-        before = self.edits[no].GetLineText(0)
-        if before != _("なし"):
-            if not self.filter.Check(before):
-                errorDialog(_("このショートカットは変更できません。"), self.wnd)
-                return
-        d = views.keyConfig.Dialog(self.wnd, self.filter)
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
-            dialog(_("設定完了"), _("解除しました。"), self.wnd)
-            self.edits[no].SetValue(_("なし"))
+        before = field.GetLineText(0)
+        if before != NO_KEY and not self.key_filter.Check(before):
+            errorDialog(_("このショートカットは変更できません。"), self)
+            return
+        key = self.input_key("key%d" % no, self.key_filter)
+        if key is None:
+            dialog(_("設定完了"), _("解除しました。"), self)
+            field.SetValue(NO_KEY)
         else:
-            dialog(_("設定完了"), _("%s に設定しました。") % (d.GetValue()), self.wnd)
-            self.edits[no].SetValue(d.GetValue())
-        return
+            dialog(_("設定完了"), _("%s に設定しました。") % key, self)
+            field.SetValue(key)
 
-    # 同一パターンを２重指定している場合の処理をしてから閉じる
-    def Validation(self, event):
-        lst = []
-        for i in range(1, 6):
-            if self.edits[i].GetLineText(0) != _("なし"):
-                entry = keymap.makeEntry(self.edits[0].GetLineText(0), self.edits[i].GetLineText(0), None, self.log)
-                if entry not in lst:
-                    lst.append(entry)
+    def validate(self):
+        # 同一パターンを２重指定している場合は、後のものを解除する
+        entries = []
+        for i in range(MAX_KEY_COUNT):
+            field = self.fields["key%d" % i]
+            if field.GetLineText(0) != NO_KEY:
+                entry = keymap.makeEntry(self.get_value("name"), field.GetLineText(0), None, self.log)
+                if entry in entries:
+                    field.SetValue(NO_KEY)
                 else:
-                    self.edits[i].SetValue(_("なし"))
-        event.Skip()
+                    entries.append(entry)
+        return True
+
+    def result(self):
+        keys = [self.get_value("key%d" % i) for i in range(MAX_KEY_COUNT)]
+        keys = [key for key in keys if key != NO_KEY]
+        return {
+            "name": self.get_value("name"),
+            "key": "/".join(keys) if keys else NO_KEY,
+            "identifier": self.get_value("identifier"),
+        }

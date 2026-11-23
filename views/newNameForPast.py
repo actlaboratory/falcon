@@ -3,32 +3,21 @@
 # 同一ディレクトリに貼り付けしようとしたときに、名前を問い合わせるときのやつ
 # Copyright (C) 2021 Yukio Nozawa <personal@nyanchangames.com>
 
+import viewkit
 import wx
-import views.ViewCreator
-from logging import getLogger
-from views.baseDialog import *
 
 
-class Dialog(BaseDialog):
-    def __init__(self):
-        super().__init__("newNameEditDialog")
+class NewNameForPastWindow(viewkit.SubWindow):
+    """貼り付け先の新しい名前を入力するウィンドウ。parametersは既存の名前。結果は入力された名前。"""
 
-    def Initialize(self, existingName):
-        super().Initialize(self.app.main_window, _("新しい名前を入力"))
-        self.InstallControls(existingName)
-        return True
+    def __init__(self, parent, ctx, title, parameters: str):
+        super().__init__(parent, ctx, title, parameters)
+        creator = self.creator.makeChild(wx.VERTICAL, 20)
+        self.name_edit, dummy = creator.inputbox(_("新しい名前"), x=400, default_value=parameters)
 
-    def InstallControls(self, existingName):
-        self.creator = views.ViewCreator.ViewCreator(
-            1, self.panel, self.sizer, wx.VERTICAL, 20)
-        self.iName, self.static = self.creator.inputbox(_("新しい名前"), x=400, default_value=existingName)
+        footer = self.creator.makeChild(wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
+        footer.okbutton(_("ＯＫ"))
+        footer.cancelbutton(_("スキップ"))
 
-        self.buttonArea = views.ViewCreator.BoxSizer(
-            self.sizer, wx.HORIZONTAL, wx.ALIGN_RIGHT)
-        self.creator = views.ViewCreator.ViewCreator(
-            1, self.panel, self.buttonArea, wx.HORIZONTAL, 20)
-        self.bOk = self.creator.okbutton(_("ＯＫ"), None)
-        self.bCancel = self.creator.cancelbutton(_("スキップ"), None)
-
-    def GetData(self):
-        return self.iName.GetLineText(0)
+    def result(self):
+        return self.name_edit.GetLineText(0)

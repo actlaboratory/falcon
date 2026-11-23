@@ -324,12 +324,9 @@ class FileListTab(base.FalconTabBase):
                     (_("%s先") % op_str, dest),
                     (os.path.basename(i), i)
                 ]
-                d = views.OperationSelecter.Dialog(
-                    _("自身のサブディレクトリへの%sはできません。") %
-                    op_str, info, views.OperationSelecter.GetMethod("OWN_SUB_DIR"), False)
-                d.Initialize()
-                d.Show()
-                ret = d.GetValue()
+                ret = globalVars.app.main_window.showSubWindow(
+                    views.OperationSelecter.OperationSelecterWindow, _("ファイル操作確認"),
+                    views.OperationSelecter.OperationSelecterParameters(_("自身のサブディレクトリへの%sはできません。") % op_str, info, views.OperationSelecter.GetMethod("OWN_SUB_DIR"), False)).user_object
                 if ret["all"]:
                     all = ret["response"]
                 # end 「以降も同様に処理」が指定されていたら、そのレスポンスを覚える
@@ -401,18 +398,13 @@ class FileListTab(base.FalconTabBase):
                     from_stat.st_size, misc.UNIT_AUTO, True)), (_("更新日時"), datetime.datetime.fromtimestamp(
                         dest_stat.st_mtime), "→", datetime.datetime.fromtimestamp(
                         from_stat.st_mtime))]
-            d = views.OperationSelecter.Dialog(
-                _("上書きしますか？"),
-                info,
-                views.OperationSelecter.GetMethod("ALREADY_EXISTS"),
-                False)
-            d.Initialize()
-            d.Show()
-            val = d.GetValue()
+            val = globalVars.app.main_window.showSubWindow(
+                views.OperationSelecter.OperationSelecterWindow, _("ファイル操作確認"),
+                views.OperationSelecter.OperationSelecterParameters(_("上書きしますか？"), info, views.OperationSelecter.GetMethod("ALREADY_EXISTS"), False)).user_object
             if val['all'] is True:  # 「以降も同様に処理」がオン
                 confs.RespondAll(elem, val['response'])
             else:  # この1件だけ
-                elem.SetResponse(d.GetValue())  # 渓谷に対して、文字列でレスポンスする
+                elem.SetResponse(val)  # 渓谷に対して、文字列でレスポンスする
             # end これ以降全てかこれだけか
         # end while
         self.log.debug("End checking confirmation.")
@@ -430,13 +422,11 @@ class FileListTab(base.FalconTabBase):
         ret = ""
         input = existingName
         while(True):
-            dlg = views.newNameForPast.Dialog()
-            dlg.Initialize(input)
-            r = dlg.Show()
-            if r == wx.ID_CANCEL:
+            result = globalVars.app.main_window.showSubWindow(views.newNameForPast.NewNameForPastWindow, _("新しい名前を入力"), input)
+            if result.code == wx.ID_CANCEL:
                 break
             # end キャンセル
-            input = dlg.GetData()
+            input = result.user_object
             if input == existingName:
                 dialog(_("エラー"), _("新しい名前を入力してください。"))
                 continue

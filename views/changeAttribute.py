@@ -3,52 +3,26 @@
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
+import viewkit
 import wx
-from logging import getLogger, FileHandler, Formatter
-from .baseDialog import *
-import keymap
-import misc
-from simpleDialog import *
-import views.ViewCreator
 
 
-class Dialog(BaseDialog):
-    def __init__(self, defaultAttributes):
-        super().__init__("changeAttributeDialog")
-        # 現在の属性を初期値としてセット
-        self.defaultAttributes = defaultAttributes
+class ChangeAttributeWindow(viewkit.SubWindow):
+    """
+    ファイルの属性を変更するウィンドウ。
+    parametersは現在の属性(読み取り専用・隠し・システム・アーカイブ)のチェック状態のリスト。
+    結果は変更後のチェック状態のリスト。
+    """
 
-    def Initialize(self):
-        super().Initialize(self.app.main_window, _("属性変更"))
-        self.InstallControls()
-        return True
-
-    def InstallControls(self):
-        """いろんなwidgetを設置する。"""
-        self.mainArea = views.ViewCreator.BoxSizer(
-            self.sizer, wx.HORIZONTAL, wx.ALIGN_CENTER)
-
+    def __init__(self, parent, ctx, title, parameters: list):
+        super().__init__(parent, ctx, title, parameters)
         # 属性の変更
-        self.creator = views.ViewCreator.ViewCreator(
-            1, self.panel, self.mainArea, wx.VERTICAL, 20, _("属性の変更"))
-        self.checks = self.creator.checkbox3(
-            [_("読み取り専用"), _("隠し"), _("システム"), _("アーカイブ")], None, self.defaultAttributes)
+        creator = self.creator.makeChild(wx.VERTICAL, 20, _("属性の変更"))
+        self.checks = creator.checkbox3([_("読み取り専用"), _("隠し"), _("システム"), _("アーカイブ")], None, parameters)
 
-        # タイムスタンプの変更
-        # self.creator=views.ViewCreator.ViewCreator(1,self.panel,self.mainArea,wx.VERTICAL,20,_("タイムスタンプの変更"))
-        # self.date=self.creator.calendar()
-        # self.time=self.creator.timepicker()
+        footer = self.creator.makeChild(wx.HORIZONTAL, 20)
+        footer.okbutton(_("ＯＫ"))
+        footer.cancelbutton(_("キャンセル"))
 
-        self.buttonArea = views.ViewCreator.BoxSizer(self.sizer, wx.HORIZONTAL)
-        self.creator = views.ViewCreator.ViewCreator(
-            1, self.panel, self.buttonArea, wx.HORIZONTAL, 20)
-        self.bOk = self.creator.okbutton(_("ＯＫ"), None)
-        self.bCancel = self.creator.cancelbutton(_("キャンセル"), None)
-
-    def GetData(self):
-        v = []
-        v.append(self.checks[0].Get3StateValue())
-        v.append(self.checks[1].Get3StateValue())
-        v.append(self.checks[2].Get3StateValue())
-        v.append(self.checks[3].Get3StateValue())
-        return v
+    def result(self):
+        return [check.Get3StateValue() for check in self.checks]

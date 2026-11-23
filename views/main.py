@@ -24,6 +24,7 @@ import sys
 import history
 import pywintypes
 import viewkit
+import viewkit.presets.keyValueSetting
 import win32file
 import wx
 
@@ -46,7 +47,7 @@ import views.changeAttribute
 import views.favoriteDirectory
 import views.fonttest
 import views.globalKeyConfig
-import views.KeyValueSettingDialogBase
+import views.key_value_setting
 import views.makeHash
 import views.makeShortcut
 import views.menuBlocker
@@ -118,13 +119,6 @@ class MainWindow(viewkit.MainWindow):
         self.Bind(wx.EVT_MENU_OPEN, self._on_menu_open)
 
     # ---- viewkit.MainWindow のオーバーライド ----
-
-    def clear(self, space=0):
-        """falconの表示設定を適用したViewCreatorでパネルを作り直す"""
-        self.DestroyChildren()
-        panel = views.ViewCreator.makePanel(self)
-        self.creator = views.ViewCreator.ViewCreator(views.ViewCreator.get_view_mode(), panel, None, wx.VERTICAL, style=wx.ALL, space=space)
-        self.Layout()
 
     def define_features(self):
         features = []
@@ -623,7 +617,7 @@ class MainWindow(viewkit.MainWindow):
             "ENV_FONTTEST": self._on_font_test,
             "ENV_SETTINGS": self._on_settings,
 
-            "HELP_VERINFO": lambda event: views.versionDialog.versionDialog(),
+            "HELP_VERINFO": lambda event: self.showSubWindow(views.versionDialog.VersionWindow, _("バージョン情報")),
             "HELP_UPDATE": lambda event: globalVars.update.update(),
         }
 
@@ -660,33 +654,35 @@ class MainWindow(viewkit.MainWindow):
         self.Close()
 
     def _on_change_attribute(self, event):
-        d = views.changeAttribute.Dialog(self.active_tab.GetSelectedItems().GetAttributeCheckState())
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+        result = self.showSubWindow(views.changeAttribute.ChangeAttributeWindow, _("属性変更"), self.active_tab.GetSelectedItems().GetAttributeCheckState())
+        if result.code == wx.ID_CANCEL:
             return
-        self.active_tab.ChangeAttribute(d.GetValue())
+        self.active_tab.ChangeAttribute(result.user_object)
 
     def _on_make_shortcut(self, event):
         target = self.active_tab.GetSelectedItems().GetElement(0)  # browsableObjects
-        d = views.makeShortcut.Dialog(
-            target.basename,
-            target.canLnkTarget,
-            target.canHardLinkTarget,
-            target.canSynLinkTarget)
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+        parameters = views.makeShortcut.MakeShortcutParameters(target.basename, target.canLnkTarget, target.canHardLinkTarget, target.canSynLinkTarget)
+        result = self.showSubWindow(views.makeShortcut.MakeShortcutWindow, _("ショートカットの作成"), parameters)
+        if result.code == wx.ID_CANCEL:
             return
-        self.active_tab.MakeShortcut(d.GetValue())
+        self.active_tab.MakeShortcut(result.user_object)
 
     def _on_view_detail(self, event):
         self.show_detail(self.active_tab.GetFocusedElement())
 
     def _on_make_directory(self, event):
-        d = views.SimpleInputDialog.Dialog(_("ディレクトリ作成"), _("ディレクトリ名"))
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+        value = self.input_text(_("ディレクトリ作成"), _("ディレクトリ名"))
+        if value is None:
             return
-        self.active_tab.MakeDirectory(d.GetValue())
+        self.active_tab.MakeDirectory(value)
+
+    def input_text(self, title, detail, default_value=""):
+        """1行の文字列を入力してもらう。キャンセルされたらNoneを返す。"""
+        parameters = views.SimpleInputDialog.SimpleInputParameters(detail, default_value)
+        result = self.showSubWindow(views.SimpleInputDialog.SimpleInputWindow, title, parameters)
+        if result.code == wx.ID_CANCEL:
+            return None
+        return result.user_object
 
     def _on_update_file_list(self, event):
         self.update_file_list()
@@ -750,19 +746,19 @@ class MainWindow(viewkit.MainWindow):
 
     def _on_input_dir(self, event):
         root_dir = self.active_tab.listObject.rootDirectory
-        d = views.SimpleInputDialog.Dialog(_("パスを指定して移動"), _("移動先"), defaultValue=root_dir)
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+        value = self.input_text(_("パスを指定して移動"), _("移動先"), root_dir)
+        if value is None:
             return
-        self.active_tab.Move(misc.analyzeUserInputPath(d.GetValue(), self.active_tab.listObject.rootDirectory))
+        self.active_tab.Move(misc.analyzeUserInputPath(value, self.active_tab.listObject.rootDirectory))
 
     def _on_add_favorite(self, event):
         root_dir = self.active_tab.listObject.rootDirectory
-        d = views.favoriteDirectory.SettingDialog(self, os.path.basename(root_dir), root_dir, "")
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+        initial_row = {"name": os.path.basename(root_dir), "path": root_dir, "key": ""}
+        edit_event = viewkit.presets.keyValueSetting.KeyValueSettingEditEvent([], True, -1, initial_row)
+        result = self.showSubWindow(views.favoriteDirectory.FavoriteDirectoryEditWindow, _("登録内容の入力"), edit_event)
+        if result.code == wx.ID_CANCEL:
             return
-        name, path, key = d.GetValue()
+        name, path, key = result.user_object["name"], result.user_object["path"], result.user_object["key"]
 
         if name in self.app.favorite_directory:
             dlg = wx.MessageDialog(
@@ -776,45 +772,38 @@ class MainWindow(viewkit.MainWindow):
                 return
         v = dict(self.app.favorite_directory.keyMap.items())
         v[name] = key
-        if not views.KeyValueSettingDialogBase.KeySettingValidation(dict(self.app.favorite_directory.keyMap.items()), v, None):
+        if not views.key_value_setting.validate_key_settings(dict(self.app.favorite_directory.keyMap.items()), v):
             return
 
         self.app.favorite_directory.add(name, path, key)
         self.update_user_command()
 
     def _on_setting_favorite(self, event):
-        d = views.favoriteDirectory.Dialog(
-            dict(self.app.favorite_directory.paramMap.items()),
-            dict(self.app.favorite_directory.keyMap.items()))
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+        config = views.favoriteDirectory.create_config(self.app.favorite_directory.paramMap, self.app.favorite_directory.keyMap)
+        result = self.showSubWindow(views.favoriteDirectory.FavoriteDirectoryWindow, _("お気に入りディレクトリの設定"), config)
+        if result.code == wx.ID_CANCEL:
             return
-        params, keys = d.GetValue()
+        params, keys = views.favoriteDirectory.split_rows(result.user_object)
         self.app.favorite_directory.replace(params, keys)
         self.update_user_command()
 
     def _on_setting_open_here(self, event):
-        d = views.openHere.Dialog(
-            dict(self.app.open_here_command.paramMap.items()),
-            dict(self.app.open_here_command.keyMap.items()))
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+        config = views.openHere.create_config(self.app.open_here_command.paramMap, self.app.open_here_command.keyMap)
+        result = self.showSubWindow(views.openHere.OpenHereWindow, _("「ここで開く」コマンドの設定"), config)
+        if result.code == wx.ID_CANCEL:
             return
-        params, keys = d.GetValue()
+        params, keys = views.openHere.split_rows(result.user_object)
         self.app.open_here_command.replace(params, keys)
         self.update_user_command()
 
     def _on_hash_calc(self, event):
-        d = views.makeHash.Dialog(self.active_tab.GetFocusedElement().fullpath)
-        d.Initialize()
-        d.Show()
+        self.showSubWindow(views.makeHash.MakeHashWindow, _("ファイルハッシュの計算"), self.active_tab.GetFocusedElement().fullpath)
 
     def _on_exec_program(self, event):
-        d = views.SimpleInputDialog.Dialog(_("ファイル名を指定して実行"), _("コマンドライン"))
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+        value = self.input_text(_("ファイル名を指定して実行"), _("コマンドライン"))
+        if value is None:
             return
-        self.active_tab.ExecProgram(d.GetValue())
+        self.active_tab.ExecProgram(value)
 
     def _on_add_path(self, event):
         paths = self.active_tab.GetSelectedItems().GetItemPaths()
@@ -857,33 +846,30 @@ class MainWindow(viewkit.MainWindow):
         self.show_detail(elem)
 
     def _on_regist_original_association(self, event):
-        d = views.registerOriginalAssociation.Dialog(self.app.settings.get_section("originalAssociation"))
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+        config = views.registerOriginalAssociation.create_config(self.app.settings.get_section("originalAssociation"))
+        result = self.showSubWindow(views.registerOriginalAssociation.OriginalAssociationWindow, _("拡張子の独自関連付け"), config)
+        if result.code == wx.ID_CANCEL:
             return
-        self.app.settings.replace_section("originalAssociation", d.GetValue()[0])
+        self.app.settings.replace_section("originalAssociation", views.registerOriginalAssociation.rows_to_dict(result.user_object))
 
     def _on_key_config(self, event):
         keys = self.menu.keymap.map[KEYMAP_IDENTIFIER.upper()]
-        key_data = {}
-        menu_data = {}
+        rows = []
         for ref_name in defaultKeymap.defaultKeymap[KEYMAP_IDENTIFIER.upper()].keys():
-            title = menuItemsDic.dic[ref_name]
-            if ref_name in keys:
-                key_data[title] = keys[ref_name]
-            else:
-                key_data[title] = "なし"
-            menu_data[title] = ref_name
-        d = views.globalKeyConfig.Dialog(key_data, menu_data)
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+            rows.append({
+                "name": menuItemsDic.dic[ref_name],
+                "key": keys.get(ref_name, views.key_value_setting.NO_KEY),
+                "identifier": ref_name,
+            })
+        parameters = views.globalKeyConfig.GlobalKeyConfigParameters(rows)
+        result = self.showSubWindow(views.globalKeyConfig.GlobalKeyConfigWindow, _("ショートカットキーの設定"), parameters)
+        if result.code == wx.ID_CANCEL:
             return
 
-        key_data, menu_data = d.GetValue()
         # キーマップの既存設定を置き換える
         shortcuts = dict(self.app.ctx.settings.getShortcutSettings())
-        for name, key in key_data.items():
-            shortcuts[menu_data[name]] = key if key != _("なし") else ""
+        for row in result.user_object:
+            shortcuts[row["identifier"]] = row["key"] if row["key"] != views.key_value_setting.NO_KEY else ""
         self.app.ctx.settings.changeSetting("shortcuts", shortcuts)
         self.app.save_settings()
 
@@ -894,9 +880,7 @@ class MainWindow(viewkit.MainWindow):
         views.fonttest.show_font_test(self)
 
     def _on_settings(self, event):
-        d = views.settingsDialog.Dialog()
-        d.Initialize()
-        d.Show()
+        self.showSubWindow(views.settingsDialog.SettingsWindow, _("設定"))
 
     def _on_search(self, event):
         base_path = self.active_tab.listObject.rootDirectory
@@ -917,19 +901,12 @@ class MainWindow(viewkit.MainWindow):
         except BaseException:
             pass
 
-        d = views.search.Dialog(base_path, list(reversed(search_history.getList())), list(reversed(grep_history.getList())))
-        d.Initialize()
-        while True:
-            if d.Show() == wx.ID_CANCEL:
-                task.Cancel()
-                return
-            val = d.GetValue()
-            if val['isRegularExpression']:
-                ret = misc.ValidateRegularExpression(val['keyword'])
-                if ret != "OK":
-                    dialog(_("エラー"), _("正規表現の文法が間違っています。\nエラー内容: %(error)s") % {'error': ret})
-                    continue
-            break
+        parameters = views.search.SearchParameters(base_path, list(reversed(search_history.getList())), list(reversed(grep_history.getList())))
+        result = self.showSubWindow(views.search.SearchWindow, _("検索"), parameters)
+        if result.code == wx.ID_CANCEL:
+            task.Cancel()
+            return
+        val = result.user_object
 
         target = {
             'action': "search" if val['type'] == 0 else "grep",
@@ -952,8 +929,7 @@ class MainWindow(viewkit.MainWindow):
             pass
 
     def show_detail(self, elem):
-        d = views.objectDetail.Dialog()
-        d.Initialize()
+        d = views.objectDetail.ObjectDetailParameters()
         d.add(_("名前"), elem.basename)
         d.add(_("パス"), elem.fullpath)
         if isinstance(elem, browsableObjects.File) or isinstance(elem, browsableObjects.Stream):
@@ -963,11 +939,10 @@ class MainWindow(viewkit.MainWindow):
                 if isinstance(elem, browsableObjects.Folder):
                     d.add(_("内容"), _("ファイル数： %d サブディレクトリ数： %d") % (elem.fileCount, elem.dirCount))
             elif isinstance(elem, browsableObjects.Folder):
-                d.add(_("サイズ"), d.CALCURATING)
-                d.add(_("サイズ(バイト)"), d.CALCURATING)
-                d.add(_("内容"), d.CALCURATING)
-                param = {'lst': [(0, elem.fullpath)], 'callback': d.setDirCalcResult}
-                d.setTask(workerThreads.RegisterTask(workerThreadTasks.DirCalc, param))
+                d.add(_("サイズ"), views.objectDetail.CALCURATING)
+                d.add(_("サイズ(バイト)"), views.objectDetail.CALCURATING)
+                d.add(_("内容"), views.objectDetail.CALCURATING)
+                d.dir_calc_path = elem.fullpath
         if isinstance(elem, browsableObjects.File):
             d.add(_("作成日時"), elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
             d.add(_("更新日時"), elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
@@ -1012,7 +987,7 @@ class MainWindow(viewkit.MainWindow):
             d.add(_("種類"), elem.typeString)
         if isinstance(elem, browsableObjects.NetworkResource) and elem.address != "":
             d.add(_("IPアドレス"), elem.address)
-        d.Show()
+        self.showSubWindow(views.objectDetail.ObjectDetailWindow, _("詳細情報"), d)
 
 
 class FalconMenu:
