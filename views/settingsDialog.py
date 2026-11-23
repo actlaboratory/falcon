@@ -1,221 +1,187 @@
 # -*- coding: utf-8 -*-
 # settings dialog
 
+from enum import Enum, auto
+
+import viewkit
 import wx
 
+from viewkit.creator import viewCreator
+
 import constants
-import simpleDialog
-import views.ViewCreator
-
-from enum import Enum, auto
-from views.baseDialog import *
+import globalVars
 
 
-class configType(Enum):
+class ValueType(Enum):
     BOOL = auto()
     INT = auto()
     STRING = auto()
     DIC = auto()
 
 
-class Dialog(BaseDialog):
-    readerSelection = {
-        "NOSPEECH": _("音声なし"),
-        "AUTO": _("自動選択"),
-        "SAPI5": "SAPI5",
-        "CLIPBOARD": _("クリップボード出力"),
-        "PCTK": "PC-Talker",
-        "NVDA": "NVDA",
-        "JAWS": "JAWS for Windows"
-    }
-    colorModeSelection = {
-        "white": _("標準"),
-        "dark": _("ダーク")
-    }
-    logLevelSelection = {
-        "50": "CRITICAL",
-        "40": "ERROR",
-        "30": "WARNING",
-        "20": "INFO",
-        "10": "DEBUG",
-        "0": "ALL"
-    }
-    textWrappingSelection = {
-        "on": _("画面幅で折り返し"),
-        "off": _("折り返さない")
-    }
-    languageSelection = constants.SUPPORTING_LANGUAGE
+READER_SELECTION = {
+    "NOSPEECH": _("音声なし"),
+    "AUTO": _("自動選択"),
+    "SAPI5": "SAPI5",
+    "CLIPBOARD": _("クリップボード出力"),
+    "PCTK": "PC-Talker",
+    "NVDA": "NVDA",
+    "JAWS": "JAWS for Windows"
+}
+COLOR_MODE_SELECTION = {
+    "white": _("標準"),
+    "dark": _("ダーク")
+}
+LOG_LEVEL_SELECTION = {
+    "50": "CRITICAL",
+    "40": "ERROR",
+    "30": "WARNING",
+    "20": "INFO",
+    "10": "DEBUG",
+    "0": "ALL"
+}
+TEXT_WRAPPING_SELECTION = {
+    "on": _("画面幅で折り返し"),
+    "off": _("折り返さない")
+}
+LANGUAGE_SELECTION = constants.SUPPORTING_LANGUAGE
 
-    def __init__(self):
-        super().__init__("settingsDialog")
-        self.iniDic = {}  # iniファイルと作ったオブジェクトの対応
 
-    def Initialize(self):
-        self.log.debug("created")
-        super().Initialize(self.app.hMainView.hFrame, _("設定"))
-        self.InstallControls()
-        self.load()
-        self.checkBoxStatusChanged()  # 初期値を反映する為一度呼び出しておく
-        return True
+class SettingsWindow(viewkit.SubWindow):
+    """環境設定を行うウィンドウ。OKボタンが押されると設定を保存する。"""
 
-    def InstallControls(self):
+    def __init__(self, parent, ctx, title, parameters=None):
+        super().__init__(parent, ctx, title, parameters)
+        self.app = globalVars.app
+        self._bindings = {}  # 作ったオブジェクトと設定項目の対応
+        self._install_controls()
+        self._load()
+        self._on_proxy_setting_changed()  # 初期値を反映する為一度呼び出しておく
+
+    def _page_creator(self, label, orient, **kwargs):
+        """タブのページを作り、そこに部品を配置するためのViewCreatorを返す"""
+        return viewkit.creator.ViewCreator(self.creator.getMode(), self.creator.getFont(), self.tab, None, orient, label=label, **kwargs)
+
+    def _install_controls(self):
         """いろんなwidgetを設置する。"""
-
-        # tab
-        self.creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.VERTICAL, 20)
-        self.tab = self.creator.tabCtrl(_("カテゴリ選択"))
+        creator = self.creator.makeChild(wx.VERTICAL, 20)
+        self.tab = creator.tabCtrl(_("カテゴリ選択"))
 
         # general
-        creator = views.ViewCreator.ViewCreator(self.viewMode, self.tab, None, wx.VERTICAL, space=20, label=_("一般"), style=wx.ALL, margin=20)
-        static = creator.staticText(_("起動時に開くフォルダ"))
-        horizontalCreator = views.ViewCreator.ViewCreator(
-            self.viewMode,
-            creator.GetPanel(),
-            creator.GetSizer(),
-            wx.HORIZONTAL,
-            space=0,
-            label="",
-            style=wx.ALL | wx.EXPAND,
-            margin=0)
-        self.startpath, static = horizontalCreator.inputbox(_("起動時に開く場所"), proportion=1, textLayout=None)
-        self.startpathBrowse = horizontalCreator.button(_("参照"), self.browseDir)
+        creator = self._page_creator(_("一般"), wx.VERTICAL, space=20, style=wx.ALL, margin=20)
+        creator.staticText(_("起動時に開くフォルダ"))
+        horizontal_creator = creator.makeChild(wx.HORIZONTAL, 0, "", wx.ALL | wx.EXPAND, margin=0)
+        self.start_path, dummy = horizontal_creator.inputbox(_("起動時に開く場所"), proportion=1, text_layout=None)
+        horizontal_creator.button(_("参照"), self._on_browse_dir)
 
-        creator = views.ViewCreator.ViewCreator(self.viewMode, creator.GetPanel(), creator.GetSizer(), views.ViewCreator.GridBagSizer,
-                                                label=_("一般"), style=wx.ALL | wx.EXPAND, proportion=1, margin=20)
-
-        self.logLevel, dummy = creator.combobox(_("ログ記録レベル(&L)"), list(self.logLevelSelection.values()))
-        self.reader, static = creator.combobox(_("出力先(&O)"), list(self.readerSelection.values()))
-        self.fxvolumeSpin, static = creator.spinCtrl(_("効果音の音量"), 0, 300, self.spinChanged)
-        self.fxvolumeSlider, static = creator.slider(_("効果音の音量"), 0, 300, self.sliderChanged, enableTabFocus=False)
-        self.historycount, static = creator.spinCtrl(_("検索履歴の保持件数"), 0, 100)
+        creator = creator.makeChild(viewCreator.GridBagSizer, 20, _("一般"), wx.ALL | wx.EXPAND, proportion=1)
+        self.log_level, dummy = creator.combobox(_("ログ記録レベル(&L)"), list(LOG_LEVEL_SELECTION.values()))
+        self.reader, dummy = creator.combobox(_("出力先(&O)"), list(READER_SELECTION.values()))
+        self.fx_volume_spin, dummy = creator.spinCtrl(_("効果音の音量"), 0, 300, self._on_spin_changed)
+        self.fx_volume_slider, dummy = creator.slider(_("効果音の音量"), 0, 300, self._on_slider_changed, enable_tab_focus=False)
+        self.history_count, dummy = creator.spinCtrl(_("検索履歴の保持件数"), 0, 100)
 
         # preview
-        creator = views.ViewCreator.ViewCreator(self.viewMode, self.tab, None, views.ViewCreator.GridBagSizer,
-                                                label=_("プレビュー"), style=wx.ALL | wx.EXPAND, proportion=1, margin=20)
-        self.headerlinecount, static = creator.spinCtrl(_("テキストヘッダー行数"), 1, 100)
-        self.footerlinecount, static = creator.spinCtrl(_("テキストフッター行数"), 1, 100)
-        self.audiovolumeSpin, static = creator.spinCtrl(_("プレビューの音量"), 0, 300, self.spinChanged)
-        self.audiovolumeSlider, static = creator.slider(_("プレビューの音量"), 0, 300, self.sliderChanged, enableTabFocus=False)
+        creator = self._page_creator(_("プレビュー"), viewCreator.GridBagSizer, style=wx.ALL | wx.EXPAND, proportion=1, margin=20)
+        self.header_line_count, dummy = creator.spinCtrl(_("テキストヘッダー行数"), 1, 100)
+        self.footer_line_count, dummy = creator.spinCtrl(_("テキストフッター行数"), 1, 100)
+        self.audio_volume_spin, dummy = creator.spinCtrl(_("プレビューの音量"), 0, 300, self._on_spin_changed)
+        self.audio_volume_slider, dummy = creator.slider(_("プレビューの音量"), 0, 300, self._on_slider_changed, enable_tab_focus=False)
 
         # view
-        creator = views.ViewCreator.ViewCreator(
-            self.viewMode,
-            self.tab,
-            None,
-            views.ViewCreator.GridBagSizer,
-            label=_("表示/言語"),
-            style=wx.ALL,
-            margin=20)
-        self.language, static = creator.combobox(_("言語(&L)"), list(self.languageSelection.values()))
-        self.colormode, static = creator.combobox(_("画面表示モード(&D)"), list(self.colorModeSelection.values()))
-        self.textwrapping, static = creator.combobox(_("テキストの折り返し(&W)"), list(self.textWrappingSelection.values()))
+        creator = self._page_creator(_("表示/言語"), viewCreator.GridBagSizer, style=wx.ALL, margin=20)
+        self.language, dummy = creator.combobox(_("言語(&L)"), list(LANGUAGE_SELECTION.values()))
+        self.color_mode, dummy = creator.combobox(_("画面表示モード(&D)"), list(COLOR_MODE_SELECTION.values()))
+        self.text_wrapping, dummy = creator.combobox(_("テキストの折り返し(&W)"), list(TEXT_WRAPPING_SELECTION.values()))
 
         # network
-        creator = views.ViewCreator.ViewCreator(self.viewMode, self.tab, None, wx.VERTICAL, space=20, label=_("ネットワーク"), style=wx.ALL, margin=20)
+        creator = self._page_creator(_("ネットワーク"), wx.VERTICAL, space=20, style=wx.ALL, margin=20)
         self.update = creator.checkbox(_("起動時に更新を確認(&U)"))
-        self.usemanualsetting = creator.checkbox(_("プロキシサーバーの情報を手動で設定する(&M)"), self.checkBoxStatusChanged)
-        self.server, static = creator.inputbox(_("サーバーURL"))
+        self.use_manual_setting = creator.checkbox(_("プロキシサーバーの情報を手動で設定する(&M)"), self._on_proxy_setting_changed)
+        self.server, dummy = creator.inputbox(_("サーバーURL"))
         self.server.hideScrollBar(wx.HORIZONTAL)
-        self.port, static = creator.spinCtrl(_("ポート番号"), 0, 65535, defaultValue=8080)
+        self.port, dummy = creator.spinCtrl(_("ポート番号"), 0, 65535, default_value=8080)
 
         # buttons
-        creator = views.ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.HORIZONTAL, style=wx.ALIGN_RIGHT)
-        self.okbtn = creator.okbutton("OK", self.onOkButton, proportion=1)
-        self.cancelBtn = creator.cancelbutton(_("キャンセル"), proportion=1)
+        footer = self.creator.makeChild(wx.HORIZONTAL, style=wx.ALIGN_RIGHT)
+        footer.okbutton("OK", self._on_ok, proportion=1)
+        footer.cancelbutton(_("キャンセル"), proportion=1)
 
-    def load(self):
+    def _load(self):
         # general
-        self._setValue(self.startpath, "browse", "startpath", configType.STRING)
-        self._setValue(self.reader, "speech", "reader", configType.DIC, self.readerSelection)
-        self._setValue(self.logLevel, "general", "log_level", configType.DIC, self.logLevelSelection)
-        self._setValue(self.fxvolumeSpin, "speech", "fx_volume", configType.INT, 100, 0, 300)
-        self.fxvolumeSlider.SetValue(self.fxvolumeSpin.GetValue())
-        self._setValue(self.historycount, "search", "history_count", configType.INT, 0, 0, 100)
+        self._bind(self.start_path, "browse", "startpath", ValueType.STRING)
+        self._bind(self.reader, "speech", "reader", ValueType.DIC, READER_SELECTION)
+        self._bind(self.log_level, "general", "log_level", ValueType.DIC, LOG_LEVEL_SELECTION)
+        self._bind(self.fx_volume_spin, "speech", "fx_volume", ValueType.INT, 100, 0, 300)
+        self.fx_volume_slider.SetValue(self.fx_volume_spin.GetValue())
+        self._bind(self.history_count, "search", "history_count", ValueType.INT, 0, 0, 100)
 
         # preview
-        self._setValue(self.headerlinecount, "preview", "header_line_count", configType.INT, 10, 1, 100)
-        self._setValue(self.footerlinecount, "preview", "footer_line_count", configType.INT, 10, 1, 100)
-        self._setValue(self.audiovolumeSpin, "preview", "audio_volume", configType.INT, 100, 0, 300)
-        self.audiovolumeSlider.SetValue(self.audiovolumeSpin.GetValue())
+        self._bind(self.header_line_count, "preview", "header_line_count", ValueType.INT, 10, 1, 100)
+        self._bind(self.footer_line_count, "preview", "footer_line_count", ValueType.INT, 10, 1, 100)
+        self._bind(self.audio_volume_spin, "preview", "audio_volume", ValueType.INT, 100, 0, 300)
+        self.audio_volume_slider.SetValue(self.audio_volume_spin.GetValue())
+
         # view
-        self._setValue(self.language, "general", "language", configType.DIC, self.languageSelection)
-        self._setValue(self.colormode, "view", "colormode", configType.DIC, self.colorModeSelection)
-        self._setValue(self.textwrapping, "view", "textwrapping", configType.DIC, self.textWrappingSelection)
+        self._bind(self.language, "general", "language", ValueType.DIC, LANGUAGE_SELECTION)
+        # 表示モードはviewkitの設定として保存されている
+        viewkit_settings = self.app_ctx.settings
+        self.color_mode.SetValue(COLOR_MODE_SELECTION["dark" if viewkit_settings.getSetting("view.is_dark", False) else "white"])
+        self.text_wrapping.SetValue(TEXT_WRAPPING_SELECTION["on" if viewkit_settings.getSetting("view.is_word_wrap", False) else "off"])
 
         # network
-        self._setValue(self.update, "general", "update", configType.BOOL)
-        self._setValue(self.usemanualsetting, "proxy", "usemanualsetting", configType.BOOL)
-        self._setValue(self.server, "proxy", "server", configType.STRING)
-        self._setValue(self.port, "proxy", "port", configType.STRING)
+        self._bind(self.update, "general", "update", ValueType.BOOL)
+        self._bind(self.use_manual_setting, "proxy", "usemanualsetting", ValueType.BOOL)
+        self._bind(self.server, "proxy", "server", ValueType.STRING)
+        self._bind(self.port, "proxy", "port", ValueType.STRING)
 
-    def onOkButton(self, event):
-        result = self._save()
+    def _bind(self, obj, section, key, value_type, prm=None, prm2=None, prm3=None):
+        """設定値を画面の部品に反映し、保存時のために対応を記録する"""
+        settings = self.app.settings
+        if value_type == ValueType.DIC:
+            obj.SetValue(prm[settings.get_str(section, key, prm2 if prm2 is not None else list(prm.keys())[0], prm.keys())])
+        elif value_type == ValueType.BOOL:
+            obj.SetValue(settings.get_bool(section, key, True if prm is None else prm))
+        elif value_type == ValueType.STRING:
+            obj.SetValue(settings.get_str(section, key, "" if prm is None else prm, prm2))
+        elif value_type == ValueType.INT:
+            obj.SetValue(settings.get_int(section, key, prm, prm2, prm3))
+        self._bindings[obj] = (value_type, section, key, prm)
+
+    def _on_ok(self, event):
+        self._save()
         event.Skip()
 
-    def checkBoxStatusChanged(self, event=None):
-        # proxy
-        result = self.usemanualsetting.GetValue()
-        self.server.Enable(result)
-        self.port.Enable(result)
-
-    def _setValue(self, obj, section, key, t, prm=None, prm2=None, prm3=None):
-        assert isinstance(obj, wx.Window)
-        assert type(section) == str
-        assert type(key) == str
-        assert type(t) == configType
-
-        conf = self.app.config
-
-        if t == configType.DIC:
-            assert type(prm) == dict
-            assert isinstance(obj, wx.ComboBox)
-            obj.SetValue(prm[conf.getstring(section, key, prm2, prm.keys())])
-        elif t == configType.BOOL:
-            if prm is None:
-                prm = True
-            assert type(prm) == bool
-            obj.SetValue(conf.getboolean(section, key, prm))
-        elif t == configType.STRING:
-            if prm is None:
-                prm = ""
-            assert type(prm) == str
-            obj.SetValue(conf.getstring(section, key, prm, prm2))
-        elif t == configType.INT:
-            assert type(prm) == int
-            assert type(prm2) == int
-            assert type(prm3) == int
-            obj.SetValue(conf.getint(section, key, prm, prm2, prm3))
-        self.iniDic[obj] = (t, section, key, prm, prm2)
-
     def _save(self):
-        conf = self.app.config
-        for obj, v in self.iniDic.items():
-            if v[0] == configType.DIC:
-                conf[v[1]][v[2]] = list(v[3].keys())[obj.GetSelection()]
+        settings = self.app.settings
+        for obj, (value_type, section, key, prm) in self._bindings.items():
+            if value_type == ValueType.DIC:
+                settings.set(section, key, list(prm.keys())[obj.GetSelection()])
             else:
-                conf[v[1]][v[2]] = obj.GetValue()
-        conf.write()
+                settings.set(section, key, obj.GetValue())
+        # 表示モードはviewkitの設定として保存する
+        viewkit_settings = self.app_ctx.settings
+        viewkit_settings.changeSetting("view.is_dark", list(COLOR_MODE_SELECTION.keys())[self.color_mode.GetSelection()] == "dark")
+        viewkit_settings.changeSetting("view.is_word_wrap", list(TEXT_WRAPPING_SELECTION.keys())[self.text_wrapping.GetSelection()] == "on")
+        self.app.save_settings()
 
-    def browseDir(self, event):
-        target = self.startpath
-        dialog = wx.DirDialog(self.wnd, _("起動時に開くフォルダを選択"))
-        result = dialog.ShowModal()
-        if result == wx.ID_CANCEL:
-            return
-        target.SetValue(dialog.GetPath())
+    def _on_proxy_setting_changed(self, event=None):
+        enabled = self.use_manual_setting.GetValue()
+        self.server.Enable(enabled)
+        self.port.Enable(enabled)
 
-    def spinChanged(self, event):
+    def _on_browse_dir(self, event):
+        d = wx.DirDialog(self, _("起動時に開くフォルダを選択"))
+        if d.ShowModal() != wx.ID_CANCEL:
+            self.start_path.SetValue(d.GetPath())
+        d.Destroy()
+
+    def _on_spin_changed(self, event):
         obj = event.GetEventObject()
-        if obj == self.fxvolumeSpin:
-            target = self.fxvolumeSlider
-        elif obj == self.audiovolumeSpin:
-            target = self.audiovolumeSlider
+        target = self.fx_volume_slider if obj == self.fx_volume_spin else self.audio_volume_slider
         target.SetValue(obj.GetValue())
 
-    def sliderChanged(self, event):
+    def _on_slider_changed(self, event):
         obj = event.GetEventObject()
-        if obj == self.fxvolumeSlider:
-            target = self.fxvolumeSpin
-        elif obj == self.audiovolumeSlider:
-            target = self.audiovolumeSpin
+        target = self.fx_volume_spin if obj == self.fx_volume_slider else self.audio_volume_spin
         target.SetValue(obj.GetValue())

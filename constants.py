@@ -21,10 +21,8 @@ APP_COPYRIGHT_MESSAGE = "Copyright (c) %s %s All lights reserved." % (APP_COPYRI
 
 SUPPORTING_LANGUAGE = {"ja-JP": "日本語", "en-US": "English"}  # 対応言語一覧
 
-SETTING_FILE_NAME = "settings.ini"
 LOG_PREFIX = "falcon"
 LOG_FILE_NAME = "falcon.log"
-KEYMAP_FILE_NAME = "keymap.ini"
 HISTORY_FILE_NAME = "history.dat"
 
 FONT_MIN_SIZE = 5
@@ -43,6 +41,7 @@ ARROW_LEFT = 3
 BASE_PACKAGE_URL = "https://github.com/actlaboratory/falcon/releases/download/0.0.1/falcon-0.0.1.zip"
 PACKAGE_CONTAIN_ITEMS = ("xd2txlib.dll", "fx")  # パッケージに含めたいファイルやfolderがあれば指定
 NEED_HOOKS = ()  # pyinstallerのhookを追加したい場合は指定
+COLLECT_DATA_PACKAGES = ("viewkit",)  # データファイル(dllなど)も同梱する必要があるパッケージを指定
 STARTUP_FILE = "falcon.py"  # 起動用ファイルを指定
 UPDATER_URL = "https://github.com/actlaboratory/updater/releases/download/1.0.0/updater.zip"
 

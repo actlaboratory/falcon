@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Falcon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-18 22:25+0900\n"
+"POT-Creation-Date: 2026-11-24 01:02+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,53 +17,1838 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: app.py:54
-msgid "終了"
+#: app.py:117
+msgid "音声エンジンエラー"
 msgstr ""
 
-#: app.py:56 app.py:111
-msgid "バージョン情報"
+#: app.py:117
+msgid ""
+"音声読み上げ機能の初期化に失敗したため、読み上げ機能を使用できません。出力先"
+"の変更をお試しください。"
 msgstr ""
 
-#: app.py:59
-msgid "ファイル"
+#: app.py:161
+msgid ""
+"お気に入りフォルダの設定が不正です。以下の設定を確認してください。\n"
+"\n"
 msgstr ""
 
-#: app.py:60
-msgid "ヘルプ"
-msgstr ""
-
-#: app.py:102
+#: app.py:164 app.py:174 app.py:197 app.py:202 deviceCtrl.py:32
+#: deviceCtrl.py:52 misc.py:297 misc.py:347 fileOperator\__init__.py:161
+#: lists\file.py:89 lists\networkResource.py:63 lists\stream.py:62
+#: tabs\base.py:331 tabs\base.py:338 tabs\base.py:349 tabs\base.py:803
+#: tabs\driveList.py:60 tabs\driveList.py:80 tabs\driveList.py:88
+#: tabs\fileList.py:61 tabs\fileList.py:68 tabs\fileList.py:96
+#: tabs\fileList.py:103 tabs\fileList.py:110 tabs\fileList.py:141
+#: tabs\fileList.py:172 tabs\fileList.py:287 tabs\fileList.py:415
+#: tabs\fileList.py:431 tabs\fileList.py:436 tabs\navigator.py:104
+#: tabs\streamList.py:49 tabs\streamList.py:82 tabs\streamList.py:143
+#: views\favoriteDirectory.py:81 views\favoriteDirectory.py:84
+#: views\fontManager.py:30 views\fontManager.py:57 views\globalKeyConfig.py:76
+#: views\key_value_setting.py:137 views\key_value_setting.py:192
+#: views\main.py:299 views\main.py:479 views\main.py:821 views\main.py:826
+#: views\main.py:834 views\main.py:839 views\main.py:844 views\main.py:1034
+#: views\openHere.py:84 views\openHere.py:88 views\openHere.py:91
+#: views\openHere.py:94 views\registerOriginalAssociation.py:73
+#: views\registerOriginalAssociation.py:76
+#: views\registerOriginalAssociation.py:79
+#: views\registerOriginalAssociation.py:85 views\search.py:60
+#: views\search.py:65 views\updateDialog.py:65
 msgid "エラー"
 msgstr ""
 
-#: app.py:102
-msgid "操作が定義されていないメニューです。"
-msgstr ""
-
-#: app.py:111
-#, python-format
+#: app.py:171
 msgid ""
-"%(app)s Version %(ver)s.\n"
-"Copyright (C) %(year)s %(names)s"
+"「ここで開く」の設定が不正です。以下の設定を確認してください。\n"
+"\n"
 msgstr ""
 
-#: tabObjects.py:37
+#: app.py:177
+msgid "お気に入りディレクトリ"
+msgstr ""
+
+#: app.py:178
+msgid "ここで開く"
+msgstr ""
+
+#: app.py:198
+msgid ""
+"以下の拡張子は、利用できない文字を含んでいるため登録できません。\n"
+"\n"
+msgstr ""
+
+#: app.py:203
+msgid ""
+"以下の拡張子は、既に音声データの拡張子として登録されているため、テキスト形式"
+"として登録できません。\n"
+"\n"
+msgstr ""
+
+#: browsableObjects.py:45
+msgid "読取専用"
+msgstr ""
+
+#: browsableObjects.py:53 views\changeAttribute.py:21
+msgid "隠し"
+msgstr ""
+
+#: browsableObjects.py:61 views\changeAttribute.py:21
+msgid "システム"
+msgstr ""
+
+#: browsableObjects.py:68
+msgid "リパースポイント"
+msgstr ""
+
+#: browsableObjects.py:332
+msgid " ドライブ"
+msgstr ""
+
+#: browsableObjects.py:334
+msgid "ローカル ディスク"
+msgstr ""
+
+#: browsableObjects.py:336
+msgid "ルートディレクトリなし"
+msgstr ""
+
+#: browsableObjects.py:338
+msgid "RAM ディスク"
+msgstr ""
+
+#: browsableObjects.py:340
+msgid "リムーバブル ディスク"
+msgstr ""
+
+#: browsableObjects.py:342 views\settingsDialog.py:98
+msgid "ネットワーク"
+msgstr ""
+
+#: browsableObjects.py:344 browsableObjects.py:347 views\objectDetail.py:72
+msgid "不明"
+msgstr ""
+
+#: browsableObjects.py:426
+msgid "ネットワークリソース"
+msgstr ""
+
+#: browsableObjects.py:492
+msgid "完了"
+msgstr ""
+
+#: browsableObjects.py:493
+msgid "ctrl+w で閉じます"
+msgstr ""
+
+#: fileSystemManager.py:40
+msgid "「\\」 は、ファイルやディレクトリの名前として使用できない記号です。"
+msgstr ""
+
+#: fileSystemManager.py:42
+msgid "「/」 は、ファイルやディレクトリの名前として使用できない記号です。"
+msgstr ""
+
+#: fileSystemManager.py:56
+msgid "は、ファイルやディレクトリの名前として使用できない記号です。"
+msgstr ""
+
+#: fileSystemManager.py:62 fileSystemManager.py:68
+msgid ""
+"この文字列は、Windowsによって予約された特別な名前のため、ファイルやディレクト"
+"リの名前として使用できません。"
+msgstr ""
+
+#: fileSystemManager.py:72
+msgid "名前の最後を半角の.(ピリオド)または半角スペースとすることはできません。"
+msgstr ""
+
+#: fileSystemManager.py:81
+msgid ""
+"このドライブでは、以下の文字数を超えない名前を付ける必要があります。\n"
+"\n"
+"制限文字数:"
+msgstr ""
+
+#: fileSystemManager.py:85
+msgid ""
+"このドライブでは、ディレクトリ名のフルパスが以下の文字数を超えないように名前"
+"を付ける必要があります。\n"
+"\n"
+"制限文字数:"
+msgstr ""
+
+#: fileSystemManager.py:89
+msgid ""
+"このドライブでは、ファイル名のフルパスが以下の文字数を超えないように名前を付"
+"ける必要があります。\n"
+"\n"
+"制限文字数:"
+msgstr ""
+
+#: keymapHandlerBase.py:706 keymapHandlerBase.py:736
+#, python-format
+msgid "%s は存在しないキーです。"
+msgstr ""
+
+#: keymapHandlerBase.py:777
+#, python-format
+msgid "%s は使用できないキーです。"
+msgstr ""
+
+#: keymapHandlerBase.py:786
+msgid "修飾キーのみのパターンは設定できません。"
+msgstr ""
+
+#: keymapHandlerBase.py:788
+msgid "このキーは修飾キーと合わせて指定する必要があります。"
+msgstr ""
+
+#: keymapHandlerBase.py:793
+msgid "修飾キーでないキーを複数指定することはできません。"
+msgstr ""
+
+#: keymapHandlerBase.py:796 keymapHandlerBase.py:804
+msgid "このキーは、SHIFTキー以外の修飾キーと合わせて指定する必要があります。"
+msgstr ""
+
+#: keymapHandlerBase.py:799
+msgid "修飾キーのみの組み合わせは指定できません。"
+msgstr ""
+
+#: keymapHandlerBase.py:808
+msgid "この組み合わせは別の用途で予約されているため、利用できません。"
+msgstr ""
+
+#: menuItemsDic.py:2
+msgid "名前を変更"
+msgstr ""
+
+#: menuItemsDic.py:3
+msgid "属性を変更"
+msgstr ""
+
+#: menuItemsDic.py:4
+msgid "ショートカットを作成"
+msgstr ""
+
+#: menuItemsDic.py:5
+msgid "ゴミ箱へ移動"
+msgstr ""
+
+#: menuItemsDic.py:6
+msgid "完全削除"
+msgstr ""
+
+#: menuItemsDic.py:7
+msgid "詳細情報を表示"
+msgstr ""
+
+#: menuItemsDic.py:8
+msgid "プロパティを表示"
+msgstr ""
+
+#: menuItemsDic.py:9
+msgid "新規ディレクトリ作成"
+msgstr ""
+
+#: menuItemsDic.py:10
+msgid "テスト中のファイルオペレーションを実行"
+msgstr ""
+
+#: menuItemsDic.py:11
+msgid "終了"
+msgstr ""
+
+#: menuItemsDic.py:13 tabs\fileList.py:180 tabs\streamList.py:153
+msgid "コピー"
+msgstr ""
+
+#: menuItemsDic.py:14 tabs\fileList.py:186 tabs\streamList.py:161
+msgid "切り取り"
+msgstr ""
+
+#: menuItemsDic.py:15
+msgid "貼り付け"
+msgstr ""
+
+#: menuItemsDic.py:16
+msgid "名前をコピー"
+msgstr ""
+
+#: menuItemsDic.py:17 tabs\base.py:509
+msgid "フルパスをコピー"
+msgstr ""
+
+#: menuItemsDic.py:18 tabs\base.py:495
+msgid "全て選択"
+msgstr ""
+
+#: menuItemsDic.py:19 views\main.py:905
+msgid "検索"
+msgstr ""
+
+#: menuItemsDic.py:20
+msgid "最新の情報に更新"
+msgstr ""
+
+#: menuItemsDic.py:21
+msgid "チェック／チェック解除"
+msgstr ""
+
+#: menuItemsDic.py:22 tabs\base.py:433
+msgid "すべてチェック"
+msgstr ""
+
+#: menuItemsDic.py:23 tabs\base.py:437
+msgid "すべてチェック解除"
+msgstr ""
+
+#: menuItemsDic.py:24
+msgid "チェック状態反転"
+msgstr ""
+
+#: menuItemsDic.py:25
+msgid "コンテキストメニューを開く"
+msgstr ""
+
+#: menuItemsDic.py:27
+msgid "開く"
+msgstr ""
+
+#: menuItemsDic.py:28
+msgid "管理者として開く"
+msgstr ""
+
+#: menuItemsDic.py:29
+msgid "独自関連付けで実行"
+msgstr ""
+
+#: menuItemsDic.py:30
+msgid "別のタブで開く"
+msgstr ""
+
+#: menuItemsDic.py:31
+msgid "開く(ストリーム)"
+msgstr ""
+
+#: menuItemsDic.py:32
+msgid "上の階層へ"
+msgstr ""
+
+#: menuItemsDic.py:33 views\main.py:351
+msgid "新しいタブ"
+msgstr ""
+
+#: menuItemsDic.py:34
+msgid "現在のタブを閉じる"
+msgstr ""
+
+#: menuItemsDic.py:35
+msgid "先頭ファイルへ"
+msgstr ""
+
+#: menuItemsDic.py:36
+msgid "上にジャンプ"
+msgstr ""
+
+#: menuItemsDic.py:37
+msgid "下にジャンプ"
+msgstr ""
+
+#: menuItemsDic.py:38
+msgid "次の履歴位置へ"
+msgstr ""
+
+#: menuItemsDic.py:39
+msgid "前の履歴位置へ"
+msgstr ""
+
+#: menuItemsDic.py:40
+msgid "表示中の場所をマーク"
+msgstr ""
+
+#: menuItemsDic.py:41
+msgid "マークした場所へ移動"
+msgstr ""
+
+#: menuItemsDic.py:42 views\main.py:749
+msgid "パスを指定して移動"
+msgstr ""
+
+#: menuItemsDic.py:44
+msgid "現在の場所をお気に入りに登録"
+msgstr ""
+
+#: menuItemsDic.py:45 views\main.py:783
+msgid "お気に入りディレクトリの設定"
+msgstr ""
+
+#: menuItemsDic.py:46
+msgid "ここで開く コマンドの設定"
+msgstr ""
+
+#: menuItemsDic.py:48 lists\constants.py:48 lists\grepResult.py:36
+#: views\settingsDialog.py:85
+msgid "プレビュー"
+msgstr ""
+
+#: menuItemsDic.py:49
+msgid "ファイルをプレビュー"
+msgstr ""
+
+#: menuItemsDic.py:50
+msgid "テキストヘッダー読み"
+msgstr ""
+
+#: menuItemsDic.py:51
+msgid "テキストフッター読み"
+msgstr ""
+
+#: menuItemsDic.py:53
+msgid "現在のフォルダ名を読み上げ"
+msgstr ""
+
+#: menuItemsDic.py:54
+msgid "リスト項目数を読み上げ"
+msgstr ""
+
+#: menuItemsDic.py:55
+msgid "一覧情報を読み上げ"
+msgstr ""
+
+#: menuItemsDic.py:56
+msgid "移動先の読み方を設定"
+msgstr ""
+
+#: menuItemsDic.py:58
+msgid "フォルダ容量計算"
+msgstr ""
+
+#: menuItemsDic.py:59 views\main.py:800
+msgid "ファイルハッシュの計算"
+msgstr ""
+
+#: menuItemsDic.py:60 views\main.py:803
+msgid "ファイル名を指定して実行"
+msgstr ""
+
+#: menuItemsDic.py:61
+msgid "環境変数PATHに追加"
+msgstr ""
+
+#: menuItemsDic.py:62
+msgid "ドライブの取り外し"
+msgstr ""
+
+#: menuItemsDic.py:63
+msgid "デバイスの取り外し"
+msgstr ""
+
+#: menuItemsDic.py:65
+msgid "次の並び順"
+msgstr ""
+
+#: menuItemsDic.py:66
+msgid "並び順を選択"
+msgstr ""
+
+#: menuItemsDic.py:67
+msgid "昇順/降順切り替え"
+msgstr ""
+
+#: menuItemsDic.py:68
+msgid "ドライブ情報の表示"
+msgstr ""
+
+#: menuItemsDic.py:69
+msgid "カラムの並び替え"
+msgstr ""
+
+#: menuItemsDic.py:71
+msgid "独自関連付けの管理"
+msgstr ""
+
+#: menuItemsDic.py:72
+msgid "キーボードショートカットの設定"
+msgstr ""
+
+#: menuItemsDic.py:73
+msgid "テストダイアログを表示"
+msgstr ""
+
+#: menuItemsDic.py:74
+msgid "貼り付け状況ダイアログテスト"
+msgstr ""
+
+#: menuItemsDic.py:75
+msgid "フォントテストダイアログを表示"
+msgstr ""
+
+#: menuItemsDic.py:76
+msgid "環境設定"
+msgstr ""
+
+#: menuItemsDic.py:78
+msgid "バージョン情報(&V)"
+msgstr ""
+
+#: menuItemsDic.py:79
+msgid "最新バージョンを確認(&U)"
+msgstr ""
+
+#: misc.py:326
+msgid "管理者で起動"
+msgstr ""
+
+#: misc.py:326
+msgid "起動"
+msgstr ""
+
+#: misc.py:347
+#, python-format
+msgid "ファイルを開くことができませんでした(%(error)s)"
+msgstr ""
+
+#: update.py:55 update.py:66 update.py:80 update.py:86 update.py:97
+#: update.py:105 update.py:110 update.py:115 update.py:169
+#: views\updateDialog.py:34
+msgid "アップデート"
+msgstr ""
+
+#: update.py:55
+msgid "このバージョンではアップデートを使用できません。"
+msgstr ""
+
+#: update.py:66
+msgid ""
+"アップデータが利用できません。お手数ですが、再度ソフトウェアをダウンロードし"
+"てください。"
+msgstr ""
+
+#: update.py:80
+msgid "サーバーへの通信がタイムアウトしました。"
+msgstr ""
+
+#: update.py:86
+msgid "サーバーへの接続に失敗しました。インターネット接続などをご確認ください"
+msgstr ""
+
+#: update.py:92
+msgid "サーバーとの通信中に不明なエラーが発生しました。"
+msgstr ""
+
+#: update.py:97
+msgid "サーバーとの通信に失敗しました。"
+msgstr ""
+
+#: update.py:105
+msgid "現在のバージョンが最新です。アップデートの必要はありません。"
+msgstr ""
+
+#: update.py:110
+msgid "リクエストパラメーターが不正です。開発者まで連絡してください"
+msgstr ""
+
+#: update.py:115
+msgid "アップデーターが登録されていません。開発者に連絡してください。"
+msgstr ""
+
+#: update.py:120
+#, python-format
+msgid "アップデート - %s"
+msgstr ""
+
+#: update.py:169
+msgid ""
+"ダウンロードが完了しました。\n"
+"ソフトウェア終了時に、自動でアップデートされます。"
+msgstr ""
+
+#: fileOperator\past.py:166
+msgid "このフォルダはすでに存在します。"
+msgstr ""
+
+#: fileOperator\__init__.py:161
+msgid ""
+"管理者権限の操作を行うためには、Falconをビルドして実行する必要があります。"
+msgstr ""
+
+#: lists\base.py:53
+msgid "このリストはソートできません。"
+msgstr ""
+
+#: lists\base.py:68 lists\base.py:78
+msgid "昇順"
+msgstr ""
+
+#: lists\base.py:68 lists\base.py:78
+msgid "降順"
+msgstr ""
+
+#: lists\constants.py:36 lists\file.py:37 lists\grepResult.py:34
+#: lists\searchResult.py:31 views\search.py:35
 msgid "ファイル名"
 msgstr ""
 
-#: tabObjects.py:37
-msgid "サイズ"
+#: lists\constants.py:37
+msgid "ファイルサイズ"
 msgstr ""
 
-#: tabObjects.py:37
-msgid "更新"
+#: lists\constants.py:38 tabs\fileList.py:398 tabs\pastProgress.py:87
+#: views\main.py:948
+msgid "更新日時"
 msgstr ""
 
-#: tabObjects.py:37
+#: lists\constants.py:39 lists\file.py:40 lists\grepResult.py:40
+#: lists\searchResult.py:35 views\main.py:949
 msgid "属性"
 msgstr ""
 
-#: tabObjects.py:37
+#: lists\constants.py:40 lists\drive.py:40 lists\file.py:41
+#: lists\grepResult.py:41 lists\searchResult.py:36 views\main.py:950
+#: views\main.py:987
 msgid "種類"
+msgstr ""
+
+#: lists\constants.py:41 lists\constants.py:42 lists\drive.py:36
+msgid "ラベル"
+msgstr ""
+
+#: lists\constants.py:43 lists\drive.py:38
+msgid "空き"
+msgstr ""
+
+#: lists\constants.py:44 lists\drive.py:39
+msgid "合計"
+msgstr ""
+
+#: lists\constants.py:45 lists\searchResult.py:33
+msgid "検索パス"
+msgstr ""
+
+#: lists\constants.py:46 lists\grepResult.py:35
+msgid "行"
+msgstr ""
+
+#: lists\constants.py:47
+msgid "ヒット"
+msgstr ""
+
+#: lists\drive.py:37
+msgid "レター"
+msgstr ""
+
+#: lists\drive.py:64
+msgid "ドライブ洗濯"
+msgstr ""
+
+#: lists\file.py:38 lists\grepResult.py:38 lists\searchResult.py:32
+#: lists\stream.py:28 tabs\fileList.py:396 tabs\pastProgress.py:85
+#: views\main.py:937 views\main.py:942
+msgid "サイズ"
+msgstr ""
+
+#: lists\file.py:39 lists\grepResult.py:39 lists\searchResult.py:34
+#: tabs\base.py:517
+msgid "更新"
+msgstr ""
+
+#: lists\file.py:71
+#, python-format
+msgid "%sルート"
+msgstr ""
+
+#: lists\file.py:73
+#, python-format
+msgid "%(name)sの%(level)d "
+msgstr ""
+
+#: lists\file.py:90
+#, python-format
+msgid "フォルダを開くことができませんでした(%(error)s)"
+msgstr ""
+
+#: lists\grepResult.py:37
+msgid "ヒット件数"
+msgstr ""
+
+#: lists\networkResource.py:27 tabs\fileList.py:396 tabs\pastProgress.py:85
+#: views\globalKeyConfig.py:30 views\globalKeyConfig.py:90 views\main.py:933
+#: views\openHere.py:23 views\openHere.py:57
+msgid "名前"
+msgstr ""
+
+#: lists\networkResource.py:64
+#, python-format
+msgid "ネットワーク上のリソース一覧を取得できませんでした(%(error)s)"
+msgstr ""
+
+#: lists\pastProgress.py:28
+msgid "項目名"
+msgstr ""
+
+#: lists\pastProgress.py:29
+msgid "ステータス"
+msgstr ""
+
+#: lists\pastProgress.py:30
+msgid "詳細"
+msgstr ""
+
+#: lists\pastProgress.py:65 tabs\fileList.py:134 tabs\navigator.py:124
+#: tabs\pastProgress.py:59 tabs\streamList.py:74
+msgid "確認"
+msgstr ""
+
+#: lists\searchResultBase.py:44
+#, python-format
+msgid "検索終了、%(item)d件ヒットしました。"
+msgstr ""
+
+#: lists\stream.py:27
+msgid "ストリーム名"
+msgstr ""
+
+#: lists\stream.py:52
+#, python-format
+msgid "%(name)sの%(level)d"
+msgstr ""
+
+#: lists\stream.py:63
+#, python-format
+msgid "NTFS 副ストリーム情報を取得できませんでした(%(error)s)"
+msgstr ""
+
+#: tabs\base.py:331
+msgid "NTFSドライブ以外の場所にシンボリックリンクを作成することはできません。"
+msgstr ""
+
+#: tabs\base.py:338
+msgid "他のドライブに対してハードリンクを作成することはできません。"
+msgstr ""
+
+#: tabs\base.py:349
+msgid "ショートカットの作成に失敗しました。"
+msgstr ""
+
+#: tabs\base.py:441
+msgid "チェック反転"
+msgstr ""
+
+#: tabs\base.py:454
+msgid "チェック解除"
+msgstr ""
+
+#: tabs\base.py:458
+msgid "チェック"
+msgstr ""
+
+#: tabs\base.py:501
+msgid "ファイル名をコピー"
+msgstr ""
+
+#: tabs\base.py:675
+msgid "マーク設定"
+msgstr ""
+
+#: tabs\base.py:684
+msgid "マーク位置へ移動"
+msgstr ""
+
+#: tabs\base.py:803
+msgid ""
+"再生に失敗しました。ファイルにアクセスができないか、ファイルが壊れている可能"
+"性があります。"
+msgstr ""
+
+#: tabs\base.py:809
+msgid "プレビューに対応していないファイル形式です。"
+msgstr ""
+
+#: tabs\base.py:814 tabs\base.py:828
+msgid "ドキュメントファイルではありません。"
+msgstr ""
+
+#: tabs\base.py:822
+#, python-format
+msgid "先頭%(ln)d行"
+msgstr ""
+
+#: tabs\base.py:835
+#, python-format
+msgid "末尾%(ln)d行"
+msgstr ""
+
+#: tabs\base.py:846
+msgid "フォルダ階層を読み上げ"
+msgstr ""
+
+#: tabs\base.py:847
+msgid "フォルダ名を読み上げ"
+msgstr ""
+
+#: tabs\base.py:848
+msgid "項目数を読み上げ"
+msgstr ""
+
+#: tabs\driveList.py:60
+msgid "ネットワークリソース一覧が取得できませんでした。"
+msgstr ""
+
+#: tabs\driveList.py:88 tabs\fileList.py:68 tabs\streamList.py:49
+msgid "名前が変更できません。"
+msgstr ""
+
+#: tabs\driveList.py:101
+msgid "現在は、ドライブ洗濯"
+msgstr ""
+
+#: tabs\driveList.py:106
+#, python-format
+msgid "ドライブ数 %(drives)d"
+msgstr ""
+
+#: tabs\driveList.py:110
+#, python-format
+msgid "ドライブ %(drives)d個"
+msgstr ""
+
+#: tabs\driveList.py:115
+#, python-format
+msgid ""
+"ドライブ一覧を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 %(current)d個目"
+msgstr ""
+
+#: tabs\driveList.py:125
+msgid "ドライブ一覧"
+msgstr ""
+
+#: tabs\fileList.py:91
+msgid "情報"
+msgstr ""
+
+#: tabs\fileList.py:91
+msgid "変更が必要な俗世はありませんでした。"
+msgstr ""
+
+#: tabs\fileList.py:96
+msgid "属性が変更できません。"
+msgstr ""
+
+#: tabs\fileList.py:110
+msgid "フォルダを作成できません。"
+msgstr ""
+
+#: tabs\fileList.py:129 tabs\streamList.py:69
+#, python-format
+msgid ""
+"%(file)s\n"
+"このファイルをごみ箱に移動してもよろしいですか？"
+msgstr ""
+
+#: tabs\fileList.py:131 tabs\streamList.py:71
+#, python-format
+msgid "選択中の項目 %(num)d件をごみ箱に移動してもよろしいですか？"
+msgstr ""
+
+#: tabs\fileList.py:141 tabs\streamList.py:82
+msgid "ファイルをゴミ箱に移動できませんでした。"
+msgstr ""
+
+#: tabs\fileList.py:157 tabs\streamList.py:128
+#, python-format
+msgid ""
+"%(file)s\n"
+"このファイルを完全削除してもよろしいですか？"
+msgstr ""
+
+#: tabs\fileList.py:159 tabs\streamList.py:130
+#, python-format
+msgid "選択中の項目 %(num)d件を完全削除してもよろしいですか？"
+msgstr ""
+
+#: tabs\fileList.py:164 tabs\streamList.py:135
+msgid "完全削除の確認"
+msgstr ""
+
+#: tabs\fileList.py:172 tabs\streamList.py:143
+msgid "削除に失敗しました。"
+msgstr ""
+
+#: tabs\fileList.py:196
+msgid "先頭ファイル"
+msgstr ""
+
+#: tabs\fileList.py:199
+msgid "ファイルなし"
+msgstr ""
+
+#: tabs\fileList.py:229 tabs\streamList.py:177
+#, python-format
+msgid "現在は、ドライブ%(drive)sの %(folder)s"
+msgstr ""
+
+#: tabs\fileList.py:232 tabs\streamList.py:180
+#, python-format
+msgid "現在は、%(drive)sの %(folder)s"
+msgstr ""
+
+#: tabs\fileList.py:240
+#, python-format
+msgid "フォルダ数 %(folders)d ファイル数 %(files)d"
+msgstr ""
+
+#: tabs\fileList.py:248 tabs\fileList.py:264 tabs\streamList.py:193
+#: tabs\streamList.py:208
+#, python-format
+msgid "%(letter)sルート"
+msgstr ""
+
+#: tabs\fileList.py:253
+#, python-format
+msgid "%(containing)sの中には、フォルダ %(folders)d個、 ファイル %(files)d個"
+msgstr ""
+
+#: tabs\fileList.py:268
+msgid "フォルダ "
+msgstr ""
+
+#: tabs\fileList.py:270
+#, python-format
+msgid ""
+"%(prefix)s%(dir)sを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 "
+"%(current)d個目"
+msgstr ""
+
+#: tabs\fileList.py:287
+msgid "貼り付けるものがありません。"
+msgstr ""
+
+#: tabs\fileList.py:294
+msgid "複写"
+msgstr ""
+
+#: tabs\fileList.py:294 views\main.py:166
+msgid "移動"
+msgstr ""
+
+#: tabs\fileList.py:323
+msgid "項目"
+msgstr ""
+
+#: tabs\fileList.py:323 views\main.py:934
+msgid "パス"
+msgstr ""
+
+#: tabs\fileList.py:324
+#, python-format
+msgid "%s先"
+msgstr ""
+
+#: tabs\fileList.py:328 tabs\fileList.py:402 tabs\pastProgress.py:91
+msgid "ファイル操作確認"
+msgstr ""
+
+#: tabs\fileList.py:329
+#, python-format
+msgid "自身のサブディレクトリへの%sはできません。"
+msgstr ""
+
+#: tabs\fileList.py:351
+#, python-format
+msgid ""
+"%(file)s\n"
+"このファイルを、 %(dest)s に%(op)sしますか？"
+msgstr ""
+
+#: tabs\fileList.py:354
+#, python-format
+msgid "%(num)d 項目を、 %(dest)s に%(op)sしますか？"
+msgstr ""
+
+#: tabs\fileList.py:357
+#, python-format
+msgid "%(op)sの確認"
+msgstr ""
+
+#: tabs\fileList.py:403 tabs\pastProgress.py:92
+msgid "上書きしますか？"
+msgstr ""
+
+#: tabs\fileList.py:415
+#, python-format
+msgid "%(op)sに失敗しました。"
+msgstr ""
+
+#: tabs\fileList.py:425
+msgid "新しい名前を入力"
+msgstr ""
+
+#: tabs\fileList.py:431
+msgid "新しい名前を入力してください。"
+msgstr ""
+
+#: tabs\grepResult.py:25
+#, python-format
+msgid ""
+"%(keyword)sのファイル内容検索結果を %(sortkind)sの%(sortad)sで一覧中、 "
+"%(max)d個中 %(current)d個目"
+msgstr ""
+
+#: tabs\navigator.py:104
+msgid "移動に失敗しました。移動先が存在しません。"
+msgstr ""
+
+#: tabs\navigator.py:123
+msgid ""
+"アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行"
+"しますか？"
+msgstr ""
+
+#: tabs\NetworkResourceList.py:35
+msgid "現在は、"
+msgstr ""
+
+#: tabs\NetworkResourceList.py:40
+#, python-format
+msgid "項目数 %(count)d"
+msgstr ""
+
+#: tabs\NetworkResourceList.py:46
+#, python-format
+msgid "ネットワークリソースの一覧を一覧中、 %(max)d個中 %(current)d個目"
+msgstr ""
+
+#: tabs\pastProgress.py:110
+#, python-format
+msgid "項目数 %(results)d件"
+msgstr ""
+
+#: tabs\searchResult.py:27
+#, python-format
+msgid ""
+"%(keyword)sの検索結果を %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 "
+"%(current)d個目"
+msgstr ""
+
+#: tabs\searchResultTabBase.py:66
+msgid "現在検索中です。再建策はできません。"
+msgstr ""
+
+#: tabs\searchResultTabBase.py:70
+msgid "再建策"
+msgstr ""
+
+#: tabs\searchResultTabBase.py:118
+msgid "検索完了"
+msgstr ""
+
+#: tabs\searchResultTabBase.py:119
+msgid "検索中"
+msgstr ""
+
+#: tabs\searchResultTabBase.py:121
+#, python-format
+msgid "キーワード %(keyword)s で ディレクトリ %(dir)s を%(state)s"
+msgstr ""
+
+#: tabs\searchResultTabBase.py:128
+#, python-format
+msgid "検索結果 %(results)d件"
+msgstr ""
+
+#: tabs\searchResultTabBase.py:136
+#, python-format
+msgid "%(word)sの検索"
+msgstr ""
+
+#: tabs\streamList.py:187
+#, python-format
+msgid "ストリーム数 %(streams)d"
+msgstr ""
+
+#: tabs\streamList.py:198
+#, python-format
+msgid "%(containing)sには、ストリーム %(streams)d個"
+msgstr ""
+
+#: tabs\streamList.py:213
+#, python-format
+msgid ""
+"%(dir)sに含まれるストリームを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 "
+"%(current)d個目"
+msgstr ""
+
+#: views\changeAttribute.py:20
+msgid "属性の変更"
+msgstr ""
+
+#: views\changeAttribute.py:21
+msgid "読み取り専用"
+msgstr ""
+
+#: views\changeAttribute.py:21
+msgid "アーカイブ"
+msgstr ""
+
+#: views\changeAttribute.py:24 views\key_value_setting.py:38
+#: views\key_value_setting.py:123 views\makeShortcut.py:65
+#: views\newNameForPast.py:19 views\objectDetail.py:50
+#: views\OperationSelecter.py:46 views\search.py:40
+#: views\SimpleInputDialog.py:32
+msgid "ＯＫ"
+msgstr ""
+
+#: views\changeAttribute.py:25 views\key_value_setting.py:40
+#: views\key_value_setting.py:124 views\makeShortcut.py:66
+#: views\OperationSelecter.py:48 views\search.py:41 views\settingsDialog.py:108
+#: views\SimpleInputDialog.py:33 views\updateDialog.py:40
+msgid "キャンセル"
+msgstr ""
+
+#: views\favoriteDirectory.py:20 views\globalKeyConfig.py:28
+#: views\openHere.py:21 views\registerOriginalAssociation.py:24
+msgid "現在の登録内容"
+msgstr ""
+
+#: views\favoriteDirectory.py:22 views\favoriteDirectory.py:56
+msgid "登録名"
+msgstr ""
+
+#: views\favoriteDirectory.py:23 views\favoriteDirectory.py:57
+msgid "場所"
+msgstr ""
+
+#: views\favoriteDirectory.py:24 views\favoriteDirectory.py:58
+#: views\globalKeyConfig.py:31 views\openHere.py:25 views\openHere.py:59
+msgid "ショートカット"
+msgstr ""
+
+#: views\favoriteDirectory.py:28 views\globalKeyConfig.py:37
+#: views\openHere.py:29 views\registerOriginalAssociation.py:31
+msgid "追加(&A)"
+msgstr ""
+
+#: views\favoriteDirectory.py:29 views\globalKeyConfig.py:38
+#: views\openHere.py:30 views\registerOriginalAssociation.py:32
+msgid "変更(&M)"
+msgstr ""
+
+#: views\favoriteDirectory.py:30 views\globalKeyConfig.py:39
+#: views\openHere.py:31 views\registerOriginalAssociation.py:33
+msgid "削除(&D)"
+msgstr ""
+
+#: views\favoriteDirectory.py:57 views\openHere.py:58
+#: views\registerOriginalAssociation.py:57 views\settingsDialog.py:75
+msgid "参照"
+msgstr ""
+
+#: views\favoriteDirectory.py:58 views\globalKeyConfig.py:94 views\main.py:883
+#: views\openHere.py:59
+msgid "設定"
+msgstr ""
+
+#: views\favoriteDirectory.py:62
+msgid "場所の選択"
+msgstr ""
+
+#: views\favoriteDirectory.py:71 views\globalKeyConfig.py:107
+#: views\openHere.py:74
+msgid "解除しました。"
+msgstr ""
+
+#: views\favoriteDirectory.py:74 views\globalKeyConfig.py:110
+#: views\openHere.py:77
+#, python-format
+msgid "%s に設定しました。"
+msgstr ""
+
+#: views\favoriteDirectory.py:81
+msgid "パスは絶対パスで指定してください。"
+msgstr ""
+
+#: views\favoriteDirectory.py:84
+msgid ""
+"入力されたパスが存在しません。有効なディレクトリへのパスであることを確認して"
+"ください。"
+msgstr ""
+
+#: views\fontManager.py:30
+msgid ""
+"設定されているフォント情報が不正です。デフォルトのフォントを適用します。"
+msgstr ""
+
+#: views\fontManager.py:57
+msgid "原因不明のエラーにより、フォントの変更に失敗しました。"
+msgstr ""
+
+#: views\globalKeyConfig.py:32 views\globalKeyConfig.py:95
+msgid "識別子"
+msgstr ""
+
+#: views\globalKeyConfig.py:76
+#, python-format
+msgid ""
+"以下の項目において、重複するキー %(key)s が設定されています。\n"
+"\n"
+"%(command)s"
+msgstr ""
+
+#: views\globalKeyConfig.py:93
+#, python-format
+msgid "ショートカット%d"
+msgstr ""
+
+#: views\globalKeyConfig.py:103
+msgid "このショートカットは変更できません。"
+msgstr ""
+
+#: views\globalKeyConfig.py:107 views\globalKeyConfig.py:110
+msgid "設定完了"
+msgstr ""
+
+#: views\keyConfig.py:31
+msgid ""
+"設定するには、使用したいキーの組み合わせを押します。\n"
+"設定を解除するには、Escキーを押します。"
+msgstr ""
+
+#: views\keyConfig.py:36
+msgid "設定解除"
+msgstr ""
+
+#: views\key_value_setting.py:28 views\main.py:954 views\main.py:974
+msgid "なし"
+msgstr ""
+
+#: views\key_value_setting.py:81
+#, python-format
+msgid "この%sは既に登録されています。登録を上書きしますか？"
+msgstr ""
+
+#: views\key_value_setting.py:82 views\main.py:767
+msgid "上書き確認"
+msgstr ""
+
+#: views\key_value_setting.py:99 views\main.py:758
+msgid "登録内容の入力"
+msgstr ""
+
+#: views\key_value_setting.py:137
+#, python-format
+msgid "%sを空白や半角の=を含む値に設定することはできません。"
+msgstr ""
+
+#: views\key_value_setting.py:148
+msgid "キー設定"
+msgstr ""
+
+#: views\key_value_setting.py:181
+#, python-format
+msgid "%(v1)sと%(v2)sに同じショートカットキー%(key)sが設定されています。\n"
+msgstr ""
+
+#: views\key_value_setting.py:184
+#, python-format
+msgid ""
+"%(v1)s、%(v2)sなど計%(count)d箇所に同じショートカットキー%(key)sが設定されて"
+"います。\n"
+msgstr ""
+
+#: views\key_value_setting.py:188
+#, python-format
+msgid ""
+"設定されたショートカット%sが認識できません。お手数ですが、このエラーメッセー"
+"ジを作者へご連絡ください。\n"
+msgstr ""
+
+#: views\key_value_setting.py:190
+#, python-format
+msgid ""
+"%(command)sに設定されたショートカットキー%(key)sは、別の場所で利用されていま"
+"す。\n"
+msgstr ""
+
+#: views\main.py:110
+msgid "管理者"
+msgstr ""
+
+#: views\main.py:117
+msgid "タブ選択"
+msgstr ""
+
+#: views\main.py:139
+msgid "ファイル"
+msgstr ""
+
+#: views\main.py:151
+msgid "編集"
+msgstr ""
+
+#: views\main.py:186
+msgid "読み"
+msgstr ""
+
+#: views\main.py:197
+msgid "ツール"
+msgstr ""
+
+#: views\main.py:205 views\main.py:245
+msgid "表示"
+msgstr ""
+
+#: views\main.py:211
+msgid "環境"
+msgstr ""
+
+#: views\main.py:219
+msgid "ヘルプ"
+msgstr ""
+
+#: views\main.py:299
+msgid "操作が定義されていないメニューです。"
+msgstr ""
+
+#: views\main.py:319
+#, python-format
+msgid "引数で指定されたディレクトリ '%(dir)s' は存在しません。"
+msgstr ""
+
+#: views\main.py:328
+#, python-format
+msgid "設定された起動時ディレクトリ '%(dir)s' は存在しません。"
+msgstr ""
+
+#: views\main.py:331
+msgid ""
+"ドライブ一覧の読み込みに失敗しました。大変お手数ですが、ログファイルを添付し"
+"て開発者までお問い合わせください。"
+msgstr ""
+
+#: views\main.py:351
+msgid "falcon"
+msgstr ""
+
+#: views\main.py:438
+#, python-format
+msgid ""
+"%(tabs)d個のタブが開いています。これらのタブを全て閉じて、Falconを終了しても"
+"よろしいですか？"
+msgstr ""
+
+#: views\main.py:439
+msgid "終了確認"
+msgstr ""
+
+#: views\main.py:476
+msgid ""
+"お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが"
+"正しくありません。キーが重複しているか、存在しないキー名を指定しています。以"
+"下のキーの設定内容をご確認ください。\n"
+"\n"
+msgstr ""
+
+#: views\main.py:523
+msgid "前へ"
+msgstr ""
+
+#: views\main.py:524
+msgid "後ろへ"
+msgstr ""
+
+#: views\main.py:620
+msgid "バージョン情報"
+msgstr ""
+
+#: views\main.py:657
+msgid "属性変更"
+msgstr ""
+
+#: views\main.py:665
+msgid "ショートカットの作成"
+msgstr ""
+
+#: views\main.py:674
+msgid "ディレクトリ作成"
+msgstr ""
+
+#: views\main.py:674
+msgid "ディレクトリ名"
+msgstr ""
+
+#: views\main.py:749
+msgid "移動先"
+msgstr ""
+
+#: views\main.py:766
+msgid "この名前は既に登録されています。登録を上書きしますか？"
+msgstr ""
+
+#: views\main.py:792
+msgid "「ここで開く」コマンドの設定"
+msgstr ""
+
+#: views\main.py:803
+msgid "コマンドライン"
+msgstr ""
+
+#: views\main.py:811 views\main.py:813
+msgid "パスの追加"
+msgstr ""
+
+#: views\main.py:811
+msgid "ユーザ環境変数PATHに追加しました。"
+msgstr ""
+
+#: views\main.py:813
+msgid "追加に失敗しました。"
+msgstr ""
+
+#: views\main.py:818 views\main.py:831
+msgid "成功"
+msgstr ""
+
+#: views\main.py:818
+msgid "ドライブは安全に切断されました。"
+msgstr ""
+
+#: views\main.py:821
+msgid ""
+"指定されたドライブが見つかりません。既に取り外しされた可能性があります。"
+msgstr ""
+
+#: views\main.py:826
+msgid "取り外しに失敗しました。"
+msgstr ""
+
+#: views\main.py:826
+msgid "このドライブは使用中の可能性があります。"
+msgstr ""
+
+#: views\main.py:831
+msgid "デバイスは安全に取り外せる状態になりました。"
+msgstr ""
+
+#: views\main.py:834
+msgid "デバイスの取り外しに失敗しました。"
+msgstr ""
+
+#: views\main.py:839
+msgid "このオペレーションはサポートされていません。"
+msgstr ""
+
+#: views\main.py:844
+msgid "ドライブ情報の取得に失敗しました。"
+msgstr ""
+
+#: views\main.py:850
+msgid "拡張子の独自関連付け"
+msgstr ""
+
+#: views\main.py:865
+msgid "ショートカットキーの設定"
+msgstr ""
+
+#: views\main.py:938 views\main.py:943
+msgid "サイズ(バイト)"
+msgstr ""
+
+#: views\main.py:940 views\main.py:944
+msgid "内容"
+msgstr ""
+
+#: views\main.py:940 views\objectDetail.py:69
+#, python-format
+msgid "ファイル数： %(files)d サブディレクトリ数： %(dirs)d"
+msgstr ""
+
+#: views\main.py:947
+msgid "作成日時"
+msgstr ""
+
+#: views\main.py:952 views\main.py:954
+msgid "短い名前"
+msgstr ""
+
+#: views\main.py:966
+msgid "消費ディスク領域"
+msgstr ""
+
+#: views\main.py:970
+msgid "削除予約済 "
+msgstr ""
+
+#: views\main.py:972
+#, python-format
+msgid "ハードリンクにより他の %d 箇所から参照"
+msgstr ""
+
+#: views\main.py:975
+msgid "追加情報"
+msgstr ""
+
+#: views\main.py:979 views\main.py:986
+msgid "フォーマット"
+msgstr ""
+
+#: views\main.py:981 views\main.py:983
+msgid "空き容量"
+msgstr ""
+
+#: views\main.py:984
+msgid "総容量"
+msgstr ""
+
+#: views\main.py:986
+msgid "未挿入"
+msgstr ""
+
+#: views\main.py:989
+msgid "IPアドレス"
+msgstr ""
+
+#: views\main.py:990
+msgid "詳細情報"
+msgstr ""
+
+#: views\main.py:1009
+msgid "現在メニューは操作できません"
+msgstr ""
+
+#: views\main.py:1031
+msgid ""
+"設定されたショートカットキーが正しくありません。キーの重複、存在しないキー名"
+"の指定、使用できないキーパターンの指定などが考えられます。以下のキーの設定内"
+"容をご確認ください。\n"
+"\n"
+msgstr ""
+
+#: views\makeHash.py:33
+msgid "値の種類"
+msgstr ""
+
+#: views\makeHash.py:34
+msgid "計算"
+msgstr ""
+
+#: views\makeHash.py:38
+msgid "結果"
+msgstr ""
+
+#: views\makeHash.py:41 views\versionDialog.py:41
+msgid "閉じる"
+msgstr ""
+
+#: views\makeShortcut.py:28
+msgid ""
+"makeShortcutDialogを表示するには、少なくとも１種類のショートカットの作成が有"
+"効化されている必要があります。"
+msgstr ""
+
+#: views\makeShortcut.py:42
+msgid "ショートカット(lnk)"
+msgstr ""
+
+#: views\makeShortcut.py:42
+msgid "ハードリンク"
+msgstr ""
+
+#: views\makeShortcut.py:42
+msgid "シンボリックリンク"
+msgstr ""
+
+#: views\makeShortcut.py:48
+msgid "作成方式"
+msgstr ""
+
+#: views\makeShortcut.py:55
+msgid "パラメータ"
+msgstr ""
+
+#: views\makeShortcut.py:56
+msgid "作業ディレクトリ"
+msgstr ""
+
+#: views\makeShortcut.py:57
+msgid "リンクの種類"
+msgstr ""
+
+#: views\makeShortcut.py:57
+msgid "絶対"
+msgstr ""
+
+#: views\makeShortcut.py:57
+msgid "相対"
+msgstr ""
+
+#: views\makeShortcut.py:61
+msgid "作成先"
+msgstr ""
+
+#: views\newNameForPast.py:16
+msgid "新しい名前"
+msgstr ""
+
+#: views\newNameForPast.py:20 views\OperationSelecter.py:61
+#: views\OperationSelecter.py:64
+msgid "スキップ"
+msgstr ""
+
+#: views\objectDetail.py:46
+msgid "計算中"
+msgstr ""
+
+#: views\openHere.py:24 views\registerOriginalAssociation.py:27
+#: views\registerOriginalAssociation.py:57
+msgid "実行ファイル名"
+msgstr ""
+
+#: views\openHere.py:58
+msgid "実行ファイル名(引数指定可)"
+msgstr ""
+
+#: views\openHere.py:64 views\registerOriginalAssociation.py:62
+msgid "実行ファイルの選択"
+msgstr ""
+
+#: views\openHere.py:64 views\registerOriginalAssociation.py:62
+msgid "実行ファイル"
+msgstr ""
+
+#: views\openHere.py:84
+msgid "指定された実行ファイルの書式が正しくありません。"
+msgstr ""
+
+#: views\openHere.py:88 views\registerOriginalAssociation.py:73
+msgid "実行ファイルのパスは絶対パスで指定してください。"
+msgstr ""
+
+#: views\openHere.py:91 views\registerOriginalAssociation.py:76
+msgid "入力された実行ファイルが存在しません。パスを確認してください。"
+msgstr ""
+
+#: views\openHere.py:94 views\registerOriginalAssociation.py:79
+msgid ""
+"指定されたファイルは存在しますが、実行可能な形式のファイルではありません。"
+msgstr ""
+
+#: views\OperationSelecter.py:33
+msgid "アイテム情報"
+msgstr ""
+
+#: views\OperationSelecter.py:41
+msgid "アクション"
+msgstr ""
+
+#: views\OperationSelecter.py:42
+msgid "以降も同様に処理する"
+msgstr ""
+
+#: views\OperationSelecter.py:60
+msgid "上書きする"
+msgstr ""
+
+#: views\OperationSelecter.py:65
+msgid "名前を変える"
+msgstr ""
+
+#: views\registerOriginalAssociation.py:26
+#: views\registerOriginalAssociation.py:56
+msgid "拡張子"
+msgstr ""
+
+#: views\registerOriginalAssociation.py:85
+msgid "入力された拡張子に利用できない文字が含まれています。"
+msgstr ""
+
+#: views\search.py:32
+msgid "キーワード"
+msgstr ""
+
+#: views\search.py:35
+msgid "検索方式"
+msgstr ""
+
+#: views\search.py:35
+msgid "ファイル内容"
+msgstr ""
+
+#: views\search.py:36
+msgid "正規表現を利用"
+msgstr ""
+
+#: views\search.py:60
+msgid "検索キーワードを入力してください。"
+msgstr ""
+
+#: views\search.py:65
+#, python-format
+msgid ""
+"正規表現の文法が間違っています。\n"
+"エラー内容: %(error)s"
+msgstr ""
+
+#: views\settingsDialog.py:23
+msgid "音声なし"
+msgstr ""
+
+#: views\settingsDialog.py:24
+msgid "自動選択"
+msgstr ""
+
+#: views\settingsDialog.py:26
+msgid "クリップボード出力"
+msgstr ""
+
+#: views\settingsDialog.py:32
+msgid "標準"
+msgstr ""
+
+#: views\settingsDialog.py:33
+msgid "ダーク"
+msgstr ""
+
+#: views\settingsDialog.py:44
+msgid "画面幅で折り返し"
+msgstr ""
+
+#: views\settingsDialog.py:45
+msgid "折り返さない"
+msgstr ""
+
+#: views\settingsDialog.py:68
+msgid "カテゴリ選択"
+msgstr ""
+
+#: views\settingsDialog.py:71 views\settingsDialog.py:77
+msgid "一般"
+msgstr ""
+
+#: views\settingsDialog.py:72
+msgid "起動時に開くフォルダ"
+msgstr ""
+
+#: views\settingsDialog.py:74
+msgid "起動時に開く場所"
+msgstr ""
+
+#: views\settingsDialog.py:78
+msgid "ログ記録レベル(&L)"
+msgstr ""
+
+#: views\settingsDialog.py:79
+msgid "出力先(&O)"
+msgstr ""
+
+#: views\settingsDialog.py:80 views\settingsDialog.py:81
+msgid "効果音の音量"
+msgstr ""
+
+#: views\settingsDialog.py:82
+msgid "検索履歴の保持件数"
+msgstr ""
+
+#: views\settingsDialog.py:86
+msgid "テキストヘッダー行数"
+msgstr ""
+
+#: views\settingsDialog.py:87
+msgid "テキストフッター行数"
+msgstr ""
+
+#: views\settingsDialog.py:88 views\settingsDialog.py:89
+msgid "プレビューの音量"
+msgstr ""
+
+#: views\settingsDialog.py:92
+msgid "表示/言語"
+msgstr ""
+
+#: views\settingsDialog.py:93
+msgid "言語(&L)"
+msgstr ""
+
+#: views\settingsDialog.py:94
+msgid "画面表示モード(&D)"
+msgstr ""
+
+#: views\settingsDialog.py:95
+msgid "テキストの折り返し(&W)"
+msgstr ""
+
+#: views\settingsDialog.py:99
+msgid "起動時に更新を確認(&U)"
+msgstr ""
+
+#: views\settingsDialog.py:100
+msgid "プロキシサーバーの情報を手動で設定する(&M)"
+msgstr ""
+
+#: views\settingsDialog.py:101
+msgid "サーバーURL"
+msgstr ""
+
+#: views\settingsDialog.py:103
+msgid "ポート番号"
+msgstr ""
+
+#: views\settingsDialog.py:174
+msgid "起動時に開くフォルダを選択"
+msgstr ""
+
+#: views\updateDialog.py:26
+#, python-format
+msgid "version %s にアップデートできます。"
+msgstr ""
+
+#: views\updateDialog.py:27
+msgid "進行状況"
+msgstr ""
+
+#: views\updateDialog.py:29
+#, python-format
+msgid "version %s アップデート情報"
+msgstr ""
+
+#: views\updateDialog.py:36
+msgid "緊急のお知らせがあります。"
+msgstr ""
+
+#: views\updateDialog.py:39
+msgid "お知らせページへ"
+msgstr ""
+
+#: views\updateDialog.py:54
+msgid "アップデートをダウンロード中..."
+msgstr ""
+
+#: views\updateDialog.py:65
+msgid ""
+"updater.exeが見つかりませんでした。誤って削除したかなどをご確認ください。"
+msgstr ""
+
+#: views\versionDialog.py:18
+msgid "ソフトウェアバージョン"
+msgstr ""
+
+#: views\versionDialog.py:20
+msgid "アップデータバージョン"
+msgstr ""
+
+#: views\versionDialog.py:23
+msgid "ライセンス"
+msgstr ""
+
+#: views\versionDialog.py:24
+msgid "開発元"
+msgstr ""
+
+#: views\versionDialog.py:25
+msgid "ソフトウェア詳細情報"
+msgstr ""
+
+#: views\versionDialog.py:27
+msgid ""
+"ライセンス/著作権情報については、同梱の license.txt を参照してください。"
 msgstr ""

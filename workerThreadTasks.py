@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon worker thread tasks
 # Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -86,7 +86,7 @@ def DebugBeep(taskState, param):
     for i in range(10):
         if taskState.canceled:
             return False
-        globalVars.app.PlaySound("tip.ogg")
+        globalVars.app.play_sound("tip.ogg")
         time.sleep(1)
     # end for
     return True

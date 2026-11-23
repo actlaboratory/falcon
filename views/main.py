@@ -4,1066 +4,932 @@
 # Copyright (C) 2019-2021 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
-import copy
-import history
-import logging
+"""
+falconのメインウィンドウ。
+
+viewkit.MainWindow を土台に、falcon固有の以下の機能を追加している。
+- タブ(ファイル一覧・ドライブ一覧など)の管理
+- タブの種類や選択項目に応じたメニューの無効化(views.menuBlocker)
+- タブの種類によって同じキーを別の機能に割り当てるショートカットキー(keymap)
+- お気に入りフォルダ・「ここで開く」など、設定に応じて追加されるメニュー
+- カラムの並び替えメニュー
+- 名前の変更中などにショートカットキーとメニューを無効化する機能
+"""
+
+import ctypes
 import os
 import pickle
 import sys
-import wx
-import win32file
-import re
-import ctypes
+
+import history
 import pywintypes
+import viewkit
+import viewkit.presets.keyValueSetting
+import win32file
+import wx
+
+from logging import getLogger
+from viewkit.menu import Menu as ViewkitMenu
 
 import browsableObjects
-import misc
 import constants
-import errorCodes
-import ConfigManager
-import globalVars
-import lists
-import tabs.navigator
-import menuItemsStore
-import fileSystemManager
+import defaultKeymap
 import deviceCtrl
-
+import errorCodes
+import fileSystemManager
+import globalVars
+import keymap
+import menuItemsDic
+import menuItemsStore
+import misc
+import tabs.navigator
 import views.changeAttribute
 import views.favoriteDirectory
 import views.fonttest
 import views.globalKeyConfig
-import views.SimpleInputDialog
+import views.key_value_setting
 import views.makeHash
 import views.makeShortcut
+import views.menuBlocker
 import views.objectDetail
 import views.openHere
-import views.search
 import views.registerOriginalAssociation
-import views.versionDialog
+import views.search
 import views.settingsDialog
-
+import views.SimpleInputDialog
+import views.versionDialog
+import views.ViewCreator
 import workerThreads
 import workerThreadTasks
 
-from logging import getLogger, FileHandler, Formatter
 from simpleDialog import dialog
-from .base import *
 
-from simpleDialog import *
+# 適当な数字。そのイベントは自分自身で投げたものであることを示している
+EVENT_FROM_SELF = -1
 
-EVENT_FROM_SELF = -1  # 適当な数字。そのイベントは自分自身で投げたものであることを示している
+# キーマップ上でのメインウィンドウの識別子
+KEYMAP_IDENTIFIER = "mainView"
 
 
-class View(BaseView):
-    def Initialize(self):
-        t = misc.Timer()
+class UserMenuItemDefinition(viewkit.MenuItemDefinition):
+    """ユーザが名前を付けたメニュー項目。アクセスキーを持たず、名前をそのまま表示する。"""
+
+    def __init__(self, identifier: str, display_name: str):
+        self.identifier = identifier
+        self.display_name = display_name
+        self.accessor_letter = None
+        self.sub_menu_items = None
+
+    def getDisplayString(self) -> str:
+        return self.display_name
+
+
+def _menu_item(identifier: str, accessor_letter: str) -> viewkit.MenuItemDefinition:
+    """menuItemsDic の表示名を使ってメニュー項目の定義を作る"""
+    # 表示名に含まれるアクセスキー表記は、viewkitが付けるので取り除く
+    name = menuItemsDic.dic[identifier].replace("(&%s)" % accessor_letter, "")
+    return viewkit.MenuItemDefinition(identifier, name, accessor_letter)
+
+
+class MainWindow(viewkit.MainWindow):
+    def __init__(self, ctx: viewkit.ApplicationContext):
+        self.app = globalVars.app
+        self.log = getLogger("%s.mainView" % constants.LOG_PREFIX)
         self.log.debug("created")
-        self.events = Events(self, self.identifier)
+        self.timer = misc.Timer()
+        self.shortcut_enabled = True
+        self.tabs = []
+        self.active_tab = None
+        super().__init__(ctx)
+
+        # メニューのrefは、falcon全体で使っている menuItemsStore で管理する
+        self.window_ctx.ref_store = menuItemsStore.getStore()
+
         title = ""
-        if(ctypes.windll.shell32.IsUserAnAdmin()):
+        if ctypes.windll.shell32.IsUserAnAdmin():
             title += "[" + _("管理者") + "]"
         title += constants.APP_NAME
-        super().Initialize(
-            title,
-            self.app.config.getint(self.identifier, "sizeX", 800, 400),
-            self.app.config.getint(self.identifier, "sizeY", 600, 300),
-            self.app.config.getint(self.identifier, "positionX", 50, 0),
-            self.app.config.getint(self.identifier, "positionY", 50, 0)
+        self.SetTitle(title)
+
+        self.menu = FalconMenu(self, KEYMAP_IDENTIFIER)
+        self._add_user_command_keys()
+
+        self.tab_ctrl = self.creator.tabCtrl(_("タブ選択"), self._on_change_tab, 0, wx.EXPAND, 1)
+        self.Bind(wx.EVT_CLOSE, self._on_close)
+        self.Bind(wx.EVT_MENU_OPEN, self._on_menu_open)
+
+    # ---- viewkit.MainWindow のオーバーライド ----
+
+    def define_features(self):
+        features = []
+        handlers = self._get_feature_handlers()
+        for identifier, display_name in menuItemsDic.dic.items():
+            if identifier == "":
+                continue
+            features.append(viewkit.Feature(identifier, display_name, None, handlers.get(identifier)))
+        # お気に入りフォルダと「ここで開く」
+        for manager in self.app.user_command_managers:
+            for name in manager.paramMap:
+                identifier = (manager.refHead + name).upper()
+                features.append(viewkit.Feature(identifier, name, None, self._on_user_command))
+        return features
+
+    def define_menu(self):
+        return viewkit.MenuDefinition(
+            viewkit.TopMenuDefinition(_("ファイル"), "F", [
+                _menu_item("FILE_RENAME", "R"),
+                _menu_item("FILE_CHANGEATTRIBUTE", "A"),
+                _menu_item("FILE_MAKESHORTCUT", "S"),
+                _menu_item("FILE_TRASH", "T"),
+                _menu_item("FILE_DELETE", "D"),
+                _menu_item("FILE_VIEW_DETAIL", "I"),
+                _menu_item("FILE_SHOWPROPERTIES", "P"),
+                _menu_item("FILE_MKDIR", "N"),
+                _menu_item("FILE_FILEOPTEST", "O"),
+                _menu_item("FILE_EXIT", "X"),
+            ]),
+            viewkit.TopMenuDefinition(_("編集"), "E", [
+                _menu_item("EDIT_COPY", "C"),
+                _menu_item("EDIT_CUT", "X"),
+                _menu_item("EDIT_PAST", "V"),
+                _menu_item("EDIT_NAMECOPY", "N"),
+                _menu_item("EDIT_FULLPATHCOPY", "F"),
+                _menu_item("EDIT_SELECTALL", "A"),
+                _menu_item("EDIT_SEARCH", "S"),
+                _menu_item("EDIT_UPDATEFILELIST", "U"),
+                _menu_item("EDIT_MARKITEM", "K"),
+                _menu_item("EDIT_MARKITEM_ALL", "L"),
+                _menu_item("EDIT_UNMARKITEM_ALL", "E"),
+                _menu_item("EDIT_MARKITEM_INVERSE", "I"),
+                _menu_item("EDIT_OPENCONTEXTMENU", "M"),
+            ]),
+            viewkit.TopMenuDefinition(_("移動"), "M", [
+                _menu_item("MOVE_FORWARD", "O"),
+                _menu_item("MOVE_FORWARD_ADMIN", "A"),
+                _menu_item("MOVE_EXEC_ORIGINAL_ASSOCIATION", "E"),
+                _menu_item("MOVE_FORWARD_TAB", "T"),
+                _menu_item("MOVE_FORWARD_STREAM", "S"),
+                _menu_item("MOVE_BACKWARD", "U"),
+                _menu_item("MOVE_NEWTAB", "N"),
+                _menu_item("MOVE_CLOSECURRENTTAB", "C"),
+                _menu_item("MOVE_TOPFILE", "F"),
+                _menu_item("MOVE_SPECIAL_UP", "P"),
+                _menu_item("MOVE_SPECIAL_DOWN", "D"),
+                _menu_item("MOVE_HIST_NEXT", "X"),
+                _menu_item("MOVE_HIST_PREV", "V"),
+                _menu_item("MOVE_MARKSET", "K"),
+                _menu_item("MOVE_MARK", "M"),
+                _menu_item("MOVE_INPUT_DIR", "I"),
+                self._user_command_menu(self.app.favorite_directory, "G", ("MOVE_ADD_FAVORITE", "MOVE_SETTING_FAVORITE")),
+                self._user_command_menu(self.app.open_here_command, "H", ("MOVE_SETTING_OPEN_HERE",)),
+            ]),
+            viewkit.TopMenuDefinition(_("読み"), "R", [
+                viewkit.MenuItemDefinition("READ_PREVIEW", menuItemsDic.dic["READ_PREVIEW"], "P", [
+                    _menu_item("READ_CONTENT_PREVIEW", "P"),
+                    _menu_item("READ_CONTENT_READHEADER", "H"),
+                    _menu_item("READ_CONTENT_READFOOTER", "F"),
+                ]),
+                _menu_item("READ_CURRENTFOLDER", "C"),
+                _menu_item("READ_LISTITEMNUMBER", "N"),
+                _menu_item("READ_LISTINFO", "I"),
+                _menu_item("READ_SETMOVEMENTREAD", "M"),
+            ]),
+            viewkit.TopMenuDefinition(_("ツール"), "T", [
+                _menu_item("TOOL_DIRCALC", "D"),
+                _menu_item("TOOL_HASHCALC", "H"),
+                _menu_item("TOOL_EXEC_PROGRAM", "R"),
+                _menu_item("TOOL_ADDPATH", "P"),
+                _menu_item("TOOL_EJECT_DRIVE", "E"),
+                _menu_item("TOOL_EJECT_DEVICE", "V"),
+            ]),
+            viewkit.TopMenuDefinition(_("表示"), "V", [
+                _menu_item("VIEW_SORTNEXT", "N"),
+                _menu_item("VIEW_SORTSELECT", "S"),
+                _menu_item("VIEW_SORTCYCLEAD", "A"),
+                _menu_item("VIEW_DRIVE_INFO", "D"),
+            ]),
+            viewkit.TopMenuDefinition(_("環境"), "O", [
+                _menu_item("ENV_REGIST_ORIGINAL_ASSOCIATION", "A"),
+                _menu_item("ENV_KEY_CONFIG", "K"),
+                _menu_item("ENV_TESTDIALOG", "T"),
+                _menu_item("ENV_PASTTABTEST", "P"),
+                _menu_item("ENV_FONTTEST", "F"),
+                _menu_item("ENV_SETTINGS", "S"),
+            ]),
+            viewkit.TopMenuDefinition(_("ヘルプ"), "H", [
+                _menu_item("HELP_VERINFO", "V"),
+                _menu_item("HELP_UPDATE", "U"),
+            ]),
         )
-        self.menu = Menu(self.identifier)
-        self.AddUserCommandKey()
-        self.InstallMenuEvent(self.menu, self.events.OnMenuSelect)
-        self.AddUserCommandMenu()
 
-        self.tabs = []
-        self.activeTab = None  # 最初なので空
-        self.hTabCtrl = self.creator.tabCtrl(_("タブ選択"), self.ChangeTab, 0, wx.EXPAND, 1)
-        self.MakeFirstTab()
-        self.activeTab.hListCtrl.SetFocus()
-        self.hFrame.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.hFrame.Bind(wx.EVT_MENU_OPEN, self.events.OnMenuOpen)
-        if self.app.config.getboolean(self.identifier, "maximized", False):
-            self.hFrame.Maximize()
-        self.hFrame.Show()
-        self.app.SetTopWindow(self.hFrame)
-        self.log.debug("Finished creating main view (%f seconds)" % t.elapsed)
-        return True
+    def _user_command_menu(self, manager, accessor_letter, fixed_items):
+        """お気に入りフォルダ・「ここで開く」のサブメニュー定義を作る"""
+        items = [UserMenuItemDefinition((manager.refHead + name).upper(), name) for name in manager.paramMap]
+        items += [_menu_item(identifier, letter) for identifier, letter in zip(fixed_items, ("A", "S"))]
+        return viewkit.MenuItemDefinition(manager.refHead, self.app.user_command_managers[manager], accessor_letter, items)
 
-    def OnClose(self, event=None):
-        """ウィンドウが閉じられる直前に呼ばれる。"""
-        self.log.info("received close event(force=" +
-                      ("true" if not event.CanVeto() else "false") + ")")
-        if not event.CanVeto():  # 強制シャットダウン
-            self.hFrame.Destroy()
-            return
-        # end 強制終了
-        num = self.GetNumberOfTabs()
-        if num > 1:
-            dlg = wx.MessageDialog(
-                self.hFrame,
-                _("%(tabs)d個のタブが開いています。これらのタブを全て閉じて、Falconを終了してもよろしいですか？") % {'tabs': num},
-                _("終了確認"),
-                wx.YES_NO | wx.ICON_QUESTION)
-            ret = dlg.ShowModal()
-            if ret == wx.ID_NO:
-                event.Veto()
-                self.log.info("CloseEvent.Veto(). user select cancel.")
-                return
-            # end no
-        # end 複数タブが開いている渓谷
-        event.Skip()
+    def onOpen(self):
+        self._make_first_tab()
+        if self.active_tab is not None:
+            self.active_tab.hListCtrl.SetFocus()
+        self.log.debug("Finished creating main view (%f seconds)" % self.timer.elapsed)
 
-    def MakeFirstTab(self):
-        """最初のタブを作成する。"""
+    def _applyCustomShortcuts(self):
+        # ショートカットキーは、タブの種類による重複を許すfalcon独自のキーマップ(self.menu.keymap)で管理する
+        pass
 
-        if len(sys.argv) > 1:
-            result = self.Navigate(misc.analyzeUserInputPath(sys.argv[1], os.getcwd()), as_new_tab=True)
-            if result == errorCodes.OK:
-                return
-            else:
-                dialog("Error", _("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
-        if self.app.config["browse"]["startPath"] != "":
-            result = self.Navigate(misc.analyzeUserInputPath(self.app.config["browse"]["startPath"], os.getcwd()), as_new_tab=True)
-        else:  # ドライブ一覧を表示
-            result = self.Navigate("", as_new_tab=True)
-        if result == errorCodes.OK:
-            return
-        else:
-            if os.path.abspath(os.path.expandvars(self.app.config["browse"]["startPath"])) != "":
-                dialog("Error", _("設定された起動時ディレクトリ '%(dir)s' は存在しません。") % {"dir": self.app.config["browse"]["startPath"]})
-            result = self.Navigate("", as_new_tab=True)
-        if result == errorCodes.OK:
-            return
-        else:
-            dialog("Error", _("ドライブ一覧の読み込みに失敗しました。大変お手数ですが、ログファイルを添付して開発者までお問い合わせください。"))
-    # end makeFirstTab
+    def _setupMenuBar(self):
+        super()._setupMenuBar()
+        bar = self.GetMenuBar()
+        # カラムの並び替えメニューは、メニューを開いたときに中身を作る
+        view_menu = bar.GetMenu(bar.FindMenu(_("表示")))
+        view_menu.Append(wx.MenuItem(view_menu, menuItemsStore.getRef("VIEW_SORT_COLUMN"), menuItemsDic.dic["VIEW_SORT_COLUMN"] + "(&C)", subMenu=wx.Menu()))
+        self.menu.set_menu_bar(bar)
 
-    def Navigate(self, target, as_new_tab=False):
-        """指定のパスにナビゲートする。"""
-        if isinstance(target, dict):
-            self.log.debug("Creating new tab %s..." % target['action'])
-        else:
-            self.log.debug("Creating new tab %s..." % target)
-        # end log
-        wx.CallLater(200, self._sayNewTab)
-        hPanel = views.ViewCreator.makePanel(self.hTabCtrl)
-        creator = views.ViewCreator.ViewCreator(1, hPanel, None)
-        newtab = tabs.navigator.Navigate(target, create_new_tab_info=(self, creator))
-        if isinstance(newtab, int):  # Error
-            return newtab
-        self.tabs.append(newtab)
-        # self.hTabCtrl.InsertPage(len(self.tabs)-1,hPanel,"tab%d" % (len(self.tabs)),False)
-        self.hTabCtrl.InsertPage(len(self.tabs) - 1, hPanel, newtab.GetTabName(), False)
+    def _generateMenuItem(self, menu, ref, item):
+        menu_item = super()._generateMenuItem(menu, ref, item)
+        # falcon独自のキーマップで設定されたショートカットキーを表示する
+        shortcut = self.menu.get_key_string(item.identifier) if item.identifier else None
+        if shortcut and menu_item.GetSubMenu() is None:
+            menu_item.SetItemLabel("%s\t%s" % (item.display_name, shortcut))
+        return menu_item
 
-        self.ActivateTab(len(self.tabs) - 1)
-        return errorCodes.OK
+    def _applyAcceleratorTable(self):
+        # ショートカットキーは、アクティブなタブのリストに対して登録する
+        if self.active_tab is not None and self.shortcut_enabled:
+            self.menu.apply_shortcut(self.active_tab.hListCtrl)
 
-    def _sayNewTab(self):
-        s = _("新しいタブ") if len(self.tabs) > 1 else _("falcon")
-        globalVars.app.say(s, interrupt=True)
-
-    def ReplaceCurrentTab(self, newtab):
-        """現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""
-        i = self.GetTabIndex(self.activeTab)
-        if i == -1:
-            return  # 最初のタブの作成
-
-        self.UpdateMenuState(self.activeTab, newtab)
-        self.tabs[i] = newtab
-        self.activeTab.OnBeforeChangeTab()
-        self.activeTab.OnClose()
-        self.activeTab = newtab
-        self.menu.ApplyShortcut(self.activeTab.hListCtrl)
-
-        # タブ名変更。activeTab書き換え後に呼ぶ必要がある
-        self.UpdateTabName()
-    # end ReplaceCurrentTab
-
-    def ActivateTab(self, pageNo, triggerOnReactivate=False):
-        """指定されたインデックスのタブをアクティブにする。"""
-        self.UpdateMenuState(self.activeTab, self.tabs[pageNo])
-        self.activeTab = self.tabs[pageNo]
-        self.hTabCtrl.SetSelection(pageNo)
-        self.menu.ApplyShortcut(self.activeTab.hListCtrl)
-        if triggerOnReactivate:
-            self.activeTab.onReactivate()
-
-    def CloseTab(self, pageNo):
-        """指定されたインデックスのタブを閉じる。閉じたタブがアクティブだった場合は、別のタブをアクティブ状態にする。全てのタブが閉じられた場合は、終了イベントを投げる。"""
-        if not isinstance(pageNo, int):  # 数字じゃなくてタブオブジェクトが渡ってた
-            found = -1
-            for i in range(len(self.tabs)):
-                if self.tabs[i] is pageNo:
-                    found = i
-                    break
-                # end if
-            # end for
-            if found == -1:
-                return
-            pageNo = found
-        # end ページ番号じゃなかったときの検索
-
-        active_tab = self.activeTab
-        popped_tab = self.tabs.pop(pageNo)
-        popped_tab.OnClose()
-        if len(self.tabs) == 0:  # タブがなくなった
-            self.hFrame.Close()
-            return
-        # タブがなくなったらソフト終了
-        # この時点で、 noteBook がリストコントロールをデリートするらしいので、他の場所で明示的に消してはいけないとリファレンスに書いてある
-        self.hTabCtrl.DeletePage(pageNo)
-        self.hTabCtrl.SendSizeEvent()
-        if active_tab is popped_tab:  # アクティブなタブを閉じた
-            new_pageNo = pageNo
-            if new_pageNo >= len(self.tabs):
-                new_pageNo = len(self.tabs) - 1
-            self.ActivateTab(new_pageNo, triggerOnReactivate=True)
-        # end アクティブタブを閉じた場合に後ろのタブを持って来る
-    # end closeTab
-
-    def GetNumberOfTabs(self):
-        return len(self.tabs)
-
-    def GetTabIndex(self, target):
-        """targetで指定されたtabObjectがtabsの中でインデックス何番か取得"""
-        i = 0
-        for elem in self.tabs:
-            if elem is target:
-                return i
-            i += 1
-        return -1
-
-    def ChangeTab(self, event):
-        """タブ変更イベント"""
-        self.activeTab.OnBeforeChangeTab()
-        pageNo = event.GetSelection()
-        self.ActivateTab(pageNo)
-
-    def SetShortcutEnabled(self, en):
-        super().SetShortcutEnabled(en)
-        if en:
-            # 通常のメニューバーに戻す
-            self.hFrame.SetMenuBar(self.menu.hMenuBar)
-        else:
-            # 名前の変更中にはダミーのメニューバーを出しておく
-            # これがないとメニューバーの高さ分リストオブジェクトの大きさが変わってしまうために必要
-            self.hFrame.SetMenuBar(self.menu.hDisableMenuBar)
-        # SetMenuBarの後に呼び出しが必要
-        self.creator.GetSizer().Layout()
-
-    def UpdateMenuState(self, old, new):
-        # メニューのブロック状態を変更
-        self.menu.Enable(menuItemsStore.getRef("MOVE_MARK"), new.IsMarked())
-        self.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"), new.hasCheckedItem())
-        self.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(new.checkedItem) != len(new.listObject))
-        self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"), new.environment["history"].hasNext())
-        self.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"), new.environment["history"].hasPrevious())
-
-    def UpdateTabName(self):
-        """タブ名変更の可能性があるときにtabsからたたかれる"""
-        index = self.GetTabIndex(self.activeTab)
-        if index >= 0:
-            self.hTabCtrl.SetPageText(index, self.activeTab.GetTabName())
-
-    def AddUserCommandKey(self):
-        # お気に入りフォルダと「ここで開く」のショートカットキーを登録
-        for target in (globalVars.app.userCommandManagers):
-            for v in target.keyMap:
-                if target.keyMap[v] != "":  # キーが指定されていない場合は無視
-                    self.menu.keymap.add(self.identifier, target.refHead + v, target.keyMap[v])
-        errors = self.menu.keymap.GetError(self.identifier)
-        if errors:
-            tmp = _("お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
-            for v in errors:
-                tmp += v + "\n"
-            dialog(_("エラー"), tmp)
-
-    def AddUserCommandMenu(self):
-        for m in globalVars.app.userCommandManagers:
-            # 既に登録済みならインデックスを取得していったん削除する
-            item = self.menu.hMoveMenu.FindItemById(menuItemsStore.getRef(m.refHead))
-            if item:
-                index = self.menu.hMoveMenu.GetMenuItems().index(item)
-                self.menu.hMoveMenu.DestroyItem(item)
-            else:
-                index = self.menu.hMoveMenu.GetMenuItemCount()
-
-            subMenu = wx.Menu()
-            for v in m.paramMap:
-                self.menu.RegisterMenuCommand(subMenu, m.refHead + v, v)
-
-            if m == globalVars.app.favoriteDirectory:
-                self.menu.RegisterMenuCommand(subMenu, (
-                    "",
-                    "MOVE_ADD_FAVORITE",
-                    "MOVE_SETTING_FAVORITE"
-                ))
-            else:
-                self.menu.RegisterMenuCommand(subMenu, (
-                    "",
-                    "MOVE_SETTING_OPEN_HERE"
-                ))
-            title = globalVars.app.userCommandManagers[m]
-            self.menu.RegisterMenuCommand(self.menu.hMoveMenu, m.refHead, title, subMenu, index)
-            self.hFrame.SetMenuBar(self.menu.hMenuBar)
-
-    def UpdateUserCommand(self):
-        self.menu.InitShortcut()  # キーマップを再取得
-        self.AddUserCommandKey()  # ユーザコマンドを登録
-        self.menu.ApplyShortcut(self.activeTab.hListCtrl)  # acceleratorTable再取得
-        self.AddUserCommandMenu()  # メニューバーの登録更新
-        return
-
-    def GetKeyEntries(self):
-        return self.menu.keymap.GetEntries(self.identifier)
-
-    def PopupMenu(self, hMenu):
-        self.hFrame.PopupMenu(hMenu)
-
-    def SetShortcutEnabled(self, en):
-        """
-                ショートカットキーの有効/無効を切り替える。
-                AcceleratorTableとメニューバーのそれぞれに登録されているので、両方の対策が必要。
-        """
-        # 登録先が違うのでsuperのものを使わない
-        if hasattr(self, "activeTab"):
-            return self._SetShortcutEnabled(en, self.activeTab.hListCtrl)
-
-
-class Menu(BaseMenu):
-    def __init__(self, identifier):
-        filter = keyFilter = keymap.KeyFilter().SetDefault(False, True)
-        filter.AddFunctionKey(
-            ("LEFTARROW",
-             "RIGHTARROW",
-             "NUMPAD_DIVIDE",
-             "NUMPAD_MULTIPLY"))
-
-        super().__init__(identifier, keyFilter=filter)
-
-        # これ以降はユーザ設定の追加なのでフィルタを変更
-        filter = keyFilter = keymap.KeyFilter().SetDefault(False, True)
-        filter.AddFunctionKey(
-            ("LEFTARROW",
-             "RIGHTARROW",
-             "NUMPAD_DIVIDE",
-             "NUMPAD_MULTIPLY"))
-        self.keymap.filter = filter
-
-    def Apply(self, target):
-        """指定されたウィンドウに、メニューを適用する。"""
-
-        # メニューの大項目を作る
-        self.hFileMenu = wx.Menu()
-        self.hEditMenu = wx.Menu()
-        self.hMoveMenu = wx.Menu()
-        self.hReadMenu = wx.Menu()
-        self.hToolMenu = wx.Menu()
-        self.hViewMenu = wx.Menu()
-        self.hEnvMenu = wx.Menu()
-        self.hHelpMenu = wx.Menu()
-
-        # ファイルメニューの中身
-        self.RegisterMenuCommand(self.hFileMenu, (
-            "FILE_RENAME",
-            "FILE_CHANGEATTRIBUTE",
-            "FILE_MAKESHORTCUT",
-            "FILE_TRASH",
-            "FILE_DELETE",
-            "FILE_VIEW_DETAIL",
-            "FILE_SHOWPROPERTIES",
-            "FILE_MKDIR",
-            "FILE_FILEOPTEST",
-            "FILE_EXIT"
-        ))
-
-        # 編集メニューの中身
-        self.RegisterMenuCommand(self.hEditMenu, (
-            "EDIT_COPY",
-            "EDIT_CUT",
-            "EDIT_PAST",
-            "EDIT_NAMECOPY",
-            "EDIT_FULLPATHCOPY",
-            "EDIT_SELECTALL",
-            "EDIT_SEARCH",
-            "EDIT_UPDATEFILELIST",
-            "EDIT_MARKITEM",
-            "EDIT_MARKITEM_ALL",
-            "EDIT_UNMARKITEM_ALL",
-            "EDIT_MARKITEM_INVERSE",
-            "EDIT_OPENCONTEXTMENU",
-        ))
-
-        # 移動メニューの中身
-        self.RegisterMenuCommand(self.hMoveMenu, (
-            "MOVE_FORWARD",
-            "MOVE_FORWARD_ADMIN",
-            "MOVE_EXEC_ORIGINAL_ASSOCIATION",
-            "MOVE_FORWARD_TAB",
-            "MOVE_FORWARD_STREAM",
-            "MOVE_BACKWARD",
-            "MOVE_NEWTAB",
-            "MOVE_CLOSECURRENTTAB",
-            "MOVE_TOPFILE",
-            "MOVE_SPECIAL_UP",
-            "MOVE_SPECIAL_DOWN",
-            "MOVE_HIST_NEXT",
-            "MOVE_HIST_PREV",
-            "MOVE_MARKSET",
-            "MOVE_MARK",
-            "MOVE_INPUT_DIR"
-        ))
-
-        # 読みメニューの中身
-        subMenu = wx.Menu()
-        self.RegisterMenuCommand(subMenu, (
-            "READ_CONTENT_PREVIEW",
-            "READ_CONTENT_READHEADER",
-            "READ_CONTENT_READFOOTER"
-        )),
-        self.RegisterMenuCommand(
-            self.hReadMenu,
-            "READ_PREVIEW",
-            _("プレビュー"),
-            subMenu)
-        self.RegisterMenuCommand(self.hReadMenu, (
-            "READ_CURRENTFOLDER",
-            "READ_LISTITEMNUMBER",
-            "READ_LISTINFO",
-            "READ_SETMOVEMENTREAD"
-        ))
-
-        # ツールメニューの中身
-        self.RegisterMenuCommand(self.hToolMenu, (
-            "TOOL_DIRCALC",
-            "TOOL_HASHCALC",
-            "TOOL_EXEC_PROGRAM",
-            "TOOL_ADDPATH",
-            "TOOL_EJECT_DRIVE",
-            "TOOL_EJECT_DEVICE",
-        ))
-
-        # 表示メニューの中身
-        self.RegisterMenuCommand(self.hViewMenu, (
-            "VIEW_SORTNEXT",
-            "VIEW_SORTSELECT",
-            "VIEW_SORTCYCLEAD",
-            "VIEW_DRIVE_INFO",
-        ))
-        subMenu = wx.Menu()
-        self.RegisterMenuCommand(
-            self.hViewMenu,
-            "VIEW_SORT_COLUMN",
-            _("カラムの並び替え"),
-            subMenu)
-
-        # 環境メニューの中身
-        self.RegisterMenuCommand(self.hEnvMenu, (
-            "ENV_REGIST_ORIGINAL_ASSOCIATION",
-            "ENV_KEY_CONFIG",
-            "ENV_TESTDIALOG",
-            "ENV_PASTTABTEST",
-            "ENV_FONTTEST",
-            "ENV_SETTINGS",
-        ))
-
-        # ヘルプメニューの中身
-        self.RegisterMenuCommand(self.hHelpMenu, (
-            "HELP_VERINFO",
-            "HELP_UPDATE",
-        ))
-
-        # メニューバー
-        self.hMenuBar.Append(self.hFileMenu, _("ファイル"))
-        self.hMenuBar.Append(self.hEditMenu, _("編集"))
-        self.hMenuBar.Append(self.hMoveMenu, _("移動"))
-        self.hMenuBar.Append(self.hReadMenu, _("読み"))
-        self.hMenuBar.Append(self.hToolMenu, _("ツール"))
-        self.hMenuBar.Append(self.hViewMenu, _("表示"))
-        self.hMenuBar.Append(self.hEnvMenu, _("環境"))
-        self.hMenuBar.Append(self.hHelpMenu, _("ヘルプ"))
-        target.SetMenuBar(self.hMenuBar)
-
-        self.ApplyShortcut()
-
-
-class Events(BaseEvents):
-    def OnMenuSelect(self, event):
-        """メニュー項目が選択されたときのイベントハンドら。"""
+    def _receiveMenuCommand(self, event):
+        """メニュー項目が選択されたときのイベントハンドラ。"""
         # ショートカットキーが無効状態のときは何もしない
-        if not self.parent.shortcutEnable:
+        if not self.shortcut_enabled or self.active_tab is None:
             event.Skip()
             return
 
         # プレビュー再生停止等のため、キー押下をタブへ通知
         # ここにきている場合KeyDownイベントはとれないため
-        self.parent.activeTab.OnKeyDown()
+        self.active_tab.OnKeyDown()
 
-        selected = event.GetId()  # メニュー識別しの数値が出る
+        selected = event.GetId()
 
         # カラムソートは特別対応
         if selected >= constants.MENU_ID_SORT_COLUMN:
-            self.ColumnSort(selected)
+            self._column_sort(selected)
             return
 
         # キー重複対応のためのIDの場合には、イベントを投げ直す
-        # 複数投げられるが、有効状態の者は１つだけなはず
-        if globalVars.app.hMainView.menu.keymap.isRefHit(selected):
-            for ref in globalVars.app.hMainView.menu.keymap.GetOriginalRefs(selected):
-                newEvent = wx.CommandEvent(event.GetEventType(), ref)
-                newEvent.SetExtraLong(EVENT_FROM_SELF)  # キー操作無効を示す音を鳴らさない
-                wx.PostEvent(self.parent.hFrame.GetEventHandler(), newEvent)
+        # 複数投げられるが、有効状態のものは１つだけなはず
+        if self.menu.keymap.isRefHit(selected):
+            for ref in self.menu.keymap.GetOriginalRefs(selected):
+                new_event = wx.CommandEvent(event.GetEventType(), ref)
+                new_event.SetExtraLong(EVENT_FROM_SELF)  # キー操作無効を示す音を鳴らさない
+                wx.PostEvent(self.GetEventHandler(), new_event)
             return
 
         # 選択された(ショートカットで押された)メニューが無効状態なら何もしない
-        if selected in views.menuBlocker.testMenu(self.parent.activeTab):
+        if selected in views.menuBlocker.testMenu(self.active_tab):
             if not event.GetExtraLong() == EVENT_FROM_SELF:
-                globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
+                self.app.play_sound(self.app.settings.get("sounds", "boundary"))
             event.Skip()
             return
 
-        if selected == menuItemsStore.getRef("ENV_PASTTABTEST"):
-            self.parent.Navigate({"action": "past"}, as_new_tab=True)
+        identifier = self.window_ctx.ref_store.getIdentifier(selected)
+        feature = self.window_ctx.feature_store.getByIdentifier(identifier) if identifier else None
+        if feature is None or feature.action is None:
+            dialog(_("エラー"), _("操作が定義されていないメニューです。"))
             return
-        # end test
-        if selected == menuItemsStore.getRef("MOVE_BACKWARD"):
-            self.GoBackward()
+        feature.action(event)
+
+    def _windowMove(self, event):
+        # viewkitの設定は負の座標を受け付けないので、最大化時などは保存しない
+        position = self.GetPosition()
+        if position.x >= 0 and position.y >= 0:
+            super()._windowMove(event)
+        else:
+            event.Skip()
+
+    # ---- タブ管理 ----
+
+    def _make_first_tab(self):
+        """最初のタブを作成する。"""
+        if len(sys.argv) > 1:
+            result = self.navigate(misc.analyzeUserInputPath(sys.argv[1], os.getcwd()), as_new_tab=True)
+            if result == errorCodes.OK:
+                return
+            dialog("Error", _("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
+        start_path = self.app.settings.get("browse", "startpath")
+        if start_path != "":
+            result = self.navigate(misc.analyzeUserInputPath(start_path, os.getcwd()), as_new_tab=True)
+        else:  # ドライブ一覧を表示
+            result = self.navigate("", as_new_tab=True)
+        if result == errorCodes.OK:
             return
-        if selected == menuItemsStore.getRef("MOVE_FORWARD"):
-            self.GoForward(False)
+        if os.path.abspath(os.path.expandvars(start_path)) != "":
+            dialog("Error", _("設定された起動時ディレクトリ '%(dir)s' は存在しません。") % {"dir": start_path})
+        result = self.navigate("", as_new_tab=True)
+        if result != errorCodes.OK:
+            dialog("Error", _("ドライブ一覧の読み込みに失敗しました。大変お手数ですが、ログファイルを添付して開発者までお問い合わせください。"))
+
+    def navigate(self, target, as_new_tab=False):
+        """指定のパスにナビゲートする。"""
+        if isinstance(target, dict):
+            self.log.debug("Creating new tab %s..." % target['action'])
+        else:
+            self.log.debug("Creating new tab %s..." % target)
+        wx.CallLater(200, self._say_new_tab)
+        panel = views.ViewCreator.makePanel(self.tab_ctrl)
+        creator = views.ViewCreator.ViewCreator(1, panel, None)
+        new_tab = tabs.navigator.Navigate(target, create_new_tab_info=(self, creator))
+        if isinstance(new_tab, int):  # Error
+            return new_tab
+        self.tabs.append(new_tab)
+        self.tab_ctrl.InsertPage(len(self.tabs) - 1, panel, new_tab.GetTabName(), False)
+        self.activate_tab(len(self.tabs) - 1)
+        return errorCodes.OK
+
+    def _say_new_tab(self):
+        s = _("新しいタブ") if len(self.tabs) > 1 else _("falcon")
+        self.app.say(s, interrupt=True)
+
+    def replace_current_tab(self, new_tab):
+        """現在のタブのインスタンスを入れ替える。ファイルリストからドライブリストになったときなどに使う。"""
+        i = self.get_tab_index(self.active_tab)
+        if i == -1:
+            return  # 最初のタブの作成
+
+        self._update_menu_state(new_tab)
+        self.tabs[i] = new_tab
+        self.active_tab.OnBeforeChangeTab()
+        self.active_tab.OnClose()
+        self.active_tab = new_tab
+        self._applyAcceleratorTable()
+
+        # タブ名変更。active_tab書き換え後に呼ぶ必要がある
+        self.update_tab_name()
+
+    def activate_tab(self, page_no, trigger_on_reactivate=False):
+        """指定されたインデックスのタブをアクティブにする。"""
+        self._update_menu_state(self.tabs[page_no])
+        self.active_tab = self.tabs[page_no]
+        self.tab_ctrl.SetSelection(page_no)
+        self._applyAcceleratorTable()
+        if trigger_on_reactivate:
+            self.active_tab.onReactivate()
+
+    def close_tab(self, page_no):
+        """指定されたインデックスのタブを閉じる。閉じたタブがアクティブだった場合は、別のタブをアクティブ状態にする。全てのタブが閉じられた場合は、終了イベントを投げる。"""
+        if not isinstance(page_no, int):  # 数字じゃなくてタブオブジェクトが渡ってた
+            page_no = self.get_tab_index(page_no)
+            if page_no == -1:
+                return
+
+        active_tab = self.active_tab
+        popped_tab = self.tabs.pop(page_no)
+        popped_tab.OnClose()
+        if len(self.tabs) == 0:  # タブがなくなったらソフト終了
+            self.Close()
             return
-        if selected == menuItemsStore.getRef("MOVE_EXEC_ORIGINAL_ASSOCIATION"):
-            elem = self.parent.activeTab.GetFocusedElement()
-            if ((not isinstance(elem, browsableObjects.Folder)) and
-                    isinstance(elem, (browsableObjects.File, browsableObjects.Stream, browsableObjects.GrepItem))):
-                extention = os.path.splitext(elem.fullpath)[1][1:].lower()
-                if extention in globalVars.app.config["originalAssociation"]:
-                    config = globalVars.app.config["originalAssociation"][extention]
-                else:
-                    config = globalVars.app.config["originalAssociation"]["<default_file>"]
+        # この時点で、 noteBook がリストコントロールをデリートするらしいので、他の場所で明示的に消してはいけないとリファレンスに書いてある
+        self.tab_ctrl.DeletePage(page_no)
+        self.tab_ctrl.SendSizeEvent()
+        if active_tab is popped_tab:  # アクティブなタブを閉じた場合に後ろのタブを持って来る
+            new_page_no = min(page_no, len(self.tabs) - 1)
+            self.activate_tab(new_page_no, trigger_on_reactivate=True)
+
+    def get_number_of_tabs(self):
+        return len(self.tabs)
+
+    def get_tab_index(self, target):
+        """targetで指定されたタブがtabsの中でインデックス何番か取得"""
+        for i, elem in enumerate(self.tabs):
+            if elem is target:
+                return i
+        return -1
+
+    def _on_change_tab(self, event):
+        """タブ変更イベント"""
+        self.active_tab.OnBeforeChangeTab()
+        self.activate_tab(event.GetSelection())
+
+    def update_tab_name(self):
+        """タブ名変更の可能性があるときにtabsからたたかれる"""
+        index = self.get_tab_index(self.active_tab)
+        if index >= 0:
+            self.tab_ctrl.SetPageText(index, self.active_tab.GetTabName())
+
+    def _update_menu_state(self, new):
+        # メニューの有効・無効を変更
+        self.menu.enable("MOVE_MARK", new.IsMarked())
+        self.menu.enable("EDIT_UNMARKITEM_ALL", new.hasCheckedItem())
+        self.menu.enable("EDIT_MARKITEM_ALL", len(new.checkedItem) != len(new.listObject))
+        self.menu.enable("MOVE_HIST_NEXT", new.environment["history"].hasNext())
+        self.menu.enable("MOVE_HIST_PREV", new.environment["history"].hasPrevious())
+
+    def _on_close(self, event):
+        """ウィンドウが閉じられる直前に呼ばれる。"""
+        self.log.info("received close event(force=" + ("true" if not event.CanVeto() else "false") + ")")
+        if not event.CanVeto():  # 強制シャットダウン
+            self.Destroy()
+            return
+        num = self.get_number_of_tabs()
+        if num > 1:
+            dlg = wx.MessageDialog(
+                self,
+                _("%(tabs)d個のタブが開いています。これらのタブを全て閉じて、Falconを終了してもよろしいですか？") % {'tabs': num},
+                _("終了確認"),
+                wx.YES_NO | wx.ICON_QUESTION)
+            ret = dlg.ShowModal()
+            dlg.Destroy()
+            if ret == wx.ID_NO:
+                event.Veto()
+                self.log.info("CloseEvent.Veto(). user select cancel.")
+                return
+        event.Skip()
+
+    # ---- ショートカットキー・メニュー ----
+
+    def set_shortcut_enabled(self, enabled):
+        """
+                ショートカットキーの有効/無効を切り替える。
+                AcceleratorTableとメニューバーのそれぞれに登録されているので、両方の対策が必要。
+        """
+        self.shortcut_enabled = enabled
+        # 名前の変更中にはダミーのメニューバーを出しておく
+        # これがないとメニューバーの高さ分リストオブジェクトの大きさが変わってしまうために必要
+        self.SetMenuBar(self.menu.menu_bar if enabled else self.menu.disabled_menu_bar)
+        # SetMenuBarの後に呼び出しが必要
+        self.creator.getSizer().Layout()
+        if self.active_tab is not None:
+            if enabled:
+                self.menu.apply_shortcut(self.active_tab.hListCtrl)
             else:
-                config = globalVars.app.config["originalAssociation"]["<default_dir>"]
-            config = misc.analyzeUserInputPath(config)
-            misc.RunFile(config, prm="\"%s\"" % (elem.fullpath))
-            return
-        if selected == menuItemsStore.getRef("ENV_KEY_CONFIG"):
-            keys = self.parent.menu.keymap.map[self.parent.identifier.upper()]
-            keyData = {}
-            menuData = {}
-            for refName in defaultKeymap.defaultKeymap["MainView".upper()].keys():
-                title = menuItemsDic.dic[refName]
-                if refName in keys:
-                    keyData[title] = keys[refName]
-                else:
-                    keyData[title] = "なし"
-                menuData[title] = refName
-            d = views.globalKeyConfig.Dialog(keyData, menuData)
-            d.Initialize()
-            if d.Show() == wx.ID_CANCEL:
-                return
+                self.active_tab.hListCtrl.SetAcceleratorTable(wx.AcceleratorTable())
 
-            result = {}
-            keyData, menuData = d.GetValue()
+    def _add_user_command_keys(self):
+        """お気に入りフォルダと「ここで開く」のショートカットキーを登録"""
+        for target in self.app.user_command_managers:
+            for v in target.keyMap:
+                if target.keyMap[v] != "":  # キーが指定されていない場合は無視
+                    self.menu.keymap.add(KEYMAP_IDENTIFIER, target.refHead + v, target.keyMap[v])
+        errors = self.menu.keymap.GetError(KEYMAP_IDENTIFIER)
+        if errors:
+            message = _("お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが正しくありません。キーが重複しているか、存在しないキー名を指定しています。以下のキーの設定内容をご確認ください。\n\n")
+            for v in errors:
+                message += v + "\n"
+            dialog(_("エラー"), message)
 
-            # キーマップの既存設定を置き換える
-            keymap = ConfigManager.ConfigManager()
-            keymap.read(constants.KEYMAP_FILE_NAME)
-            for name, key in keyData.items():
-                if key != _("なし"):
-                    keymap[self.parent.identifier.upper()][menuData[name]] = key
-                else:
-                    keymap[self.parent.identifier.upper()][menuData[name]] = ""
-            keymap.write()
+    def update_user_command(self):
+        """ショートカットキーやお気に入りフォルダなどの変更を、メニューとキーに反映する"""
+        self.menu.init_shortcut()  # キーマップを再取得
+        self._add_user_command_keys()  # ユーザコマンドを登録
+        # 機能とメニューを作り直す
+        self.window_ctx.feature_store = viewkit.FeatureStore()
+        self._registerFeatures(self.define_features())
+        self._assignRefs()
+        self.window_ctx.menu = ViewkitMenu()
+        self.window_ctx.menu.setup(self.define_menu())
+        self.updateShortcutKeys()
+        if not self.shortcut_enabled:
+            self.set_shortcut_enabled(False)
 
-            # ショートカットキーの変更適用とメニューバーの再描画
-            self.parent.UpdateUserCommand()
-            self.parent.menu.Apply(self.parent.hFrame)
-            return
-        if selected == menuItemsStore.getRef("MOVE_FORWARD_ADMIN"):
-            self.GoForward(False, admin=True)
-            return
-        if selected == menuItemsStore.getRef("MOVE_FORWARD_STREAM"):
-            self.GoForward(True)
-            return
-        if selected == menuItemsStore.getRef("MOVE_FORWARD_TAB"):
-            self.OpenNewTab()
-            return
-        if selected == menuItemsStore.getRef("MOVE_CLOSECURRENTTAB"):
-            self.CloseTab()
-            return
-        if selected == menuItemsStore.getRef("MOVE_NEWTAB"):
-            self.NewTab()
-            return
-        if selected == menuItemsStore.getRef("EDIT_COPY"):
-            self.parent.activeTab.Copy()
-            return
-        if selected == menuItemsStore.getRef("EDIT_CUT"):
-            self.parent.activeTab.Cut()
-            return
-        if selected == menuItemsStore.getRef("EDIT_PAST"):
-            self.parent.activeTab.Past()
-            return
-        if selected == menuItemsStore.getRef("EDIT_NAMECOPY"):
-            self.parent.activeTab.NameCopy()
-            return
-        if selected == menuItemsStore.getRef("EDIT_FULLPATHCOPY"):
-            self.parent.activeTab.FullpathCopy()
-            return
-        if selected == menuItemsStore.getRef("EDIT_SELECTALL"):
-            self.parent.activeTab.SelectAll()
-            return
-        if selected == menuItemsStore.getRef("MOVE_TOPFILE"):
-            self.parent.activeTab.GoToTopFile()
-            return
-        if selected == menuItemsStore.getRef("MOVE_SPECIAL_UP"):
-            self.parent.activeTab.Jump(constants.ARROW_UP)
-            return
-        if selected == menuItemsStore.getRef("MOVE_SPECIAL_DOWN"):
-            self.parent.activeTab.Jump(constants.ARROW_DOWN)
-            return
-        if selected == menuItemsStore.getRef("MOVE_HIST_PREV"):
-            self.parent.activeTab.GoHistPrevious()
-            return
-        if selected == menuItemsStore.getRef("MOVE_HIST_NEXT"):
-            self.parent.activeTab.GoHistNext()
-            return
-        if selected == menuItemsStore.getRef("MOVE_MARKSET"):
-            self.parent.activeTab.MarkSet()
-            self.parent.menu.Enable(menuItemsStore.getRef("MOVE_MARK"), True)
-            return
-        if selected == menuItemsStore.getRef("MOVE_MARK"):
-            self.parent.activeTab.GoToMark()
-            return
-        if selected == menuItemsStore.getRef("MOVE_INPUT_DIR"):
-            rootDir = self.parent.activeTab.listObject.rootDirectory
-            d = views.SimpleInputDialog.Dialog(_("パスを指定して移動"), _("移動先"),defaultValue=rootDir)
-            d.Initialize()
-            if d.Show() == wx.ID_CANCEL:
-                return
-            self.parent.activeTab.Move(misc.analyzeUserInputPath(d.GetValue(), self.parent.activeTab.listObject.rootDirectory))
-            return
-        if selected == menuItemsStore.getRef("MOVE_ADD_FAVORITE"):
-            rootDir = self.parent.activeTab.listObject.rootDirectory
-            d = views.favoriteDirectory.SettingDialog(self.parent.hFrame, os.path.basename(rootDir), rootDir, "")
-            d.Initialize()
-            ret = d.Show()
-            if ret == wx.ID_CANCEL:
-                return
-            name, path, key = d.GetValue()
+    def get_key_entries(self):
+        return self.menu.keymap.GetEntries(KEYMAP_IDENTIFIER)
 
-            if name in globalVars.app.favoriteDirectory:
-                dlg = wx.MessageDialog(
-                    self.parent.hFrame,
-                    _("この名前は既に登録されています。登録を上書きしますか？"),
-                    _("上書き確認"),
-                    wx.YES_NO | wx.ICON_QUESTION)
-                if dlg.ShowModal() == wx.ID_NO:
-                    return
-            v = dict(globalVars.app.favoriteDirectory.keyMap.items())
-            v[name] = key
-            if not views.KeyValueSettingDialogBase.KeySettingValidation(
-                    dict(globalVars.app.favoriteDirectory.keyMap.items()), v, None):
-                return
-
-            globalVars.app.favoriteDirectory.add(name, path, key)
-            self.parent.UpdateUserCommand()
-            return
-        if selected == menuItemsStore.getRef("MOVE_SETTING_FAVORITE"):
-            d = views.favoriteDirectory.Dialog(
-                dict(globalVars.app.favoriteDirectory.paramMap.items()),
-                dict(globalVars.app.favoriteDirectory.keyMap.items()))
-            d.Initialize()
-            ret = d.Show()
-            if ret == wx.ID_CANCEL:
-                return
-
-            result = {}
-            params, keys = d.GetValue()
-            globalVars.app.favoriteDirectory.replace(params, keys)
-            self.parent.UpdateUserCommand()
-            return
-        if selected == menuItemsStore.getRef("MOVE_SETTING_OPEN_HERE"):
-            d = views.openHere.Dialog(
-                dict(globalVars.app.openHereCommand.paramMap.items()),
-                dict(globalVars.app.openHereCommand.keyMap.items()))
-            d.Initialize()
-            ret = d.Show()
-            if ret == wx.ID_CANCEL:
-                return
-
-            result = {}
-            params, keys = d.GetValue()
-            globalVars.app.openHereCommand.replace(params, keys)
-            self.parent.UpdateUserCommand()
-            return
-        if selected == menuItemsStore.getRef("VIEW_SORTNEXT"):
-            self.DelaiedCall(self.SortNext)
-            return
-        if selected == menuItemsStore.getRef("EDIT_MARKITEM"):
-            self.parent.activeTab.OnSpaceKey()
-            return
-        if selected == menuItemsStore.getRef("EDIT_MARKITEM_ALL"):
-            self.parent.activeTab.CheckAll()
-            return
-        if selected == menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"):
-            self.parent.activeTab.UncheckAll()
-            return
-        if selected == menuItemsStore.getRef("EDIT_MARKITEM_INVERSE"):
-            self.parent.activeTab.CheckInverse()
-            return
-        if selected == menuItemsStore.getRef("VIEW_SORTSELECT"):
-            self.SortSelect()
-            return
-        if selected == menuItemsStore.getRef("VIEW_SORTCYCLEAD"):
-            self.DelaiedCall(self.SortCycleAd)
-            return
-        if selected == menuItemsStore.getRef("EDIT_SEARCH"):
-            self.Search()
-            return
-        if selected == menuItemsStore.getRef("EDIT_UPDATEFILELIST"):
-            self.UpdateFilelist()
-            return
-        if selected == menuItemsStore.getRef("EDIT_OPENCONTEXTMENU"):
-            self.OpenContextMenu()
-            return
-        if selected == menuItemsStore.getRef("FILE_MAKESHORTCUT"):
-            target = self.parent.activeTab.GetSelectedItems().GetElement(0)  # browsableObjects
-            d = views.makeShortcut.Dialog(
-                target.basename,
-                target.canLnkTarget,
-                target.canHardLinkTarget,
-                target.canSynLinkTarget)
-            d.Initialize()
-            ret = d.Show()
-            if ret == wx.ID_CANCEL:
-                return
-            self.parent.activeTab.MakeShortcut(d.GetValue())
-            return
-        if selected == menuItemsStore.getRef("FILE_CHANGEATTRIBUTE"):
-            d = views.changeAttribute.Dialog(self.parent.activeTab.GetSelectedItems().GetAttributeCheckState())
-            d.Initialize()
-            ret = d.Show()
-            if ret == wx.ID_CANCEL:
-                return
-            val = d.GetValue()
-            self.parent.activeTab.ChangeAttribute(val)
-            return
-        if selected == menuItemsStore.getRef("FILE_MKDIR"):
-            d = views.SimpleInputDialog.Dialog(_("ディレクトリ作成"), _("ディレクトリ名"))
-            d.Initialize()
-            if d.Show() == wx.ID_CANCEL:
-                return
-            self.parent.activeTab.MakeDirectory(d.GetValue())
-            return
-        if selected == menuItemsStore.getRef("FILE_FILEOPTEST"):
-            self.parent.activeTab.FileOperationTest()
-            return
-        if selected == menuItemsStore.getRef("FILE_TRASH"):
-            self.parent.activeTab.Trash()
-            return
-        if selected == menuItemsStore.getRef("FILE_DELETE"):
-            self.parent.activeTab.Delete()
-            return
-        if selected == menuItemsStore.getRef("FILE_VIEW_DETAIL"):
-            elem = self.parent.activeTab.GetFocusedElement()
-            self.ShowDetail(elem)
-            return
-        if selected == menuItemsStore.getRef("FILE_SHOWPROPERTIES"):
-            self.parent.activeTab.ShowProperties()
-            return
-        if selected == menuItemsStore.getRef("READ_CURRENTFOLDER"):
-            self.DelaiedCall(self.parent.activeTab.ReadCurrentFolder)
-            return
-        if selected == menuItemsStore.getRef("READ_LISTITEMNUMBER"):
-            self.DelaiedCall(self.parent.activeTab.ReadListItemNumber)
-            return
-        if selected == menuItemsStore.getRef("READ_LISTINFO"):
-            self.DelaiedCall(self.parent.activeTab.ReadListInfo)
-            return
-        if selected == menuItemsStore.getRef("READ_CONTENT_PREVIEW"):
-            self.parent.activeTab.Preview()
-            return
-        if selected == menuItemsStore.getRef("READ_CONTENT_READHEADER"):
-            self.DelaiedCall(self.parent.activeTab.ReadHeader)
-            return
-        if selected == menuItemsStore.getRef("READ_CONTENT_READFOOTER"):
-            self.DelaiedCall(self.parent.activeTab.ReadFooter)
-            return
-        if selected == menuItemsStore.getRef("READ_SETMOVEMENTREAD"):
-            self.parent.activeTab.SetMovementRead()
-            return
-        if selected == menuItemsStore.getRef("TOOL_DIRCALC"):
-            self.parent.activeTab.DirCalc()
-            return
-        if selected == menuItemsStore.getRef("TOOL_HASHCALC"):
-            d = views.makeHash.Dialog(self.parent.activeTab.GetFocusedElement().fullpath)
-            d.Initialize()
-            d.Show()
-            return
-        if selected == menuItemsStore.getRef("TOOL_EXEC_PROGRAM"):
-            self.ExecProgram()
-            return
-        if selected == menuItemsStore.getRef("TOOL_ADDPATH"):
-            t = self.parent.activeTab.GetSelectedItems()
-            t = t.GetItemPaths()
-            if misc.addPath(t):
-                dialog(_("パスの追加"), _("ユーザ環境変数PATHに追加しました。"))
-            else:
-                dialog(_("パスの追加"), _("追加に失敗しました。"))
-            return
-        if selected == menuItemsStore.getRef("TOOL_EJECT_DRIVE"):
-            ret = deviceCtrl.ejectDrive(self.parent.activeTab.GetFocusedElement().letter)
-            if ret == errorCodes.OK:
-                dialog(_("成功"), _("ドライブは安全に切断されました。"))
-                self.UpdateFilelist(False)
-            elif ret == errorCodes.FILE_NOT_FOUND:
-                dialog(_("エラー"), _("指定されたドライブが見つかりません。既に取り外しされた可能性があります。"))
-            elif ret == errorCodes.UNKNOWN:
-                # エラー表示はむこうでやってる
-                pass
-            elif errorCodes.ACCESS_DENIED:
-                dialog(_("エラー"), _("取り外しに失敗しました。") + _("このドライブは使用中の可能性があります。"))
-            return
-        if selected == menuItemsStore.getRef("TOOL_EJECT_DEVICE"):
-            ret = deviceCtrl.EjectDevice(self.parent.activeTab.GetFocusedElement().letter)
-            if ret == errorCodes.OK:
-                dialog(_("成功"), _("デバイスは安全に取り外せる状態になりました。"))
-                self.UpdateFilelist(False)
-            elif ret == errorCodes.UNKNOWN:
-                dialog(_("エラー"), _("デバイスの取り外しに失敗しました。"))
-            return
-        if selected == menuItemsStore.getRef("VIEW_DRIVE_INFO"):
-            elem = self.parent.activeTab.GetRootObject()
-            if elem is None:
-                dialog(_("エラー"), _("ドライブ情報の取得に失敗しました。"))
-                return
-            self.ShowDetail(elem)
-            return
-        if selected == menuItemsStore.getRef("ENV_REGIST_ORIGINAL_ASSOCIATION"):
-            config = globalVars.app.config["originalAssociation"]
-            d = views.registerOriginalAssociation.Dialog(dict(config.items()))
-            d.Initialize()
-            if d.Show() == wx.ID_CANCEL:
-                return
-            result = {}
-            result["originalAssociation"] = d.GetValue()[0]
-            globalVars.app.config.remove_section("originalAssociation")
-            globalVars.app.config.read_dict(result)
-            return
-        if selected == menuItemsStore.getRef("ENV_TESTDIALOG"):
-            return
-        if selected == menuItemsStore.getRef("ENV_FONTTEST"):
-            self.fonttest = views.fonttest.View()
-            self.fonttest.Initialize()
-            return
-        if selected == menuItemsStore.getRef("ENV_SETTINGS"):
-            d = views.settingsDialog.Dialog()
-            d.Initialize()
-            d.Show()
-            return
-        if selected == menuItemsStore.getRef("FILE_RENAME"):
-            self.StartRename()
-            return
-        if selected == menuItemsStore.getRef("FILE_EXIT"):
-            self.parent.hFrame.Close()
-            return
-        if selected == menuItemsStore.getRef("HELP_VERINFO"):
-            views.versionDialog.versionDialog()
-            return
-        if selected == menuItemsStore.getRef("HELP_UPDATE"):
-            globalVars.update.update()
-            return
-
-        for m in globalVars.app.userCommandManagers:
-            if m.isRefHit(selected):
-                if m == globalVars.app.favoriteDirectory:
-                    ret = self.parent.activeTab.Move(misc.analyzeUserInputPath(m.get(selected), self.parent.activeTab.listObject.rootDirectory))
-                    # TODO: エラー処理する
-                else:  # ここで開く
-                    path = m.get(selected)
-                    path, prm = misc.PathParamSplit(path)
-                    prm = prm.replace("%1", self.parent.activeTab.listObject.rootDirectory)
-                    misc.RunFile(path, False, prm)
-                return
-
-        dialog(_("エラー"), _("操作が定義されていないメニューです。"))
-        return
-
-    def OnMenuOpen(self, event):
+    def _on_menu_open(self, event):
         # メニューの有効・無効を切り替える
-        disableMenuIdSet = views.menuBlocker.testMenu(self.parent.activeTab)
+        if self.active_tab is None:
+            event.Skip()
+            return
+        disable_menu_ids = views.menuBlocker.testMenu(self.active_tab)
         obj = event.GetEventObject()
         if obj is None:
             # システムメニューを開いた
             return
         for i in obj.GetMenuItems():
-            i.Enable(not i.GetId() in disableMenuIdSet)
+            i.Enable(i.GetId() not in disable_menu_ids)
 
         # カラムソートメニューの場合、中身の描画をする
-        if event.GetMenu() == self.parent.menu.hMenuBar.FindItemById(menuItemsStore.getRef("VIEW_SORT_COLUMN")).GetSubMenu():
-            menu = self.parent.menu.hMenuBar.FindItemById(menuItemsStore.getRef("VIEW_SORT_COLUMN")).GetSubMenu()
+        sort_item = self.menu.menu_bar.FindItemById(menuItemsStore.getRef("VIEW_SORT_COLUMN"))
+        if sort_item is not None and event.GetMenu() == sort_item.GetSubMenu():
+            menu = sort_item.GetSubMenu()
             # 一旦全て削除
             for i in range(menu.GetMenuItemCount()):
                 menu.DestroyItem(menu.FindItemByPosition(0))
 
             # カラム数分登録
             i = 0
-            for title in self.parent.activeTab.GetListColumns():
-                subMenu = wx.Menu()
-                subMenu.Append(constants.MENU_ID_SORT_COLUMN + 2 * i, "前へ")
-                subMenu.Append(constants.MENU_ID_SORT_COLUMN + 2 * i + 1, "後ろへ")
-                menu.AppendSubMenu(subMenu, title)
+            for title in self.active_tab.GetListColumns():
+                sub_menu = wx.Menu()
+                sub_menu.Append(constants.MENU_ID_SORT_COLUMN + 2 * i, _("前へ"))
+                sub_menu.Append(constants.MENU_ID_SORT_COLUMN + 2 * i + 1, _("後ろへ"))
+                menu.AppendSubMenu(sub_menu, title)
                 i += 1
             menu.Enable(constants.MENU_ID_SORT_COLUMN, False)
             menu.Enable(constants.MENU_ID_SORT_COLUMN + 2 * (i - 1) + 1, False)
         event.Skip()
 
-    def ColumnSort(self, menuId):
-        order = self.parent.activeTab.GetColumnOrderList()
-        if menuId % 2 == 0:  # 前へ
-            target = int((menuId - constants.MENU_ID_SORT_COLUMN) / 2)
-            tmp = order[target]
-            order[target] = order[target - 1]
-            order[target - 1] = tmp
+    def _column_sort(self, menu_id):
+        order = self.active_tab.GetColumnOrderList()
+        if menu_id % 2 == 0:  # 前へ
+            target = (menu_id - constants.MENU_ID_SORT_COLUMN) // 2
+            order[target], order[target - 1] = order[target - 1], order[target]
         else:  # 後ろへ
-            target = int((menuId - constants.MENU_ID_SORT_COLUMN - 1) / 2)
-            tmp = order[target]
-            order[target] = order[target + 1]
-            order[target + 1] = tmp
-        self.parent.activeTab.SetColumnOrderList(order)
+            target = (menu_id - constants.MENU_ID_SORT_COLUMN - 1) // 2
+            order[target], order[target + 1] = order[target + 1], order[target]
+        self.active_tab.SetColumnOrderList(order)
 
-    def StartRename(self):
-        """リネームを開始する。"""
-        self.parent.activeTab.StartRename()
-    # end StartRename
+    # ---- 機能の実装 ----
 
-    def DelaiedCall(self, callable):
+    def _get_feature_handlers(self):
+        """機能の識別子と、その処理を行うメソッドの対応表を返す"""
+        tab = self._call_active_tab
+        delaied = self._delaied_call_active_tab
+        return {
+            "FILE_RENAME": tab("StartRename"),
+            "FILE_CHANGEATTRIBUTE": self._on_change_attribute,
+            "FILE_MAKESHORTCUT": self._on_make_shortcut,
+            "FILE_TRASH": tab("Trash"),
+            "FILE_DELETE": tab("Delete"),
+            "FILE_VIEW_DETAIL": self._on_view_detail,
+            "FILE_SHOWPROPERTIES": tab("ShowProperties"),
+            "FILE_MKDIR": self._on_make_directory,
+            "FILE_FILEOPTEST": tab("FileOperationTest"),
+            "FILE_EXIT": self._on_exit,
+
+            "EDIT_COPY": tab("Copy"),
+            "EDIT_CUT": tab("Cut"),
+            "EDIT_PAST": tab("Past"),
+            "EDIT_NAMECOPY": tab("NameCopy"),
+            "EDIT_FULLPATHCOPY": tab("FullpathCopy"),
+            "EDIT_SELECTALL": tab("SelectAll"),
+            "EDIT_SEARCH": self._on_search,
+            "EDIT_UPDATEFILELIST": self._on_update_file_list,
+            "EDIT_MARKITEM": tab("OnSpaceKey"),
+            "EDIT_MARKITEM_ALL": tab("CheckAll"),
+            "EDIT_UNMARKITEM_ALL": tab("UncheckAll"),
+            "EDIT_MARKITEM_INVERSE": tab("CheckInverse"),
+            "EDIT_OPENCONTEXTMENU": self._on_open_context_menu,
+
+            "MOVE_FORWARD": self._on_go_forward,
+            "MOVE_FORWARD_ADMIN": self._on_go_forward_admin,
+            "MOVE_EXEC_ORIGINAL_ASSOCIATION": self._on_exec_original_association,
+            "MOVE_FORWARD_TAB": self._on_open_new_tab,
+            "MOVE_FORWARD_STREAM": self._on_go_forward_stream,
+            "MOVE_BACKWARD": self._on_go_backward,
+            "MOVE_NEWTAB": self._on_new_tab,
+            "MOVE_CLOSECURRENTTAB": self._on_close_current_tab,
+            "MOVE_TOPFILE": tab("GoToTopFile"),
+            "MOVE_SPECIAL_UP": lambda event: self.active_tab.Jump(constants.ARROW_UP),
+            "MOVE_SPECIAL_DOWN": lambda event: self.active_tab.Jump(constants.ARROW_DOWN),
+            "MOVE_HIST_NEXT": tab("GoHistNext"),
+            "MOVE_HIST_PREV": tab("GoHistPrevious"),
+            "MOVE_MARKSET": self._on_mark_set,
+            "MOVE_MARK": tab("GoToMark"),
+            "MOVE_INPUT_DIR": self._on_input_dir,
+            "MOVE_ADD_FAVORITE": self._on_add_favorite,
+            "MOVE_SETTING_FAVORITE": self._on_setting_favorite,
+            "MOVE_SETTING_OPEN_HERE": self._on_setting_open_here,
+
+            "READ_CONTENT_PREVIEW": tab("Preview"),
+            "READ_CONTENT_READHEADER": delaied("ReadHeader"),
+            "READ_CONTENT_READFOOTER": delaied("ReadFooter"),
+            "READ_CURRENTFOLDER": delaied("ReadCurrentFolder"),
+            "READ_LISTITEMNUMBER": delaied("ReadListItemNumber"),
+            "READ_LISTINFO": delaied("ReadListInfo"),
+            "READ_SETMOVEMENTREAD": tab("SetMovementRead"),
+
+            "TOOL_DIRCALC": tab("DirCalc"),
+            "TOOL_HASHCALC": self._on_hash_calc,
+            "TOOL_EXEC_PROGRAM": self._on_exec_program,
+            "TOOL_ADDPATH": self._on_add_path,
+            "TOOL_EJECT_DRIVE": self._on_eject_drive,
+            "TOOL_EJECT_DEVICE": self._on_eject_device,
+
+            "VIEW_SORTNEXT": lambda event: self._delaied_call(self._sort_next),
+            "VIEW_SORTSELECT": tab("SortSelect"),
+            "VIEW_SORTCYCLEAD": delaied("SortCycleAd"),
+            "VIEW_DRIVE_INFO": self._on_drive_info,
+
+            "ENV_REGIST_ORIGINAL_ASSOCIATION": self._on_regist_original_association,
+            "ENV_KEY_CONFIG": self._on_key_config,
+            "ENV_TESTDIALOG": lambda event: None,
+            "ENV_PASTTABTEST": lambda event: self.navigate({"action": "past"}, as_new_tab=True),
+            "ENV_FONTTEST": self._on_font_test,
+            "ENV_SETTINGS": self._on_settings,
+
+            "HELP_VERINFO": lambda event: self.showSubWindow(views.versionDialog.VersionWindow, _("バージョン情報")),
+            "HELP_UPDATE": lambda event: globalVars.update.update(),
+        }
+
+    def _call_active_tab(self, method_name):
+        """アクティブなタブの指定されたメソッドを呼ぶイベントハンドラを返す"""
+        return lambda event: getattr(self.active_tab, method_name)()
+
+    def _delaied_call_active_tab(self, method_name):
+        """アクティブなタブの指定されたメソッドを、必要に応じて遅らせて呼ぶイベントハンドラを返す"""
+        return lambda event: self._delaied_call(getattr(self.active_tab, method_name))
+
+    def _delaied_call(self, callable):
         """メニューから、すぐに何かを読み上げる機能を実行すると、メニューが閉じてリストに戻った読み上げにかき消されてしまう。なので、エンターが押されているかどうかを判定して、その場合にcallableの実行時間を遅らせる。"""
         if not wx.GetKeyState(wx.WXK_RETURN):
             callable()
-            return
         else:
-            later = wx.CallLater(200, callable)
-    # end delaiedCall
+            wx.CallLater(200, callable)
 
-    def ExecProgram(self):
-        d = views.SimpleInputDialog.Dialog(_("ファイル名を指定して実行"), _("コマンドライン"))
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
+    def _on_user_command(self, event):
+        """お気に入りフォルダ・「ここで開く」が選択された"""
+        selected = event.GetId()
+        for m in self.app.user_command_managers:
+            if m.isRefHit(selected):
+                if m == self.app.favorite_directory:
+                    self.active_tab.Move(misc.analyzeUserInputPath(m.get(selected), self.active_tab.listObject.rootDirectory))
+                    # TODO: エラー処理する
+                else:  # ここで開く
+                    path, prm = misc.PathParamSplit(m.get(selected))
+                    prm = prm.replace("%1", self.active_tab.listObject.rootDirectory)
+                    misc.RunFile(path, False, prm)
+                return
+
+    def _on_exit(self, event):
+        self.Close()
+
+    def _on_change_attribute(self, event):
+        result = self.showSubWindow(views.changeAttribute.ChangeAttributeWindow, _("属性変更"), self.active_tab.GetSelectedItems().GetAttributeCheckState())
+        if result.code == wx.ID_CANCEL:
             return
-        val = d.GetValue()
-        self.parent.activeTab.ExecProgram(val)
+        self.active_tab.ChangeAttribute(result.user_object)
 
-    def GoBackward(self):
+    def _on_make_shortcut(self, event):
+        target = self.active_tab.GetSelectedItems().GetElement(0)  # browsableObjects
+        parameters = views.makeShortcut.MakeShortcutParameters(target.basename, target.canLnkTarget, target.canHardLinkTarget, target.canSynLinkTarget)
+        result = self.showSubWindow(views.makeShortcut.MakeShortcutWindow, _("ショートカットの作成"), parameters)
+        if result.code == wx.ID_CANCEL:
+            return
+        self.active_tab.MakeShortcut(result.user_object)
+
+    def _on_view_detail(self, event):
+        self.show_detail(self.active_tab.GetFocusedElement())
+
+    def _on_make_directory(self, event):
+        value = self.input_text(_("ディレクトリ作成"), _("ディレクトリ名"))
+        if value is None:
+            return
+        self.active_tab.MakeDirectory(value)
+
+    def input_text(self, title, detail, default_value=""):
+        """1行の文字列を入力してもらう。キャンセルされたらNoneを返す。"""
+        parameters = views.SimpleInputDialog.SimpleInputParameters(detail, default_value)
+        result = self.showSubWindow(views.SimpleInputDialog.SimpleInputWindow, title, parameters)
+        if result.code == wx.ID_CANCEL:
+            return None
+        return result.user_object
+
+    def _on_update_file_list(self, event):
+        self.update_file_list()
+
+    def update_file_list(self, silence=False):
+        self.active_tab.UpdateFilelist(silence=silence)
+
+    def _on_open_context_menu(self, event):
+        self.active_tab.OpenContextMenu(event=None)
+
+    def _on_go_forward(self, event):
+        self.go_forward()
+
+    def _on_go_forward_admin(self, event):
+        self.go_forward(admin=True)
+
+    def _on_go_forward_stream(self, event):
+        self.go_forward(stream=True)
+
+    def go_forward(self, stream=False, admin=False):
+        """forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
+        self.active_tab.GoForward(stream, admin)
+
+    def _on_go_backward(self, event):
         """back アクションを実行"""
-        ret = self.parent.activeTab.GoBackward()
-        if ret == errorCodes.BOUNDARY:
-            globalVars.app.PlaySound(self.parent.app.config["sounds"]["boundary"])
+        if self.active_tab.GoBackward() == errorCodes.BOUNDARY:
+            self.app.play_sound(self.app.settings.get("sounds", "boundary"))
 
-    def OpenNewTab(self):
-        """選択中のディレクトリを新しいタブで開く"""
-        e = self.parent.activeTab.GetFocusedElement()
-        self.parent.Navigate(e.fullpath, as_new_tab=True)
-
-    def CloseTab(self):
-        self.parent.CloseTab(self.parent.activeTab)
-
-    def NewTab(self):
-        if os.path.isdir(os.path.expandvars(globalVars.app.config["browse"]["startPath"])):
-            self.parent.Navigate(os.path.expandvars(globalVars.app.config["browse"]["startPath"]), as_new_tab=True)
+    def _on_exec_original_association(self, event):
+        elem = self.active_tab.GetFocusedElement()
+        associations = self.app.settings.get_section("originalAssociation")
+        if ((not isinstance(elem, browsableObjects.Folder)) and
+                isinstance(elem, (browsableObjects.File, browsableObjects.Stream, browsableObjects.GrepItem))):
+            extention = os.path.splitext(elem.fullpath)[1][1:].lower()
+            if extention in associations:
+                command = associations[extention]
+            else:
+                command = associations.get("<default_file>", "")
         else:
-            self.parent.Navigate("", as_new_tab=True)
+            command = associations.get("<default_dir>", "")
+        command = misc.analyzeUserInputPath(command)
+        misc.RunFile(command, prm="\"%s\"" % (elem.fullpath))
 
-    def Search(self):
-        basePath = self.parent.activeTab.listObject.rootDirectory
+    def _on_open_new_tab(self, event):
+        """選択中のディレクトリを新しいタブで開く"""
+        self.navigate(self.active_tab.GetFocusedElement().fullpath, as_new_tab=True)
+
+    def _on_new_tab(self, event):
+        start_path = os.path.expandvars(self.app.settings.get("browse", "startpath"))
+        if os.path.isdir(start_path):
+            self.navigate(start_path, as_new_tab=True)
+        else:
+            self.navigate("", as_new_tab=True)
+
+    def _on_close_current_tab(self, event):
+        self.close_tab(self.active_tab)
+
+    def _on_mark_set(self, event):
+        self.active_tab.MarkSet()
+        self.menu.enable("MOVE_MARK", True)
+
+    def _on_input_dir(self, event):
+        root_dir = self.active_tab.listObject.rootDirectory
+        value = self.input_text(_("パスを指定して移動"), _("移動先"), root_dir)
+        if value is None:
+            return
+        self.active_tab.Move(misc.analyzeUserInputPath(value, self.active_tab.listObject.rootDirectory))
+
+    def _on_add_favorite(self, event):
+        root_dir = self.active_tab.listObject.rootDirectory
+        initial_row = {"name": os.path.basename(root_dir), "path": root_dir, "key": ""}
+        edit_event = viewkit.presets.keyValueSetting.KeyValueSettingEditEvent([], True, -1, initial_row)
+        result = self.showSubWindow(views.favoriteDirectory.FavoriteDirectoryEditWindow, _("登録内容の入力"), edit_event)
+        if result.code == wx.ID_CANCEL:
+            return
+        name, path, key = result.user_object["name"], result.user_object["path"], result.user_object["key"]
+
+        if name in self.app.favorite_directory:
+            dlg = wx.MessageDialog(
+                self,
+                _("この名前は既に登録されています。登録を上書きしますか？"),
+                _("上書き確認"),
+                wx.YES_NO | wx.ICON_QUESTION)
+            ret = dlg.ShowModal()
+            dlg.Destroy()
+            if ret == wx.ID_NO:
+                return
+        v = dict(self.app.favorite_directory.keyMap.items())
+        v[name] = key
+        if not views.key_value_setting.validate_key_settings(dict(self.app.favorite_directory.keyMap.items()), v):
+            return
+
+        self.app.favorite_directory.add(name, path, key)
+        self.update_user_command()
+
+    def _on_setting_favorite(self, event):
+        config = views.favoriteDirectory.create_config(self.app.favorite_directory.paramMap, self.app.favorite_directory.keyMap)
+        result = self.showSubWindow(views.favoriteDirectory.FavoriteDirectoryWindow, _("お気に入りディレクトリの設定"), config)
+        if result.code == wx.ID_CANCEL:
+            return
+        params, keys = views.favoriteDirectory.split_rows(result.user_object)
+        self.app.favorite_directory.replace(params, keys)
+        self.update_user_command()
+
+    def _on_setting_open_here(self, event):
+        config = views.openHere.create_config(self.app.open_here_command.paramMap, self.app.open_here_command.keyMap)
+        result = self.showSubWindow(views.openHere.OpenHereWindow, _("「ここで開く」コマンドの設定"), config)
+        if result.code == wx.ID_CANCEL:
+            return
+        params, keys = views.openHere.split_rows(result.user_object)
+        self.app.open_here_command.replace(params, keys)
+        self.update_user_command()
+
+    def _on_hash_calc(self, event):
+        self.showSubWindow(views.makeHash.MakeHashWindow, _("ファイルハッシュの計算"), self.active_tab.GetFocusedElement().fullpath)
+
+    def _on_exec_program(self, event):
+        value = self.input_text(_("ファイル名を指定して実行"), _("コマンドライン"))
+        if value is None:
+            return
+        self.active_tab.ExecProgram(value)
+
+    def _on_add_path(self, event):
+        paths = self.active_tab.GetSelectedItems().GetItemPaths()
+        if misc.addPath(paths):
+            dialog(_("パスの追加"), _("ユーザ環境変数PATHに追加しました。"))
+        else:
+            dialog(_("パスの追加"), _("追加に失敗しました。"))
+
+    def _on_eject_drive(self, event):
+        ret = deviceCtrl.ejectDrive(self.active_tab.GetFocusedElement().letter)
+        if ret == errorCodes.OK:
+            dialog(_("成功"), _("ドライブは安全に切断されました。"))
+            self.update_file_list(False)
+        elif ret == errorCodes.FILE_NOT_FOUND:
+            dialog(_("エラー"), _("指定されたドライブが見つかりません。既に取り外しされた可能性があります。"))
+        elif ret == errorCodes.UNKNOWN:
+            # エラー表示はむこうでやってる
+            pass
+        elif ret == errorCodes.ACCESS_DENIED:
+            dialog(_("エラー"), _("取り外しに失敗しました。") + _("このドライブは使用中の可能性があります。"))
+
+    def _on_eject_device(self, event):
+        ret = deviceCtrl.EjectDevice(self.active_tab.GetFocusedElement().letter)
+        if ret == errorCodes.OK:
+            dialog(_("成功"), _("デバイスは安全に取り外せる状態になりました。"))
+            self.update_file_list(False)
+        elif ret == errorCodes.UNKNOWN:
+            dialog(_("エラー"), _("デバイスの取り外しに失敗しました。"))
+
+    def _sort_next(self):
+        """sortNext アクションを実行。"""
+        if self.active_tab.SortNext() == errorCodes.NOT_SUPPORTED:
+            dialog(_("エラー"), _("このオペレーションはサポートされていません。"))
+
+    def _on_drive_info(self, event):
+        elem = self.active_tab.GetRootObject()
+        if elem is None:
+            dialog(_("エラー"), _("ドライブ情報の取得に失敗しました。"))
+            return
+        self.show_detail(elem)
+
+    def _on_regist_original_association(self, event):
+        config = views.registerOriginalAssociation.create_config(self.app.settings.get_section("originalAssociation"))
+        result = self.showSubWindow(views.registerOriginalAssociation.OriginalAssociationWindow, _("拡張子の独自関連付け"), config)
+        if result.code == wx.ID_CANCEL:
+            return
+        self.app.settings.replace_section("originalAssociation", views.registerOriginalAssociation.rows_to_dict(result.user_object))
+
+    def _on_key_config(self, event):
+        keys = self.menu.keymap.map[KEYMAP_IDENTIFIER.upper()]
+        rows = []
+        for ref_name in defaultKeymap.defaultKeymap[KEYMAP_IDENTIFIER.upper()].keys():
+            rows.append({
+                "name": menuItemsDic.dic[ref_name],
+                "key": keys.get(ref_name, views.key_value_setting.NO_KEY),
+                "identifier": ref_name,
+            })
+        parameters = views.globalKeyConfig.GlobalKeyConfigParameters(rows)
+        result = self.showSubWindow(views.globalKeyConfig.GlobalKeyConfigWindow, _("ショートカットキーの設定"), parameters)
+        if result.code == wx.ID_CANCEL:
+            return
+
+        # キーマップの既存設定を置き換える
+        shortcuts = dict(self.app.ctx.settings.getShortcutSettings())
+        for row in result.user_object:
+            shortcuts[row["identifier"]] = row["key"] if row["key"] != views.key_value_setting.NO_KEY else ""
+        self.app.ctx.settings.changeSetting("shortcuts", shortcuts)
+        self.app.save_settings()
+
+        # ショートカットキーの変更適用とメニューバーの再描画
+        self.update_user_command()
+
+    def _on_font_test(self, event):
+        views.fonttest.show_font_test(self)
+
+    def _on_settings(self, event):
+        self.showSubWindow(views.settingsDialog.SettingsWindow, _("設定"))
+
+    def _on_search(self, event):
+        base_path = self.active_tab.listObject.rootDirectory
         out_lst = []  # 入力画面が出てるときに、もうファイルリスト取得を開始してしまう
-        task = workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList, {'path': basePath, 'out_lst': out_lst, 'eol': True})
+        task = workerThreads.RegisterTask(workerThreadTasks.GetRecursiveFileList, {'path': base_path, 'out_lst': out_lst, 'eol': True})
 
-        searchHistory = history.History(globalVars.app.config.getint("search", "history_count", 0, 0, 100), False)
-        grepHistory = history.History(globalVars.app.config.getint("search", "history_count", 0, 0, 100), False)
+        history_count = self.app.settings.get_int("search", "history_count", 0, 0, 100)
+        search_history = history.History(history_count, False)
+        grep_history = history.History(history_count, False)
         hist = {}
         try:
             with open(constants.HISTORY_FILE_NAME, 'rb') as f:
                 hist = pickle.load(f)
-                searchHistory.lst = hist["search"]
-                searchHistory.cursor = len(hist["search"]) - 1
-                grepHistory.lst = hist["grep"]
-                grepHistory.cursor = len(hist["grep"]) - 1
+                search_history.lst = hist["search"]
+                search_history.cursor = len(hist["search"]) - 1
+                grep_history.lst = hist["grep"]
+                grep_history.cursor = len(hist["grep"]) - 1
         except BaseException:
             pass
 
-        d = views.search.Dialog(basePath, list(reversed(searchHistory.getList())), list(reversed(grepHistory.getList())))
-        d.Initialize()
-        canceled = False
-        while(True):
-            ret = d.Show()
-            if ret == wx.ID_CANCEL:
-                task.Cancel()
-                canceled = True
-                break
-            # end キャンセルして抜ける
-            val = d.GetValue()
-            if val['isRegularExpression']:
-                ret = misc.ValidateRegularExpression(val['keyword'])
-                if ret != "OK":
-                    dialog(_("エラー"), _("正規表現の文法が間違っています。\nエラー内容: %(error)s") % {'error': ret})
-                    continue
-                # end 正規表現違う
-            # end 正規表現モードがオンかどうか
-            break
-        # end 入力が正しくなるまで
-        if canceled:
+        parameters = views.search.SearchParameters(base_path, list(reversed(search_history.getList())), list(reversed(grep_history.getList())))
+        result = self.showSubWindow(views.search.SearchWindow, _("検索"), parameters)
+        if result.code == wx.ID_CANCEL:
+            task.Cancel()
             return
-        actionstr = "search" if val['type'] == 0 else "grep"
+        val = result.user_object
+
         target = {
-            'action': actionstr,
-            'basePath': basePath,
+            'action': "search" if val['type'] == 0 else "grep",
+            'basePath': base_path,
             'out_lst': out_lst,
             'keyword': val['keyword'],
             'isRegularExpression': val['isRegularExpression']}
-        self.parent.Navigate(target, as_new_tab=True)
+        self.navigate(target, as_new_tab=True)
 
         if val['type'] == 0:
-            searchHistory.add(val['keyword'])
+            search_history.add(val['keyword'])
         else:
-            grepHistory.add(val['keyword'])
-        hist["search"] = searchHistory.getList()
-        hist["grep"] = grepHistory.getList()
+            grep_history.add(val['keyword'])
+        hist["search"] = search_history.getList()
+        hist["grep"] = grep_history.getList()
         try:
             with open(constants.HISTORY_FILE_NAME, 'wb') as f:
                 pickle.dump(hist, f)
         except BaseException:
             pass
 
-    def GoForward(self, stream=False, admin=False):
-        """forward アクションを実行。stream=True で、ファイルを開く代わりにストリームを開く。admin=True で、管理者モード。"""
-        ret = self.parent.activeTab.GoForward(stream, admin)
-
-    def SortNext(self):
-        """sortNext アクションを実行。"""
-        p = self.parent
-        ret = p.activeTab.SortNext()
-        if ret == errorCodes.NOT_SUPPORTED:
-            dialog(_("エラー"), _("このオペレーションはサポートされていません。"))
-
-    def SortSelect(self):
-        """並び順を指定する。"""
-        t = self.parent.activeTab
-        t.SortSelect()
-
-    def SortCycleAd(self):
-        t = self.parent.activeTab
-        t.SortCycleAd()
-
-    def UpdateFilelist(self, silence=False):
-        ret = self.parent.activeTab.UpdateFilelist(silence=silence)
-
-    def OpenContextMenu(self, silence=True):
-        self.parent.activeTab.OpenContextMenu(event=None)
-
-    def ShowDetail(self, elem):
-        d = views.objectDetail.Dialog()
-        d.Initialize()
+    def show_detail(self, elem):
+        d = views.objectDetail.ObjectDetailParameters()
         d.add(_("名前"), elem.basename)
         d.add(_("パス"), elem.fullpath)
         if isinstance(elem, browsableObjects.File) or isinstance(elem, browsableObjects.Stream):
@@ -1071,13 +937,12 @@ class Events(BaseEvents):
                 d.add(_("サイズ"), misc.ConvertBytesTo(elem.size, misc.UNIT_AUTO, True))
                 d.add(_("サイズ(バイト)"), elem.size)
                 if isinstance(elem, browsableObjects.Folder):
-                    d.add(_("内容"), _("ファイル数： %d サブディレクトリ数： %d") % (elem.fileCount, elem.dirCount))
+                    d.add(_("内容"), _("ファイル数： %(files)d サブディレクトリ数： %(dirs)d") % {"files": elem.fileCount, "dirs": elem.dirCount})
             elif isinstance(elem, browsableObjects.Folder):
-                d.add(_("サイズ"), d.CALCURATING)
-                d.add(_("サイズ(バイト)"), d.CALCURATING)
-                d.add(_("内容"), d.CALCURATING)
-                param = {'lst': [(0, elem.fullpath)], 'callback': d.setDirCalcResult}
-                d.setTask(workerThreads.RegisterTask(workerThreadTasks.DirCalc, param))
+                d.add(_("サイズ"), views.objectDetail.CALCURATING)
+                d.add(_("サイズ(バイト)"), views.objectDetail.CALCURATING)
+                d.add(_("内容"), views.objectDetail.CALCURATING)
+                d.dir_calc_path = elem.fullpath
         if isinstance(elem, browsableObjects.File):
             d.add(_("作成日時"), elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
             d.add(_("更新日時"), elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
@@ -1122,5 +987,90 @@ class Events(BaseEvents):
             d.add(_("種類"), elem.typeString)
         if isinstance(elem, browsableObjects.NetworkResource) and elem.address != "":
             d.add(_("IPアドレス"), elem.address)
-        d.Show()
-        return
+        self.showSubWindow(views.objectDetail.ObjectDetailWindow, _("詳細情報"), d)
+
+
+class FalconMenu:
+    """
+    falcon独自のショートカットキー(keymap)と、メニュー項目の有効・無効を管理する。
+    ショートカットキーはviewkitの設定ファイルの shortcuts に保存する。
+    """
+
+    def __init__(self, window: MainWindow, identifier: str):
+        self.window = window
+        self.identifier = identifier
+        self.log = getLogger("%s.menu" % constants.LOG_PREFIX)
+        self.menu_bar = None
+        self.disabled_items = set()  # 無効にしたメニューのref
+
+        # ショートカット無効状態の時に表示するダミーのメニューバー
+        # これがないとメニューバーの高さ分画面がずれてしまうために必要
+        self.disabled_menu_bar = wx.MenuBar()
+        self.disabled_menu_bar.Append(wx.Menu(), _("現在メニューは操作できません"))
+
+        self.init_shortcut()
+
+    def _create_key_filter(self):
+        key_filter = keymap.KeyFilter().SetDefault(False, True)
+        key_filter.AddFunctionKey(("LEFTARROW", "RIGHTARROW", "NUMPAD_DIVIDE", "NUMPAD_MULTIPLY"))
+        return key_filter
+
+    def init_shortcut(self):
+        """設定ファイルからショートカットキーを読み込む"""
+        settings = self.window.app_ctx.settings
+        shortcuts = settings.getShortcutSettings()
+        if not shortcuts:
+            # 初回起動
+            shortcuts = dict(defaultKeymap.defaultKeymap[self.identifier.upper()])
+            settings.changeSetting("shortcuts", shortcuts)
+            settings.save()
+        self.keymap = keymap.KeymapHandler(None, self._create_key_filter())
+        self.keymap.addDict({self.identifier.upper(): shortcuts})
+        errors = self.keymap.GetError(self.identifier)
+        if errors:
+            message = _("設定されたショートカットキーが正しくありません。キーの重複、存在しないキー名の指定、使用できないキーパターンの指定などが考えられます。以下のキーの設定内容をご確認ください。\n\n")
+            for v in errors:
+                message += v + "\n"
+            dialog(_("エラー"), message)
+        # これ以降はユーザ設定の追加なのでフィルタを作り直す
+        self.keymap.filter = self._create_key_filter()
+
+    def apply_shortcut(self, window):
+        """指定されたウィンドウに、ショートカットキーを登録する"""
+        self.keymap.Set(self.identifier, window)
+
+    def get_key_string(self, identifier):
+        return self.keymap.GetKeyString(self.identifier, identifier)
+
+    def set_menu_bar(self, menu_bar):
+        self.menu_bar = menu_bar
+        for ref in self.disabled_items:
+            if menu_bar.FindItemById(ref) is not None:
+                menu_bar.Enable(ref, False)
+
+    def _to_ref(self, identifier):
+        return identifier if isinstance(identifier, int) else menuItemsStore.getRef(identifier)
+
+    def enable(self, identifier, enable=True):
+        """メニューの有効・無効を切り替える。identifierは識別子(str)またはref(int)"""
+        ref = self._to_ref(identifier)
+        if enable:
+            self.disabled_items.discard(ref)
+        else:
+            self.disabled_items.add(ref)
+        if self.menu_bar is not None and self.menu_bar.FindItemById(ref) is not None:
+            self.menu_bar.Enable(ref, enable)
+
+    def is_enable(self, identifier):
+        return self._to_ref(identifier) not in self.disabled_items
+
+    def register_menu_command(self, menu, identifiers):
+        """コンテキストメニューなどに、メニュー項目をショートカットキーの表示付きで追加する"""
+        for identifier in identifiers:
+            if identifier == "":
+                menu.AppendSeparator()
+                continue
+            title = menuItemsDic.dic[identifier]
+            shortcut = self.get_key_string(identifier)
+            label = title if shortcut is None else "%s\t%s" % (title, shortcut)
+            menu.Append(menuItemsStore.getRef(identifier), label)

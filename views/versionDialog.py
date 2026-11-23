@@ -1,54 +1,42 @@
 # versionDialog
 # Copyright (C) 2020 Hiroki Fujii <hfujii@hisystron.com>
 
+import viewkit
 import wx
+
 import constants
 import update
-from views import baseDialog, ViewCreator
 
 
-def versionDialog():
-    d = dialog()
-    d.Initialize()
-    d.Show()
+class VersionWindow(viewkit.SubWindow):
+    """バージョン情報を表示するウィンドウ"""
 
-
-class dialog(baseDialog.BaseDialog):
-    def __init__(self):
-        super().__init__("versionInfoDialog")
-
-    def Initialize(self):
-        self.log.debug("created")
-        super().Initialize(self.app.hMainView.hFrame, _("バージョン情報"))
-        self.InstallControls()
-        return True
-
-    def InstallControls(self):
-        """いろんなwidgetを設置する。"""
-        versionCreator = ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, wx.VERTICAL, 10, style=wx.ALL, margin=20)
-        textList = []
-        textList.append(str(constants.APP_FULL_NAME) + " (" + constants.APP_NAME + ")")
-        textList.append(_("ソフトウェアバージョン") + ": " + str(constants.APP_VERSION))
+    def __init__(self, parent, ctx, title, parameters=None):
+        super().__init__(parent, ctx, title, parameters)
+        text_list = []
+        text_list.append(str(constants.APP_FULL_NAME) + " (" + constants.APP_NAME + ")")
+        text_list.append(_("ソフトウェアバージョン") + ": " + str(constants.APP_VERSION))
         try:
-            textList.append(_("アップデータバージョン") + ": " + update.getUpdaterVersion()[1])
+            text_list.append(_("アップデータバージョン") + ": " + update.getUpdaterVersion()[1])
         except BaseException:
             pass
-        textList.append(_("ライセンス") + ": " + constants.APP_LICENSE)
-        textList.append(_("開発元") + ": %s - %s" % (constants.APP_DEVELOPERS, constants.APP_DEVELOPERS_URL))
-        textList.append(_("ソフトウェア詳細情報") + ": " + constants.APP_DETAILS_URL)
-        textList.append("")
-        textList.append(_("ライセンス/著作権情報については、同梱の license.txt を参照してください。"))
-        textList.append("")
-        textList.append(constants.APP_COPYRIGHT_MESSAGE)
+        text_list.append(_("ライセンス") + ": " + constants.APP_LICENSE)
+        text_list.append(_("開発元") + ": %s - %s" % (constants.APP_DEVELOPERS, constants.APP_DEVELOPERS_URL))
+        text_list.append(_("ソフトウェア詳細情報") + ": " + constants.APP_DETAILS_URL)
+        text_list.append("")
+        text_list.append(_("ライセンス/著作権情報については、同梱の license.txt を参照してください。"))
+        text_list.append("")
+        text_list.append(constants.APP_COPYRIGHT_MESSAGE)
 
-        self.info, dummy = versionCreator.inputbox("", defaultValue="\r\n".join(textList), style=wx.TE_MULTILINE |
-                                                   wx.TE_READONLY | wx.TE_NO_VSCROLL | wx.BORDER_RAISED, sizerFlag=wx.EXPAND, x=750, textLayout=None)
-        f = self.info.GetFont()
-        f.SetPointSize(f.GetPointSize() * (2 / 3))
-        self.info.SetFont(f)
+        creator = self.creator.makeChild(wx.VERTICAL, 10, style=wx.ALL, margin=20)
+        self.info, dummy = creator.inputbox("", default_value="\r\n".join(text_list), style=wx.TE_MULTILINE |
+                                            wx.TE_READONLY | wx.TE_NO_VSCROLL | wx.BORDER_RAISED, sizer_flag=wx.EXPAND, x=750, text_layout=None)
+        font = self.info.GetFont()
+        font.SetPointSize(int(font.GetPointSize() * (2 / 3)))
+        self.info.SetFont(font)
         self.info.SetMinSize(wx.Size(750, 240))
 
         # フッター
-        footerCreator = ViewCreator.ViewCreator(self.viewMode, self.panel, self.sizer, style=wx.ALIGN_RIGHT | wx.ALL, margin=20)
-        self.closeBtn = footerCreator.cancelbutton(_("閉じる"))
-        self.closeBtn.SetDefault()
+        footer = self.creator.makeChild(style=wx.ALIGN_RIGHT | wx.ALL, margin=20)
+        close_button = footer.closebutton(_("閉じる"))
+        close_button.SetDefault()

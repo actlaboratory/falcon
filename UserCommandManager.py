@@ -3,7 +3,6 @@
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
-import ConfigManager
 import errorCodes
 import menuItemsStore
 
@@ -11,8 +10,7 @@ import menuItemsStore
 class UserCommandManager:
     def __init__(self, params, keys, refHead):
         """
-                params,keymapは(name,value)のタプルのリスト
-                ConfigManager.items(section)の利用を想定
+                params,keymapは(name,value)のタプルのリスト、または辞書
         """
 
         # 変数を初期化
@@ -38,20 +36,15 @@ class UserCommandManager:
 
     def _addAll(self, params, keys):
         """引数の辞書からコマンドをまとめて登録する。nameが重複する場合は上書きする。keyが削除された時の対応などされていないので、各辞書が空の状態でのみ利用可能。"""
-        dic = {}
+        # 名前は大文字小文字を区別しない
+        param_map = {str(k).lower(): v for k, v in dict(params).items()}
+        key_map = {str(k).lower(): v for k, v in dict(keys).items()}
 
-        # 引数からconfigを生成
-        dic["param"] = dict(params)
-        dic["key"] = dict(keys)
-        config = ConfigManager.ConfigManager()
-        config.read_dict(dic)
-
-        # configから２つのmapを生成
-        for k in config.options("param"):
-            if(config.has_option("key", k)):
-                k = k.lower()
-                self.paramMap[k] = config["param"][k]
-                self.keyMap[k] = config["key"][k]
+        # ２つのmapを生成
+        for k in param_map:
+            if k in key_map:
+                self.paramMap[k] = param_map[k]
+                self.keyMap[k] = key_map[k]
                 self.refMap[menuItemsStore.getRef(self.refHead + k)] = k
             else:
                 self.errors.append(k)
@@ -62,7 +55,7 @@ class UserCommandManager:
         del self.paramMap[name]
         if name in self.keyMap:
             del self.keyMap[name]
-        del refMap[menuItemsStore.getRef(self.refHead + name)]
+        del self.refMap[menuItemsStore.getRef(self.refHead + name)]
 
     def isRefHit(self, ref):
         """指定したrefがこのインスタンスのものか否かを判定"""

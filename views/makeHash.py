@@ -1,15 +1,14 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon FileHash view
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
+import viewkit
 import wx
-import misc
-import views.ViewCreator
-from logging import getLogger
-from views.baseDialog import *
 
-hashTypes = [
+import misc
+
+HASH_TYPES = [
     'md5',
     'sha1',
     'sha224',
@@ -25,38 +24,22 @@ hashTypes = [
 ]
 
 
-class Dialog(BaseDialog):
-    def __init__(self, fname):
-        super().__init__("FileHashDialog")
-        self.fileName = fname
+class MakeHashWindow(viewkit.SubWindow):
+    """ファイルのハッシュ値を計算するウィンドウ。parametersは対象ファイルのパス。"""
 
-    def Initialize(self):
-        super().Initialize(self.app.hMainView.hFrame, _("ファイルハッシュの計算"))
-        self.InstallControls()
-        return True
+    def __init__(self, parent, ctx, title, parameters: str):
+        super().__init__(parent, ctx, title, parameters)
+        creator = self.creator.makeChild(wx.HORIZONTAL, 20)
+        self.hash_type, dummy = creator.combobox(_("値の種類"), HASH_TYPES, state=HASH_TYPES.index('sha256'))
+        calc_button = creator.button(_("計算"), self._on_calc, sizer_flag=wx.ALIGN_CENTER_VERTICAL)
+        calc_button.SetDefault()
 
-    def InstallControls(self):
-        """いろんなwidgetを設置する。"""
+        creator = self.creator.makeChild(wx.VERTICAL, 20)
+        self.result_field, dummy = creator.inputbox(_("結果"), x=450, style=wx.TE_READONLY)
 
-        self.creator = views.ViewCreator.ViewCreator(
-            1, self.panel, self.sizer, wx.HORIZONTAL, 20)
-        self.combo, static = self.creator.combobox(
-            _("値の種類"), hashTypes, state=hashTypes.index('sha256'))
-        self.calcButton = self.creator.okbutton(
-            _("計算"), self.calcStart, sizerFlag=wx.ALIGN_CENTER_VERTICAL)
+        footer = self.creator.makeChild(wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
+        footer.cancelbutton(_("閉じる"))
 
-        self.creator = views.ViewCreator.ViewCreator(
-            1, self.panel, self.sizer, wx.VERTICAL, 20)
-        self.resultFeeld, self.static = self.creator.inputbox(
-            _("結果"), x=450, style=wx.TE_READONLY)
-
-        self.buttonArea = views.ViewCreator.BoxSizer(
-            self.sizer, wx.HORIZONTAL, wx.ALIGN_RIGHT)
-        self.creator = views.ViewCreator.ViewCreator(
-            1, self.panel, self.buttonArea, wx.HORIZONTAL, 20)
-        self.bClose = self.creator.cancelbutton(_("閉じる"), None)
-
-    def calcStart(self, event):
-        hash = misc.calcHash(self.fileName, self.combo.GetStringSelection())
-        self.resultFeeld.SetValue(hash)
-        self.resultFeeld.SetFocus()
+    def _on_calc(self, event):
+        self.result_field.SetValue(misc.calcHash(self.parameters, self.hash_type.GetStringSelection()))
+        self.result_field.SetFocus()

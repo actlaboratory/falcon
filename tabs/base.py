@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon tab base object
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
@@ -42,7 +42,6 @@ class FalconTabBase(object):
         self.listObject = None  # リストの中身を保持している listObjects のうちのどれかのオブジェクト・インスタンス
         self.type = None
         self.isRenaming = False
-        globalVars.app.config.add_section(self.__class__.__name__)
         self.environment = environment  # このタブ特有の環境変数
         self.stopSoundHandle = None
         self.checkedItem = set()
@@ -68,8 +67,8 @@ class FalconTabBase(object):
     def InstallListCtrl(self, creator, existing_listctrl=None):
         """指定された親パネルの子供として、このタブ専用のリストコントロールを生成する。"""
         if existing_listctrl is None:
-            self.hListCtrl, static = creator.virtualListCtrl("", proportion=1, sizerFlag=wx.EXPAND, style=wx.LC_REPORT | wx.LC_EDIT_LABELS)
-            creator.GetPanel().Layout()
+            self.hListCtrl, static = creator.virtualListCtrl("", proportion=1, sizer_flag=wx.EXPAND, style=wx.LC_REPORT | wx.LC_EDIT_LABELS)
+            creator.getPanel().Layout()
         else:
             self.hListCtrl = existing_listctrl
         # end リストコントロールを再利用する
@@ -201,7 +200,7 @@ class FalconTabBase(object):
         i = 0
         for elem, format in col.items():
             # カラム幅の設定を取得
-            w = globalVars.app.config.getint(lst.__class__.__name__, "column_width_" + str(i), 100, 0, 1500)
+            w = globalVars.app.settings.get_int(lst.__class__.__name__, "column_width_" + str(i), 100, 0, 1500)
 
             # カラムを作成
             self.hListCtrl.InsertColumn(i, elem, format=format, width=w)
@@ -213,7 +212,11 @@ class FalconTabBase(object):
 
         # カラムの並び替え設定を反映
         try:
-            self.hListCtrl.SetColumnsOrder(json.loads(globalVars.app.config[lst.__class__.__name__]["columns_order"]))
+            order = globalVars.app.settings.get(lst.__class__.__name__, "columns_order", "")
+            if isinstance(order, str):
+                # 旧バージョンの設定ファイルから移行した値は文字列になっている
+                order = json.loads(order)
+            self.hListCtrl.SetColumnsOrder(order)
         except (json.decoder.JSONDecodeError, TypeError):
             self._updateColumnConfig(type(lst))  # configが壊れているので初期値リセット
     # end SetListColumns
@@ -232,7 +235,7 @@ class FalconTabBase(object):
         self.Focus(cursor)
 
         # タブの名前変更を通知
-        globalVars.app.hMainView.UpdateTabName()
+        globalVars.app.main_window.update_tab_name()
 
     def UpdateListContent(self, content, soft=False):
         """
@@ -454,7 +457,7 @@ class FalconTabBase(object):
                 if len(items) == 1:
                     globalVars.app.say(_("チェック"), interrupt=True)
                     if not strict:
-                        globalVars.app.PlaySound(globalVars.app.config["sounds"]["check"])
+                        globalVars.app.play_sound(globalVars.app.settings.get("sounds", "check"))
                 self.checkedItem.add(item)
                 self.hListCtrl.SetItemBackgroundColour(index, "#0000FF")
                 self.hListCtrl.RefreshItem(index)
@@ -463,10 +466,8 @@ class FalconTabBase(object):
                 # self.hListCtrl.SetItemState(item,0,wx.LIST_STATE_SELECTED)
                 self.Focus(index + 1, True)
         self.hListCtrl.Update()
-        globalVars.app.hMainView.menu.Enable(
-            menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"),
-            self.hasCheckedItem())
-        globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"), len(self.checkedItem) != len(self.listObject))
+        globalVars.app.main_window.menu.enable("EDIT_UNMARKITEM_ALL", self.hasCheckedItem())
+        globalVars.app.main_window.menu.enable("EDIT_MARKITEM_ALL", len(self.checkedItem) != len(self.listObject))
 
     def BeginDrag(self, event):
         data = wx.FileDataObject()
@@ -478,9 +479,9 @@ class FalconTabBase(object):
             .ConvertToImage().Scale(128, 128).ConvertToBitmap()
 
         i = wx.DragImage(itemImage)
-        i.BeginDrag((16, 16), globalVars.app.hMainView.hFrame, True, None)
+        i.BeginDrag((16, 16), globalVars.app.main_window, True, None)
 
-        obj = DropSource(data, globalVars.app.hMainView.hFrame)
+        obj = DropSource(data, globalVars.app.main_window)
         obj.hImage = i
         i.Show()
         obj.GiveFeedback(None)  # 座標の計算などをしてi.Moveが呼ばれる
@@ -489,7 +490,7 @@ class FalconTabBase(object):
 
     def SelectAll(self):
         if self.hasCheckedItem():  # チェックアイテムがある場合は実行不可
-            globalVars.app.PlaySound(globalVars.app.config["sounds"]["boundary"])
+            globalVars.app.play_sound(globalVars.app.settings.get("sounds", "boundary"))
             return errorCodes.BOUNDARY
         globalVars.app.say(_("全て選択"), interrupt=True)
         for i in range(self.hListCtrl.GetItemCount()):
@@ -555,8 +556,8 @@ class FalconTabBase(object):
     def _updateConfig(self):
         """ソートの設定をconfigに反映する。"""
         s = self.listObject.__class__.__name__
-        globalVars.app.config[s]["sorting"] = self.listObject.GetSortCursor()
-        globalVars.app.config[s]["descending"] = int(self.listObject.GetSortDescending())
+        globalVars.app.settings.set(s, "sorting", self.listObject.GetSortCursor())
+        globalVars.app.settings.set(s, "descending", int(self.listObject.GetSortDescending()))
 
     def _updateColumnConfig(self, listType=None):
         """カラムのソート状態をconfigに保存する。"""
@@ -568,13 +569,12 @@ class FalconTabBase(object):
         if value == []:
             return  # 起動直後で、まだカラム生成前
         key = listType.__name__
-        globalVars.app.config[key]["columns_order"] = str(value)
+        globalVars.app.settings.set(key, "columns_order", list(value))
 
     def col_resize(self, event):
         no = event.GetColumn()
         width = self.hListCtrl.GetColumnWidth(no)
-        globalVars.app.config[self.listObject.__class__.__name__]["column_width_" +
-                                                                  str(no)] = str(width)
+        globalVars.app.settings.set(self.listObject.__class__.__name__, "column_width_" + str(no), width)
 
     def col_click(self, event):
         no = event.GetColumn()
@@ -613,14 +613,14 @@ class FalconTabBase(object):
 
     def EnterItem(self, event):
         """forward アクションを実行する。"""
-        globalVars.app.hMainView.events.GoForward()
+        globalVars.app.main_window.go_forward()
 
     def Move(self, path, cursor="", addHistory=True):
         """指定の場所へ移動する。"""
         if addHistory:
             self.environment["history"].add(path)
-            self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_NEXT"), self.environment["history"].hasNext())
-            self.parent.menu.Enable(menuItemsStore.getRef("MOVE_HIST_PREV"), self.environment["history"].hasPrevious())
+            self.parent.menu.enable("MOVE_HIST_NEXT", self.environment["history"].hasNext())
+            self.parent.menu.enable("MOVE_HIST_PREV", self.environment["history"].hasPrevious())
         r = navigator.Navigate(path, cursor, previous_tab=self, environment=self.environment)
         return errorCodes.OK if r is self else r
 
@@ -693,7 +693,7 @@ class FalconTabBase(object):
 
     def OnLabelEditStart(self, evt):
         self.isRenaming = True
-        self.parent.SetShortcutEnabled(False)
+        self.parent.set_shortcut_enabled(False)
 
     def IsMarked(self):
         return self.environment["markedPlace"] is not None
@@ -721,8 +721,8 @@ class FalconTabBase(object):
         self.StopSound()
         self.hListCtrl.DeleteAllItems()
         self.hilightIndex = -1
-        globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_UNMARKITEM_ALL"), False)
-        globalVars.app.hMainView.menu.Enable(menuItemsStore.getRef("EDIT_MARKITEM_ALL"), True)
+        globalVars.app.main_window.menu.enable("EDIT_UNMARKITEM_ALL", False)
+        globalVars.app.main_window.menu.enable("EDIT_MARKITEM_ALL", True)
 
     def ItemFocused(self, event):
         # チェック機能使用中の複数選択は不可
@@ -739,7 +739,7 @@ class FalconTabBase(object):
         # チェック状態のアイテムなら音を鳴らす
         # リスト描画前に呼ばれる可能性があるため、self.listObject==Noneの対策でhasCheckedItem()を入れている
         if self.hasCheckedItem() and self._IsItemChecked(self.listObject.GetElement(event.GetIndex())):
-            globalVars.app.PlaySound(globalVars.app.config["sounds"]["checked"])
+            globalVars.app.play_sound(globalVars.app.settings.get("sounds", "checked"))
         event.Skip()
 
     def _appendContextMenu(self, hMenu, elem):
@@ -764,7 +764,7 @@ class FalconTabBase(object):
             x, y = self.hListCtrl.ClientToScreen(rect.GetBottomRight())
         # end 表示位置判定
 
-        RegisterMenuCommand = globalVars.app.hMainView.menu.RegisterMenuCommand
+        RegisterMenuCommand = globalVars.app.main_window.menu.register_menu_command
 
         targetPaths = self.GetSelectedItems().GetItemPaths()
         misc.GetContextMenu()
@@ -795,10 +795,10 @@ class FalconTabBase(object):
         ext = self.GetFocusedElement().fullpath.split(".")[-1].lower()
         if ext in constants.SUPPORTED_AUDIO_FORMATS:
             self.StopSound()
-            ret = globalVars.app.PlaySound(
+            ret = globalVars.app.play_sound(
                 self.GetFocusedElement().fullpath,
                 custom_location=True,
-                volume=globalVars.app.config.getint("preview", "audio_volume", 100, 1, 300))
+                volume=globalVars.app.settings.get_int("preview", "audio_volume", 100, 1, 300))
             if ret == -1:
                 dialog(_("エラー"), _("再生に失敗しました。ファイルにアクセスができないか、ファイルが壊れている可能性があります。"))
                 return errorCodes.FILE_NOT_FOUND
@@ -814,7 +814,7 @@ class FalconTabBase(object):
             globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
             return
         # end 非対応
-        ln = globalVars.app.config.getint(
+        ln = globalVars.app.settings.get_int(
             "preview", "header_line_count", 10, 1, 100)
         s = misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
         if len(s) > ln:
@@ -828,7 +828,7 @@ class FalconTabBase(object):
             globalVars.app.say(_("ドキュメントファイルではありません。"), interrupt=True)
             return
         # end 非対応
-        ln = globalVars.app.config.getint("preview", "footer_line_count", 10, 1, 100)
+        ln = globalVars.app.settings.get_int("preview", "footer_line_count", 10, 1, 100)
         s = misc.ExtractText(self.GetFocusedElement().fullpath).split("\n")
         if len(s) > 10:
             s = s[-10:]
@@ -846,13 +846,13 @@ class FalconTabBase(object):
         m.AppendCheckItem(0, _("フォルダ階層を読み上げ"))
         m.AppendCheckItem(1, _("フォルダ名を読み上げ"))
         m.AppendCheckItem(2, _("項目数を読み上げ"))
-        m.Check(0, globalVars.app.config.getboolean('on_list_moved', 'read_directory_level', True))
-        m.Check(1, globalVars.app.config.getboolean('on_list_moved', 'read_directory_name', True))
-        m.Check(2, globalVars.app.config.getboolean('on_list_moved', 'read_item_count', True))
+        m.Check(0, globalVars.app.settings.get_bool('on_list_moved', 'read_directory_level', True))
+        m.Check(1, globalVars.app.settings.get_bool('on_list_moved', 'read_directory_name', True))
+        m.Check(2, globalVars.app.settings.get_bool('on_list_moved', 'read_item_count', True))
         item = self.hListCtrl.GetPopupMenuSelectionFromUser(m)
-        globalVars.app.config['on_list_moved']['read_directory_level'] = m.IsChecked(0)
-        globalVars.app.config['on_list_moved']['read_directory_name'] = m.IsChecked(1)
-        globalVars.app.config['on_list_moved']['read_item_count'] = m.IsChecked(2)
+        globalVars.app.settings.set('on_list_moved', 'read_directory_level', m.IsChecked(0))
+        globalVars.app.settings.set('on_list_moved', 'read_directory_name', m.IsChecked(1))
+        globalVars.app.settings.set('on_list_moved', 'read_item_count', m.IsChecked(2))
 
     def ExecProgram(self, val):
         argv = misc.CommandLineToArgv(val)
@@ -887,7 +887,7 @@ class FalconTabBase(object):
 
     def StopSound(self):
         if self.stopSoundHandle is not None:  # 音を鳴らしてたので止める
-            globalVars.app.StopSound(self.stopSoundHandle)
+            globalVars.app.stop_sound(self.stopSoundHandle)
             self.stopSoundHandle = None
 
     # D&Dで使うアイテムハイライト
@@ -946,7 +946,7 @@ class FalconTabBase(object):
 
 class DropSource(wx.DropSource):
     def GiveFeedback(self, effect):
-        self.hImage.Move(globalVars.app.hMainView.hFrame.ScreenToClient(wx.GetMousePosition()))
+        self.hImage.Move(globalVars.app.main_window.ScreenToClient(wx.GetMousePosition()))
         return False
 
 
@@ -958,7 +958,7 @@ class DropTarget(wx.DropTarget):
     # マウスオーバー時に呼ばれる
     # まだマウスを放していない
     def OnDragOver(self, x, y, defResult):
-        if not globalVars.app.hMainView.menu.IsEnable("EDIT_PAST"):
+        if not globalVars.app.main_window.menu.is_enable("EDIT_PAST"):
             return wx.DragResult.DragNone  # 現在のビューでは受け入れ不可
 
         i, flg = self.parent.hListCtrl.HitTest((x, y))
@@ -979,7 +979,7 @@ class DropTarget(wx.DropTarget):
     def OnDrop(self, x, y):
         self.parent.Hilight(-1)
 
-        if not globalVars.app.hMainView.menu.IsEnable("EDIT_PAST"):
+        if not globalVars.app.main_window.menu.is_enable("EDIT_PAST"):
             return wx.DragResult.DragNone  # 現在のビューでは受け入れ不可
         return not self.parent.isRenaming
 

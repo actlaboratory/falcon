@@ -45,6 +45,7 @@ class update(threading.Thread):
         self.log.info("update initialized")
         self.needStop = False
         self.reserve = False
+        self.window = None  # アップデートの進行状況を表示するウィンドウ
 
     def update(self, auto=False):
         self.log.info("called update auto = %s" % str(auto))
@@ -70,7 +71,7 @@ class update(threading.Thread):
             "updater_version": constants.UPDATER_VERSION,
             "version": constants.APP_VERSION
         }
-        timeout = globalVars.app.config.getint("general", "timeout", 3)
+        timeout = globalVars.app.settings.get_int("general", "timeout", 3)
         try:
             response = requests.get(constants.UPDATE_URL, params, timeout=timeout)
         except requests.exceptions.ConnectTimeout:
@@ -115,9 +116,11 @@ class update(threading.Thread):
             return
         elif code == errorCodes.UPDATER_NEED_UPDATE or errorCodes.UPDATER_VISIT_SITE:
             self.log.info("opening update dialog...")
-            self.dialog = updateDialog.updateDialog()
-            self.dialog.Initialize()
-            self.dialog.Show()
+            # 起動時の自動チェックではメインウィンドウがまだ無いので、親ウィンドウ無しで表示する
+            window = updateDialog.UpdateWindow(globalVars.app.main_window, globalVars.app.ctx, _("アップデート - %s") % constants.APP_NAME, self)
+            window.Center()
+            window.ShowModal()
+            window.Destroy()
         return
 
     def open_site(self):
@@ -134,7 +137,7 @@ class update(threading.Thread):
         else:
             self.log.info("updater not found")
             os.remove(self._file_name)
-            self.dialog.updater_notFound()
+            updateDialog.show_updater_not_found()
 
     def run(self):
         self.log.info("downloading update file...")
@@ -142,7 +145,7 @@ class update(threading.Thread):
         self._file_name = "update_file.zip"
         response = requests.get(url, stream=True)
         total_size = int(response.headers["Content-Length"])
-        wx.CallAfter(self.dialog.gauge.SetRange, (total_size))
+        wx.CallAfter(self.window.gauge.SetRange, (total_size))
         now_size = 0
         broken = False
         with open(self._file_name, mode="wb") as f:
@@ -153,15 +156,15 @@ class update(threading.Thread):
                     break
                 f.write(chunk)
                 now_size += len(chunk)
-                wx.CallAfter(self.dialog.gauge.SetValue, (now_size))
+                wx.CallAfter(self.window.gauge.SetValue, (now_size))
                 wx.YieldIfNeeded()
         if broken:
             self.log.info("downloading update file has canceled by user")
             os.remove(self._file_name)
-            wx.CallAfter(self.dialog.end)
+            wx.CallAfter(self.window.end)
             return
         self.log.info("update file downloaded")
-        wx.CallAfter(self.dialog.end)
+        wx.CallAfter(self.window.end)
         self.reserve = True
         simpleDialog.winDialog(_("アップデート"), _("ダウンロードが完了しました。\nソフトウェア終了時に、自動でアップデートされます。"))
         return

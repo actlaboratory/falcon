@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon tab creator / navigator
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
@@ -136,9 +136,9 @@ def Navigate(
         # end 再利用するかどうか
     newtab.Update(lst, targetItemIndex)
     # end ターゲットにフォーカス
-    if globalVars.app.config['on_list_moved']['read_item_count'] == 'True':
+    if globalVars.app.settings.get_bool("on_list_moved", "read_item_count", True):
         newtab.ReadListItemNumber(short=True)
     if newtab != previous_tab and previous_tab is not None:
-        globalVars.app.hMainView.ReplaceCurrentTab(newtab)
+        globalVars.app.main_window.replace_current_tab(newtab)
     return newtab
 # end Navigate

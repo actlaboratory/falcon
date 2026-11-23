@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon file operation handler main
 # Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 # Note: All comments except these top lines will be written in Japanese.
@@ -157,7 +157,7 @@ class FileOperator(object):
 
     def _elevate(self):
         """権限昇格し、アクセス拒否になった項目を再実行する。"""
-        if globalVars.app.GetFrozenStatus() is False:  # ビルド済みバイナリじゃないと昇格できないようにしてる
+        if globalVars.app.is_frozen() is False:  # ビルド済みバイナリじゃないと昇格できないようにしてる
             dialog(_("エラー"), _("管理者権限の操作を行うためには、Falconをビルドして実行する必要があります。"))
             return
         # end ビルドしてないとダメ

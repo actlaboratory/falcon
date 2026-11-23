@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon stream list object
 # Copyright (C) 2019-2020 Yukio Nozawa <personal@nyanchangames.com>
 # Copyright (C) 2019-2020 yamahubuki <itiro.ishino@gmail.com>
@@ -48,9 +48,9 @@ class StreamList(FalconListBase):
         level = len(file_spl) - 1
         if not silent:
             r = []
-            if globalVars.app.config['on_list_moved']['read_directory_level'] == 'True':
-                r.append(_("%sの%d" % (file[0], level)))
-            if globalVars.app.config['on_list_moved']['read_directory_name'] == 'True':
+            if globalVars.app.settings.get_bool("on_list_moved", "read_directory_level", True):
+                r.append(_("%(name)sの%(level)d") % {"name": file[0], "level": level})
+            if globalVars.app.settings.get_bool("on_list_moved", "read_directory_name", True):
                 r.append(file_spl[level])
             if len(r) > 0:
                 globalVars.app.say(" ".join(r))

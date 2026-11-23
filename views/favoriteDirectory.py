@@ -1,87 +1,91 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Falcon favoriteDirectory setting view
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
-import copy
 import os
+
+import viewkit.presets.keyValueSetting as keyValueSetting
 import wx
 
 import globalVars
 
-import views.keyConfig
-import views.KeyValueSettingDialogBase
-
 from simpleDialog import dialog
+from views.key_value_setting import EntryEditWindow, FalconKeyValueSettingWindow, validate_key_settings
 
 
-class Dialog(views.KeyValueSettingDialogBase.KeyValueSettingDialogBase):
-    def __init__(self, config, keyConfig):
-        info = [
-            (_("登録名"), wx.LIST_FORMAT_LEFT, 200),
-            (_("場所"), wx.LIST_FORMAT_LEFT, 350),
-            (_("ショートカット"), wx.LIST_FORMAT_LEFT, 200)
-        ]
-        super().__init__("favoriteDirectoryDialog", SettingDialog, info, config, keyConfig)
-        self.oldKeyConfig = copy.copy(keyConfig)
-
-    def Initialize(self):
-        return super().Initialize(self.app.hMainView.hFrame, _("お気に入りディレクトリの設定"))
-
-    def OkButtonEvent(self, event):
-        """
-                設定されたキーが重複している場合はエラーとする
-        """
-        if views.KeyValueSettingDialogBase.KeySettingValidation(
-                self.oldKeyConfig, self.values[1], self.log):
-            event.Skip()
-        return
+def create_config(params: dict, keys: dict) -> keyValueSetting.KeyValueSettingConfig:
+    """お気に入りディレクトリの設定({名前:場所}, {名前:キー})から、設定ウィンドウに渡す設定を作る"""
+    return keyValueSetting.KeyValueSettingConfig(
+        listview_label=_("現在の登録内容"),
+        keys=[
+            keyValueSetting.KeyValueSettingKey("name", _("登録名"), wx.LIST_FORMAT_LEFT, 200),
+            keyValueSetting.KeyValueSettingKey("path", _("場所"), wx.LIST_FORMAT_LEFT, 350),
+            keyValueSetting.KeyValueSettingKey("key", _("ショートカット"), wx.LIST_FORMAT_LEFT, 200),
+        ],
+        values=[{"name": name, "path": path, "key": keys.get(name, "")} for name, path in params.items()],
+        editor_window_class=FavoriteDirectoryEditWindow,
+        add_button_label=_("追加(&A)"),
+        edit_button_label=_("変更(&M)"),
+        delete_button_label=_("削除(&D)"),
+    )
 
 
-class SettingDialog(views.KeyValueSettingDialogBase.SettingDialogBase):
-    """設定内容を入力するダイアログ"""
+def split_rows(rows: list):
+    """設定ウィンドウの結果から、({名前:場所}, {名前:キー})を作る"""
+    return {row["name"]: row["path"] for row in rows}, {row["name"]: row["key"] for row in rows}
 
-    def __init__(self, parent, name="", path="", key=""):
-        super().__init__(
-            parent,
-                        ((_("登録名"), True), (_("場所"), True), (_("ショートカット"), False)),
-                        (None, (_("参照"), self.getRef), (_("設定"), self.SetKey)),
-            name, path, key
-        )
 
-    def Initialize(self):
-        return super().Initialize(_("登録内容の入力"))
+class FavoriteDirectoryWindow(FalconKeyValueSettingWindow):
+    """お気に入りディレクトリの一覧を編集するウィンドウ。結果は一覧の行(辞書)のリスト。"""
 
-    def getRef(self, event):
-        d = wx.DirDialog(
-            self.wnd,
-            "場所の選択",
-            style=wx.DD_DIR_MUST_EXIST | wx.DD_SHOW_HIDDEN)
-        if d.Show() == wx.ID_CANCEL:
-            return
-        self.edits[1].SetValue(d.GetPath())
+    def __init__(self, parent, ctx, title, parameters):
+        super().__init__(parent, ctx, title, parameters)
+        self._old_keys = {row["name"]: row["key"] for row in parameters.values}
 
-    def Validation(self, event):
-        if self.edits[0].GetLineText(
-                0) == "" or self.edits[1].GetLineText(0) == "":
-            return
-        path = os.path.expandvars(self.edits[1].GetLineText(0))
-        if not os.path.isabs(path):
-            dialog(_("エラー"), _("パスは絶対パスで指定してください。"))
-            return
-        if not os.path.isdir(path):
-            dialog(_("エラー"), _("入力されたパスが存在しません。有効なディレクトリへのパスであることを確認してください。"))
-            return
-        event.Skip()
+    def validate_rows(self, rows):
+        """設定されたキーが重複している場合はエラーとする"""
+        return validate_key_settings(self._old_keys, {row["name"]: row["key"] for row in rows}, self.log)
 
-    def SetKey(self, event):
-        d = views.keyConfig.Dialog(self.wnd)
-        d.Initialize()
-        if d.Show() == wx.ID_CANCEL:
-            self.edits[2].SetValue("")
+
+class FavoriteDirectoryEditWindow(EntryEditWindow):
+    """お気に入りディレクトリの登録内容を入力するウィンドウ"""
+
+    def __init__(self, parent, ctx, title, parameters):
+        super().__init__(parent, ctx, title, parameters)
+        self.add_field("name", _("登録名"))
+        self.add_field("path", _("場所"), button=(_("参照"), self._on_browse))
+        self.add_field("key", _("ショートカット"), editable=False, button=(_("設定"), self._on_set_key))
+        self.add_footer()
+
+    def _on_browse(self, event):
+        d = wx.DirDialog(self, _("場所の選択"), style=wx.DD_DIR_MUST_EXIST | wx.DD_SHOW_HIDDEN)
+        if d.ShowModal() != wx.ID_CANCEL:
+            self.fields["path"].SetValue(d.GetPath())
+        d.Destroy()
+
+    def _on_set_key(self, event):
+        key = self.input_key("key")
+        if key is None:
+            self.fields["key"].SetValue("")
             globalVars.app.say(_("解除しました。"))
             return
+        self.fields["key"].SetValue(key)
+        globalVars.app.say(_("%s に設定しました。") % key)
 
-        self.edits[2].SetValue(d.GetValue())
-        globalVars.app.say(_("%s に設定しました。") % (d.GetValue()))
-        return
+    def validate(self):
+        if self.get_value("path") == "":
+            return False
+        path = os.path.expandvars(self.get_value("path"))
+        if not os.path.isabs(path):
+            dialog(_("エラー"), _("パスは絶対パスで指定してください。"), self)
+            return False
+        if not os.path.isdir(path):
+            dialog(_("エラー"), _("入力されたパスが存在しません。有効なディレクトリへのパスであることを確認してください。"), self)
+            return False
+        return True
+
+    def result(self):
+        row = super().result()
+        row["name"] = row["name"].lower()  # 名前は大文字小文字を区別しない
+        return row
