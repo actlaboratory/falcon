@@ -937,7 +937,7 @@ class MainWindow(viewkit.MainWindow):
                 d.add(_("サイズ"), misc.ConvertBytesTo(elem.size, misc.UNIT_AUTO, True))
                 d.add(_("サイズ(バイト)"), elem.size)
                 if isinstance(elem, browsableObjects.Folder):
-                    d.add(_("内容"), _("ファイル数： %d サブディレクトリ数： %d") % (elem.fileCount, elem.dirCount))
+                    d.add(_("内容"), _("ファイル数： %(files)d サブディレクトリ数： %(dirs)d") % {"files": elem.fileCount, "dirs": elem.dirCount})
             elif isinstance(elem, browsableObjects.Folder):
                 d.add(_("サイズ"), views.objectDetail.CALCURATING)
                 d.add(_("サイズ(バイト)"), views.objectDetail.CALCURATING)

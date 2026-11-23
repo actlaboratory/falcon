@@ -70,7 +70,7 @@ class FileList(FileListBase):
                 if level == 0:
                     r.append(_("%sルート" % drive))
                 else:
-                    r.append(_("%sの%d " % (drive, level)))
+                    r.append(_("%(name)sの%(level)d ") % {"name": drive, "level": level})
             if globalVars.app.settings.get_bool("on_list_moved", "read_directory_name", True):
                 r.append(dir_spl[level - 1])
             if len(r) > 0:

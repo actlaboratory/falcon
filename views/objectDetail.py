@@ -66,7 +66,7 @@ class ObjectDetailWindow(viewkit.SubWindow):
             values = (
                 misc.ConvertBytesTo(result[0], misc.UNIT_AUTO, True),
                 str(result[0]),
-                _("ファイル数： %d サブディレクトリ数： %d") % (result[1], result[2]),
+                _("ファイル数： %(files)d サブディレクトリ数： %(dirs)d") % {"files": result[1], "dirs": result[2]},
             )
         else:
             values = (_("不明"), _("不明"), _("不明"))

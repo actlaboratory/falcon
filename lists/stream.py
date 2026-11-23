@@ -49,7 +49,7 @@ class StreamList(FalconListBase):
         if not silent:
             r = []
             if globalVars.app.settings.get_bool("on_list_moved", "read_directory_level", True):
-                r.append(_("%sの%d" % (file[0], level)))
+                r.append(_("%(name)sの%(level)d") % {"name": file[0], "level": level})
             if globalVars.app.settings.get_bool("on_list_moved", "read_directory_name", True):
                 r.append(file_spl[level])
             if len(r) > 0:
