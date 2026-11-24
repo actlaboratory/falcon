@@ -9,6 +9,7 @@ dic = {
     "FILE_SHOWPROPERTIES": _("プロパティを表示"),
     "FILE_MKDIR": _("新規ディレクトリ作成"),
     "FILE_MKFILE": _("新規ファイル作成"),
+    "FILE_MKSHORTCUT": _("新規ショートカット作成"),
     "FILE_FILEOPTEST": _("テスト中のファイルオペレーションを実行"),
     "FILE_EXIT": _("終了"),
 
