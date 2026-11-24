@@ -1,0 +1,73 @@
+Copyright (c) 2019-2026 Yukio Nozawa, yamahubuki, ACT Laboratory All rights reserved.
+
+本ソフトウェアは、Apache License 2.0の条件に従い、自由に利用することができます。
+本ソフトウェアのソースコードは、https://github.com/actlaboratory/falcon よりダウンロード可能です。
+
+※本ソフトウェアには、以下の各ライセンスに従い他者の成果物を含みます。
+　これらには、本ソフトウェアのApache License 2.0は適用されません。
+
+・Apacheライセンスv2に基づく以下のライブラリ
+	requests　(https://github.com/psf/requests)
+		Copyright 2019 Kenneth Reitz
+	proxyUtil　(https://github.com/actlaboratory/proxyUtil)
+	packaging　(https://github.com/pypa/packaging)
+	OpenSSL　(https://www.openssl.org/)
+	ACT Laboratory updater　(https://github.com/actlaboratory/updater)
+
+・LGPLライセンスv2.1以降に基づく以下のソフトウェア
+	7-Zip　(https://www.7-zip.org/)
+		Copyright (C) 1999-2026 Igor Pavlov.
+		ソースコード: https://github.com/ip7z/7zip/releases/tag/26.06
+		※一部のコードには、unRAR license restriction、BSDライセンスも適用されます。詳細は license/individual/7-zip.txt を参照してください。
+	NVDA Controller Client　(https://github.com/nvaccess/nvda)
+		※LGPLライセンスv2.1
+	tld　(https://github.com/barseghyanartur/tld)
+
+・BSDライセンスに基づく以下のライブラリ
+	pybass　(https://pypi.org/project/pybass/)
+		Copyright(c) Maxim Kolosov 2009-2013 pyirrlicht@gmail.com
+	picojson　(https://github.com/kazuho/picojson)
+		Copyright 2009-2010 Cybozu Labs, Inc.
+		Copyright 2011-2014 Kazuho Oku
+	idna　(https://github.com/kjd/idna)
+
+・MITライセンスに基づく以下のライブラリ
+	accessible_output2　(https://github.com/accessibleapps/accessible_output2)
+		Copyright (c) 2019 Christopher Toth
+	libloader　(https://github.com/accessibleapps/libloader)
+		Copyright (c) 2019 Christopher Toth
+	viewkit　(https://github.com/actlaboratory/viewkit)
+		Copyright (c) 2025 AccessibleToolsLaboratory
+	history　(https://github.com/actlaboratory/history)
+	dukpy　(https://github.com/amol-/dukpy)
+		Copyright (c) 2015 Alessandro Molina
+	urllib3　(https://github.com/urllib3/urllib3)
+		Copyright (c) 2008-2020 Andrey Petrov and contributors.
+	charset-normalizer　(https://github.com/jawah/charset_normalizer)
+		Copyright (c) 2025 TAHRI Ahmed R.
+	six　(https://github.com/benjaminp/six)
+		Copyright (c) 2010-2024 Benjamin Peterson
+	setuptools　(https://github.com/pypa/setuptools)
+	libffi　(https://github.com/libffi/libffi)
+
+・ISCライセンスに基づく以下のライブラリ
+	Cerberus　(https://github.com/pyeve/cerberus)
+
+・MPL 2.0に基づく以下のライブラリ
+	certifi　(https://github.com/certifi/python-certifi)
+
+・MS-PLに基づく以下のライブラリ
+	DotNetZip
+
+・個別のライセンスに基づく以下のソフトウェア
+	Python　(https://www.python.org/)
+	wxPython　(https://wxpython.org/)
+	pywin32　(https://github.com/mhammond/pywin32)
+	BASS　(https://www.un4seen.com/)
+	xdoc2txt　(https://ebstudio.info/home/xdoc2txt.html)
+	PyInstaller ブートローダー　(https://pyinstaller.org/)　※GPLv2以降（生成した実行ファイルの配布を認める例外条項付き）
+
+・各スクリーンリーダーの提供元が著作権を持つ、読み上げ連携用のライブラリ
+	PCTKUSR.dll （PC-Talker）、SAAPI32.dll （System Access）、dolapi.dll （Dolphin）
+
+各ライセンスは、licenseディレクトリ内に格納されています。
