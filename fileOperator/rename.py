@@ -21,31 +21,30 @@ def Execute(op):
     # end 変更先がない
     op.output["all_OK"] = True
     op.output["retry"]["to"] = []
-    i = 0
     retry = 0
-    for elem in op.instructions["files"]:
+    # 失敗した項目で次に進むときも、変更先がずれないように zip で対応づける
+    for elem, dest in zip(op.instructions["files"], to):
         isdrive = "\\" not in elem
-        log.debug("from %s, to %s, isdrive %s" % (elem, to[i], isdrive))
+        log.debug("from %s, to %s, isdrive %s" % (elem, dest, isdrive))
         if isdrive:
             d = elem[0] + ":\\"
             try:
-                win32file.SetVolumeLabel(d, to[i])
+                win32file.SetVolumeLabel(d, dest)
             except win32file.error as err:
                 if helper.CommonFailure(op, elem, err, log):
-                    appendRetry(op.output, elem, to[i])
+                    appendRetry(op.output, elem, dest)
                 continue
             # end except
         else:  # ファイルだからリネーム
             try:
-                win32file.MoveFile(elem, to[i])
+                win32file.MoveFile(elem, dest)
             except win32file.error as err:
                 if helper.CommonFailure(op, elem, err, log):
-                    appendRetry(op.output, elem, to[i])
+                    appendRetry(op.output, elem, dest)
                 continue
             # end except
         # end ファイルかドライブか
         op.output["succeeded"] += 1
-        i += 1
     # end 項目の数だけ
     if len(op.output["retry"]["files"]) > 0:
         op.output["retry"]["operation"] = VERB

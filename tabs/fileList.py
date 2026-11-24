@@ -14,6 +14,7 @@ import time
 import wx
 
 import browsableObjects
+import bulk_rename
 import clipboard
 import constants
 import errorCodes
@@ -32,6 +33,9 @@ import workerThreadTasks
 
 from simpleDialog import *
 from . import base
+
+# 名前の一括置換で、変更できなかった項目を表示する最大行数
+_MAX_FAILED_LINES = 10
 
 
 class FileListTab(base.FalconTabBase):
@@ -71,6 +75,43 @@ class FileListTab(base.FalconTabBase):
         # end fail
         f.basename = e.GetLineText(0)
     # end onLabelEditEnd
+
+    def GetBulkRenameTargets(self):
+        """名前の一括置換の対象(選択中のファイル・フォルダ)を bulk_rename.RenameTarget のリストで返す"""
+        targets = []
+        for elem in self.GetSelectedItems():
+            if isinstance(elem, browsableObjects.File):  # Folder も File の派生
+                targets.append(bulk_rename.RenameTarget(elem.fullpath, isinstance(elem, browsableObjects.Folder)))
+        return targets
+
+    def BulkRename(self, plans):
+        """
+        名前の一括置換を実行し、結果を知らせる。
+        plans は名前を変更する項目の bulk_rename.RenamePlan のリスト。
+        """
+        focused = self.GetFocusedElement()
+        focused_new_name = ""
+        inst = {"operation": "rename", "files": [], "to": []}
+        for plan in plans:
+            inst["files"].append(plan.target.fullpath)
+            inst["to"].append(plan.new_fullpath)
+            if focused is not None and plan.target.fullpath == focused.fullpath:
+                focused_new_name = plan.new_name
+        op = fileOperator.FileOperator(inst)
+        op.Execute()
+        succeeded = op.CheckSucceeded()
+        # 開発時は権限の昇格ができず、失敗した項目が記録されないことがあるため、件数は成功数から求める
+        failed_count = len(plans) - succeeded
+        self.UpdateFilelist(silence=True, cursorTargetName=focused_new_name)
+        if failed_count <= 0:
+            globalVars.app.say(_("%(count)d件の名前を変更しました。") % {"count": succeeded}, interrupt=True)
+            return
+        failed_paths = [e.elem for e in op.CheckFailed()]
+        lines = failed_paths[:_MAX_FAILED_LINES]
+        if len(failed_paths) > _MAX_FAILED_LINES:
+            lines.append(_("ほか %(count)d件") % {"count": len(failed_paths) - _MAX_FAILED_LINES})
+        dialog(_("エラー"), _("%(succeeded)d件の名前を変更しました。\n%(failed)d件は名前を変更できませんでした。\n\n%(lines)s") % {
+            "succeeded": succeeded, "failed": failed_count, "lines": "\n".join(lines)})
 
     def ChangeAttribute(self, attrib_checks):
         lst = self.GetSelectedItems()
