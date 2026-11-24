@@ -53,6 +53,7 @@ import views.key_value_setting
 import views.makeHash
 import views.makeShortcut
 import views.menuBlocker
+import views.new_file
 import views.objectDetail
 import views.openHere
 import views.registerOriginalAssociation
@@ -148,6 +149,7 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("FILE_VIEW_DETAIL", "I"),
                 _menu_item("FILE_SHOWPROPERTIES", "P"),
                 _menu_item("FILE_MKDIR", "N"),
+                _menu_item("FILE_MKFILE", "W"),
                 _menu_item("FILE_FILEOPTEST", "O"),
                 _menu_item("FILE_EXIT", "X"),
             ]),
@@ -557,6 +559,7 @@ class MainWindow(viewkit.MainWindow):
             "FILE_VIEW_DETAIL": self._on_view_detail,
             "FILE_SHOWPROPERTIES": tab("ShowProperties"),
             "FILE_MKDIR": self._on_make_directory,
+            "FILE_MKFILE": self._on_make_file,
             "FILE_FILEOPTEST": tab("FileOperationTest"),
             "FILE_EXIT": self._on_exit,
 
@@ -693,6 +696,16 @@ class MainWindow(viewkit.MainWindow):
         if value is None:
             return
         self.active_tab.MakeDirectory(value)
+
+    def _on_make_file(self, event):
+        # ファイル一覧タブにだけある機能
+        if not hasattr(self.active_tab, "MakeFile"):
+            return
+        directory = self.active_tab.listObject.rootDirectory
+        result = self.showSubWindow(views.new_file.NewFileWindow, _("ファイル作成"), directory)
+        if result.code == wx.ID_CANCEL:
+            return
+        self.active_tab.MakeFile(result.user_object)
 
     def input_text(self, title, detail, default_value=""):
         """1行の文字列を入力してもらう。キャンセルされたらNoneを返す。"""
