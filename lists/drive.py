@@ -7,6 +7,7 @@
 import wx
 import win32api
 import win32file
+import win32wnet
 
 import pywintypes
 import constants
@@ -82,7 +83,7 @@ class DriveList(FalconListBase):
         for elem in lst:
             if isinstance(elem, browsableObjects.NetworkResource):
                 self.networkResources.append(elem)
-            elif elem.total >= 0:
+            elif _is_listed_as_usable(elem):
                 self.drives.append(elem)
             else:
                 self.unusableDrives.append(elem)
@@ -94,19 +95,47 @@ class DriveList(FalconListBase):
         self.networkResources.append(resource)
 
     def Append(self, index):
-        d = GetDriveObject(index)
-        if d.total == -1:
-            self.unusableDrives.append(d)
-        else:
+        # ネットワークドライブは、接続できないと容量の取得に数十秒かかることがあるため、ここでは調べない
+        d = GetDriveObject(index, load_remote_info=False)
+        if _is_listed_as_usable(d):
             self.drives.append(d)
+        else:
+            self.unusableDrives.append(d)
         # end どっちに追加するか？
 
+    def GetPendingDrives(self):
+        """容量をまだ取得していないネットワークドライブの一覧を返す。"""
+        return [d for d in self.drives if d.info_pending]
 
-def GetDriveObject(index):
-    """ドライブ情報を調べて、browsableObjectsで返す。Aドライブが0、Zドライブが25。"""
+
+def _is_listed_as_usable(drive):
+    """ドライブを、使用可能なドライブとして一覧の前側に並べるかどうか。ネットワークドライブは接続できるか分からないので前側に並べる。"""
+    return drive.total >= 0 or drive.type == win32file.DRIVE_REMOTE
+
+
+def _get_remote_path(letter):
+    """ネットワークドライブの接続先(\\\\server\\share)を返す。接続を確認しないので、すぐに返る。"""
+    try:
+        return win32wnet.WNetGetConnection(letter + ":")
+    except pywintypes.error:
+        return ""
+
+
+def GetDriveObject(index, load_remote_info=True):
+    """
+        ドライブ情報を調べて、browsableObjectsで返す。Aドライブが0、Zドライブが25。
+        load_remote_info=False の場合、ネットワークドライブの容量は調べず、info_pending=True のオブジェクトを返す。
+    """
     letter = chr(index + 65)
     path = letter + ":\\"
     type = win32file.GetDriveType(path)
+    if type == win32file.DRIVE_REMOTE and not load_remote_info:
+        d = browsableObjects.Drive()
+        remote_path = _get_remote_path(letter)
+        d.Initialize(letter, -1, -1, type, remote_path, -1)
+        d.remote_path = remote_path
+        d.info_pending = True
+        return d
     f = -1
     t = -1
     n = ""

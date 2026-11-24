@@ -11,6 +11,7 @@
 
 import pathlib
 import wx
+import pywintypes
 import win32wnet
 from win32com.shell import shell, shellcon
 import globalVars
@@ -101,13 +102,14 @@ def GetNetworkResources(taskState=None, param=None):
         # 1=RESOURCETYPE_DISK
         lst = win32wnet.WNetEnumResource(h, 64)  # 65以上の指定不可
         win32wnet.WNetCloseEnum(h)
-    except win32net.error as er:
+    except pywintypes.error:
+        # 以前は未定義の win32net.error を参照しており、取得に失敗すると NameError になっていた
         if taskState:
-            param["onFinish"](-1)  # コールバックに通知
+            if not taskState.canceled:
+                wx.CallAfter(param["onFinish"], -1)  # コールバックに通知(ダイアログを出すのでメインスレッドで)
             return True
         else:  # 同期処理
-            raise err
-            return None
+            raise
         # end 同期処理
     # end 情報取得失敗
     if taskState and taskState.canceled:
@@ -131,6 +133,8 @@ def GetNetworkResources(taskState=None, param=None):
     if taskState:
         if taskState:
             while(not param["isReady"]()):
+                if taskState.canceled:  # タブが閉じられた
+                    return False
                 time.sleep(0.3)
             for s in sync_resources:
                 wx.CallAfter(param["onAppend"], s)

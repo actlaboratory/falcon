@@ -324,6 +324,10 @@ class Drive(FalconBrowsableBase):
         self.basename = name
         self.fullpath = letter + ":\\"
         self.hIcon = hIcon
+        # ネットワークドライブの容量をバックグラウンドで取得している間は True
+        self.info_pending = False
+        # ネットワークドライブの接続先(\\server\share)
+        self.remote_path = ""
 
     def UpdateTypeString(self):
         """タイプの数値を文字列に変換し、self.typeString にセットする。"""
