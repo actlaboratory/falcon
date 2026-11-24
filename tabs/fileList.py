@@ -24,6 +24,7 @@ import globalVars
 import lists
 import misc
 import new_file
+import new_shortcut
 import paste_shortcut
 import shell_new
 import StringUtil
@@ -172,6 +173,18 @@ class FileListTab(base.FalconTabBase):
             # ファイルは起動したプログラムが作るので、まだ無いことがある
             self.UpdateFilelist(silence=True)
             return True
+        self.UpdateFilelist(silence=True, cursorTargetName=request.name)
+        return True
+
+    def MakeNewShortcut(self, request):
+        """
+        今のディレクトリに新しいショートカットを作り、作ったショートカットにカーソルを合わせる。
+        request は new_shortcut.NewShortcutRequest。
+        """
+        error = new_shortcut.create(self.listObject.rootDirectory, request)
+        if error != "":
+            errorDialog(error)
+            return False
         self.UpdateFilelist(silence=True, cursorTargetName=request.name)
         return True
 

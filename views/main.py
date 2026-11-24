@@ -55,6 +55,7 @@ import views.makeHash
 import views.makeShortcut
 import views.menuBlocker
 import views.new_file
+import views.new_shortcut
 import views.objectDetail
 import views.openHere
 import views.registerOriginalAssociation
@@ -151,6 +152,7 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("FILE_SHOWPROPERTIES", "P"),
                 _menu_item("FILE_MKDIR", "N"),
                 _menu_item("FILE_MKFILE", "W"),
+                _menu_item("FILE_MKSHORTCUT", "L"),
                 _menu_item("FILE_FILEOPTEST", "O"),
                 _menu_item("FILE_EXIT", "X"),
             ]),
@@ -562,6 +564,7 @@ class MainWindow(viewkit.MainWindow):
             "FILE_SHOWPROPERTIES": tab("ShowProperties"),
             "FILE_MKDIR": self._on_make_directory,
             "FILE_MKFILE": self._on_make_file,
+            "FILE_MKSHORTCUT": self._on_make_new_shortcut,
             "FILE_FILEOPTEST": tab("FileOperationTest"),
             "FILE_EXIT": self._on_exit,
 
@@ -709,6 +712,17 @@ class MainWindow(viewkit.MainWindow):
         if result.code == wx.ID_CANCEL:
             return
         self.active_tab.MakeFile(result.user_object)
+
+    def _on_make_new_shortcut(self, event):
+        """リンク先を入力して、今のディレクトリに新しいショートカットを作る"""
+        # ファイル一覧タブにだけある機能
+        if not hasattr(self.active_tab, "MakeNewShortcut"):
+            return
+        directory = self.active_tab.listObject.rootDirectory
+        result = self.showSubWindow(views.new_shortcut.NewShortcutWindow, _("新規ショートカット作成"), directory)
+        if result.code == wx.ID_CANCEL:
+            return
+        self.active_tab.MakeNewShortcut(result.user_object)
 
     def input_text(self, title, detail, default_value=""):
         """1行の文字列を入力してもらう。キャンセルされたらNoneを返す。"""
