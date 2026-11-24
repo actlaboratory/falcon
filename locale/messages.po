@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Falcon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 16:46+0900\n"
+"POT-Creation-Date: 2026-11-24 16:50+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -607,41 +607,41 @@ msgstr ""
 msgid "新しいファイル"
 msgstr ""
 
-#: new_file.py:129
+#: new_file.py:138
 msgid "ファイル名を入力してください。"
 msgstr ""
 
-#: new_file.py:135 new_file.py:156
+#: new_file.py:144 new_file.py:167
 msgid "同じ名前のファイルまたはフォルダが既にあります。"
 msgstr ""
 
-#: new_file.py:151
+#: new_file.py:160
 msgid "ひな形のファイルを読み込めませんでした。"
 msgstr ""
 
-#: new_file.py:158
+#: new_file.py:169
 msgid ""
 "アクセスが拒否されました。この場所にファイルを作成する権限がないか、読み取り"
 "専用の場所です。"
 msgstr ""
 
-#: new_file.py:160
+#: new_file.py:171
 msgid "作成先のフォルダが見つかりません。"
 msgstr ""
 
-#: new_file.py:164
+#: new_file.py:177
 msgid "ディスクの空き容量が不足しています。"
 msgstr ""
 
-#: new_file.py:166
+#: new_file.py:179
 msgid "読み取り専用の場所には作成できません。"
 msgstr ""
 
-#: new_file.py:168
+#: new_file.py:181
 msgid "ファイルを作成できませんでした。"
 msgstr ""
 
-#: new_file.py:210
+#: new_file.py:223
 msgid "プログラムを起動できませんでした。"
 msgstr ""
 

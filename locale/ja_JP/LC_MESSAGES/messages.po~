@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Falcon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 16:43+0900\n"
+"POT-Creation-Date: 2026-11-24 16:46+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -722,7 +722,7 @@ msgid "降順"
 msgstr ""
 
 #: lists\constants.py:36 lists\file.py:37 lists\grepResult.py:34
-#: lists\searchResult.py:31 views\search.py:35
+#: lists\searchResult.py:31 views\new_file.py:27 views\search.py:35
 msgid "ファイル名"
 msgstr ""
 
@@ -1813,10 +1813,6 @@ msgstr ""
 #: views\newNameForPast.py:20 views\OperationSelecter.py:61
 #: views\OperationSelecter.py:64
 msgid "スキップ"
-msgstr ""
-
-#: views\new_file.py:27
-msgid "ファイル名（空欄なら種類ごとの既定の名前）"
 msgstr ""
 
 #: views\new_file.py:30

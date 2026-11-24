@@ -102,10 +102,19 @@ def get_default_index(file_types: list):
 def make_name(name: str, file_type: FileType):
     """
     入力された名前から作成するファイル名を作る。
-    拡張子が書かれていなければ、選ばれた種類の拡張子を付ける。
+    空のファイルを作る種類なら、拡張子が書かれていないときだけ、選ばれた種類の拡張子を付ける。
+    ひな形のコピーなど中身が決まっている種類なら、名前がその種類の拡張子で終わっていなければ付ける。
     """
-    if os.path.splitext(name)[1] == "":
-        return name + file_type.extension
+    extension = file_type.extension
+    if extension == "":
+        return name
+    if file_type.method != shell_new.METHOD_NULL_FILE:
+        if name.lower().endswith(extension.lower()):
+            return name
+        return name + extension
+    # 「.gitignore」のようにピリオドで始まる名前は、それ全体が名前なので拡張子を付けない
+    if os.path.splitext(name)[1] == "" and not name.startswith("."):
+        return name + extension
     return name
 
 
@@ -149,8 +158,10 @@ def create(path: str, file_type: FileType):
     except OSError as e:
         log.warning("cannot read template %s: %s" % (file_type.value, e))
         return _("ひな形のファイルを読み込めませんでした。") + "\n" + str(file_type.value)
+    created = False
     try:
         with open(path, "xb") as f:
+            created = True
             f.write(content)
     except FileExistsError:
         return _("同じ名前のファイルまたはフォルダが既にあります。")
@@ -159,7 +170,9 @@ def create(path: str, file_type: FileType):
     except FileNotFoundError:
         return _("作成先のフォルダが見つかりません。")
     except OSError as e:
-        _remove_incomplete(path)
+        # 書き込みの途中で失敗したら、作りかけのファイルを消す。自分で作ったファイル以外は消さない
+        if created:
+            _remove_incomplete(path)
         if e.errno == errno.ENOSPC:
             return _("ディスクの空き容量が不足しています。")
         if e.errno == errno.EROFS:

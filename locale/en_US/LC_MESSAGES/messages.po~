@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Falcon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 16:43+0900\n"
+"POT-Creation-Date: 2026-11-24 16:46+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -727,10 +727,9 @@ msgid "降順"
 msgstr ""
 
 #: lists\constants.py:36 lists\file.py:37 lists\grepResult.py:34
-#: lists\searchResult.py:31 views\search.py:35
-#, fuzzy
+#: lists\searchResult.py:31 views\new_file.py:27 views\search.py:35
 msgid "ファイル名"
-msgstr "File"
+msgstr "File name"
 
 #: lists\constants.py:37
 #, fuzzy
@@ -1836,10 +1835,6 @@ msgstr ""
 msgid "スキップ"
 msgstr ""
 
-#: views\new_file.py:27
-msgid "ファイル名（空欄なら種類ごとの既定の名前）"
-msgstr "File name (the default name for the type if empty)"
-
 #: views\new_file.py:30
 msgid "種類（名前に拡張子がなければ付けます）"
 msgstr "Type (added if the name has no extension)"
@@ -2098,3 +2093,6 @@ msgstr ""
 msgid ""
 "ライセンス/著作権情報については、同梱の license.txt を参照してください。"
 msgstr ""
+
+#~ msgid "ファイル名（空欄なら種類ごとの既定の名前）"
+#~ msgstr "File name (the default name for the type if empty)"
