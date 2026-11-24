@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Falcon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 16:50+0900\n"
+"POT-Creation-Date: 2026-11-24 17:18+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -48,8 +48,8 @@ msgstr ""
 #: views\favoriteDirectory.py:81 views\favoriteDirectory.py:84
 #: views\fontManager.py:30 views\fontManager.py:57 views\globalKeyConfig.py:76
 #: views\key_value_setting.py:137 views\key_value_setting.py:192
-#: views\main.py:304 views\main.py:484 views\main.py:852 views\main.py:857
-#: views\main.py:865 views\main.py:870 views\main.py:875 views\main.py:1060
+#: views\main.py:305 views\main.py:485 views\main.py:853 views\main.py:858
+#: views\main.py:866 views\main.py:871 views\main.py:876 views\main.py:1066
 #: views\openHere.py:84 views\openHere.py:88 views\openHere.py:91
 #: views\openHere.py:94 views\registerOriginalAssociation.py:73
 #: views\registerOriginalAssociation.py:76
@@ -126,7 +126,7 @@ msgstr ""
 msgid "ネットワーク"
 msgstr ""
 
-#: browsableObjects.py:348 browsableObjects.py:351 views\objectDetail.py:72
+#: browsableObjects.py:348 browsableObjects.py:351 views\objectDetail.py:122
 msgid "不明"
 msgstr ""
 
@@ -348,7 +348,7 @@ msgstr ""
 msgid "全て選択"
 msgstr ""
 
-#: menuItemsDic.py:21 views\main.py:936
+#: menuItemsDic.py:21 views\main.py:937
 msgid "検索"
 msgstr ""
 
@@ -400,7 +400,7 @@ msgstr ""
 msgid "上の階層へ"
 msgstr ""
 
-#: menuItemsDic.py:35 views\main.py:356
+#: menuItemsDic.py:35 views\main.py:357
 msgid "新しいタブ"
 msgstr ""
 
@@ -436,7 +436,7 @@ msgstr ""
 msgid "マークした場所へ移動"
 msgstr ""
 
-#: menuItemsDic.py:44 views\main.py:780
+#: menuItemsDic.py:44 views\main.py:781
 msgid "パスを指定して移動"
 msgstr ""
 
@@ -444,7 +444,7 @@ msgstr ""
 msgid "現在の場所をお気に入りに登録"
 msgstr ""
 
-#: menuItemsDic.py:47 views\main.py:814
+#: menuItemsDic.py:47 views\main.py:815
 msgid "お気に入りディレクトリの設定"
 msgstr ""
 
@@ -489,11 +489,11 @@ msgstr ""
 msgid "フォルダ容量計算"
 msgstr ""
 
-#: menuItemsDic.py:61 views\main.py:831
+#: menuItemsDic.py:61 views\main.py:832
 msgid "ファイルハッシュの計算"
 msgstr ""
 
-#: menuItemsDic.py:62 views\main.py:834
+#: menuItemsDic.py:62 views\main.py:835
 msgid "ファイル名を指定して実行"
 msgstr ""
 
@@ -645,6 +645,18 @@ msgstr ""
 msgid "プログラムを起動できませんでした。"
 msgstr ""
 
+#: shortcut_link.py:217
+msgid ""
+"ショートカットキーには、英字・数字・ファンクションキーなどを1つ指定してくださ"
+"い。"
+msgstr ""
+
+#: shortcut_link.py:220
+msgid ""
+"ショートカットキーは、Ctrl・Alt・Shift のうち2つ以上と組み合わせて指定してく"
+"ださい。"
+msgstr ""
+
 #: update.py:55 update.py:66 update.py:80 update.py:86 update.py:97
 #: update.py:105 update.py:110 update.py:115 update.py:169
 #: views\updateDialog.py:34
@@ -731,18 +743,18 @@ msgid "ファイルサイズ"
 msgstr ""
 
 #: lists\constants.py:38 tabs\fileList.py:460 tabs\pastProgress.py:87
-#: views\main.py:979
+#: views\main.py:980
 msgid "更新日時"
 msgstr ""
 
 #: lists\constants.py:39 lists\file.py:40 lists\grepResult.py:40
-#: lists\searchResult.py:35 views\main.py:980
+#: lists\searchResult.py:35 views\main.py:981
 msgid "属性"
 msgstr ""
 
 #: lists\constants.py:40 lists\drive.py:41 lists\file.py:41
-#: lists\grepResult.py:41 lists\searchResult.py:36 views\main.py:981
-#: views\main.py:1018
+#: lists\grepResult.py:41 lists\searchResult.py:36 views\main.py:982
+#: views\main.py:1019
 msgid "種類"
 msgstr ""
 
@@ -780,7 +792,7 @@ msgstr ""
 
 #: lists\file.py:38 lists\grepResult.py:38 lists\searchResult.py:32
 #: lists\stream.py:28 tabs\fileList.py:458 tabs\pastProgress.py:85
-#: views\main.py:968 views\main.py:973
+#: views\main.py:969 views\main.py:974
 msgid "サイズ"
 msgstr ""
 
@@ -809,7 +821,7 @@ msgid "ヒット件数"
 msgstr ""
 
 #: lists\networkResource.py:27 tabs\fileList.py:458 tabs\pastProgress.py:85
-#: views\globalKeyConfig.py:30 views\globalKeyConfig.py:90 views\main.py:964
+#: views\globalKeyConfig.py:30 views\globalKeyConfig.py:90 views\main.py:965
 #: views\openHere.py:23 views\openHere.py:57
 msgid "名前"
 msgstr ""
@@ -1069,7 +1081,7 @@ msgstr ""
 msgid "複写"
 msgstr ""
 
-#: tabs\fileList.py:356 views\main.py:171
+#: tabs\fileList.py:356 views\main.py:172
 msgid "移動"
 msgstr ""
 
@@ -1077,7 +1089,7 @@ msgstr ""
 msgid "項目"
 msgstr ""
 
-#: tabs\fileList.py:385 views\main.py:965
+#: tabs\fileList.py:385 views\main.py:966
 msgid "パス"
 msgstr ""
 
@@ -1255,16 +1267,16 @@ msgstr ""
 #: views\bulk_rename.py:49 views\changeAttribute.py:24
 #: views\key_value_setting.py:38 views\key_value_setting.py:123
 #: views\makeShortcut.py:65 views\newNameForPast.py:19 views\new_file.py:34
-#: views\objectDetail.py:50 views\OperationSelecter.py:46 views\search.py:40
-#: views\SimpleInputDialog.py:32
+#: views\objectDetail.py:62 views\OperationSelecter.py:46 views\search.py:40
+#: views\shortcut_setting.py:80 views\SimpleInputDialog.py:32
 msgid "ＯＫ"
 msgstr ""
 
 #: views\bulk_rename.py:50 views\changeAttribute.py:25
 #: views\key_value_setting.py:40 views\key_value_setting.py:124
 #: views\makeShortcut.py:66 views\new_file.py:35 views\OperationSelecter.py:48
-#: views\search.py:41 views\settingsDialog.py:108 views\SimpleInputDialog.py:33
-#: views\updateDialog.py:40
+#: views\search.py:41 views\settingsDialog.py:108 views\shortcut_setting.py:81
+#: views\SimpleInputDialog.py:33 views\updateDialog.py:40
 msgid "キャンセル"
 msgstr ""
 
@@ -1360,8 +1372,8 @@ msgstr ""
 msgid "参照"
 msgstr ""
 
-#: views\favoriteDirectory.py:58 views\globalKeyConfig.py:94 views\main.py:914
-#: views\openHere.py:59
+#: views\favoriteDirectory.py:58 views\globalKeyConfig.py:94 views\main.py:915
+#: views\openHere.py:59 views\shortcut_setting.py:69
 msgid "設定"
 msgstr ""
 
@@ -1370,12 +1382,12 @@ msgid "場所の選択"
 msgstr ""
 
 #: views\favoriteDirectory.py:71 views\globalKeyConfig.py:107
-#: views\openHere.py:74
+#: views\openHere.py:74 views\shortcut_setting.py:116
 msgid "解除しました。"
 msgstr ""
 
 #: views\favoriteDirectory.py:74 views\globalKeyConfig.py:110
-#: views\openHere.py:77
+#: views\openHere.py:77 views\shortcut_setting.py:113
 #, python-format
 msgid "%s に設定しました。"
 msgstr ""
@@ -1421,6 +1433,7 @@ msgid "このショートカットは変更できません。"
 msgstr ""
 
 #: views\globalKeyConfig.py:107 views\globalKeyConfig.py:110
+#: views\shortcut_setting.py:113 views\shortcut_setting.py:116
 msgid "設定完了"
 msgstr ""
 
@@ -1434,7 +1447,8 @@ msgstr ""
 msgid "設定解除"
 msgstr ""
 
-#: views\key_value_setting.py:28 views\main.py:985 views\main.py:1005
+#: views\key_value_setting.py:28 views\main.py:986 views\main.py:1006
+#: views\shortcut_setting.py:31
 msgid "なし"
 msgstr ""
 
@@ -1443,11 +1457,11 @@ msgstr ""
 msgid "この%sは既に登録されています。登録を上書きしますか？"
 msgstr ""
 
-#: views\key_value_setting.py:82 views\main.py:798
+#: views\key_value_setting.py:82 views\main.py:799
 msgid "上書き確認"
 msgstr ""
 
-#: views\key_value_setting.py:99 views\main.py:789
+#: views\key_value_setting.py:99 views\main.py:790
 msgid "登録内容の入力"
 msgstr ""
 
@@ -1486,78 +1500,78 @@ msgid ""
 "す。\n"
 msgstr ""
 
-#: views\main.py:113
+#: views\main.py:114
 msgid "管理者"
 msgstr ""
 
-#: views\main.py:120
+#: views\main.py:121
 msgid "タブ選択"
 msgstr ""
 
-#: views\main.py:142
+#: views\main.py:143
 msgid "ファイル"
 msgstr ""
 
-#: views\main.py:156
+#: views\main.py:157
 msgid "編集"
 msgstr ""
 
-#: views\main.py:191
+#: views\main.py:192
 msgid "読み"
 msgstr ""
 
-#: views\main.py:202
+#: views\main.py:203
 msgid "ツール"
 msgstr ""
 
-#: views\main.py:210 views\main.py:250
+#: views\main.py:211 views\main.py:251
 msgid "表示"
 msgstr ""
 
-#: views\main.py:216
+#: views\main.py:217
 msgid "環境"
 msgstr ""
 
-#: views\main.py:224
+#: views\main.py:225
 msgid "ヘルプ"
 msgstr ""
 
-#: views\main.py:304
+#: views\main.py:305
 msgid "操作が定義されていないメニューです。"
 msgstr ""
 
-#: views\main.py:324
+#: views\main.py:325
 #, python-format
 msgid "引数で指定されたディレクトリ '%(dir)s' は存在しません。"
 msgstr ""
 
-#: views\main.py:333
+#: views\main.py:334
 #, python-format
 msgid "設定された起動時ディレクトリ '%(dir)s' は存在しません。"
 msgstr ""
 
-#: views\main.py:336
+#: views\main.py:337
 msgid ""
 "ドライブ一覧の読み込みに失敗しました。大変お手数ですが、ログファイルを添付し"
 "て開発者までお問い合わせください。"
 msgstr ""
 
-#: views\main.py:356
+#: views\main.py:357
 msgid "falcon"
 msgstr ""
 
-#: views\main.py:443
+#: views\main.py:444
 #, python-format
 msgid ""
 "%(tabs)d個のタブが開いています。これらのタブを全て閉じて、Falconを終了しても"
 "よろしいですか？"
 msgstr ""
 
-#: views\main.py:444
+#: views\main.py:445
 msgid "終了確認"
 msgstr ""
 
-#: views\main.py:481
+#: views\main.py:482
 msgid ""
 "お気に入りディレクトリもしくは「ここで開く」で設定されたショートカットキーが"
 "正しくありません。キーが重複しているか、存在しないキー名を指定しています。以"
@@ -1565,182 +1579,182 @@ msgid ""
 "\n"
 msgstr ""
 
-#: views\main.py:528
+#: views\main.py:529
 msgid "前へ"
 msgstr ""
 
-#: views\main.py:529
+#: views\main.py:530
 msgid "後ろへ"
 msgstr ""
 
-#: views\main.py:628
+#: views\main.py:629
 msgid "バージョン情報"
 msgstr ""
 
-#: views\main.py:665
+#: views\main.py:666
 msgid "属性変更"
 msgstr ""
 
-#: views\main.py:678
+#: views\main.py:679
 msgid "名前の一括置換"
 msgstr ""
 
-#: views\main.py:686
+#: views\main.py:687
 msgid "ショートカットの作成"
 msgstr ""
 
-#: views\main.py:695
+#: views\main.py:696
 msgid "ディレクトリ作成"
 msgstr ""
 
-#: views\main.py:695
+#: views\main.py:696
 msgid "ディレクトリ名"
 msgstr ""
 
-#: views\main.py:705
+#: views\main.py:706
 msgid "ファイル作成"
 msgstr ""
 
-#: views\main.py:780
+#: views\main.py:781
 msgid "移動先"
 msgstr ""
 
-#: views\main.py:797
+#: views\main.py:798
 msgid "この名前は既に登録されています。登録を上書きしますか？"
 msgstr ""
 
-#: views\main.py:823
+#: views\main.py:824
 msgid "「ここで開く」コマンドの設定"
 msgstr ""
 
-#: views\main.py:834
+#: views\main.py:835
 msgid "コマンドライン"
 msgstr ""
 
-#: views\main.py:842 views\main.py:844
+#: views\main.py:843 views\main.py:845
 msgid "パスの追加"
 msgstr ""
 
-#: views\main.py:842
+#: views\main.py:843
 msgid "ユーザ環境変数PATHに追加しました。"
 msgstr ""
 
-#: views\main.py:844
+#: views\main.py:845
 msgid "追加に失敗しました。"
 msgstr ""
 
-#: views\main.py:849 views\main.py:862
+#: views\main.py:850 views\main.py:863
 msgid "成功"
 msgstr ""
 
-#: views\main.py:849
+#: views\main.py:850
 msgid "ドライブは安全に切断されました。"
 msgstr ""
 
-#: views\main.py:852
+#: views\main.py:853
 msgid ""
 "指定されたドライブが見つかりません。既に取り外しされた可能性があります。"
 msgstr ""
 
-#: views\main.py:857
+#: views\main.py:858
 msgid "取り外しに失敗しました。"
 msgstr ""
 
-#: views\main.py:857
+#: views\main.py:858
 msgid "このドライブは使用中の可能性があります。"
 msgstr ""
 
-#: views\main.py:862
+#: views\main.py:863
 msgid "デバイスは安全に取り外せる状態になりました。"
 msgstr ""
 
-#: views\main.py:865
+#: views\main.py:866
 msgid "デバイスの取り外しに失敗しました。"
 msgstr ""
 
-#: views\main.py:870
+#: views\main.py:871
 msgid "このオペレーションはサポートされていません。"
 msgstr ""
 
-#: views\main.py:875
+#: views\main.py:876
 msgid "ドライブ情報の取得に失敗しました。"
 msgstr ""
 
-#: views\main.py:881
+#: views\main.py:882
 msgid "拡張子の独自関連付け"
 msgstr ""
 
-#: views\main.py:896
+#: views\main.py:897 views\shortcut_setting.py:110
 msgid "ショートカットキーの設定"
 msgstr ""
 
-#: views\main.py:969 views\main.py:974
+#: views\main.py:970 views\main.py:975
 msgid "サイズ(バイト)"
 msgstr ""
 
-#: views\main.py:971 views\main.py:975
+#: views\main.py:972 views\main.py:976
 msgid "内容"
 msgstr ""
 
-#: views\main.py:971 views\objectDetail.py:69
+#: views\main.py:972 views\objectDetail.py:119
 #, python-format
 msgid "ファイル数： %(files)d サブディレクトリ数： %(dirs)d"
 msgstr ""
 
-#: views\main.py:978
+#: views\main.py:979
 msgid "作成日時"
 msgstr ""
 
-#: views\main.py:983 views\main.py:985
+#: views\main.py:984 views\main.py:986
 msgid "短い名前"
 msgstr ""
 
-#: views\main.py:997
+#: views\main.py:998
 msgid "消費ディスク領域"
 msgstr ""
 
-#: views\main.py:1001
+#: views\main.py:1002
 msgid "削除予約済 "
 msgstr ""
 
-#: views\main.py:1003
+#: views\main.py:1004
 #, python-format
 msgid "ハードリンクにより他の %d 箇所から参照"
 msgstr ""
 
-#: views\main.py:1006
+#: views\main.py:1007
 msgid "追加情報"
 msgstr ""
 
-#: views\main.py:1010 views\main.py:1017
+#: views\main.py:1011 views\main.py:1018
 msgid "フォーマット"
 msgstr ""
 
-#: views\main.py:1012 views\main.py:1014
+#: views\main.py:1013 views\main.py:1015
 msgid "空き容量"
 msgstr ""
 
-#: views\main.py:1015
+#: views\main.py:1016
 msgid "総容量"
 msgstr ""
 
-#: views\main.py:1017
+#: views\main.py:1018
 msgid "未挿入"
 msgstr ""
 
-#: views\main.py:1020
+#: views\main.py:1021
 msgid "IPアドレス"
 msgstr ""
 
-#: views\main.py:1021
+#: views\main.py:1024
 msgid "詳細情報"
 msgstr ""
 
-#: views\main.py:1040
+#: views\main.py:1046
 msgid "現在メニューは操作できません"
 msgstr ""
 
-#: views\main.py:1057
+#: views\main.py:1063
 msgid ""
 "設定されたショートカットキーが正しくありません。キーの重複、存在しないキー名"
 "の指定、使用できないキーパターンの指定などが考えられます。以下のキーの設定内"
@@ -1786,7 +1800,8 @@ msgstr ""
 msgid "作成方式"
 msgstr ""
 
-#: views\makeShortcut.py:55
+#: views\makeShortcut.py:55 views\objectDetail.py:77
+#: views\shortcut_setting.py:64
 msgid "パラメータ"
 msgstr ""
 
@@ -1819,8 +1834,53 @@ msgstr ""
 msgid "種類（名前に拡張子がなければ付けます）"
 msgstr ""
 
-#: views\objectDetail.py:46
+#: views\objectDetail.py:54
 msgid "計算中"
+msgstr ""
+
+#: views\objectDetail.py:61
+msgid "ショートカットの設定を変更(&L)..."
+msgstr ""
+
+#: views\objectDetail.py:76 views\objectDetail.py:90
+#: views\shortcut_setting.py:63
+msgid "リンク先"
+msgstr ""
+
+#: views\objectDetail.py:78 views\shortcut_setting.py:65
+msgid "作業フォルダー"
+msgstr ""
+
+#: views\objectDetail.py:79 views\shortcut_setting.py:68
+msgid "ショートカットキー"
+msgstr ""
+
+#: views\objectDetail.py:80 views\shortcut_setting.py:74
+msgid "実行時の大きさ"
+msgstr ""
+
+#: views\objectDetail.py:81 views\shortcut_setting.py:75
+msgid "コメント"
+msgstr ""
+
+#: views\objectDetail.py:82 views\shortcut_setting.py:76
+msgid "管理者として実行"
+msgstr ""
+
+#: views\objectDetail.py:82
+msgid "はい"
+msgstr ""
+
+#: views\objectDetail.py:82
+msgid "いいえ"
+msgstr ""
+
+#: views\objectDetail.py:90
+msgid "ショートカットを読み込めませんでした。"
+msgstr ""
+
+#: views\objectDetail.py:98
+msgid "ショートカットの設定"
 msgstr ""
 
 #: views\openHere.py:24 views\registerOriginalAssociation.py:27
@@ -2012,6 +2072,33 @@ msgstr ""
 
 #: views\settingsDialog.py:174
 msgid "起動時に開くフォルダを選択"
+msgstr ""
+
+#: views\shortcut_setting.py:17 views\shortcut_setting.py:25
+msgid "通常のウィンドウ"
+msgstr ""
+
+#: views\shortcut_setting.py:18
+msgid "最小化"
+msgstr ""
+
+#: views\shortcut_setting.py:19
+msgid "最大化"
+msgstr ""
+
+#: views\shortcut_setting.py:124
+msgid "リンク先を入力してください。"
+msgstr ""
+
+#: views\shortcut_setting.py:127
+#, python-format
+msgid ""
+"リンク先 '%s' が見つかりません。パスとファイル名が正しいかどうか確認してくだ"
+"さい。"
+msgstr ""
+
+#: views\shortcut_setting.py:133
+msgid "ショートカットの設定を保存できませんでした。"
 msgstr ""
 
 #: views\updateDialog.py:26
