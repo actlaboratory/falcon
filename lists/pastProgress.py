@@ -7,7 +7,7 @@
 import os
 import re
 import wx
-from browsableObjects import PastProgressItem, PastProgressHeader
+from browsableObjects import PastProgressFailedItem, PastProgressItem, PastProgressHeader
 
 import errorCodes
 import misc
@@ -52,7 +52,7 @@ class PastProgressList(FalconListBase):
             0)
         self.headers.append(head)
 
-    def Update(self, confirmationManager=None):
+    def Update(self, confirmationManager=None, failed=()):
         if confirmationManager is None:
             return
         self.results.clear()
@@ -67,6 +67,10 @@ class PastProgressList(FalconListBase):
             obj.setConfirmationManagerIndex(idx)
             self.results.append(obj)
         # end 追加
+        for elem in failed:
+            obj = PastProgressFailedItem()
+            obj.Initialize(os.path.basename(elem.elem), elem.elem, _("エラー"), elem.msg[1])
+            self.results.append(obj)
 
     def SetHeaderPercentage(self, percentage):
         """ヘッダーのパーセント表示を更新する。複数ヘッダーは想定してない。"""

@@ -10,6 +10,7 @@ import random
 import threading
 import win32api
 import win32event
+import winerror
 import wx
 from win32com.shell import shell, shellcon
 from simpleDialog import dialog
@@ -75,7 +76,6 @@ class FileOperator(object):
         ファイルオペレーションを実行。threaded=True にすると、バックグラウンドで実行される。
         この関数自体は、ファイルオペレーションが開始できたかどうかを帰すだけで、結果は通知しない。
         """
-        print("op exec")
         if not self.instructions:
             self.log.error("No instructions specified.")
             return False
@@ -159,6 +159,8 @@ class FileOperator(object):
         """権限昇格し、アクセス拒否になった項目を再実行する。"""
         if globalVars.app.is_frozen() is False:  # ビルド済みバイナリじゃないと昇格できないようにしてる
             dialog(_("エラー"), _("管理者権限の操作を行うためには、Falconをビルドして実行する必要があります。"))
+            if self.output["retry"]["operation"] == past.VERB:  # 貼り付けの状況のタブに表示するため
+                self.output["failed"].extend(FileOperator(self.output["retry"]).FailAll())
             return
         # end ビルドしてないとダメ
         o = FileOperator(self.output["retry"])
@@ -180,6 +182,8 @@ class FileOperator(object):
         self.output["succeeded"] += o.output["succeeded"]
         l = len(self.output["failed"])
         self.output["failed"][l:l] = o.output["failed"]
+        for elem in o.output["need_to_confirm"].Iterate():
+            self.output["need_to_confirm"].Append(elem)
         self.log.debug("after elevation: success %s, failure %s." %
                        (self.output["succeeded"], len(self.output["failed"])))
 
@@ -198,11 +202,13 @@ class FileOperator(object):
                 failedElement.FailedElement(
                     elem, "Access denied and elevation failed"))
         # end for
+        if self.instructions["operation"] == past.VERB:  # 貼り付けは (コピー元, コピー先) のタプルで持っている
+            for elem in self.instructions["target"]:
+                lst.append(failedElement.FailedElement(elem[0], (winerror.ERROR_ACCESS_DENIED, _("アクセスが拒否されました。"))))
         return lst
 
     def CheckFinished(self):
         """ファイルオペレーションが終了したかどうかを取得する。"""
-        print("started=%s working=%s" % (self.started, self.working))
         return self.started and not self.working
     # end CheckFinished
 

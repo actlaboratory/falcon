@@ -482,6 +482,10 @@ class PastProgressItem(FalconBrowsableBase):
         return "<past progress item>"
 
 
+class PastProgressFailedItem(PastProgressItem):
+    """貼り付けにおいて、エラーになったファイルを表す。確認に応答することはできない。"""
+
+
 class PastProgressHeader(PastProgressItem):
     def __init__(self):
         PastProgressItem.__init__(self)
@@ -502,6 +506,11 @@ class PastProgressHeader(PastProgressItem):
         if int(percentage) == 100:
             self.status = _("完了")
             self.details = _("ctrl+w で閉じます")
+
+    def set_status(self, status, details):
+        """ステータスと詳細の表示を変更する。"""
+        self.status = status
+        self.details = details
 
     def GetListTuple(self):
         """表示に必要なタプルを返す。"""

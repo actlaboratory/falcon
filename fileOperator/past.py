@@ -7,8 +7,8 @@ import os
 import re
 import time
 import win32file
+import winerror
 from . import confirmElement, failedElement, helper
-import misc
 from clipboard import COPY, MOVE
 
 VERB = "past"
@@ -36,6 +36,8 @@ def Execute(op, resume=False):
     """実行処理。リトライが必要になった項目数を返す。"""
     if resume:
         log.debug("Starting as resume mode...")
+    # 上書きを確認済みの項目が権限の昇格後に渡された場合も、確認済みとして扱う
+    resume = resume or op.instructions.get("overwrite", False)
     retry = 0
     try:
         f = op.instructions["target"]
@@ -46,26 +48,29 @@ def Execute(op, resume=False):
     copy_move_flag = op.instructions["copy_move_flag"]
     if not resume:  # resume modeではない=初期化
         op.output["all_OK"] = True
-        op.output["retry"]["target"] = []
         op.output["percentage"] = 0
         op.output["copy_move_flag"] = copy_move_flag
     # end 初期化
+    # 再開時に、前回リトライした項目をもう一度処理しないよう、毎回空にする
+    op.output["retry"]["target"] = []
     log.debug("Retrieving file list...")
     lst = []
     for elemt in f:
         elem = elemt[0]
         dest = elemt[1]
         basepath = os.path.dirname(elem)
-        if os.path.isfile(elem):
+        if not os.path.exists(elem):  # コピーした後に削除された場合など
+            _append_failed(op, Element(elem, basepath, dest), winerror.ERROR_FILE_NOT_FOUND, _("ファイルまたはフォルダが見つかりません。"))
+        elif os.path.isfile(elem):
             lst.append(Element(elem, basepath, dest))
         else:
             e = Element(elem, basepath, dest)
             if os.path.isdir(e.destpath) and not resume:
                 # フォルダがもうあれば、その時点で確認に入れる(中のフォルダを展開しない)
                 # コピー先にディレクトリがあった時点で、「ディレクトリを上書きしますか？」の確認を出したいので。
-                _processExistingFolder(op.output, elem, basepath, destpath)
+                _processExistingFolder(op.output, elem, basepath, dest)
             else:  # まだないか、ユーザーに確認済みなので追加
-                _expandFolder(lst, elem, e, basepath, dest, copy_move_flag)
+                _expandFolder(op, lst, elem, e, basepath, dest, copy_move_flag)
             # end フォルダを展開するかしないか
         # end フォルダだった
     # end ファイルリスト作るループ
@@ -84,7 +89,10 @@ def Execute(op, resume=False):
     log.debug("Start copying...")
     overwrite = resume
     pasted_size = 0
+    failed_folders = []  # 作成できなかったフォルダ。この中の項目は処理しない
     for elem in f:
+        if any(elem.path == folder or elem.path.startswith(folder + os.sep) for folder in failed_folders):
+            continue
         if elem.destpath is None:  # フォルダ削除用
             # 移動するとき、 destpath が空のエントリーは、フォルダを消すという命令代わりに使っている。
             log.debug("deleting folder %s" % elem.path)
@@ -97,6 +105,12 @@ def Execute(op, resume=False):
             # end except
             continue  # エラーにならないように逃げる
         # end フォルダ消す
+        # 同じ名前のファイルとフォルダは、上書きも昇格もできない
+        if os.path.exists(elem.destpath) and os.path.isfile(elem.destpath) != elem.isfile:
+            if not elem.isfile:
+                failed_folders.append(elem.path)
+            _append_failed(op, elem, winerror.ERROR_ALREADY_EXISTS, _("同じ名前のファイルまたはフォルダがすでに存在します。"))
+            continue
         try:
             if elem.isfile:
                 copyOrMove(elem, copy_move_flag, overwrite)
@@ -106,7 +120,9 @@ def Execute(op, resume=False):
                 win32file.CreateDirectory(elem.destpath, None)
         except win32file.error as err:
             log.error("Cannot create %s (%s)" % (elem.destpath, str(err)))
-            ProcessError(op, elem, str(err), resume)
+            if not elem.isfile:
+                failed_folders.append(elem.path)
+            ProcessError(op, elem, err, resume)
             continue
         # end except
         op.output["succeeded"] += 1
@@ -120,6 +136,8 @@ def Execute(op, resume=False):
     # end 削除処理
     if len(op.output["retry"]["target"]) > 0:
         op.output["retry"]["operation"] = VERB
+        op.output["retry"]["copy_move_flag"] = copy_move_flag
+        op.output["retry"]["overwrite"] = overwrite
         retry = len(op.output["retry"]["target"])
     # end リトライあるか
     # 終わった者はもう使わないので、ファイルリストは消してしまう
@@ -138,26 +156,29 @@ def copyOrMove(elem, copy_move_flag, overwrite):
         win32file.MoveFileEx(elem.path, elem.destpath, f)
 
 
-def ProcessError(op, elem, msg, resume):
-    """アクセス拒否であれば、リトライするリストに追加する。昇格しても失敗するエラーであれば、 need_to_confirm に追加する。"""
-    number = helper.GetErrorNumber(msg)
-    if helper.IsAccessDenied(number):  # アクセス拒否なので、リトライするリストに追加する
-        op.output["retry"]["target"].append(elem)
+def ProcessError(op, elem, err, resume):
+    """アクセス拒否であれば、リトライするリストに追加する。コピー先がすでに存在する場合は need_to_confirm に追加する。それ以外は失敗とする。"""
+    number = err.winerror
+    if helper.IsAccessDenied(number) and not op.elevated:  # アクセス拒否なので、リトライするリストに追加する
+        op.output["retry"]["target"].append((elem.path, elem.destpath))
         return
     # end リトライ
     # コピー/移動先ファイルがすでに存在する
-    if number == 80 or number == 183:
-        op.output["need_to_confirm"].Append(
-            confirmElement.ConfirmElement(
-                elem, number, msg))
-        op._doCallback("confirm", elem)
+    if not resume and number in (winerror.ERROR_FILE_EXISTS, winerror.ERROR_ALREADY_EXISTS):
+        # コピーでは80、移動では183になるが、「以降も同様に処理する」でまとめて応答できるよう番号をそろえる
+        confirmation = confirmElement.ConfirmElement(elem, winerror.ERROR_FILE_EXISTS, _("このファイルはすでに存在します。"))
+        op.output["need_to_confirm"].Append(confirmation)
+        op._doCallback("confirm", confirmation)
         return
     # end 要確認
-    output["all_OK"] = False
-    output["failed"].append(
-        failedElement.FailedElement(
-            elem.destpath, (number, msg)))
+    _append_failed(op, elem, number, err.strerror)
 # end ProcessError
+
+
+def _append_failed(op, elem, number, msg):
+    """項目を、失敗したリストに追加する。"""
+    op.output["all_OK"] = False
+    op.output["failed"].append(failedElement.FailedElement(elem.path, (number, msg)))
 
 
 def _processExistingFolder(output, elem, basepath, destpath):
@@ -166,17 +187,23 @@ def _processExistingFolder(output, elem, basepath, destpath):
         Element(elem, basepath, destpath), 80, _("このフォルダはすでに存在します。")))
 
 
-def _expandFolder(lst, path, e, basepath, destpath, copy_move_flag):
+def _expandFolder(op, lst, path, e, basepath, destpath, copy_move_flag):
     """フォルダを展開して、指定されたリストに入れる。"""
     lst.append(e)  # イテレーションの最初に親フォルダ追加
     # 再帰的にディレクトリを掘っていく。切り取りモードの時にフォルダ削除マークを入れたいので、iteratePaths計で一気に取得することはできない。
-    for elem in os.listdir(path):
+    try:
+        names = os.listdir(path)
+    except OSError as err:
+        log.error("Cannot list %s (%s)" % (path, str(err)))
+        _append_failed(op, e, err.winerror, err.strerror)
+        return
+    for elem in names:
         p = os.path.join(path, elem)
         innerDestpath = os.path.join(destpath, os.path.basename(p))
         innerElem = Element(p, basepath, innerDestpath)
         if os.path.isdir(p):
             # フォルダなので、再帰的に中身を転回
-            _expandFolder(lst, p, innerElem, basepath,
+            _expandFolder(op, lst, p, innerElem, basepath,
                           innerDestpath, copy_move_flag)
             _handleFolderDeleteRecord(lst, innerElem, basepath, copy_move_flag)
         else:

@@ -85,7 +85,6 @@ tabTypeBlockList = {
         "EDIT_PAST_SHORTCUT",
         "EDIT_SEARCH",
         "EDIT_UPDATEFILELIST",
-        "MOVE_FORWARD",
         "MOVE_FORWARD_ADMIN",
         "MOVE_EXEC_ORIGINAL_ASSOCIATION",
         "MOVE_FORWARD_TAB",

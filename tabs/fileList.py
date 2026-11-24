@@ -8,9 +8,7 @@
 ファイルリストやドライブ一覧リストなどです。一通りのファイル操作を行うことができます。
 """
 
-import datetime
 import os
-import time
 import wx
 
 import browsableObjects
@@ -359,13 +357,22 @@ class FileListTab(base.FalconTabBase):
         # クリップボードから情報取得し
         c = clipboard.ClipboardFile()
         # コピー元、コピー先をそれぞれ設定
-        target = list(map(lambda x: (x, x.replace(os.path.dirname(x), dest)), c.GetFileList()))
-        if not target:
+        try:
+            paths = c.GetFileList()
+        except Exception:
+            self.log.exception("cannot get file list from clipboard")
+            paths = []
+        if not paths:
             dialog(_("エラー"), _("貼り付けるものがありません。"))
             return
         # end 貼り付ける物がない
-        op = c.GetOperation()
-        self.PastOperation(target, self.listObject.rootDirectory, op)
+        try:
+            # エクスプローラーのコピーは「コピーまたはリンク」(5)になるので、移動だけが指定されているとき以外はコピーにする
+            op = clipboard.MOVE if c.GetOperation() == clipboard.MOVE else clipboard.COPY
+        except Exception:
+            # Preferred DropEffect を付けないアプリからのコピーはコピー扱いにする
+            op = clipboard.COPY
+        self.PastOperation(paths, dest, op)
 
     def PasteShortcut(self):
         """クリップボードの項目のショートカットを今のディレクトリに作る（エクスプローラーの「ショートカットの貼り付け」）。"""
@@ -403,21 +410,23 @@ class FileListTab(base.FalconTabBase):
     def PastOperation(self, target, dest, op=clipboard.COPY):
         op_str = _("複写") if op == clipboard.COPY else _("移動")
 
-        # 重複を排除
-        # target=set(target)
+        # コピー元、コピー先をそれぞれ設定。ドラッグアンドドロップの場合も、パスのリストで渡される
+        target = [(path, os.path.join(dest, os.path.basename(path))) for path in target]
 
         # 自身のサブフォルダへの貼り付けはできない
         errors = []
         for it in target:
             i = it[0]
-            if i in dest or os.path.dirname(i) == dest:
+            source = os.path.normcase(i)
+            destination = os.path.normcase(dest)
+            if destination == source or destination.startswith(os.path.join(source, "")) or os.path.dirname(source) == destination:
                 errors.append(i)
             # end サブディレクトリ、あるいは、同じディレクトリへのコピー/貼り付け
         # end 事前チェック
         if errors:
             all = ""
             for i in errors:
-                target.remove((i, i))
+                target.remove((i, os.path.join(dest, os.path.basename(i))))
                 if all == "SKIP":
                     continue
                 # end 「以降も同様に処理」で全てスキップ
@@ -462,11 +471,13 @@ class FileListTab(base.FalconTabBase):
                 'file': target[0][0], 'dest': target[0][1], 'op': op_str}
         else:
             msg = _("%(num)d 項目を、 %(dest)s に%(op)sしますか？") % {'num': len(
-                target), 'dest': self.listObject.rootDirectory, 'op': op_str}
+                target), 'dest': dest, 'op': op_str}
         # end メッセージどっちにするか
         dlg = wx.MessageDialog(None, msg, _("%(op)sの確認") %
                                {'op': op_str}, wx.YES_NO | wx.ICON_QUESTION)
-        if dlg.ShowModal() == wx.ID_NO:
+        answer = dlg.ShowModal()
+        dlg.Destroy()
+        if answer == wx.ID_NO:
             return
 
         # fileOperatorに処理依頼
@@ -476,55 +487,15 @@ class FileListTab(base.FalconTabBase):
             "to": dest,
             "copy_move_flag": op}
         op = fileOperator.FileOperator(inst)
-        ret = op.Execute()
+        op.Execute()
+        directories = {os.path.dirname(source) for source, dummy in target}
+        directories.add(dest)
+        globalVars.app.main_window.update_file_lists(directories)
 
         # 今はテストで、常にダイアログを表示して処理刷る
         nav = {"action": "past", "operator": op}
         globalVars.app.main_window.navigate(nav, as_new_tab=True)
         return  # このあとのことは新しいタブに任せる
-
-        # ここから先は今はリーチしない
-        # 0.5秒待つ
-        time.sleep(0.5)
-
-        # 状況確認
-        # TODO:タブに分ける処理
-        self.log.debug("Start checking confirmation")
-        confs = op.GetConfirmationManager()
-        while(True):
-            confs_list = list(confs.IterateNotResponded())
-            self.log.debug("%d confirmations." % len(confs_list))
-            if len(confs_list) == 0:
-                break
-            elem = confs_list[0]
-            e = elem.GetElement()
-            from_path = e.path
-            dest_path = e.destpath
-            from_stat = os.stat(from_path)
-            dest_stat = os.stat(dest_path)
-            info = [
-                (_("名前"), "test.txt", "", ""), (_("サイズ"), misc.ConvertBytesTo(
-                    dest_stat.st_size, misc.UNIT_AUTO, True), "→", misc.ConvertBytesTo(
-                    from_stat.st_size, misc.UNIT_AUTO, True)), (_("更新日時"), datetime.datetime.fromtimestamp(
-                        dest_stat.st_mtime), "→", datetime.datetime.fromtimestamp(
-                        from_stat.st_mtime))]
-            val = globalVars.app.main_window.showSubWindow(
-                views.OperationSelecter.OperationSelecterWindow, _("ファイル操作確認"),
-                views.OperationSelecter.OperationSelecterParameters(_("上書きしますか？"), info, views.OperationSelecter.GetMethod("ALREADY_EXISTS"), False)).user_object
-            if val['all'] is True:  # 「以降も同様に処理」がオン
-                confs.RespondAll(elem, val['response'])
-            else:  # この1件だけ
-                elem.SetResponse(val)  # 渓谷に対して、文字列でレスポンスする
-            # end これ以降全てかこれだけか
-        # end while
-        self.log.debug("End checking confirmation.")
-        op.UpdateConfirmation()  # これで繁栄する
-        op.Execute()  # これでコピーを再実行
-
-        if op.CheckSucceeded() == 0 and ret == 0:
-            dialog(_("エラー"), _("%(op)sに失敗しました。" % {'op': op_str}))
-        # end failure
-        self.UpdateFilelist(silence=True)
     # end past
 
     def getNewNameForPast(self, existingDirname, existingName):

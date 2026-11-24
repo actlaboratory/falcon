@@ -433,6 +433,14 @@ class MainWindow(viewkit.MainWindow):
         self.active_tab.OnBeforeChangeTab()
         self.activate_tab(event.GetSelection())
 
+    def update_file_lists(self, directories):
+        """指定されたディレクトリを表示しているファイル一覧のタブを、最新の状態に更新する。"""
+        directories = {os.path.normcase(directory) for directory in directories}
+        for tab in self.tabs:
+            # 検索結果のタブは FileListTab の派生だが、再検索になるため更新しない
+            if type(tab) is tabs.fileList.FileListTab and os.path.normcase(tab.listObject.rootDirectory) in directories:
+                tab.UpdateFilelist(silence=True)
+
     def update_tab_name(self):
         """タブ名変更の可能性があるときにtabsからたたかれる"""
         index = self.get_tab_index(self.active_tab)
