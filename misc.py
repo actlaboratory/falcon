@@ -7,9 +7,11 @@
 import ctypes
 import json
 import socket
+import pythoncom
 import pywintypes
 import os
 import re
+import threading
 import time
 import hashlib
 import winreg
@@ -138,7 +140,13 @@ def attrib2dward(readonly=False, hidden=False, system=False, archive=False):
 
 
 def getDiscDriveTypes():
+    """
+        光学ドライブの種類を調べ、{ドライブレター: (取り出し可否, 種類名)} の辞書で返す。
+        ドライブに問い合わせるため時間がかかることがある（しばらく使っていないと1秒以上）。メインスレッドからは呼ばず、load_disc_drive_types() を別スレッドで使う。
+    """
     ptr = falconHelper.getDiscDriveTypes()
+    if not ptr:
+        return {}  # 情報を取得できなかった
     s = ctypes.c_char_p(ptr).value
     falconHelper.releasePtr(ptr)
     s2 = s.decode('utf-8').split("\n")
@@ -151,6 +159,31 @@ def getDiscDriveTypes():
     # end for
     return ret
 # end getDiscDriveTypes
+
+
+# 光学ドライブの種類のキャッシュ。{ドライブレター: 種類名}。ドライブの種類は機器の性能なので、一度調べたら使い回す
+_disc_drive_types = {}
+_disc_drive_types_lock = threading.Lock()
+
+
+def get_cached_disc_drive_type(letter):
+    """調べ済みの光学ドライブの種類名（"BD-RW" など）を返す。まだ調べていなければ None を返す。"""
+    return _disc_drive_types.get(letter)
+
+
+def load_disc_drive_types():
+    """(別スレッド)光学ドライブの種類を調べてキャッシュに入れる。"""
+    with _disc_drive_types_lock:
+        pythoncom.CoInitialize()
+        try:
+            types = getDiscDriveTypes()
+        except Exception:
+            log.exception("failed to get disc drive types")
+            return
+        finally:
+            pythoncom.CoUninitialize()
+        for letter, (dummy, type_name) in types.items():
+            _disc_drive_types[letter] = type_name
 
 
 def makeStringForFalconHelper(string):

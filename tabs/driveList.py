@@ -66,13 +66,37 @@ class DriveListTab(base.FalconTabBase):
         self._start_loading_drive_info()
 
     def _start_loading_drive_info(self):
-        """容量を取得していないネットワークドライブについて、ドライブごとに専用のスレッドで容量を取得する。"""
+        """
+            容量を取得していないネットワークドライブについて、ドライブごとに専用のスレッドで容量を取得する。
+            種類を調べていない光学ドライブがあれば、それも専用のスレッドで調べる。
+        """
         self._drive_info_generation += 1
         for drive in self.listObject.GetPendingDrives():
             threading.Thread(
                 target=self._load_drive_info,
                 args=(drive, self._drive_info_generation),
                 daemon=True).start()
+        disc_drives = self.listObject.get_pending_disc_drives()
+        if disc_drives:
+            threading.Thread(
+                target=self._load_disc_drive_types,
+                args=(disc_drives, self._drive_info_generation),
+                daemon=True).start()
+
+    def _load_disc_drive_types(self, drives, generation):
+        """(別スレッド)光学ドライブの種類を調べ、メインスレッドに結果を渡す。"""
+        misc.load_disc_drive_types()
+        wx.CallAfter(self._on_disc_drive_types_loaded, drives, generation)
+
+    def _on_disc_drive_types_loaded(self, drives, generation):
+        """調べた光学ドライブの種類を一覧に反映する。"""
+        if self._closed or generation != self._drive_info_generation:
+            return  # タブが閉じられたか、一覧が作り直された
+        for drive in drives:
+            drive.UpdateTypeString()
+            index = self.listObject.GetItemIndex(drive)
+            if index >= 0:
+                self.hListCtrl.RefreshItem(index)
 
     def _load_drive_info(self, drive, generation):
         """(別スレッド)ドライブの容量を取得し、メインスレッドに結果を渡す。"""
