@@ -14,6 +14,7 @@ tabTypeBlockList = {
         "FILE_CHANGEATTRIBUTE",
         "FILE_TRASH",
         "FILE_DELETE",
+        "FILE_NEW",
         "FILE_MKDIR",
         "FILE_MKFILE",
         "FILE_MKSHORTCUT",
@@ -42,6 +43,7 @@ tabTypeBlockList = {
         "FILE_CHANGEATTRIBUTE",
         "FILE_TRASH",
         "FILE_DELETE",
+        "FILE_NEW",
         "FILE_MKDIR",
         "FILE_MKFILE",
         "FILE_MKSHORTCUT",
@@ -69,6 +71,7 @@ tabTypeBlockList = {
         "FILE_MAKESHORTCUT",
         "FILE_TRASH",
         "FILE_DELETE",
+        "FILE_NEW",
         "FILE_MKDIR",
         "FILE_MKFILE",
         "FILE_MKSHORTCUT",
@@ -109,6 +112,7 @@ tabTypeBlockList = {
     tabs.streamList.StreamListTab: [
         "FILE_BULK_RENAME",
         "FILE_CHANGEATTRIBUTE",
+        "FILE_NEW",
         "FILE_MKDIR",
         "FILE_MKFILE",
         "FILE_MKSHORTCUT",
@@ -135,6 +139,7 @@ tabTypeBlockList = {
 for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
     tabTypeBlockList[t] += [
         "FILE_BULK_RENAME",  # 名前を変えると検索結果と合わなくなるため
+        "FILE_NEW",
         "FILE_MKDIR",
         "FILE_MKFILE",
         "FILE_MKSHORTCUT",

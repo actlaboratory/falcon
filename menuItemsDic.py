@@ -7,6 +7,7 @@ dic = {
     "FILE_DELETE": _("完全削除"),
     "FILE_VIEW_DETAIL": _("詳細情報を表示"),
     "FILE_SHOWPROPERTIES": _("プロパティを表示"),
+    "FILE_NEW": _("新規作成"),
     "FILE_MKDIR": _("新規ディレクトリ作成"),
     "FILE_MKFILE": _("新規ファイル作成"),
     "FILE_MKSHORTCUT": _("新規ショートカット作成"),
