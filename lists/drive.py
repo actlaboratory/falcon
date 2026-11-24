@@ -107,6 +107,10 @@ class DriveList(FalconListBase):
         """容量をまだ取得していないネットワークドライブの一覧を返す。"""
         return [d for d in self.drives if d.info_pending]
 
+    def get_pending_disc_drives(self):
+        """種類をまだ調べていない光学ドライブの一覧を返す。ディスクが入っていないドライブも含む。"""
+        return [d for d in self.drives + self.unusableDrives if d.disc_type_pending]
+
 
 def _is_listed_as_usable(drive):
     """ドライブを、使用可能なドライブとして一覧の前側に並べるかどうか。ネットワークドライブは接続できるか分からないので前側に並べる。"""

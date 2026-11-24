@@ -320,6 +320,8 @@ class Drive(FalconBrowsableBase):
         self.free = free
         self.total = total
         self.type = type
+        # 光学ドライブの種類をまだ調べていない間は True（調べるのはドライブ一覧タブがバックグラウンドで行う）
+        self.disc_type_pending = False
         self.UpdateTypeString()
         self.basename = name
         self.fullpath = letter + ":\\"
@@ -332,8 +334,13 @@ class Drive(FalconBrowsableBase):
     def UpdateTypeString(self):
         """タイプの数値を文字列に変換し、self.typeString にセットする。"""
         if self.type == win32file.DRIVE_CDROM:
-            discDrives = misc.getDiscDriveTypes()
-            self.typeString = discDrives[self.letter][1] + _(" ドライブ")
+            # ドライブへの問い合わせには時間がかかることがあるため、ここでは調べ済みの結果だけを使う
+            disc_type = misc.get_cached_disc_drive_type(self.letter)
+            self.disc_type_pending = disc_type is None
+            if disc_type is None:
+                self.typeString = _("光学ドライブ")
+            else:
+                self.typeString = disc_type + _(" ドライブ")
         elif self.type == win32file.DRIVE_FIXED:
             self.typeString = _("ローカル ディスク")
         elif self.type == win32file.DRIVE_NO_ROOT_DIR:
