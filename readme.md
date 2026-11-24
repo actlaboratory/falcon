@@ -43,3 +43,11 @@ locale フォルダを勝手に探して、poファイルを配置してくれ�
 ## 翻訳したら  
 python tools\buildTranslation.py
 新規言語の場合は、constants.SUPPORTING_LANGUAGEに言語コードを追加
+
+## ライセンス
+falcon は Apache License 2.0 で提供されます(LICENSE)。  
+同梱している他者の成果物のライセンスは、 public/license.txt と public/license フォルダにあります。  
+
+## 同梱の7-Zip
+7zやRARなどの圧縮・解凍には、 bin フォルダの7-Zip(7z.exe / 7z.dll、公式の32bit版を変更せずに同梱)を使います。  
+新しいバージョンに更新するときは、7z.exe と 7z.dll を差し替え、 public/license/individual/7-zip.txt のバージョンとソースコードのURL、 7-zip_License.txt、 public/license.txt も合わせて更新してください。  

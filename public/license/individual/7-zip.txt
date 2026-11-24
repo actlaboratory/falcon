@@ -1,0 +1,15 @@
+7-Zip 26.06 (32-bit x86)
+
+7-Zip Copyright (C) 1999-2026 Igor Pavlov.
+
+本ソフトウェアに同梱されている 7-Zip（bin/7z.exe、bin/7z.dll）は、公式に配布されているものを変更せずに使用しています。
+本ソフトウェアは、7z.exe を別のプログラムとして起動して使用します。
+
+7-Zip は、GNU Lesser General Public License version 2.1 or later（LGPL v2.1+）の条件に従って提供されています。
+7z.dll の一部のコードには、unRAR license restriction、BSD 3-clause License、BSD 2-clause License も適用されます。
+unRAR のコードは、RAR（WinRAR）互換の圧縮ソフトの開発に使うことはできません。
+
+7-Zip のライセンスの原文は individual/7-zip_License.txt を、LGPL の全文は common/LGPL-2.1.txt を参照してください。
+
+公式サイト: https://www.7-zip.org/
+対応するソースコード: https://github.com/ip7z/7zip/releases/tag/26.06 （7z2606-src.tar.xz）

@@ -41,6 +41,7 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 | `views/menuBlocker.py` | タブの種類・選択項目に応じて無効にするメニューの定義 |
 | `keymap.py` / `defaultKeymap.py` | ショートカットキーの検証（`KeyFilter`）と登録（`Keymap`）。キー名とキーコードの対応は viewkit の表を使う。タブの種類によって同じキーを別機能に割り当てられる（例: Delete がファイル一覧ではゴミ箱、ドライブ一覧では取り外し。`permit_conflict` で判定） |
 | `menuItemsDic.py` / `menuItemsStore.py` | メニュー項目の表示名と ID。`menuItemsStore` は viewkit の RefStore としても使われる |
+| `archiver.py` / `bin/` | 圧縮と解凍。ZIP・TAR系以外は同梱の7-Zip（`bin/7z.exe`）だけを使う（インストール版は使わない） |
 | `tabs/`, `lists/`, `browsableObjects.py` | タブ（ファイル一覧・ドライブ一覧・検索結果など）とその中身 |
 
 ### 設定の読み書き

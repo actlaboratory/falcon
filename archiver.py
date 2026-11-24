@@ -6,7 +6,8 @@
 ファイルの圧縮と解凍の処理。画面には依存しない。
 
 - ZIP と TAR 系（tar / tar.gz / tar.bz2 / tar.xz）、単独の gz / bz2 / xz は falcon だけで扱う
-- 7z の圧縮、パスワード付きの圧縮、7z / RAR / LZH などの解凍は、インストールされている 7-Zip（7z.exe）を使う
+- 7z の圧縮、パスワード付きの圧縮、7z / RAR / LZH などの解凍は、同梱の 7-Zip（bin/7z.exe）を使う。
+  利用者がインストールした 7-Zip は、版の違いによる不具合を見つけにくくなるので使わない
 - 圧縮は保存先の一時フォルダに、解凍は展開先の一時フォルダに行い、最後に本来の名前へ移す。
   途中で失敗・中止しても、作りかけのファイルは残さない
 """
@@ -20,11 +21,11 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tarfile
 import tempfile
 import threading
 import time
-import winreg
 import zipfile
 import zlib
 
@@ -38,6 +39,10 @@ CONFLICT_OVERWRITE = "overwrite"
 _CHUNK_SIZE = 256 * 1024
 _TEMP_PREFIX = "~falcon"
 _MAX_MESSAGE_LINES = 10
+
+# 同梱の 7-Zip。exe では falcon.exe、開発時はこのファイルと同じ場所の bin フォルダにある
+_APP_DIRECTORY = os.path.dirname(os.path.abspath(sys.executable if hasattr(sys, "frozen") else __file__))
+SEVEN_ZIP_PATH = os.path.join(_APP_DIRECTORY, "bin", "7z.exe")
 
 _TAR_MODES = {".tar": "w", ".tar.gz": "w:gz", ".tar.bz2": "w:bz2", ".tar.xz": "w:xz"}
 _TAR_EXTENSIONS = (".tar.gz", ".tar.bz2", ".tar.xz", ".tgz", ".tbz2", ".tbz", ".txz", ".tar")
@@ -170,17 +175,15 @@ class Job:
 # ---- 形式の判定 ----
 
 def get_compress_formats():
-    """圧縮に使える形式の一覧を返す。7-Zip がなければ、7-Zip が必要なものは含まない。"""
-    has_seven_zip = find_seven_zip() is not None
-    formats = [
-        CompressFormat(".zip", "ZIP", supports_password=has_seven_zip),
+    """圧縮に使える形式の一覧を返す"""
+    return [
+        CompressFormat(".zip", "ZIP", supports_password=True),
         CompressFormat(".7z", "7z", needs_seven_zip=True, supports_password=True),
         CompressFormat(".tar.gz", "TAR.GZ"),
         CompressFormat(".tar.bz2", "TAR.BZ2"),
         CompressFormat(".tar.xz", "TAR.XZ"),
         CompressFormat(".tar", "TAR"),
     ]
-    return [f for f in formats if has_seven_zip or not f.needs_seven_zip]
 
 
 def get_extension(path: str):
@@ -201,32 +204,9 @@ def get_stem(path: str):
 
 def check_extractable(path: str):
     """解凍できる形式か調べ、できなければ理由、できれば空文字列を返す"""
-    extension = get_extension(path)
-    if extension == "":
+    if get_extension(path) == "":
         return _("%(name)s は、対応していない形式です。") % {"name": os.path.basename(path)}
-    if extension in _SEVEN_ZIP_EXTENSIONS and find_seven_zip() is None:
-        return _("%(name)s を解凍するには、7-Zip をインストールしてください。") % {"name": os.path.basename(path)}
     return ""
-
-
-def find_seven_zip():
-    """インストールされている 7z.exe のパスを返す。なければ None。"""
-    directories = []
-    for root in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
-        for view in (winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY):
-            try:
-                with winreg.OpenKey(root, r"Software\7-Zip", 0, winreg.KEY_READ | view) as key:
-                    directories.append(winreg.QueryValueEx(key, "Path")[0])
-            except OSError:
-                pass
-    for name in ("ProgramW6432", "ProgramFiles", "ProgramFiles(x86)"):
-        if os.environ.get(name):
-            directories.append(os.path.join(os.environ[name], "7-Zip"))
-    for directory in directories:
-        path = os.path.join(directory, "7z.exe")
-        if os.path.isfile(path):
-            return path
-    return None
 
 
 # ---- 圧縮 ----
@@ -420,26 +400,18 @@ def _extract_zip(job, path, staging, password):
         archive, code_page = _open_zip(path)
     except (zipfile.BadZipFile, NotImplementedError):
         # 分割された ZIP や、一部が壊れた ZIP は 7-Zip なら扱えることがある
-        if find_seven_zip() is None:
-            raise
         _extract_with_seven_zip(job, path, staging, password)
         return
     with archive:
         infos = archive.infolist()
-        encrypted = any(i.flag_bits & 1 for i in infos)
-        supported = all(i.compress_type in _ZIP_METHODS for i in infos)
-        if (not encrypted and supported) or find_seven_zip() is None:
-            if not supported:
-                raise ArchiveError(_("この ZIP を解凍するには、7-Zip をインストールしてください。"))
-            if encrypted and not password:
-                raise PasswordError(_("パスワードが必要です。"))
-            _extract_zip_entries(job, archive, infos, staging, password)
+        if not any(i.flag_bits & 1 or i.compress_type not in _ZIP_METHODS for i in infos):
+            _extract_zip_entries(job, archive, infos, staging)
             return
-    # 暗号化の復号は Python では遅く、AES などには対応していないので、あれば 7-Zip を使う
+    # 暗号化の復号は Python では遅く、AES などには対応していないので、7-Zip を使う
     _extract_with_seven_zip(job, path, staging, password, ["-mcp=%d" % code_page])
 
 
-def _extract_zip_entries(job, archive, infos, staging, password):
+def _extract_zip_entries(job, archive, infos, staging):
     counter = _Counter(job, sum(i.file_size for i in infos))
     for info in infos:
         job.check_canceled()
@@ -447,14 +419,8 @@ def _extract_zip_entries(job, archive, infos, staging, password):
             os.makedirs(_get_output_path(staging, info.filename), exist_ok=True)
             continue
         output = _prepare_output(staging, info.filename)
-        encrypted = info.flag_bits & 1
-        try:
-            with archive.open(info, pwd=password.encode("utf-8") if encrypted else None) as source:
-                _copy_stream(job, source, output, counter.add)
-        except (RuntimeError, zipfile.BadZipFile, zlib.error):
-            if encrypted:
-                raise PasswordError(_("パスワードが違うか、ファイルが壊れています。"))
-            raise
+        with archive.open(info) as source:
+            _copy_stream(job, source, output, counter.add)
         try:
             _set_time(output, time.mktime(info.date_time + (0, 0, -1)))
         except (ValueError, OverflowError):  # 日時が正しくない
@@ -508,10 +474,9 @@ def _extract_with_seven_zip(job, path, staging, password, options=()):
 
 def _run_seven_zip(job, arguments, cwd):
     """7z.exe を実行し、終了コードとエラーメッセージを返す。引数にパスワードが含まれるので、ログには残さない。"""
-    program = find_seven_zip()
-    if program is None:
-        raise ArchiveError(_("7-Zip が見つかりません。"))
-    command = [program, arguments[0], "-bsp1", "-bso0", "-bse2", "-sccUTF-8"] + arguments[1:]
+    if not os.path.isfile(SEVEN_ZIP_PATH):
+        raise ArchiveError(_("圧縮・解凍に必要なファイルが見つかりません。\n%(path)s") % {"path": SEVEN_ZIP_PATH})
+    command = [SEVEN_ZIP_PATH, arguments[0], "-bsp1", "-bso0", "-bse2", "-sccUTF-8"] + arguments[1:]
     with tempfile.TemporaryFile() as errors:
         process = subprocess.Popen(
             command, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=errors,
