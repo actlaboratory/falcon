@@ -9,15 +9,17 @@
 定期的に taskState.canceled プロパティをチェックして、 True になっていれば、処理を中断しなければなりません。その際には、 False を返します。処理を最後まで実行したら、 True を返す必要があります。
 """
 
+import logging
 import pathlib
 import wx
 import pywintypes
-import win32wnet
-from win32com.shell import shell, shellcon
 import globalVars
 import misc
+import network_resource
 import time
 import browsableObjects
+
+log = logging.getLogger("falcon.workerThreadTasks")
 
 
 def DirCalc(taskState, param):
@@ -93,52 +95,37 @@ def DebugBeep(taskState, param):
     return True
 
 
-def GetNetworkResources(taskState=None, param=None):
-    # 同期処理でも呼び出し可能。パラメータ無しで呼ぶ。
-    sync_resources = []
+def GetNetworkResources(taskState, param):
+    """
+        ネットワーク上のコンピューターを探し、見つかるたびに onAppend で通知する。
+        終わったら onFinish に見つかった数(取得できなかった場合は-1)を渡す。
+    """
+    while not param["isReady"]():
+        if taskState.canceled:  # タブが閉じられた
+            return False
+        time.sleep(0.3)
+    resources = []
+
+    def on_found(name, path, hIcon):
+        resource = browsableObjects.NetworkResource()
+        resource.Initialize(name, path, "", hIcon)
+        resources.append(resource)
+        wx.CallAfter(param["onAppend"], resource, taskState)
+
     try:
-        h = win32wnet.WNetOpenEnum(5, 1, 0, None)
-        # 5=RESOURCE_CONTEXT
-        # 1=RESOURCETYPE_DISK
-        lst = win32wnet.WNetEnumResource(h, 64)  # 65以上の指定不可
-        win32wnet.WNetCloseEnum(h)
-    except pywintypes.error:
-        # 以前は未定義の win32net.error を参照しており、取得に失敗すると NameError になっていた
-        if taskState:
-            if not taskState.canceled:
-                wx.CallAfter(param["onFinish"], -1)  # コールバックに通知(ダイアログを出すのでメインスレッドで)
-            return True
-        else:  # 同期処理
-            raise
-        # end 同期処理
-    # end 情報取得失敗
-    if taskState and taskState.canceled:
-        return False
-    lst.pop(0)  # 先頭はドライブではない者が入るので省く
-    for l in lst:
-        ret, shfileinfo = shell.SHGetFileInfo(
-            l.lpRemoteName, 0, shellcon.SHGFI_ICON)
-        if taskState and taskState.canceled:
+        completed = network_resource.enumerate_computers(on_found, lambda: taskState.canceled)
+    except pywintypes.com_error as err:
+        log.warning("Cannot enumerate network computers: %s" % err)
+        if taskState.canceled:
             return False
-        addr = misc.ResolveLocalIpAddress(l.lpRemoteName[2:])
-        s = browsableObjects.NetworkResource()
-        s.Initialize(l.lpRemoteName[2:], l.lpRemoteName, addr, shfileinfo[0])
-        if taskState and taskState.canceled:
-            return False
-        sync_resources.append(s)
-        # end 同期処理
-    # end 追加ループ
-    if taskState and taskState.canceled:
-        return False
-    if taskState:
-        if taskState:
-            while(not param["isReady"]()):
-                if taskState.canceled:  # タブが閉じられた
-                    return False
-                time.sleep(0.3)
-            for s in sync_resources:
-                wx.CallAfter(param["onAppend"], s)
-        wx.CallAfter(param["onFinish"], len(lst))
+        wx.CallAfter(param["onFinish"], -1)
         return True
-    else:
-        return sync_resources
+    if not completed:
+        return False
+    wx.CallAfter(param["onFinish"], len(resources))
+    # 名前の解決には時間がかかることがあるため、一覧に出した後で行う
+    for resource in resources:
+        if taskState.canceled:
+            return False
+        resource.address = misc.ResolveLocalIpAddress(resource.fullpath[2:])
+    return True

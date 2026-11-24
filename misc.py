@@ -20,10 +20,11 @@ import win32con
 import win32file
 import win32gui
 
+import browsableObjects
 import constants
 import globalVars
 import lists
-import workerThreadTasks
+import network_resource
 
 from logging import getLogger
 from simpleDialog import dialog
@@ -426,16 +427,10 @@ def ResolveLocalIpAddress(name):
 
 
 def GetNetworkResource(target):
-    # targetに指定した名前のネットワークリソースを取得(例：\\network。存在しない場合や何らかのエラー発生時はNoneを返す。)
-    try:
-        resources = workerThreadTasks.GetNetworkResources()
-        for resource in resources:
-            if resource.fullpath == target:
-                return resource
-        log.info("network resource \"" + target + "\" not found.")
-        return None
-    except Exception as e:
-        return None
+    r"""\\server の形式のパスから、そのコンピューターを表すNetworkResourceを作る。存在は確認しない。"""
+    resource = browsableObjects.NetworkResource()
+    resource.Initialize(target[2:], target, ResolveLocalIpAddress(target[2:]))
+    return resource
 
 
 def GetRootObject(rootPath):
@@ -445,16 +440,13 @@ def GetRootObject(rootPath):
             DriveまたはNetworkResourceが返る
     """
     elem = None
-    rootPath = rootPath[0]
-    if rootPath != "\\":  # \でないならそれはドライブ
+    if rootPath[0] != "\\":  # \でないならそれはドライブ
         try:
-            elem = lists.drive.GetDriveObject(int(ord(rootPath) - 65))
+            elem = lists.drive.GetDriveObject(ord(rootPath[0].upper()) - 65)
         except BaseException:
             pass
     else:  # ネットワークリソース
-        rootPath = self.listObject.rootDirectory
-        rootPath = rootPath[0:rootPath[2:].find("\\") + 2]
-        elem = misc.GetNetworkResource(rootPath)
+        elem = GetNetworkResource(network_resource.get_server_path(rootPath))
     return elem
 
 

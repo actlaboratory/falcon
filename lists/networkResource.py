@@ -4,9 +4,10 @@
 # Note: All comments except these top lines will be written in Japanese.
 
 import wx
-import win32wnet
+import pywintypes
 
 import misc
+import network_resource
 import browsableObjects
 import globalVars
 import errorCodes
@@ -22,7 +23,7 @@ class NetworkResourceList(FalconListBase):
 
     def __init__(self):
         super().__init__()
-        self.supportedSorts = []  # ソート不可
+        self.supportedSorts = [SORT_TYPE_BASENAME]
         self.columns = {
             _("名前"): wx.LIST_FORMAT_LEFT,
         }
@@ -35,7 +36,6 @@ class NetworkResourceList(FalconListBase):
     def Initialize(self, path, silent=False):
         """リソースの情報を取得し、リストを初期化する。"""
         self.log.debug("Getting resources list...")
-        self.rootDirectory = path
         t = misc.Timer()
         if isinstance(
                 path,
@@ -43,37 +43,30 @@ class NetworkResourceList(FalconListBase):
             self.resources += path
             return errorCodes.OK
         # end copy
+        self.rootDirectory = path
         self.resources.clear()
         if not silent:
             globalVars.app.say(path[2:])
 
-        # 取得対象を構造体にセット
-        rootResource = win32wnet.NETRESOURCE()
-        rootResource.lpRemoteName = path
-
-        # リソースリストの取得
+        # 共有フォルダの一覧の取得
         try:
-            h = win32wnet.WNetOpenEnum(2, 1, 0, rootResource)
-            # 2=RESOURCE_GLOBALNET
-            # 1=RESOURCETYPE_DISK
-            lst = win32wnet.WNetEnumResource(h, 64)  # 65以上の指定不可
-            win32wnet.WNetCloseEnum(h)
-        except win32wnet.error as er:
+            shares = network_resource.get_shares_with_auth(path, globalVars.app.main_window.GetHandle())
+        except pywintypes.error as er:
+            self.log.error("Cannot get shares of %s: %s" % (path, er))
+            if network_resource.is_cancelled_error(er):
+                return errorCodes.ACCESS_DENIED
             dialog(
                 _("エラー"),
                 _("ネットワーク上のリソース一覧を取得できませんでした(%(error)s)") % {
-                    "error": str(er)})
+                    "error": er.strerror})
             return errorCodes.ACCESS_DENIED
 
-        for l in lst:
-            ret, shfileinfo = shell.SHGetFileInfo(
-                l.lpRemoteName, 0, shellcon.SHGFI_ICON)
+        for share in shares:
+            dummy, shfileinfo = shell.SHGetFileInfo(share, 0, shellcon.SHGFI_ICON)
             s = browsableObjects.NetworkResource()
-            self.log.debug(
-                "network resource found and check IP address:" + l.lpRemoteName[2:])
-            s.Initialize(l.lpRemoteName[len(path) + 1:],
-                         l.lpRemoteName, "", shfileinfo[0])
+            s.Initialize(share[len(path) + 1:], share, "", shfileinfo[0])
             self.resources.append(s)
+        self.ApplySort()
 
         self.log.debug(
             "Network resource list created in %d seconds." %
