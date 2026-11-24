@@ -68,7 +68,7 @@ def _get_focused_path(tab):
     """フォーカスされている項目のパスを返す。項目がない場合は読み上げてNoneを返す。"""
     elem = tab.GetFocusedElement()
     if elem is None:
-        globalVars.app.say(_("項目が選択されていません。"), interrupt=True)
+        globalVars.app.say(_("項目なし"), interrupt=True)
         return None
     return elem.fullpath
 
@@ -82,5 +82,5 @@ def _extract_text(path):
     """文書のテキストを返す。読み取れない場合は読み上げてNoneを返す。"""
     text = misc.ExtractText(path)
     if text is None:
-        globalVars.app.say(_("ファイルの内容を読み取れませんでした。"), interrupt=True)
+        globalVars.app.say(_("読み取れません"), interrupt=True)
     return text

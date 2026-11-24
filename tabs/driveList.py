@@ -87,7 +87,7 @@ class DriveListTab(base.FalconTabBase):
         drive.total = loaded.total
         drive.info_pending = False
         if loaded.total < 0:
-            drive.typeString = _("ネットワーク（接続できません）")
+            drive.typeString = _("ネットワーク（未接続）")
         else:
             drive.hIcon = loaded.hIcon
         index = self.listObject.GetItemIndex(drive)

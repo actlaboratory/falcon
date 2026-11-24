@@ -10,7 +10,7 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 - 依存パッケージのバージョンは viewkit の指定（wxPython 4.2.2 / Pillow 9.5 / PyInstaller 6.11.0）に合わせる。viewkit 本体は requirements.txt で GitHub のアーカイブ URL（コミット固定）から入れる
 - proxyUtil は `dukpy~=0.2.2` を指定しているが、dukpy 0.2 系には 32bit Python 3.12 向けのビルド済みファイルがなく CI でコンパイルにも失敗する。そのため proxyUtil は `requirements-nodeps.txt` に分けて `--no-deps` で入れ、依存パッケージ（dukpy 0.3.1 など）は requirements.txt に書く。proxyUtil は他の管理下なので変更しない
 - 実行: `python falcon.py`（`python -m falcon.py` ではない）
-- ドライブ一覧では、ネットワークドライブの容量を一覧の作成時には調べず、ドライブごとの専用スレッドで後から取得する（`tabs/driveList.py`）。接続できないドライブは数十秒後に種類が「ネットワーク（接続できません）」になる。エラーではない
+- ドライブ一覧では、ネットワークドライブの容量を一覧の作成時には調べず、ドライブごとの専用スレッドで後から取得する（`tabs/driveList.py`）。接続できないドライブは数十秒後に種類が「ネットワーク（未接続）」になる。エラーではない
 - 接続できないネットワークドライブの中に入ると、ファイル一覧の取得で数十秒待たされる（未対応）
 
 ## 作業の基本方針
