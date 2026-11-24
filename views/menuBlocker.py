@@ -10,6 +10,7 @@ import menuItemsStore
 # タブの種類によるブロック
 tabTypeBlockList = {
     tabs.driveList.DriveListTab: [
+        "FILE_BULK_RENAME",
         "FILE_CHANGEATTRIBUTE",
         "FILE_TRASH",
         "FILE_DELETE",
@@ -34,6 +35,7 @@ tabTypeBlockList = {
     ],
     tabs.NetworkResourceList.NetworkResourceListTab: [
         "FILE_RENAME",
+        "FILE_BULK_RENAME",
         "FILE_CHANGEATTRIBUTE",
         "FILE_TRASH",
         "FILE_DELETE",
@@ -56,6 +58,7 @@ tabTypeBlockList = {
     ],
     tabs.pastProgress.PastProgressTab: [
         "FILE_RENAME",
+        "FILE_BULK_RENAME",
         "FILE_CHANGEATTRIBUTE",
         "FILE_MAKESHORTCUT",
         "FILE_TRASH",
@@ -95,6 +98,7 @@ tabTypeBlockList = {
 
     ],
     tabs.streamList.StreamListTab: [
+        "FILE_BULK_RENAME",
         "FILE_CHANGEATTRIBUTE",
         "FILE_MKDIR",
         "FILE_TRASH",
@@ -118,6 +122,7 @@ tabTypeBlockList = {
 # 検索結果タブ共通のブロック要素を適用
 for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
     tabTypeBlockList[t] += [
+        "FILE_BULK_RENAME",  # 名前を変えると検索結果と合わなくなるため
         "FILE_MKDIR",
         "EDIT_PAST",
         "EDIT_SEARCH",
@@ -136,6 +141,7 @@ for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
 selectedItemCountBlockList = {
     0: [
         "FILE_RENAME",
+        "FILE_BULK_RENAME",
         "FILE_CHANGEATTRIBUTE",
         "FILE_MAKESHORTCUT",
         "FILE_TRASH",

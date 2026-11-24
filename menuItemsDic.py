@@ -1,5 +1,6 @@
 dic = {
     "FILE_RENAME": _("名前を変更"),
+    "FILE_BULK_RENAME": _("名前を一括置換"),
     "FILE_CHANGEATTRIBUTE": _("属性を変更"),
     "FILE_MAKESHORTCUT": _("ショートカットを作成"),
     "FILE_TRASH": _("ゴミ箱へ移動"),

@@ -44,6 +44,7 @@ import menuItemsDic
 import menuItemsStore
 import misc
 import tabs.navigator
+import views.bulk_rename
 import views.changeAttribute
 import views.favoriteDirectory
 import views.fonttest
@@ -139,6 +140,7 @@ class MainWindow(viewkit.MainWindow):
         return viewkit.MenuDefinition(
             viewkit.TopMenuDefinition(_("ファイル"), "F", [
                 _menu_item("FILE_RENAME", "R"),
+                _menu_item("FILE_BULK_RENAME", "B"),
                 _menu_item("FILE_CHANGEATTRIBUTE", "A"),
                 _menu_item("FILE_MAKESHORTCUT", "S"),
                 _menu_item("FILE_TRASH", "T"),
@@ -547,6 +549,7 @@ class MainWindow(viewkit.MainWindow):
         delaied = self._delaied_call_active_tab
         return {
             "FILE_RENAME": tab("StartRename"),
+            "FILE_BULK_RENAME": self._on_bulk_rename,
             "FILE_CHANGEATTRIBUTE": self._on_change_attribute,
             "FILE_MAKESHORTCUT": self._on_make_shortcut,
             "FILE_TRASH": tab("Trash"),
@@ -660,6 +663,19 @@ class MainWindow(viewkit.MainWindow):
         if result.code == wx.ID_CANCEL:
             return
         self.active_tab.ChangeAttribute(result.user_object)
+
+    def _on_bulk_rename(self, event):
+        """選択中の項目の名前を正規表現で一括置換する"""
+        # ファイル一覧のタブだけが持つメソッド。ほかのタブでは menuBlocker で無効にしている
+        if not hasattr(self.active_tab, "GetBulkRenameTargets"):
+            return
+        targets = self.active_tab.GetBulkRenameTargets()
+        if not targets:
+            return
+        result = self.showSubWindow(views.bulk_rename.BulkRenameWindow, _("名前の一括置換"), targets)
+        if result.code == wx.ID_CANCEL:
+            return
+        self.active_tab.BulkRename(result.user_object)
 
     def _on_make_shortcut(self, event):
         target = self.active_tab.GetSelectedItems().GetElement(0)  # browsableObjects

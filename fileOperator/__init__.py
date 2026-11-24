@@ -168,7 +168,7 @@ class FileOperator(object):
                 shellcon.SEE_MASK_NOCLOSEPROCESS, 0, "runas", "fileop.exe", fn)
         except pywintypes.error as e:
             self.log.error("Cannot elevate (%s)" % str(e))
-            self.output["failed"].append(o.FailAll())
+            self.output["failed"].extend(o.FailAll())  # FailAll はリストを返すので、要素として追加する
             dialog("error", "error")
             return
         # end except
