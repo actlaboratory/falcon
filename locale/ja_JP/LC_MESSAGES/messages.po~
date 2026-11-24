@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Falcon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 01:01+0900\n"
+"POT-Creation-Date: 2026-11-24 01:02+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -660,7 +660,7 @@ msgstr ""
 
 #: lists\file.py:73
 #, python-format
-msgid "%sの%d "
+msgid "%(name)sの%(level)d "
 msgstr ""
 
 #: lists\file.py:90
@@ -711,7 +711,7 @@ msgstr ""
 
 #: lists\stream.py:52
 #, python-format
-msgid "%sの%d"
+msgid "%(name)sの%(level)d"
 msgstr ""
 
 #: lists\stream.py:63
@@ -1460,7 +1460,7 @@ msgstr ""
 
 #: views\main.py:940 views\objectDetail.py:69
 #, python-format
-msgid "ファイル数： %d サブディレクトリ数： %d"
+msgid "ファイル数： %(files)d サブディレクトリ数： %(dirs)d"
 msgstr ""
 
 #: views\main.py:947
