@@ -43,6 +43,8 @@ class DriveListTab(base.FalconTabBase):
         super().__init__(*args, **kwargs)
         self.networkListTask = None
         self._closed = False
+        # ネットワーク上のコンピューターは後から見つかるため、見つかった時にフォーカスするパスを覚えておく
+        self._pending_focus_path = ""
         # ドライブ一覧を作り直すたびに増やし、古い一覧に対する容量取得の結果を捨てるために使う
         self._drive_info_generation = 0
         self._getNetworkList()
@@ -62,6 +64,7 @@ class DriveListTab(base.FalconTabBase):
         threading.Thread(target=_run_task, args=(self.networkListTask,), daemon=True).start()
 
     def Update(self, lst, cursor=-1):
+        self._pending_focus_path = ""
         super().Update(lst, cursor)
         self._start_loading_drive_info()
 
@@ -126,12 +129,27 @@ class DriveListTab(base.FalconTabBase):
     def isReady(self):
         return self.listObject is not None
 
-    def OnAppendNetworkResource(self, resource):
-        if self._closed:
-            return False
-        if self.listObject:
+    def set_pending_focus(self, path):
+        """指定したパスのコンピューターが見つかった時に、まだどこにもフォーカスがなければフォーカスする。"""
+        self._pending_focus_path = path
+
+    def UpdateFilelist(self, silence=False, cursorTargetName=""):
+        focused = self.GetFocusedElement()
+        result = super().UpdateFilelist(silence, cursorTargetName)
+        if cursorTargetName == "" and isinstance(focused, browsableObjects.NetworkResource):
+            self.set_pending_focus(focused.fullpath)
+        return result
+
+    def OnAppendNetworkResource(self, resource, task_state):
+        if self._closed or task_state is not self.networkListTask:
+            return False  # タブが閉じられたか、一覧を取得し直している
+        if self.listObject is not None:
             self.listObject.AppendNetworkResource(resource)
             self._AppendElement(resource)
+            if resource.fullpath.lower() == self._pending_focus_path.lower():
+                self._pending_focus_path = ""
+                if self.GetFocusedItem() < 0:
+                    self.Focus(len(self.listObject) - 1)
             return True
         else:
             return False
@@ -140,10 +158,11 @@ class DriveListTab(base.FalconTabBase):
         if self._closed:
             return
         if number == -1:
-            dialog(_("エラー"), _("ネットワークリソース一覧が取得できませんでした。"))
+            # ネットワークが使えない環境ではドライブ一覧を開くたびに起きるため、ダイアログは出さない
+            self.log.warning("Cannot get the list of network resources.")
+            return
         # end error
         self.log.debug("scanned network drives: %d" % number)
-        self.networkTask = None
 
     def GoBackward(self):
         """内包しているフォルダ/ドライブ一覧へ移動する。"""

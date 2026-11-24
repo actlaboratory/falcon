@@ -18,6 +18,8 @@ import lists
 import globalVars
 import constants
 import misc
+import network_resource
+import pywintypes
 import views.ViewCreator
 from . import fileList, driveList, streamList, searchResult, grepResult, NetworkResourceList, pastProgress
 from simpleDialog import dialog
@@ -79,11 +81,25 @@ def Navigate(
     # end targetが辞書の時の特殊処理
 
     target = os.path.expandvars(target)
+    if target != "" and not network_resource.is_server_path(target):
+        # ネットワーク上の場所で認証が必要な場合は、資格情報の入力画面が出る
+        try:
+            exists = network_resource.exists_with_auth(target, globalVars.app.main_window.GetHandle())
+        except pywintypes.error as err:
+            log.error("navigate failed: cannot connect to %s: %s" % (target, err))
+            if not network_resource.is_cancelled_error(err):
+                dialog(_("エラー"), _("移動に失敗しました(%(error)s)") % {"error": err.strerror})
+            return errorCodes.ACCESS_DENIED
+        if not exists:
+            log.error("navigate failed: %s not exist." % target)
+            dialog(_("エラー"), _("移動に失敗しました。移動先が存在しません。"))
+            return errorCodes.FILE_NOT_FOUND
     if target == "":  # ドライブリスト
         lst = lists.DriveList()
         lst.Initialize()
         if isinstance(previous_tab, driveList.DriveListTab):  # 再利用
             newtab = previous_tab
+            newtab.OnUpdate()  # 新しい一覧にはネットワーク上のコンピューターがないので、探し直す
         else:
             newtab = driveList.DriveListTab(environment)
             newtab.Initialize(parent, creator, hListCtrl)
@@ -92,17 +108,16 @@ def Navigate(
         if targetItemIndex == -1 and cursor != "":  # ネットワークドライブ対策
             targetItemIndex = lst.Search(cursor, 0)
     # end ドライブリストへ行く
-    elif target[0:2] == "\\\\" and "\\" not in target[2:]:
+    elif network_resource.is_server_path(target):
+        target = target.rstrip("\\")
         lst = lists.NetworkResourceList()
         result = lst.Initialize(target)
         if result != errorCodes.OK:
             return result  # アクセス不可
+        if cursor != "":
+            targetItemIndex = lst.Search(cursor)
         newtab = NetworkResourceList.NetworkResourceListTab(environment)
         newtab.Initialize(parent, creator, hListCtrl)
-    elif not os.path.exists(target):
-        log.error("navigate failed: %s not exist." % target)
-        dialog(_("エラー"), _("移動に失敗しました。移動先が存在しません。"))
-        return errorCodes.FILE_NOT_FOUND
     elif os.path.isfile(target):  # 副ストリームへ移動
         lst = lists.StreamList()
         lst.Initialize(target)
@@ -117,7 +132,10 @@ def Navigate(
         lst = lists.FileList()
         result = lst.Initialize(target)
         if result != errorCodes.OK:
-            if result == errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
+            if result == errorCodes.ACCESS_DENIED and network_resource.is_unc_path(target):
+                # ネットワーク上のフォルダは、管理者として立ち上げ直しても開けるようにならない
+                dialog(_("エラー"), _("アクセスが拒否されました。"))
+            elif result == errorCodes.ACCESS_DENIED and not ctypes.windll.shell32.IsUserAnAdmin():
                 dlg = wx.MessageDialog(
                     None,
                     _("アクセスが拒否されました。管理者としてFalconを別ウィンドウで立ち上げて再試行しますか？"),
@@ -135,6 +153,8 @@ def Navigate(
             newtab.Initialize(parent, creator, hListCtrl)
         # end 再利用するかどうか
     newtab.Update(lst, targetItemIndex)
+    if target == "" and targetItemIndex == -1 and network_resource.is_server_path(cursor):
+        newtab.set_pending_focus(cursor)
     # end ターゲットにフォーカス
     if globalVars.app.settings.get_bool("on_list_moved", "read_item_count", True):
         newtab.ReadListItemNumber(short=True)

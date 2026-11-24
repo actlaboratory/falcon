@@ -23,6 +23,7 @@ import fileSystemManager
 import globalVars
 import lists
 import misc
+import network_resource
 import new_file
 import new_shortcut
 import paste_shortcut
@@ -549,6 +550,18 @@ class FileListTab(base.FalconTabBase):
             break
         # end 有効なファイル名になるまで
         return ret
+
+    def GoBackward(self):
+        """内包しているフォルダ/ドライブ一覧へ移動する。"""
+        share_root = network_resource.split_share_root(self.listObject.rootDirectory)
+        if share_root is None:
+            return super().GoBackward()
+        # 共有フォルダのルートからは、コンピューターの共有フォルダの一覧へ移動する
+        server, share = share_root
+        result = self.Move(server, share)
+        if isinstance(result, int):  # 移動できない時はドライブ一覧へ
+            result = self.Move("", server)
+        return result
 
     def GetTabName(self):
         """タブコントロールに表示する名前"""

@@ -4,6 +4,7 @@
 # Copyright (C) 2020 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
+import pywintypes
 import win32api
 import re
 import os
@@ -11,14 +12,22 @@ from enum import Enum
 
 
 def GetFileSystemObject(letter):
-    """
-    ドライブレターから、そのドライブのファイルシステムを取得する。
+    r"""
+    ドライブレターまたはUNCパスから、そのファイルシステムを取得する。
+    対応していないファイルシステムの場合や、UNCパスで情報を取得できない場合は None を返す。
 
-    :param letter: ドライブレター1文字。
+    :param letter: ドライブレターで始まる文字列、またはUNCパス(\\server\share)。
     :type letter: str
     :rtype: FileSystemBase
     """
-    name = win32api.GetVolumeInformation("%s:\\" % (letter[0]))[4]
+    if letter.startswith("\\\\"):
+        root = os.path.splitdrive(letter)[0].rstrip("\\") + "\\"
+        try:
+            name = win32api.GetVolumeInformation(root)[4]
+        except pywintypes.error:
+            return None
+    else:
+        name = win32api.GetVolumeInformation("%s:\\" % (letter[0]))[4]
     try:
         cls = globals()[name]
     except KeyError:
@@ -76,7 +85,8 @@ def ValidationObjectName(path, pathType, path2=""):
         drive = GetFileSystemObject(path2)
         # TODO
     else:
-        drive = GetFileSystemObject(os.path.splitdrive(path)[0])
+        # ファイルシステムが分からない共有フォルダなどでは、標準の制限で確認する
+        drive = GetFileSystemObject(os.path.splitdrive(path)[0]) or FileSystemBase()
         if len(s) > drive.MAX_PATH_LENGTH:
             return _("このドライブでは、以下の文字数を超えない名前を付ける必要があります。\n\n制限文字数:" +
                      str(drive.MAX_PATH_LENGTH))

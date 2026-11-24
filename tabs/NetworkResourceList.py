@@ -22,17 +22,17 @@ class NetworkResourceListTab(base.FalconTabBase):
 
     def GoBackward(self):
         """ドライブ一覧へ戻る"""
-        target = ""
-        cursorTarget = self.listObject.rootDirectory[0]
-        return self.Move(target, cursorTarget)
+        return self.Move("", self.listObject.rootDirectory)
 
-    def OnLabelEditEnd(self, event):
+    def OnLabelEditEnd(self, evt):
+        self.isRenaming = False
+        self.parent.set_shortcut_enabled(True)
         evt.Veto()
         return
 
     def ReadCurrentFolder(self):
         globalVars.app.say(
-            _("現在は、" + self.listObject.rootDirectory), interrupt=True)
+            _("現在は、%(folder)s") % {"folder": self.listObject.rootDirectory}, interrupt=True)
 
     def ReadListItemNumber(self, short=False):
         # shortもlongも関係ない
