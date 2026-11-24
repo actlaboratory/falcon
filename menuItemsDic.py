@@ -15,6 +15,7 @@ dic = {
     "EDIT_COPY": _("コピー"),
     "EDIT_CUT": _("切り取り"),
     "EDIT_PAST": _("貼り付け"),
+    "EDIT_PAST_SHORTCUT": _("ショートカットの貼り付け"),
     "EDIT_NAMECOPY": _("名前をコピー"),
     "EDIT_FULLPATHCOPY": _("フルパスをコピー"),
     "EDIT_SELECTALL": _("全て選択"),
