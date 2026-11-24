@@ -191,6 +191,7 @@ def DestroyContextMenu():
 
 
 def ExtractText(path):
+    """ドキュメントファイルからテキストを取り出す。読み取れなかった場合は None を返す。"""
     ext = os.path.splitext(path)[1].lower()[1:]
 
     if ext in constants.TEXT_READABLE_DOCUMENT_FORMATS:
@@ -203,17 +204,22 @@ def ExtractText(path):
                 with open(path, 'r', encoding="cp932") as f:
                     data = f.read()
                     return data
-            except Exception as e:
-                return ""
-        except Exception as e:
-            return ""
+            except Exception:
+                log.exception("Failed to read %s" % path)
+                return None
+        except Exception:
+            log.exception("Failed to read %s" % path)
+            return None
     else:
         path_bytes = makeStringForFalconHelper(path)
         ptr = falconHelper.extractText(path_bytes)
+        if not ptr:
+            # xd2txlib.dll(32bit版VC++ 2010ランタイムが必要)が読み込めない場合など
+            log.error("Failed to extract text from %s" % path)
+            return None
         s = ctypes.c_char_p(ptr).value
         falconHelper.releasePtr(ptr)
-        s2 = s.decode('UTF-8')
-        return s2
+        return s.decode("UTF-8", errors="replace")
 
 
 def disableWindowStyleFlag(hwnd, flag):

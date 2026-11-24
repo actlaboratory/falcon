@@ -10,6 +10,7 @@ Falcon は、ワーカースレッドを提供します。ワーカースレッ�
 import logging
 from logging import getLogger
 import queue
+import sys
 import threading
 import time
 import misc
@@ -88,7 +89,14 @@ class _workerThreadBody(threading.Thread):
             active_task_states.append(item)
             t = misc.Timer()
             item.setWorkingState(True)
-            ret = func(item, params)
+            try:
+                ret = func(item, params)
+            except Exception:
+                # タスク内の例外でスレッドが終了すると、以後のバックグラウンド処理がすべて止まるため、ここで捕まえて次のタスクへ進む
+                self.log.exception("Exception in task %s" % getattr(func, "__name__", func))
+                ret = False
+                item.FinishCallback()  # キャンセル要求が来ても待たないようにする
+                sys.excepthook(*sys.exc_info())  # エラーログの記録とエラー音の再生
             if ret is True:
                 item.FinishCallback()
             else:

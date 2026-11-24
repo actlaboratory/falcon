@@ -9,6 +9,7 @@
 """
 
 import os
+import threading
 import wx
 
 import browsableObjects
@@ -16,6 +17,7 @@ import errorCodes
 import globalVars
 import fileOperator
 import fileSystemManager
+import lists.drive
 import misc
 import workerThreads
 import workerThreadTasks
@@ -24,12 +26,25 @@ from simpleDialog import *
 from . import base
 
 
+def _run_task(task_state):
+    """(別スレッド)ワーカースレッド用のタスクを、共用のワーカースレッドを使わずに実行する。"""
+    task_state.setWorkingState(True)
+    if task_state.func(task_state, task_state.params) is True:
+        task_state.FinishCallback()
+    else:
+        task_state.CancelCallback()
+    task_state.setWorkingState(False)
+
+
 class DriveListTab(base.FalconTabBase):
     """ドライブリストが表示されているタブ。"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.networkListTask = None
+        self._closed = False
+        # ドライブ一覧を作り直すたびに増やし、古い一覧に対する容量取得の結果を捨てるために使う
+        self._drive_info_generation = 0
         self._getNetworkList()
 
     def _getNetworkList(self):
@@ -37,17 +52,59 @@ class DriveListTab(base.FalconTabBase):
             self.networkListTask.Cancel()
             self.networkListTask = None
         # end cancel previous
-        self.networkListTask = workerThreads.RegisterTask(
+        # ネットワーク上のコンピューターの列挙は数十秒かかることがあり、共用のワーカースレッドを占有しないように専用のスレッドで行う
+        self.networkListTask = workerThreads.TaskState(
             workerThreadTasks.GetNetworkResources,
             {
                 "isReady": self.isReady,
                 "onAppend": self.OnAppendNetworkResource,
                 "onFinish": self.OnFinishNetworkResource})
+        threading.Thread(target=_run_task, args=(self.networkListTask,), daemon=True).start()
+
+    def Update(self, lst, cursor=-1):
+        super().Update(lst, cursor)
+        self._start_loading_drive_info()
+
+    def _start_loading_drive_info(self):
+        """容量を取得していないネットワークドライブについて、ドライブごとに専用のスレッドで容量を取得する。"""
+        self._drive_info_generation += 1
+        for drive in self.listObject.GetPendingDrives():
+            threading.Thread(
+                target=self._load_drive_info,
+                args=(drive, self._drive_info_generation),
+                daemon=True).start()
+
+    def _load_drive_info(self, drive, generation):
+        """(別スレッド)ドライブの容量を取得し、メインスレッドに結果を渡す。"""
+        loaded = lists.drive.GetDriveObject(ord(drive.letter) - 65)
+        wx.CallAfter(self._on_drive_info_loaded, drive, loaded, generation)
+
+    def _on_drive_info_loaded(self, drive, loaded, generation):
+        """取得した容量を一覧に反映する。"""
+        if self._closed or generation != self._drive_info_generation:
+            return  # タブが閉じられたか、一覧が作り直された
+        drive.free = loaded.free
+        drive.total = loaded.total
+        drive.info_pending = False
+        if loaded.total < 0:
+            drive.typeString = _("ネットワーク（未接続）")
+        else:
+            drive.hIcon = loaded.hIcon
+        index = self.listObject.GetItemIndex(drive)
+        if index < 0:
+            return
+        if drive.hIcon >= 0:
+            icon_index = self.GetIconIndex(drive.hIcon)
+            if icon_index >= 0:
+                self.hListCtrl.SetItemImage(index, icon_index, icon_index)
+        self.hListCtrl.RefreshItem(index)
 
     def isReady(self):
         return self.listObject is not None
 
     def OnAppendNetworkResource(self, resource):
+        if self._closed:
+            return False
         if self.listObject:
             self.listObject.AppendNetworkResource(resource)
             self._AppendElement(resource)
@@ -56,6 +113,8 @@ class DriveListTab(base.FalconTabBase):
             return False
 
     def OnFinishNetworkResource(self, number):
+        if self._closed:
+            return
         if number == -1:
             dialog(_("エラー"), _("ネットワークリソース一覧が取得できませんでした。"))
         # end error
@@ -143,6 +202,8 @@ class DriveListTab(base.FalconTabBase):
 
     def OnClose(self):
         """ネットワークリソース一覧をキャンセルして大気"""
+        # 閉じた後はリストコントロールが次のタブに引き継がれるため、遅れて届いた結果を反映しないようにする
+        self._closed = True
         if self.networkListTask:
             self.networkListTask.Cancel()
 

@@ -10,11 +10,13 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 - 依存パッケージのバージョンは viewkit の指定（wxPython 4.2.2 / Pillow 9.5 / PyInstaller 6.11.0）に合わせる。viewkit 本体は requirements.txt で GitHub のアーカイブ URL（コミット固定）から入れる
 - proxyUtil は `dukpy~=0.2.2` を指定しているが、dukpy 0.2 系には 32bit Python 3.12 向けのビルド済みファイルがなく CI でコンパイルにも失敗する。そのため proxyUtil は `requirements-nodeps.txt` に分けて `--no-deps` で入れ、依存パッケージ（dukpy 0.3.1 など）は requirements.txt に書く。proxyUtil は他の管理下なので変更しない
 - 実行: `python falcon.py`（`python -m falcon.py` ではない）
-- 起動時のドライブ一覧の取得は、接続できないネットワークドライブがあると数十秒かかる。エラーではない
+- ドライブ一覧では、ネットワークドライブの容量を一覧の作成時には調べず、ドライブごとの専用スレッドで後から取得する（`tabs/driveList.py`）。接続できないドライブは数十秒後に種類が「ネットワーク（未接続）」になる。エラーではない
+- 接続できないネットワークドライブの中に入ると、ファイル一覧の取得で数十秒待たされる（未対応）
 
 ## 作業の基本方針
 
 - **viewkit はテンプレート。viewkit 本体（`.venv` 内や `../viewkit`）は変更しない。** falcon 独自の機能は、viewkit のクラスを継承するなどして falcon 側に実装する
+- **名前に `base` を含むファイル（`tabs/base.py`、`lists/base.py`、`tabs/searchResultTabBase.py` など）は変更しない。** 他の actlab のプロジェクトと共通にしているため。修正が必要な場合は、呼び出し側や別のモジュールで対応する（例: プレビュー・先頭/末尾の読み上げは `content_reader.py`）
 - viewkit の不具合は falcon 側で回避し、回避箇所にコメントを書き、ユーザーに報告する
 - 新しく書く・書き直すコードは viewkit のコーディング規約（`../viewkit/docs/coding_conventions.md`、PEP8 準拠）に従う
   - 関数・変数・新規モジュール名は `snake_case`、クラスは `PascalCase`、定数は `SCREAMING_SNAKE_CASE`、非公開は `_` 始まり
