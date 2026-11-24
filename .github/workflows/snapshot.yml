@@ -25,7 +25,7 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo
-            const tagName = repo + "-latestcommit"
+            const tagName = "FALCON-latestcommit" // actlabサイトに登録されているタグ名に合わせる(リポジトリ名は小文字)
             try {
               // Fetch the release by its tag
               const { data: release } = await github.rest.repos.getReleaseByTag({ owner, repo, tag: tagName })
@@ -55,7 +55,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: Snapshot
-          tag_name: ${{ github.event.repository.name }}-latestcommit
+          tag_name: FALCON-latestcommit
           body: Automatic build from master branch
           files: |
             ./${{ github.event.repository.name }}-*.zip

@@ -30,23 +30,20 @@ from tools import bumpup
 
 class build:
     def __init__(self):
-        # appVeyorかどうかを判別し、処理をスタート
-        appveyor = self.setAppVeyor()
-        print("Starting build for %s(appveyor mode=%s)" % (constants.APP_NAME, appveyor))
+        # GitHub Actionsなどの自動実行かどうかを判別し、処理をスタート
+        automated = self.setAutomated()
+        print("Starting build for %s(automated mode=%s)" % (constants.APP_NAME, automated))
 
         # パッケージのパスとファイル名を決定
         package_path = os.path.join("dist", os.path.splitext(os.path.basename(constants.STARTUP_FILE))[0])
-        if 'APPVEYOR_REPO_TAG_NAME' in os.environ:
-            build_filename = os.environ['APPVEYOR_REPO_TAG_NAME']
-        else:
-            build_filename = 'snapshot'
+        build_filename = os.environ.get("TAG_NAME", "snapshot")
         print("Will be built as %s" % build_filename)
 
         # pyinstallerのパスを決定
-        if not appveyor:
+        if not automated:
             pyinstaller_path = "pyinstaller.exe"
         else:
-            pyinstaller_path = "%PYTHON%\\Scripts\\pyinstaller.exe"
+            pyinstaller_path = "%pythonLocation%\\Scripts\\pyinstaller.exe"
         print("pyinstaller_path=%s" % pyinstaller_path)
         hooks_path = os.path.join(PyInstaller.__path__[0], "hooks/")
         print("hooks_path is %s" % (hooks_path))
@@ -59,8 +56,8 @@ class build:
         # 前のビルドをクリーンアップ
         self.creen(package_path)
 
-        # appveyorでのスナップショットの場合はバージョン番号を一時的に書き換え
-        if build_filename == "snapshot" and appveyor:
+        # 自動実行でのスナップショットの場合はバージョン番号を一時的に書き換え
+        if build_filename == "snapshot" and automated:
             self.makeSnapshotVersionNumber()
 
         # ビルド
@@ -69,7 +66,7 @@ class build:
         archive_name = "%s-%s.zip" % (constants.APP_NAME, build_filename)
 
         # スナップショットでなければ
-        if build_filename == "snapshot" and not appveyor:
+        if build_filename == "snapshot" and not automated:
             print("Skipping batch archiving because this is a local snapshot.")
         else:
             patch_name = self.makePatch(build_filename, archive_name)
@@ -83,10 +80,8 @@ class build:
         proc.communicate()
         return proc.poll()
 
-    def setAppVeyor(self):
-        if len(sys.argv) >= 2 and sys.argv[1] == "--appveyor":
-            return True
-        return False
+    def setAutomated(self):
+        return os.environ.get("GITHUB_ACTIONS", "false") == "true"
 
     def creen(self, package_path):
         if os.path.isdir(package_path):
@@ -97,8 +92,8 @@ class build:
     def makeSnapshotVersionNumber(self):
         # 日本標準時オブジェクト
         JST = datetime.timezone(datetime.timedelta(hours=+9))
-        # Pythonは世界標準時のZに対応していないので文字列処理で乗り切り、それを日本標準時に変換
-        dt = datetime.datetime.fromisoformat(os.environ["APPVEYOR_REPO_COMMIT_TIMESTAMP"][0:19] + "+00:00").astimezone(JST)
+        # コミット日時(タイムゾーン付き)を日本標準時に変換
+        dt = datetime.datetime.fromisoformat(os.environ["COMMIT_TIMESTAMP"]).astimezone(JST)
         major = str(dt.year)[2:4] + str(dt.month).zfill(2)
         minor = str(dt.day)
         patch = str(int(math.floor((dt.hour * 3600 + dt.minute * 60 + dt.second) / 86400 * 1000)))
