@@ -44,6 +44,7 @@ import keymap
 import menuItemsDic
 import menuItemsStore
 import misc
+import reparse_link
 import shortcut_link
 import tabs.navigator
 import views.archive_progress
@@ -1116,6 +1117,24 @@ class MainWindow(viewkit.MainWindow):
         except BaseException:
             pass
 
+    def _add_link_detail(self, detail, path):
+        """シンボリックリンクやジャンクションの場合に、種類とリンク先を詳細情報に追加する。"""
+        try:
+            link = reparse_link.get_link(path)
+        except OSError as err:
+            self.log.warning("Cannot read link target of %s (%s)" % (path, err))
+            detail.add(_("リンク先"), _("不明"))
+            return
+        if link is None:
+            return
+        detail.add(_("リンクの種類"), reparse_link.get_kind_name(link.kind))
+        detail.add(_("リンク先"), link.target)
+        absolute = reparse_link.get_absolute_target(path, link)
+        if os.path.normcase(absolute) != os.path.normcase(os.path.normpath(link.target)):
+            detail.add(_("リンク先の絶対パス"), absolute)
+        if not os.path.exists(path):
+            detail.add(_("リンクの状態"), _("リンク先が見つかりません"))
+
     def show_detail(self, elem):
         d = views.objectDetail.ObjectDetailParameters()
         d.add(_("名前"), elem.basename)
@@ -1141,15 +1160,21 @@ class MainWindow(viewkit.MainWindow):
             else:
                 d.add(_("短い名前"), _("なし"))
 
-            h = win32file.CreateFile(
-                elem.fullpath,
-                0,
-                win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
-                None,
-                win32file.OPEN_EXISTING,
-                win32file.FILE_FLAG_BACKUP_SEMANTICS,  # これがないとディレクトリを開けない
-                0)
-            info = win32file.GetFileInformationByHandleEx(h, win32file.FileStandardInfo)
+            self._add_link_detail(d, elem.fullpath)
+
+            try:
+                h = win32file.CreateFile(
+                    elem.fullpath,
+                    0,
+                    win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
+                    None,
+                    win32file.OPEN_EXISTING,
+                    win32file.FILE_FLAG_BACKUP_SEMANTICS,  # これがないとディレクトリを開けない
+                    0)
+                info = win32file.GetFileInformationByHandleEx(h, win32file.FileStandardInfo)
+            except win32file.error as err:  # リンク先が存在しない場合など
+                self.log.warning("Cannot get file information of %s (%s)" % (elem.fullpath, err))
+                info = None
             if info:
                 d.add(_("消費ディスク領域"),
                       misc.ConvertBytesTo(info["AllocationSize"], misc.UNIT_AUTO, True) + " (" + str(info["AllocationSize"]) + " bytes)")

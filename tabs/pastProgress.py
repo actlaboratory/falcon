@@ -87,8 +87,9 @@ class PastProgressTab(base.FalconTabBase):
         from_path = e.path
         dest_path = e.destpath
         try:
-            from_stat = os.stat(from_path)
-            dest_stat = os.stat(dest_path)
+            # リンク先がないリンクの場合は、リンク自体の情報を使う
+            from_stat = os.stat(from_path) if os.path.exists(from_path) else os.lstat(from_path)
+            dest_stat = os.stat(dest_path) if os.path.exists(dest_path) else os.lstat(dest_path)
         except OSError as err:
             simpleDialog.dialog(_("エラー"), err.strerror)
             return

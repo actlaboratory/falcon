@@ -7,6 +7,7 @@ import os
 import win32file
 
 import misc
+import reparse_link
 
 from . import helper
 
@@ -27,10 +28,11 @@ def Execute(op):
     op.output["retry"]["target"] = []
     lst = []
     for elem in f:
-        if os.path.isfile(elem):
+        # リンクの場合は、リンク先の中身を消さないよう、リンク自体だけを削除する
+        if not reparse_link.is_directory_entry(elem) or reparse_link.is_link(elem):
             lst.append(elem)
         else:
-            for elem2 in misc.IteratePaths(elem):
+            for elem2 in misc.IteratePaths(elem, follow_links=False):
                 lst.append(elem2)
             # end フォルダからファイルリスト
             lst.append(elem)  # イテレーションの最後に親フォルダ追加
@@ -40,10 +42,10 @@ def Execute(op):
     f = lst
     for elem in f:
         try:
-            if os.path.isfile(elem):
-                win32file.DeleteFile(elem)
-            else:
+            if reparse_link.is_directory_entry(elem):
                 win32file.RemoveDirectory(elem)
+            else:
+                win32file.DeleteFile(elem)
         except win32file.error as err:
             if helper.CommonFailure(op, elem, err, log):
                 appendRetry(op.output, elem)

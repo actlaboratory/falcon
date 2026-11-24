@@ -426,10 +426,15 @@ class FileListTab(base.FalconTabBase):
 
         # 自身のサブフォルダへの貼り付けはできない
         errors = []
+        # リンクを経由した場所でも判定できるよう、実際のパスで比べる。項目自体がリンクの場合は、リンクのある場所で比べる
+        destination = os.path.normcase(os.path.realpath(dest))
+        real_parents = {}
         for it in target:
             i = it[0]
-            source = os.path.normcase(i)
-            destination = os.path.normcase(dest)
+            parent = os.path.dirname(i)
+            if parent not in real_parents:
+                real_parents[parent] = os.path.realpath(parent)
+            source = os.path.normcase(os.path.join(real_parents[parent], os.path.basename(i)))
             if destination == source or destination.startswith(os.path.join(source, "")) or os.path.dirname(source) == destination:
                 errors.append(i)
             # end サブディレクトリ、あるいは、同じディレクトリへのコピー/貼り付け

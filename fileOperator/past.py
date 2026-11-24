@@ -9,6 +9,7 @@ import time
 import win32file
 import winerror
 from . import confirmElement, failedElement, helper
+import reparse_link
 from clipboard import COPY, MOVE
 
 VERB = "past"
@@ -19,10 +20,12 @@ log = logging.getLogger("falcon.%s" % VERB)
 class Element(object):
     """コピー/移動する項目の情報を持っておく。"""
 
-    def __init__(self, path, basepath, destpath):
+    def __init__(self, path, basepath, destpath, is_link=False):
+        """is_link=True の場合は、リンク先をたどらず、リンク自体を移動する。"""
         self.path = path
-        self.isfile = os.path.isfile(path)
-        self.size = os.path.getsize(path) if self.isfile else -1
+        self.is_link = is_link
+        self.isfile = not reparse_link.is_directory_entry(path) if is_link else os.path.isfile(path)
+        self.size = os.path.getsize(path) if self.isfile and not is_link else -1
         self.destpath = destpath
     # end __init__
 
@@ -59,7 +62,10 @@ def Execute(op, resume=False):
         elem = elemt[0]
         dest = elemt[1]
         basepath = os.path.dirname(elem)
-        if not os.path.exists(elem):  # コピーした後に削除された場合など
+        if copy_move_flag == MOVE and reparse_link.is_link(elem):
+            # リンク先の中身まで移動しないよう、リンク自体を移動する
+            lst.append(Element(elem, basepath, dest, is_link=True))
+        elif not os.path.exists(elem):  # コピーした後に削除された場合など
             _append_failed(op, Element(elem, basepath, dest), winerror.ERROR_FILE_NOT_FOUND, _("ファイルまたはフォルダが見つかりません。"))
         elif os.path.isfile(elem):
             lst.append(Element(elem, basepath, dest))
@@ -105,6 +111,16 @@ def Execute(op, resume=False):
             # end except
             continue  # エラーにならないように逃げる
         # end フォルダ消す
+        # リンクを経由して、同じ項目を自分自身に貼り付けようとしている場合
+        if _is_same_item(elem):
+            if not elem.isfile:
+                failed_folders.append(elem.path)
+            _append_failed(op, elem, winerror.ERROR_ALREADY_EXISTS, _("コピー元とコピー先が同じです。"))
+            continue
+        # フォルダ用のリンクで、すでにあるフォルダやリンクを上書きすることはできない
+        if elem.is_link and not elem.isfile and os.path.lexists(elem.destpath):
+            _append_failed(op, elem, winerror.ERROR_ALREADY_EXISTS, _("同じ名前のファイルまたはフォルダがすでに存在します。"))
+            continue
         # 同じ名前のファイルとフォルダは、上書きも昇格もできない
         if os.path.exists(elem.destpath) and os.path.isfile(elem.destpath) != elem.isfile:
             if not elem.isfile:
@@ -112,13 +128,15 @@ def Execute(op, resume=False):
             _append_failed(op, elem, winerror.ERROR_ALREADY_EXISTS, _("同じ名前のファイルまたはフォルダがすでに存在します。"))
             continue
         try:
-            if elem.isfile:
+            if elem.is_link:
+                reparse_link.move_link(elem.path, elem.destpath, overwrite)
+            elif elem.isfile:
                 copyOrMove(elem, copy_move_flag, overwrite)
             else:
                 if resume and os.path.isdir(elem.destpath):
                     continue  # 再開している場合はエラーになる前に逃げる
                 win32file.CreateDirectory(elem.destpath, None)
-        except win32file.error as err:
+        except (win32file.error, OSError) as err:
             log.error("Cannot create %s (%s)" % (elem.destpath, str(err)))
             if not elem.isfile:
                 failed_folders.append(elem.path)
@@ -156,6 +174,14 @@ def copyOrMove(elem, copy_move_flag, overwrite):
         win32file.MoveFileEx(elem.path, elem.destpath, f)
 
 
+def _is_same_item(elem):
+    """コピー元とコピー先が、同じ項目かどうかを返す。"""
+    try:
+        return os.path.samefile(elem.path, elem.destpath)
+    except OSError:
+        return False  # どちらかがない
+
+
 def ProcessError(op, elem, err, resume):
     """アクセス拒否であれば、リトライするリストに追加する。コピー先がすでに存在する場合は need_to_confirm に追加する。それ以外は失敗とする。"""
     number = err.winerror
@@ -187,8 +213,14 @@ def _processExistingFolder(output, elem, basepath, destpath):
         Element(elem, basepath, destpath), 80, _("このフォルダはすでに存在します。")))
 
 
-def _expandFolder(op, lst, path, e, basepath, destpath, copy_move_flag):
+def _expandFolder(op, lst, path, e, basepath, destpath, copy_move_flag, parents=()):
     """フォルダを展開して、指定されたリストに入れる。"""
+    # コピーではリンク先の中身をたどるので、同じフォルダを繰り返したどらないようにする
+    real_path = os.path.normcase(os.path.realpath(path))
+    if real_path in parents:
+        _append_failed(op, e, winerror.ERROR_CANT_RESOLVE_FILENAME, _("リンク先が自身を含むフォルダのため、コピーできません。"))
+        return
+    parents += (real_path,)
     lst.append(e)  # イテレーションの最初に親フォルダ追加
     # 再帰的にディレクトリを掘っていく。切り取りモードの時にフォルダ削除マークを入れたいので、iteratePaths計で一気に取得することはできない。
     try:
@@ -200,11 +232,16 @@ def _expandFolder(op, lst, path, e, basepath, destpath, copy_move_flag):
     for elem in names:
         p = os.path.join(path, elem)
         innerDestpath = os.path.join(destpath, os.path.basename(p))
+        if copy_move_flag == MOVE and reparse_link.is_link(p):
+            lst.append(Element(p, basepath, innerDestpath, is_link=True))
+            continue
         innerElem = Element(p, basepath, innerDestpath)
-        if os.path.isdir(p):
+        if not os.path.exists(p):  # リンク先がないリンクなど
+            _append_failed(op, innerElem, winerror.ERROR_FILE_NOT_FOUND, _("ファイルまたはフォルダが見つかりません。"))
+        elif os.path.isdir(p):
             # フォルダなので、再帰的に中身を転回
             _expandFolder(op, lst, p, innerElem, basepath,
-                          innerDestpath, copy_move_flag)
+                          innerDestpath, copy_move_flag, parents)
             _handleFolderDeleteRecord(lst, innerElem, basepath, copy_move_flag)
         else:
             # ファイルなのでそのまま追加

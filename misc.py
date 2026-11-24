@@ -25,6 +25,7 @@ import constants
 import globalVars
 import lists
 import network_resource
+import reparse_link
 
 from logging import getLogger
 from simpleDialog import dialog
@@ -264,14 +265,14 @@ def disableWindowStyleFlag(hwnd, flag):
     win32api.SetWindowLong(hwnd, -16, value)
 
 
-def IteratePaths(path, append_eol=False):
-    """FindFirstFile 系を使って、パス名をイテレートする。append_eol=True にすると、最後に "eol" という1行をリストに入れるので、検索の終了判定などに使える。"""
+def IteratePaths(path, append_eol=False, follow_links=True):
+    """FindFirstFile 系を使って、パス名をイテレートする。append_eol=True にすると、最後に "eol" という1行をリストに入れるので、検索の終了判定などに使える。follow_links=False にすると、シンボリックリンクとジャンクションの中はたどらない(リンク自体は返す)。"""
     try:
         for elem in win32file.FindFilesIterator(os.path.join(path, "*")):
             if elem[8] == "." or elem[8] == "..":
                 continue
-            if elem[0] & win32file.FILE_ATTRIBUTE_DIRECTORY:
-                yield from IteratePaths(os.path.join(path, elem[8]))
+            if elem[0] & win32file.FILE_ATTRIBUTE_DIRECTORY and (follow_links or not reparse_link.is_link(os.path.join(path, elem[8]))):
+                yield from IteratePaths(os.path.join(path, elem[8]), follow_links=follow_links)
             # end ディレクトリ
             yield os.path.join(path, elem[8])
         # end iterate
