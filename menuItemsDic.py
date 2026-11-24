@@ -60,6 +60,8 @@ dic = {
     "READ_LISTINFO": _("一覧情報を読み上げ"),
     "READ_SETMOVEMENTREAD": _("移動先の読み方を設定"),
 
+    "TOOL_COMPRESS": _("圧縮"),
+    "TOOL_EXTRACT": _("解凍"),
     "TOOL_DIRCALC": _("フォルダ容量計算"),
     "TOOL_HASHCALC": _("ファイルハッシュの計算"),
     "TOOL_EXEC_PROGRAM": _("ファイル名を指定して実行"),

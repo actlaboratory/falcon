@@ -58,6 +58,8 @@ defaultKeymap["MAINVIEW"] = {
     "READ_LISTINFO": "alt+f1",
     "READ_SETMOVEMENTREAD": "",
 
+    "TOOL_COMPRESS": "",
+    "TOOL_EXTRACT": "",
     "TOOL_DIRCALC": "",
     "TOOL_HASHCALC": "",
     "TOOL_EXEC_PROGRAM": "ctrl+h/ctrl+shift+f2",
