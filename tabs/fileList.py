@@ -24,6 +24,7 @@ import globalVars
 import lists
 import misc
 import new_file
+import paste_shortcut
 import shell_new
 import StringUtil
 import tabs.streamList
@@ -351,6 +352,39 @@ class FileListTab(base.FalconTabBase):
         # end 貼り付ける物がない
         op = c.GetOperation()
         self.PastOperation(target, self.listObject.rootDirectory, op)
+
+    def PasteShortcut(self):
+        """クリップボードの項目のショートカットを今のディレクトリに作る（エクスプローラーの「ショートカットの貼り付け」）。"""
+        c = clipboard.ClipboardFile()
+        try:
+            targets = c.GetFileList()
+        except Exception:
+            self.log.exception("cannot get file list from clipboard")
+            targets = []
+        if not targets:
+            dialog(_("エラー"), _("貼り付けるものがありません。"))
+            return False
+        try:
+            op = c.GetOperation()
+        except Exception:
+            # Preferred DropEffect を付けないアプリからのコピーはコピー扱いにする
+            op = clipboard.COPY
+        # エクスプローラーでは、切り取った項目はショートカットとして貼り付けられない
+        if op == clipboard.MOVE:
+            dialog(_("エラー"), _("切り取った項目は、ショートカットとして貼り付けられません。コピーしてから貼り付けてください。"))
+            return False
+        result = paste_shortcut.paste(targets, self.listObject.rootDirectory)
+        cursor_target = result.created[0] if result.created else ""
+        self.UpdateFilelist(silence=True, cursorTargetName=cursor_target)
+        if not result.failed:
+            globalVars.app.say(_("%(count)d件のショートカットを作成しました。") % {"count": len(result.created)}, interrupt=True)
+            return True
+        lines = ["%s: %s" % (path, error.replace("\n", " ")) for path, error in result.failed[:_MAX_FAILED_LINES]]
+        if len(result.failed) > _MAX_FAILED_LINES:
+            lines.append(_("ほか %(count)d件") % {"count": len(result.failed) - _MAX_FAILED_LINES})
+        dialog(_("エラー"), _("%(succeeded)d件のショートカットを作成しました。\n%(failed)d件はショートカットを作成できませんでした。\n\n%(lines)s") % {
+            "succeeded": len(result.created), "failed": len(result.failed), "lines": "\n".join(lines)})
+        return False
 
     def PastOperation(self, target, dest, op=clipboard.COPY):
         op_str = _("複写") if op == clipboard.COPY else _("移動")
