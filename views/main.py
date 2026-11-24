@@ -33,6 +33,7 @@ from viewkit.menu import Menu as ViewkitMenu
 
 import browsableObjects
 import constants
+import content_reader
 import defaultKeymap
 import deviceCtrl
 import errorCodes
@@ -590,9 +591,10 @@ class MainWindow(viewkit.MainWindow):
             "MOVE_SETTING_FAVORITE": self._on_setting_favorite,
             "MOVE_SETTING_OPEN_HERE": self._on_setting_open_here,
 
-            "READ_CONTENT_PREVIEW": tab("Preview"),
-            "READ_CONTENT_READHEADER": delaied("ReadHeader"),
-            "READ_CONTENT_READFOOTER": delaied("ReadFooter"),
+            # tabs/base.py の Preview などは、フォーカスがない・文書を読み取れない場合に例外になるため、content_reader を使う
+            "READ_CONTENT_PREVIEW": lambda event: content_reader.preview(self.active_tab),
+            "READ_CONTENT_READHEADER": lambda event: self._delaied_call(lambda: content_reader.read_header(self.active_tab)),
+            "READ_CONTENT_READFOOTER": lambda event: self._delaied_call(lambda: content_reader.read_footer(self.active_tab)),
             "READ_CURRENTFOLDER": delaied("ReadCurrentFolder"),
             "READ_LISTITEMNUMBER": delaied("ReadListItemNumber"),
             "READ_LISTINFO": delaied("ReadListInfo"),

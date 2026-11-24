@@ -68,7 +68,10 @@ class GrepResultList(SearchResultBase):
         """_performSearchStepから呼ばれ、与えられたpathのファイルが検索にヒットするならリスト追加する"""
         if misc.isDocumentExt(path.split(".")[-1]):
             fullpath = os.path.join(self.rootDirectory, path)
-            content = misc.ExtractText(fullpath).split("\n")
+            text = misc.ExtractText(fullpath)
+            if text is None:  # 読み取れないファイルはヒットしない扱い
+                return 0
+            content = text.split("\n")
             fileobj = None  # 複数ヒットでファイルオブジェクトを生成し続けないようにキャッシュする
             ln = 1
             hitobjects = []
