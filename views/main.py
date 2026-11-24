@@ -43,6 +43,7 @@ import keymap
 import menuItemsDic
 import menuItemsStore
 import misc
+import shortcut_link
 import tabs.navigator
 import views.bulk_rename
 import views.changeAttribute
@@ -1020,7 +1021,12 @@ class MainWindow(viewkit.MainWindow):
             d.add(_("種類"), elem.typeString)
         if isinstance(elem, browsableObjects.NetworkResource) and elem.address != "":
             d.add(_("IPアドレス"), elem.address)
-        self.showSubWindow(views.objectDetail.ObjectDetailWindow, _("詳細情報"), d)
+        if isinstance(elem, browsableObjects.File) and shortcut_link.is_shortcut(elem.fullpath):
+            d.shortcut_path = elem.fullpath
+        result = self.showSubWindow(views.objectDetail.ObjectDetailWindow, _("詳細情報"), d)
+        # ショートカットの設定を変えると更新日時が変わるので、一覧を更新する
+        if getattr(result, "user_object", None) is True and hasattr(self.active_tab, "UpdateFilelist"):
+            self.active_tab.UpdateFilelist(silence=True)
 
 
 class FalconMenu:
