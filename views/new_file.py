@@ -15,7 +15,7 @@ class NewFileWindow(viewkit.SubWindow):
     """
     作成するファイルの名前と種類を入力するウィンドウ。
     parameters は作成先のディレクトリのフルパス。
-    結果は作成するファイル名（拡張子を含む）。
+    結果は new_file.NewFileRequest。
     """
 
     def __init__(self, parent, ctx, title, parameters: str):
@@ -24,11 +24,11 @@ class NewFileWindow(viewkit.SubWindow):
 
         creator = self.creator.makeChild(wx.VERTICAL, 20, style=wx.ALL | wx.EXPAND, margin=20)
         self.name, dummy = creator.inputbox(
-            _("ファイル名（空欄なら「%(name)s」）") % {"name": new_file.get_default_base_name()},
-            x=400, style=wx.BORDER_RAISED | wx.TE_DONTWRAP)
+            _("ファイル名"), x=400, style=wx.BORDER_RAISED | wx.TE_DONTWRAP)
         self.name.hideScrollBar(wx.HORIZONTAL)
         self.file_type, dummy = creator.combobox(
-            _("種類（名前に拡張子がなければ付けます）"), [t.label() for t in self._file_types], state=0)
+            _("種類（名前に拡張子がなければ付けます）"), [t.label() for t in self._file_types],
+            state=new_file.get_default_index(self._file_types), x=400)
 
         footer = self.creator.makeChild(wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
         footer.okbutton(_("ＯＫ"), self._on_ok)
@@ -58,4 +58,4 @@ class NewFileWindow(viewkit.SubWindow):
         event.Skip()
 
     def result(self):
-        return self._make_name()
+        return new_file.NewFileRequest(self._make_name(), self._selected_type())

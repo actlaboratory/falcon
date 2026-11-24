@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Falcon\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 16:38+0900\n"
+"POT-Creation-Date: 2026-11-24 16:46+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -38,10 +38,10 @@ msgstr ""
 #: lists\file.py:89 lists\networkResource.py:63 lists\stream.py:62
 #: tabs\base.py:331 tabs\base.py:338 tabs\base.py:349 tabs\base.py:803
 #: tabs\driveList.py:119 tabs\driveList.py:139 tabs\driveList.py:147
-#: tabs\fileList.py:66 tabs\fileList.py:73 tabs\fileList.py:114
-#: tabs\fileList.py:138 tabs\fileList.py:145 tabs\fileList.py:152
-#: tabs\fileList.py:195 tabs\fileList.py:226 tabs\fileList.py:341
-#: tabs\fileList.py:469 tabs\fileList.py:485 tabs\fileList.py:490
+#: tabs\fileList.py:67 tabs\fileList.py:74 tabs\fileList.py:115
+#: tabs\fileList.py:139 tabs\fileList.py:146 tabs\fileList.py:153
+#: tabs\fileList.py:203 tabs\fileList.py:234 tabs\fileList.py:349
+#: tabs\fileList.py:477 tabs\fileList.py:493 tabs\fileList.py:498
 #: tabs\navigator.py:104 tabs\streamList.py:49 tabs\streamList.py:82
 #: tabs\streamList.py:143 views\bulk_rename.py:108 views\bulk_rename.py:113
 #: views\bulk_rename.py:121 views\bulk_rename.py:125
@@ -324,11 +324,11 @@ msgstr ""
 msgid "終了"
 msgstr ""
 
-#: menuItemsDic.py:15 tabs\fileList.py:234 tabs\streamList.py:153
+#: menuItemsDic.py:15 tabs\fileList.py:242 tabs\streamList.py:153
 msgid "コピー"
 msgstr ""
 
-#: menuItemsDic.py:16 tabs\fileList.py:240 tabs\streamList.py:161
+#: menuItemsDic.py:16 tabs\fileList.py:248 tabs\streamList.py:161
 msgid "切り取り"
 msgstr ""
 
@@ -574,62 +574,75 @@ msgstr ""
 msgid "ファイルを開くことができませんでした(%(error)s)"
 msgstr ""
 
-#: new_file.py:32
+#: new_file.py:55
+#, python-format
+msgid "新規 %(type)s"
+msgstr ""
+
+#: new_file.py:62
 msgid "テキスト文書"
 msgstr ""
 
-#: new_file.py:33
+#: new_file.py:63
 msgid "Markdown 文書"
 msgstr ""
 
-#: new_file.py:34
+#: new_file.py:64
 msgid "CSV ファイル"
 msgstr ""
 
-#: new_file.py:35
+#: new_file.py:65
 msgid "HTML 文書"
 msgstr ""
 
-#: new_file.py:36
+#: new_file.py:66
 msgid "JSON ファイル"
 msgstr ""
 
-#: new_file.py:37
+#: new_file.py:69
 msgid "拡張子なし"
 msgstr ""
 
-#: new_file.py:43
+#: new_file.py:69
 msgid "新しいファイル"
 msgstr ""
 
-#: new_file.py:73
+#: new_file.py:129
 msgid "ファイル名を入力してください。"
 msgstr ""
 
-#: new_file.py:79 new_file.py:92
+#: new_file.py:135 new_file.py:156
 msgid "同じ名前のファイルまたはフォルダが既にあります。"
 msgstr ""
 
-#: new_file.py:94
+#: new_file.py:151
+msgid "ひな形のファイルを読み込めませんでした。"
+msgstr ""
+
+#: new_file.py:158
 msgid ""
 "アクセスが拒否されました。この場所にファイルを作成する権限がないか、読み取り"
 "専用の場所です。"
 msgstr ""
 
-#: new_file.py:96
+#: new_file.py:160
 msgid "作成先のフォルダが見つかりません。"
 msgstr ""
 
-#: new_file.py:99
+#: new_file.py:164
 msgid "ディスクの空き容量が不足しています。"
 msgstr ""
 
-#: new_file.py:101
+#: new_file.py:166
 msgid "読み取り専用の場所には作成できません。"
 msgstr ""
 
-#: new_file.py:103
+#: new_file.py:168
 msgid "ファイルを作成できませんでした。"
+msgstr ""
+
+#: new_file.py:210
+msgid "プログラムを起動できませんでした。"
 msgstr ""
 
 #: update.py:55 update.py:66 update.py:80 update.py:86 update.py:97
@@ -709,7 +722,7 @@ msgid "降順"
 msgstr ""
 
 #: lists\constants.py:36 lists\file.py:37 lists\grepResult.py:34
-#: lists\searchResult.py:31 views\search.py:35
+#: lists\searchResult.py:31 views\new_file.py:27 views\search.py:35
 msgid "ファイル名"
 msgstr ""
 
@@ -717,7 +730,7 @@ msgstr ""
 msgid "ファイルサイズ"
 msgstr ""
 
-#: lists\constants.py:38 tabs\fileList.py:452 tabs\pastProgress.py:87
+#: lists\constants.py:38 tabs\fileList.py:460 tabs\pastProgress.py:87
 #: views\main.py:979
 msgid "更新日時"
 msgstr ""
@@ -766,7 +779,7 @@ msgid "ドライブ洗濯"
 msgstr ""
 
 #: lists\file.py:38 lists\grepResult.py:38 lists\searchResult.py:32
-#: lists\stream.py:28 tabs\fileList.py:450 tabs\pastProgress.py:85
+#: lists\stream.py:28 tabs\fileList.py:458 tabs\pastProgress.py:85
 #: views\main.py:968 views\main.py:973
 msgid "サイズ"
 msgstr ""
@@ -795,7 +808,7 @@ msgstr ""
 msgid "ヒット件数"
 msgstr ""
 
-#: lists\networkResource.py:27 tabs\fileList.py:450 tabs\pastProgress.py:85
+#: lists\networkResource.py:27 tabs\fileList.py:458 tabs\pastProgress.py:85
 #: views\globalKeyConfig.py:30 views\globalKeyConfig.py:90 views\main.py:964
 #: views\openHere.py:23 views\openHere.py:57
 msgid "名前"
@@ -818,7 +831,7 @@ msgstr ""
 msgid "詳細"
 msgstr ""
 
-#: lists\pastProgress.py:65 tabs\fileList.py:188 tabs\navigator.py:124
+#: lists\pastProgress.py:65 tabs\fileList.py:196 tabs\navigator.py:124
 #: tabs\pastProgress.py:59 tabs\streamList.py:74
 msgid "確認"
 msgstr ""
@@ -904,7 +917,7 @@ msgstr ""
 msgid "ネットワークリソース一覧が取得できませんでした。"
 msgstr ""
 
-#: tabs\driveList.py:147 tabs\fileList.py:73 tabs\streamList.py:49
+#: tabs\driveList.py:147 tabs\fileList.py:74 tabs\streamList.py:49
 msgid "名前が変更できません。"
 msgstr ""
 
@@ -932,17 +945,17 @@ msgstr ""
 msgid "ドライブ一覧"
 msgstr ""
 
-#: tabs\fileList.py:108
+#: tabs\fileList.py:109
 #, python-format
 msgid "%(count)d件の名前を変更しました。"
 msgstr ""
 
-#: tabs\fileList.py:113 views\bulk_rename.py:120
+#: tabs\fileList.py:114 views\bulk_rename.py:120
 #, python-format
 msgid "ほか %(count)d件"
 msgstr ""
 
-#: tabs\fileList.py:114
+#: tabs\fileList.py:115
 #, python-format
 msgid ""
 "%(succeeded)d件の名前を変更しました。\n"
@@ -951,168 +964,168 @@ msgid ""
 "%(lines)s"
 msgstr ""
 
-#: tabs\fileList.py:133
+#: tabs\fileList.py:134
 msgid "情報"
 msgstr ""
 
-#: tabs\fileList.py:133
+#: tabs\fileList.py:134
 msgid "変更が必要な俗世はありませんでした。"
 msgstr ""
 
-#: tabs\fileList.py:138
+#: tabs\fileList.py:139
 msgid "属性が変更できません。"
 msgstr ""
 
-#: tabs\fileList.py:152
+#: tabs\fileList.py:153
 msgid "フォルダを作成できません。"
 msgstr ""
 
-#: tabs\fileList.py:183 tabs\streamList.py:69
+#: tabs\fileList.py:191 tabs\streamList.py:69
 #, python-format
 msgid ""
 "%(file)s\n"
 "このファイルをごみ箱に移動してもよろしいですか？"
 msgstr ""
 
-#: tabs\fileList.py:185 tabs\streamList.py:71
+#: tabs\fileList.py:193 tabs\streamList.py:71
 #, python-format
 msgid "選択中の項目 %(num)d件をごみ箱に移動してもよろしいですか？"
 msgstr ""
 
-#: tabs\fileList.py:195 tabs\streamList.py:82
+#: tabs\fileList.py:203 tabs\streamList.py:82
 msgid "ファイルをゴミ箱に移動できませんでした。"
 msgstr ""
 
-#: tabs\fileList.py:211 tabs\streamList.py:128
+#: tabs\fileList.py:219 tabs\streamList.py:128
 #, python-format
 msgid ""
 "%(file)s\n"
 "このファイルを完全削除してもよろしいですか？"
 msgstr ""
 
-#: tabs\fileList.py:213 tabs\streamList.py:130
+#: tabs\fileList.py:221 tabs\streamList.py:130
 #, python-format
 msgid "選択中の項目 %(num)d件を完全削除してもよろしいですか？"
 msgstr ""
 
-#: tabs\fileList.py:218 tabs\streamList.py:135
+#: tabs\fileList.py:226 tabs\streamList.py:135
 msgid "完全削除の確認"
 msgstr ""
 
-#: tabs\fileList.py:226 tabs\streamList.py:143
+#: tabs\fileList.py:234 tabs\streamList.py:143
 msgid "削除に失敗しました。"
 msgstr ""
 
-#: tabs\fileList.py:250
+#: tabs\fileList.py:258
 msgid "先頭ファイル"
 msgstr ""
 
-#: tabs\fileList.py:253
+#: tabs\fileList.py:261
 msgid "ファイルなし"
 msgstr ""
 
-#: tabs\fileList.py:283 tabs\streamList.py:177
+#: tabs\fileList.py:291 tabs\streamList.py:177
 #, python-format
 msgid "現在は、ドライブ%(drive)sの %(folder)s"
 msgstr ""
 
-#: tabs\fileList.py:286 tabs\streamList.py:180
+#: tabs\fileList.py:294 tabs\streamList.py:180
 #, python-format
 msgid "現在は、%(drive)sの %(folder)s"
 msgstr ""
 
-#: tabs\fileList.py:294
+#: tabs\fileList.py:302
 #, python-format
 msgid "フォルダ数 %(folders)d ファイル数 %(files)d"
 msgstr ""
 
-#: tabs\fileList.py:302 tabs\fileList.py:318 tabs\streamList.py:193
+#: tabs\fileList.py:310 tabs\fileList.py:326 tabs\streamList.py:193
 #: tabs\streamList.py:208
 #, python-format
 msgid "%(letter)sルート"
 msgstr ""
 
-#: tabs\fileList.py:307
+#: tabs\fileList.py:315
 #, python-format
 msgid "%(containing)sの中には、フォルダ %(folders)d個、 ファイル %(files)d個"
 msgstr ""
 
-#: tabs\fileList.py:322
+#: tabs\fileList.py:330
 msgid "フォルダ "
 msgstr ""
 
-#: tabs\fileList.py:324
+#: tabs\fileList.py:332
 #, python-format
 msgid ""
 "%(prefix)s%(dir)sを %(sortkind)sの%(sortad)sで一覧中、 %(max)d個中 "
 "%(current)d個目"
 msgstr ""
 
-#: tabs\fileList.py:341
+#: tabs\fileList.py:349
 msgid "貼り付けるものがありません。"
 msgstr ""
 
-#: tabs\fileList.py:348
+#: tabs\fileList.py:356
 msgid "複写"
 msgstr ""
 
-#: tabs\fileList.py:348 views\main.py:171
+#: tabs\fileList.py:356 views\main.py:171
 msgid "移動"
 msgstr ""
 
-#: tabs\fileList.py:377
+#: tabs\fileList.py:385
 msgid "項目"
 msgstr ""
 
-#: tabs\fileList.py:377 views\main.py:965
+#: tabs\fileList.py:385 views\main.py:965
 msgid "パス"
 msgstr ""
 
-#: tabs\fileList.py:378
+#: tabs\fileList.py:386
 #, python-format
 msgid "%s先"
 msgstr ""
 
-#: tabs\fileList.py:382 tabs\fileList.py:456 tabs\pastProgress.py:91
+#: tabs\fileList.py:390 tabs\fileList.py:464 tabs\pastProgress.py:91
 msgid "ファイル操作確認"
 msgstr ""
 
-#: tabs\fileList.py:383
+#: tabs\fileList.py:391
 #, python-format
 msgid "自身のサブディレクトリへの%sはできません。"
 msgstr ""
 
-#: tabs\fileList.py:405
+#: tabs\fileList.py:413
 #, python-format
 msgid ""
 "%(file)s\n"
 "このファイルを、 %(dest)s に%(op)sしますか？"
 msgstr ""
 
-#: tabs\fileList.py:408
+#: tabs\fileList.py:416
 #, python-format
 msgid "%(num)d 項目を、 %(dest)s に%(op)sしますか？"
 msgstr ""
 
-#: tabs\fileList.py:411
+#: tabs\fileList.py:419
 #, python-format
 msgid "%(op)sの確認"
 msgstr ""
 
-#: tabs\fileList.py:457 tabs\pastProgress.py:92
+#: tabs\fileList.py:465 tabs\pastProgress.py:92
 msgid "上書きしますか？"
 msgstr ""
 
-#: tabs\fileList.py:469
+#: tabs\fileList.py:477
 #, python-format
 msgid "%(op)sに失敗しました。"
 msgstr ""
 
-#: tabs\fileList.py:479
+#: tabs\fileList.py:487
 msgid "新しい名前を入力"
 msgstr ""
 
-#: tabs\fileList.py:485
+#: tabs\fileList.py:493
 msgid "新しい名前を入力してください。"
 msgstr ""
 
@@ -1802,12 +1815,7 @@ msgstr ""
 msgid "スキップ"
 msgstr ""
 
-#: views\new_file.py:27
-#, python-format
-msgid "ファイル名（空欄なら「%(name)s」）"
-msgstr ""
-
-#: views\new_file.py:31
+#: views\new_file.py:30
 msgid "種類（名前に拡張子がなければ付けます）"
 msgstr ""
 

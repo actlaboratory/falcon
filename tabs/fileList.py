@@ -24,6 +24,7 @@ import globalVars
 import lists
 import misc
 import new_file
+import shell_new
 import StringUtil
 import tabs.streamList
 import views.OperationSelecter
@@ -154,16 +155,23 @@ class FileListTab(base.FalconTabBase):
         # end error
         self.UpdateFilelist(silence=True, cursorTargetName=newdir)
 
-    def MakeFile(self, name):
-        """今のディレクトリに空のファイルを作り、作ったファイルにカーソルを合わせる。"""
+    def MakeFile(self, request):
+        """
+        今のディレクトリに新しいファイルを作り、作ったファイルにカーソルを合わせる。
+        request は new_file.NewFileRequest。
+        """
         directory = self.listObject.rootDirectory
-        error = new_file.validate(directory, name)
+        error = new_file.validate(directory, request.name)
         if error == "":
-            error = new_file.create(os.path.join(directory, name))
+            error = new_file.create(os.path.join(directory, request.name), request.file_type)
         if error != "":
             errorDialog(error)
             return False
-        self.UpdateFilelist(silence=True, cursorTargetName=name)
+        if request.file_type.method == shell_new.METHOD_COMMAND:
+            # ファイルは起動したプログラムが作るので、まだ無いことがある
+            self.UpdateFilelist(silence=True)
+            return True
+        self.UpdateFilelist(silence=True, cursorTargetName=request.name)
         return True
 
     def FileOperationTest(self):
