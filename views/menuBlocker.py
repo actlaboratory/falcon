@@ -25,6 +25,8 @@ tabTypeBlockList = {
         "MOVE_BACKWARD",
         "MOVE_TOPFILE",
         "MOVE_OPEN_HERE_",
+        "TOOL_COMPRESS",
+        "TOOL_EXTRACT",
         "TOOL_DIRCALC",
         "TOOL_HASHCALC",
         "TOOL_ADDPATH",
@@ -54,6 +56,8 @@ tabTypeBlockList = {
         "MOVE_FORWARD_STREAM",
         "MOVE_TOPFILE",
         "MOVE_OPEN_HERE_",
+        "TOOL_COMPRESS",
+        "TOOL_EXTRACT",
         "TOOL_DIRCALC",
         "TOOL_HASHCALC",
         "TOOL_ADDPATH",
@@ -95,6 +99,8 @@ tabTypeBlockList = {
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
+        "TOOL_COMPRESS",
+        "TOOL_EXTRACT",
         "TOOL_DIRCALC",
         "TOOL_HASHCALC",
         "TOOL_ADDPATH",
@@ -123,6 +129,8 @@ tabTypeBlockList = {
         "MOVE_FORWARD_STREAM",
         "MOVE_TOPFILE",
         "MOVE_OPEN_HERE_",
+        "TOOL_COMPRESS",
+        "TOOL_EXTRACT",
         "TOOL_DIRCALC",
         "TOOL_HASHCALC",
         "TOOL_ADDPATH",
@@ -139,6 +147,8 @@ tabTypeBlockList = {
 for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
     tabTypeBlockList[t] += [
         "FILE_BULK_RENAME",  # 名前を変えると検索結果と合わなくなるため
+        "TOOL_COMPRESS",  # 複数のフォルダの項目が混ざるため
+        "TOOL_EXTRACT",
         "FILE_NEW",
         "FILE_MKDIR",
         "FILE_MKFILE",
@@ -179,6 +189,8 @@ selectedItemCountBlockList = {
         "MOVE_FORWARD_TAB",
         "MOVE_FORWARD_STREAM",
         "MOVE_EXEC_ORIGINAL_ASSOCIATION",
+        "TOOL_COMPRESS",
+        "TOOL_EXTRACT",
         "TOOL_DIRCALC",
         "TOOL_HASHCALC",
         "TOOL_ADDPATH",
@@ -222,6 +234,7 @@ selectedItemTypeBlockList = {
         "TOOL_EJECT_DEVICE",
     ],
     browsableObjects.Folder: [
+        "TOOL_EXTRACT",
         "TOOL_HASHCALC",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
