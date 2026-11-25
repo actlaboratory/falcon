@@ -46,6 +46,7 @@ import menuItemsDic
 import menuItemsStore
 import misc
 import network_resource
+import operation_manager
 import reparse_link
 import shortcut_link
 import tabs.navigator
@@ -65,6 +66,7 @@ import views.new_file
 import views.new_shortcut
 import views.objectDetail
 import views.openHere
+import views.operation_progress
 import views.registerOriginalAssociation
 import views.search
 import views.settingsDialog
@@ -132,6 +134,12 @@ class MainWindow(viewkit.MainWindow):
         self._add_user_command_keys()
 
         self.tab_ctrl = self.creator.tabCtrl(_("タブ選択"), self._on_change_tab, 0, wx.EXPAND, 1)
+        # 実行中のファイル操作の進み具合。操作がない間は隠す
+        self.progress_gauge, dummy = self.creator.gauge(_("ファイル操作の進行状況"), text_layout=None)
+        self.progress_gauge.SetRange(100)
+        self.progress_gauge.Hide()
+        self._progress_window_opened = False
+        self.operations = operation_manager.OperationManager(self)
         self.Bind(wx.EVT_CLOSE, self._on_close)
         self.Bind(wx.EVT_MENU_OPEN, self._on_menu_open)
 
@@ -215,6 +223,7 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("READ_CURRENTFOLDER", "C"),
                 _menu_item("READ_LISTITEMNUMBER", "N"),
                 _menu_item("READ_LISTINFO", "I"),
+                _menu_item("READ_PROGRESS", "G"),
                 _menu_item("READ_SETMOVEMENTREAD", "M"),
             ]),
             viewkit.TopMenuDefinition(_("ツール"), "T", [
@@ -233,12 +242,12 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("VIEW_SORTCYCLEAD", "A"),
                 _menu_item("VIEW_DRIVE_INFO", "D"),
                 _menu_item("VIEW_TOGGLE_EXTENSION", "E"),
+                _menu_item("VIEW_PROGRESS", "P"),
             ]),
             viewkit.TopMenuDefinition(_("環境"), "O", [
                 _menu_item("ENV_REGIST_ORIGINAL_ASSOCIATION", "A"),
                 _menu_item("ENV_KEY_CONFIG", "K"),
                 _menu_item("ENV_TESTDIALOG", "T"),
-                _menu_item("ENV_PASTTABTEST", "P"),
                 _menu_item("ENV_FONTTEST", "F"),
                 _menu_item("ENV_SETTINGS", "S"),
             ]),
@@ -412,12 +421,14 @@ class MainWindow(viewkit.MainWindow):
             if page_no == -1:
                 return
 
+        if len(self.tabs) == 1:  # 最後のタブなのでソフト終了
+            tab = self.tabs[0]
+            if self.Close():  # 終了の確認で取りやめた場合は、タブを残す
+                tab.OnClose()
+            return
         active_tab = self.active_tab
         popped_tab = self.tabs.pop(page_no)
         popped_tab.OnClose()
-        if len(self.tabs) == 0:  # タブがなくなったらソフト終了
-            self.Close()
-            return
         # この時点で、 noteBook がリストコントロールをデリートするらしいので、他の場所で明示的に消してはいけないとリファレンスに書いてある
         self.tab_ctrl.DeletePage(page_no)
         self.tab_ctrl.SendSizeEvent()
@@ -448,6 +459,65 @@ class MainWindow(viewkit.MainWindow):
             if type(tab) is tabs.fileList.FileListTab and os.path.normcase(tab.listObject.rootDirectory) in directories:
                 tab.UpdateFilelist(silence=True)
 
+    def can_update_in_background(self):
+        """利用者の操作を妨げずに、一覧を更新できるかどうかを返す。名前の変更中や、ダイアログを開いている間は更新しない。"""
+        return self.shortcut_enabled and self.IsEnabled()
+
+    def refresh_file_lists(self, directories):
+        """update_file_lists と同じだが、カーソルの位置、選択、チェックを維持する。ファイル操作が終わったときに使う。"""
+        directories = {os.path.normcase(directory) for directory in directories}
+        for tab in self.tabs:
+            # 検索結果のタブは FileListTab の派生だが、再検索になるため更新しない
+            if type(tab) is tabs.fileList.FileListTab and os.path.normcase(tab.listObject.rootDirectory) in directories:
+                self._refresh_file_list(tab)
+        self._update_menu_state(self.active_tab)
+
+    def _refresh_file_list(self, tab):
+        index = tab.GetFocusedItem()
+        selected = set()
+        i = tab.hListCtrl.GetFirstSelected()
+        while i >= 0:
+            selected.add(tab.listObject.GetElement(i).fullpath)
+            i = tab.hListCtrl.GetNextSelected(i)
+        focused = tab.GetFocusedElement()
+        checked = {element.fullpath for element in tab.checkedItem}
+        if tab.UpdateFilelist(silence=True) is not None:
+            return  # 更新できなかった
+        items = list(tab.listObject.GetItemList())
+        if not items:
+            return
+        if focused is not None and focused.fullpath not in {item.fullpath for item in items}:
+            # カーソルのあった項目がなくなった
+            tab.Focus(min(index, len(items) - 1))
+        for i, item in enumerate(items):
+            if item.fullpath in selected:
+                tab.hListCtrl.Select(i)
+            if item.fullpath in checked:
+                tab.checkedItem.add(item)
+                tab.hListCtrl.SetItemBackgroundColour(i, "#0000FF")
+                tab.hListCtrl.RefreshItem(i)
+
+    def set_progress(self, percentage):
+        """プログレスバーに割合を表示する。None なら隠す。"""
+        visible = percentage is not None and not self._progress_window_opened
+        if visible and self.progress_gauge.GetValue() != percentage:
+            self.progress_gauge.SetValue(percentage)
+        # 名前の変更中に一覧の大きさが変わると、編集が打ち切られてしまう
+        if visible != self.progress_gauge.IsShown() and self.shortcut_enabled:
+            self.progress_gauge.Show(visible)
+            self.creator.getPanel().Layout()
+
+    def _on_view_progress(self, event):
+        """ファイル操作の進行状況を表示する"""
+        # スクリーンリーダーの報告が重ならないよう、プログレスバーはどちらか一方だけに表示する
+        self._progress_window_opened = True
+        self.operations.update_gauge()
+        try:
+            self.showSubWindow(views.operation_progress.OperationProgressWindow, _("ファイル操作の進行状況"), self.operations)
+        finally:
+            self._progress_window_opened = False
+            self.operations.update_gauge()
+
     def update_tab_name(self):
         """タブ名変更の可能性があるときにtabsからたたかれる"""
         index = self.get_tab_index(self.active_tab)
@@ -466,7 +536,11 @@ class MainWindow(viewkit.MainWindow):
         """ウィンドウが閉じられる直前に呼ばれる。"""
         self.log.info("received close event(force=" + ("true" if not event.CanVeto() else "false") + ")")
         if not event.CanVeto():  # 強制シャットダウン
+            self.operations.shutdown()
             self.Destroy()
+            return
+        if not self._confirm_stop_operations():
+            event.Veto()
             return
         num = self.get_number_of_tabs()
         if num > 1:
@@ -481,7 +555,22 @@ class MainWindow(viewkit.MainWindow):
                 event.Veto()
                 self.log.info("CloseEvent.Veto(). user select cancel.")
                 return
+        self.operations.shutdown()
         event.Skip()
+
+    def _confirm_stop_operations(self):
+        """終わっていないファイル操作があれば、終了してよいか確認する。"""
+        count = self.operations.get_unfinished_count()
+        if count == 0:
+            return True
+        dlg = wx.MessageDialog(
+            self,
+            _("%(count)d件のファイル操作が終わっていません。中止して、Falconを終了してもよろしいですか？") % {"count": count},
+            _("終了確認"),
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+        result = dlg.ShowModal()
+        dlg.Destroy()
+        return result == wx.ID_YES
 
     # ---- ショートカットキー・メニュー ----
 
@@ -638,6 +727,7 @@ class MainWindow(viewkit.MainWindow):
             "READ_CURRENTFOLDER": delaied("ReadCurrentFolder"),
             "READ_LISTITEMNUMBER": delaied("ReadListItemNumber"),
             "READ_LISTINFO": delaied("ReadListInfo"),
+            "READ_PROGRESS": lambda event: self._delaied_call(self.operations.say_progress),
             "READ_SETMOVEMENTREAD": tab("SetMovementRead"),
 
             "TOOL_COMPRESS": self._on_compress,
@@ -653,12 +743,12 @@ class MainWindow(viewkit.MainWindow):
             "VIEW_SORTSELECT": tab("SortSelect"),
             "VIEW_SORTCYCLEAD": delaied("SortCycleAd"),
             "VIEW_DRIVE_INFO": self._on_drive_info,
+            "VIEW_PROGRESS": self._on_view_progress,
             "VIEW_TOGGLE_EXTENSION": lambda event: self._delaied_call(self._toggle_extension),
 
             "ENV_REGIST_ORIGINAL_ASSOCIATION": self._on_regist_original_association,
             "ENV_KEY_CONFIG": self._on_key_config,
             "ENV_TESTDIALOG": lambda event: None,
-            "ENV_PASTTABTEST": lambda event: self.navigate({"action": "past"}, as_new_tab=True),
             "ENV_FONTTEST": self._on_font_test,
             "ENV_SETTINGS": self._on_settings,
 

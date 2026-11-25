@@ -22,7 +22,7 @@ import misc
 import network_resource
 import pywintypes
 import views.ViewCreator
-from . import fileList, driveList, streamList, searchResult, grepResult, NetworkResourceList, pastProgress
+from . import fileList, driveList, streamList, searchResult, grepResult, NetworkResourceList
 from simpleDialog import dialog
 
 log = logging.getLogger("falcon.navigator")
@@ -68,15 +68,6 @@ def Navigate(
                 target['keyword'],
                 target['isRegularExpression'])
         # end grep検索
-        if target['action'] == 'past':
-            newtab = pastProgress.PastProgressTab(environment)
-            newtab.Initialize(parent, creator)
-            lst = lists.PastProgressList()
-            lst.Initialize(
-                header_directory=target["operator"].instructions["to"])
-            newtab.Update(lst)
-            newtab.SetFileOperator(target["operator"])
-        # end 貼り付け
         # かならずviews.Main.Navigateを経由して呼び出されているはず
         return newtab
     # end targetが辞書の時の特殊処理

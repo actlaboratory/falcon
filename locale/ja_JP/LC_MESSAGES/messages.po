@@ -2267,3 +2267,121 @@ msgid ""
 "Wi-Fiなどのネットワークの接続と、接続先の機器の状態を確認してください。\n"
 "(%(error)s)"
 msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(count)d件のファイル操作が終わっていません。中止して、Falconを終了してもよろしいですか？"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(count)d項目 → %(destination)s"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(item)s → %(destination)s"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sが完了しました。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sでエラーが発生しました。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sの確認が必要です。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sを中止しました。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sを待機中に追加しました。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sを開始しました。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(percentage)d%%"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "エラー %(count)d件"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "ファイル操作"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "ファイル操作の詳細"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "ファイル操作の進行状況"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "中止しています"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "処理方法を選択"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "実行中"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "実行中のファイル操作はありません。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "実行中の操作"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "待機中"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "待機中 %(count)d件"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "確認待ち %(count)d件"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "確認待ちの操作 %(count)d件"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "終了した操作を消去"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "進行状況を確認"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "進行状況を読み上げ"
+msgstr ""

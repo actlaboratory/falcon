@@ -13,6 +13,9 @@ import reparse_link
 from clipboard import COPY, MOVE
 
 VERB = "past"
+# CopyFileEx などの進行状況のコールバックの戻り値
+_PROGRESS_CONTINUE = 0
+_PROGRESS_CANCEL = 1
 log = logging.getLogger("falcon.%s" % VERB)
 """テスト用のモックです。ディスクへの書き込みを待ち時間でシミュレートします。"""
 
@@ -51,14 +54,17 @@ def Execute(op, resume=False):
     copy_move_flag = op.instructions["copy_move_flag"]
     if not resume:  # resume modeではない=初期化
         op.output["all_OK"] = True
-        op.output["percentage"] = 0
         op.output["copy_move_flag"] = copy_move_flag
     # end 初期化
+    op.output["percentage"] = 0
+    op.is_counting = True
     # 再開時に、前回リトライした項目をもう一度処理しないよう、毎回空にする
     op.output["retry"]["target"] = []
     log.debug("Retrieving file list...")
     lst = []
     for elemt in f:
+        if op.is_canceled():
+            break
         elem = elemt[0]
         dest = elemt[1]
         basepath = os.path.dirname(elem)
@@ -92,11 +98,15 @@ def Execute(op, resume=False):
     op.output['total_bytes'] = total
     op.output['current_bytes'] = 0
     log.debug("Size: %d bbytes" % total)
+    op.is_counting = False
     log.debug("Start copying...")
     overwrite = resume
     pasted_size = 0
     failed_folders = []  # 作成できなかったフォルダ。この中の項目は処理しない
-    for elem in f:
+    for index, elem in enumerate(f):
+        if op.is_canceled():
+            log.info("canceled")
+            break
         if any(elem.path == folder or elem.path.startswith(folder + os.sep) for folder in failed_folders):
             continue
         if elem.destpath is None:  # フォルダ削除用
@@ -131,12 +141,15 @@ def Execute(op, resume=False):
             if elem.is_link:
                 reparse_link.move_link(elem.path, elem.destpath, overwrite)
             elif elem.isfile:
-                copyOrMove(elem, copy_move_flag, overwrite)
+                copyOrMove(elem, copy_move_flag, overwrite, _create_progress_routine(op, pasted_size, total))
             else:
                 if resume and os.path.isdir(elem.destpath):
                     continue  # 再開している場合はエラーになる前に逃げる
                 win32file.CreateDirectory(elem.destpath, None)
         except (win32file.error, OSError) as err:
+            if op.is_canceled() and err.winerror == winerror.ERROR_REQUEST_ABORTED:
+                log.info("canceled while processing %s" % elem.path)
+                break
             log.error("Cannot create %s (%s)" % (elem.destpath, str(err)))
             if not elem.isfile:
                 failed_folders.append(elem.path)
@@ -147,11 +160,13 @@ def Execute(op, resume=False):
         if elem.size != -1:
             pasted_size += elem.size
         if total == 0:
-            percentage = 100
+            percentage = int((index + 1) / len(f) * 100)
         else:
             percentage = int(pasted_size / total * 100)
         op.SetPercentage(percentage)
     # end 削除処理
+    if op.is_canceled():
+        op.output["retry"]["target"] = []
     if len(op.output["retry"]["target"]) > 0:
         op.output["retry"]["operation"] = VERB
         op.output["retry"]["copy_move_flag"] = copy_move_flag
@@ -163,15 +178,28 @@ def Execute(op, resume=False):
     return retry
 
 
-def copyOrMove(elem, copy_move_flag, overwrite):
+def _create_progress_routine(op, pasted_size, total):
+    """1つのファイルの途中でも、進み具合の反映と中止ができるようにするコールバックを作る。"""
+    def routine(size, transferred, stream_size, stream_transferred, stream_number, reason, source, destination, data):
+        if op.is_canceled():
+            return _PROGRESS_CANCEL
+        if total > 0:
+            percentage = min(100, int((pasted_size + transferred) / total * 100))
+            if percentage != op.GetPercentage():
+                op.SetPercentage(percentage)
+        return _PROGRESS_CONTINUE
+    return routine
+
+
+def copyOrMove(elem, copy_move_flag, overwrite, progress_routine=None):
     if copy_move_flag == COPY:
         f = 0 if overwrite else win32file.COPY_FILE_FAIL_IF_EXISTS
         win32file.CopyFileEx(
-            elem.path, elem.destpath, None, None, False, f
+            elem.path, elem.destpath, progress_routine, None, False, f
         )
     else:
         f = win32file.MOVEFILE_COPY_ALLOWED | win32file.MOVEFILE_REPLACE_EXISTING if overwrite else win32file.MOVEFILE_COPY_ALLOWED
-        win32file.MoveFileEx(elem.path, elem.destpath, f)
+        win32file.MoveFileWithProgress(elem.path, elem.destpath, progress_routine, None, f)
 
 
 def _is_same_item(elem):
@@ -215,6 +243,8 @@ def _processExistingFolder(output, elem, basepath, destpath):
 
 def _expandFolder(op, lst, path, e, basepath, destpath, copy_move_flag, parents=()):
     """フォルダを展開して、指定されたリストに入れる。"""
+    if op.is_canceled():
+        return
     # コピーではリンク先の中身をたどるので、同じフォルダを繰り返したどらないようにする
     real_path = os.path.normcase(os.path.realpath(path))
     if real_path in parents:

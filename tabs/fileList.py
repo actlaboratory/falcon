@@ -520,16 +520,8 @@ class FileListTab(base.FalconTabBase):
             "target": target,
             "to": dest,
             "copy_move_flag": op}
-        op = fileOperator.FileOperator(inst)
-        op.Execute()
-        directories = {os.path.dirname(source) for source, dummy in target}
-        directories.add(dest)
-        globalVars.app.main_window.update_file_lists(directories)
-
-        # 今はテストで、常にダイアログを表示して処理刷る
-        nav = {"action": "past", "operator": op}
-        globalVars.app.main_window.navigate(nav, as_new_tab=True)
-        return  # このあとのことは新しいタブに任せる
+        # 別スレッドで実行し、一覧の更新や結果の通知もそちらに任せる
+        globalVars.app.main_window.operations.add(fileOperator.FileOperator(inst))
     # end past
 
     def getNewNameForPast(self, existingDirname, existingName):
