@@ -34,6 +34,7 @@ tabTypeBlockList = {
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
+        "VIEW_TOGGLE_EXTENSION",
     ],
     tabs.fileList.FileListTab: [
         "TOOL_EJECT_DRIVE",
@@ -67,6 +68,7 @@ tabTypeBlockList = {
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
+        "VIEW_TOGGLE_EXTENSION",
     ],
     tabs.pastProgress.PastProgressTab: [
         "FILE_RENAME",
@@ -106,6 +108,7 @@ tabTypeBlockList = {
         "TOOL_EJECT_DRIVE",
         "TOOL_EJECT_DEVICE",
         "VIEW_DRIVE_INFO",
+        "VIEW_TOGGLE_EXTENSION",
     ],
     tabs.grepResult.GrepResultTab: [
         "MOVE_FORWARD_TAB",
@@ -139,6 +142,7 @@ tabTypeBlockList = {
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
+        "VIEW_TOGGLE_EXTENSION",
     ]
 }
 

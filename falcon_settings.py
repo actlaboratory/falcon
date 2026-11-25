@@ -92,6 +92,7 @@ DEFAULT_VALUES = {
     },
     "view": {
         "header_title_length": 20,
+        "hide_extension": False,
     },
     "browse": {
         "startpath": "",

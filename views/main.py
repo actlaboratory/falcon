@@ -229,6 +229,7 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("VIEW_SORTSELECT", "S"),
                 _menu_item("VIEW_SORTCYCLEAD", "A"),
                 _menu_item("VIEW_DRIVE_INFO", "D"),
+                _menu_item("VIEW_TOGGLE_EXTENSION", "E"),
             ]),
             viewkit.TopMenuDefinition(_("環境"), "O", [
                 _menu_item("ENV_REGIST_ORIGINAL_ASSOCIATION", "A"),
@@ -646,6 +647,7 @@ class MainWindow(viewkit.MainWindow):
             "VIEW_SORTSELECT": tab("SortSelect"),
             "VIEW_SORTCYCLEAD": delaied("SortCycleAd"),
             "VIEW_DRIVE_INFO": self._on_drive_info,
+            "VIEW_TOGGLE_EXTENSION": lambda event: self._delaied_call(self._toggle_extension),
 
             "ENV_REGIST_ORIGINAL_ASSOCIATION": self._on_regist_original_association,
             "ENV_KEY_CONFIG": self._on_key_config,
@@ -1022,6 +1024,14 @@ class MainWindow(viewkit.MainWindow):
             dialog(_("エラー"), _("ドライブ情報の取得に失敗しました。"))
             return
         self.show_detail(elem)
+
+    def _toggle_extension(self):
+        """ファイル名の拡張子の非表示/表示を切り替え、開いているすべてのタブに反映する"""
+        hide = not self.app.settings.get_bool("view", "hide_extension", False)
+        self.app.settings.set("view", "hide_extension", hide)
+        for tab in self.tabs:
+            tab.hListCtrl.Refresh()
+        self.app.say(_("拡張子を非表示") if hide else _("拡張子を表示"), interrupt=True)
 
     def _on_regist_original_association(self, event):
         config = views.registerOriginalAssociation.create_config(self.app.settings.get_section("originalAssociation"))

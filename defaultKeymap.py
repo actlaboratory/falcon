@@ -71,6 +71,7 @@ defaultKeymap["MAINVIEW"] = {
     "VIEW_SORTSELECT": "ctrl+S",
     "VIEW_SORTCYCLEAD": "shift+F11",
     "VIEW_DRIVE_INFO": "alt+f2",
+    "VIEW_TOGGLE_EXTENSION": "",
 
     "ENV_REGIST_ORIGINAL_ASSOCIATION": "",
     "ENV_KEY_CONFIG": "",

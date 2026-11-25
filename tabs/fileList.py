@@ -44,6 +44,17 @@ _MAX_FAILED_LINES = 10
 class FileListTab(base.FalconTabBase):
     """ファイル/フォルダリストが表示されているタブ。"""
 
+    def OnLabelEditStart(self, evt):
+        """
+        ファイル名変更の入力開始イベント
+        拡張子を非表示にしていても、拡張子が失われないように、拡張子を含む名前を編集させる
+        """
+        super().OnLabelEditStart(evt)
+        elem = self.listObject.GetElement(evt.GetIndex())
+        edit = self.hListCtrl.GetEditControl()
+        if edit is not None and elem is not None and edit.GetValue() != elem.basename:
+            edit.SetValue(elem.basename)
+
     def OnLabelEditEnd(self, evt):
         """
                 ファイル名変更の入力終了イベント

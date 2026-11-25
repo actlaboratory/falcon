@@ -73,6 +73,7 @@ dic = {
     "VIEW_SORTSELECT": _("並び順を選択"),
     "VIEW_SORTCYCLEAD": _("昇順/降順切り替え"),
     "VIEW_DRIVE_INFO": _("ドライブ情報の表示"),
+    "VIEW_TOGGLE_EXTENSION": _("拡張子の非表示/表示"),
     "VIEW_SORT_COLUMN": _("カラムの並び替え"),
 
     "ENV_REGIST_ORIGINAL_ASSOCIATION": _("独自関連付けの管理"),
