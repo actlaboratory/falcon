@@ -2421,5 +2421,44 @@ msgstr "View progress"
 msgid "進行状況を読み上げ"
 msgstr "Read progress"
 
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sが完了しました。注意が%(count)d件あります。"
+msgstr "%(name)s finished with %(count)d notices."
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sにパスワードの入力が必要です。"
+msgstr "%(name)s requires a password."
+
+#: operation_manager.py views\operation_progress.py
+msgid "パスワードの入力"
+msgstr "Enter password"
+
+#: operation_manager.py views\operation_progress.py
+msgid "パスワードの入力待ち"
+msgstr "Password required"
+
+#: operation_manager.py views\operation_progress.py
+msgid "圧縮"
+msgstr "Compress"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "完了 注意%(count)d件"
+msgstr "Finished, notices: %(count)d"
+
+#: operation_manager.py views\operation_progress.py
+msgid "注意"
+msgstr "Notice"
+
+#: operation_manager.py views\operation_progress.py
+msgid "確認待ち"
+msgstr "Confirmation required"
+
+#: operation_manager.py views\operation_progress.py
+msgid "解凍"
+msgstr "Extract"
+
 #~ msgid "ファイル名（空欄なら種類ごとの既定の名前）"
 #~ msgstr "File name (the default name for the type if empty)"

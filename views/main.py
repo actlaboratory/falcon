@@ -50,7 +50,6 @@ import operation_manager
 import reparse_link
 import shortcut_link
 import tabs.navigator
-import views.archive_progress
 import views.bulk_rename
 import views.changeAttribute
 import views.compress
@@ -83,11 +82,6 @@ EVENT_FROM_SELF = -1
 
 # キーマップ上でのメインウィンドウの識別子
 KEYMAP_IDENTIFIER = "mainView"
-
-# 圧縮・解凍が終わらないとき、進み具合を表示するまでの時間(秒)
-ARCHIVE_PROGRESS_DELAY = 0.3
-# 圧縮・解凍の注意を表示する最大行数
-MAX_ARCHIVE_WARNINGS = 10
 
 
 class UserMenuItemDefinition(viewkit.MenuItemDefinition):
@@ -982,14 +976,7 @@ class MainWindow(viewkit.MainWindow):
         result = self.showSubWindow(views.compress.CompressWindow, _("圧縮"), parameters)
         if result.code == wx.ID_CANCEL:
             return
-        request = result.user_object
-        job = archiver.Job(archiver.compress, request)
-        self._run_archive_job(job, _("圧縮しています"))
-        if self._show_archive_error(job):
-            return
-        directory, name = os.path.split(request.destination)
-        self._update_after_archive(directory, name)
-        self._show_archive_result(_("圧縮しました。"), job.warnings)
+        self.operations.add(operation_manager.CompressOperation(result.user_object))
 
     def _on_extract(self, event):
         """選択中の書庫を解凍する"""
@@ -1004,40 +991,8 @@ class MainWindow(viewkit.MainWindow):
         result = self.showSubWindow(views.extract.ExtractWindow, _("解凍"), self.active_tab.listObject.rootDirectory)
         if result.code == wx.ID_CANCEL:
             return
-        request = result.user_object
-        warnings = []
-        focus_name = ""
-        succeeded = 0
         for path in archives:
-            directory = request.get_directory(path)
-            job = self._extract_archive(path, directory, request.conflict)
-            if job is None:  # パスワードの入力をやめた
-                continue
-            if self._show_archive_error(job, path):
-                if isinstance(job.error, archiver.Canceled):
-                    break
-                continue
-            succeeded += 1
-            warnings += job.warnings
-            if request.make_folder and focus_name == "":
-                focus_name = os.path.basename(directory)
-        self._update_after_archive(request.directory, focus_name)
-        if succeeded > 0:
-            self._show_archive_result(_("%(count)d件を解凍しました。") % {"count": succeeded}, warnings)
-
-    def _extract_archive(self, path, directory, conflict):
-        """1つの書庫を、必要ならパスワードを尋ねて解凍し、終わった Job を返す。パスワードの入力をやめたら None。"""
-        password = ""
-        while True:
-            job = archiver.Job(archiver.extract, path, directory, conflict, password)
-            self._run_archive_job(job, _("解凍しています"))
-            if not isinstance(job.error, archiver.PasswordError):
-                return job
-            message = "%s\n%s" % (os.path.basename(path), job.error)
-            result = self.showSubWindow(views.extract.PasswordWindow, _("パスワードの入力"), message)
-            if result.code == wx.ID_CANCEL:
-                return None
-            password = result.user_object
+            self.operations.add(operation_manager.ExtractOperation(path, result.user_object))
 
     def _get_archive_targets(self):
         """圧縮・解凍の対象として、選択中のファイル・フォルダのパスを返す"""
@@ -1045,40 +1000,6 @@ class MainWindow(viewkit.MainWindow):
         if not isinstance(self.active_tab, tabs.fileList.FileListTab):
             return []
         return [e.fullpath for e in self.active_tab.GetSelectedItems() if isinstance(e, browsableObjects.File)]
-
-    def _run_archive_job(self, job, title):
-        """圧縮・解凍を別スレッドで実行し、終わるまで待つ。時間がかかるときは進み具合を表示する。"""
-        job.start()
-        if not job.wait(ARCHIVE_PROGRESS_DELAY):
-            self.showSubWindow(views.archive_progress.ArchiveProgressWindow, title, job)
-
-    def _show_archive_error(self, job, path=""):
-        """圧縮・解凍が失敗・中止していれば、知らせてTrueを返す"""
-        if job.error is None:
-            return False
-        if isinstance(job.error, archiver.Canceled):
-            self.app.say(_("中止しました。"), interrupt=True)
-        else:
-            message = str(job.error)
-            dialog(_("エラー"), "%s\n%s" % (os.path.basename(path), message) if path else message)
-        return True
-
-    def _show_archive_result(self, message, warnings):
-        """圧縮・解凍の結果を知らせる。注意があればダイアログで表示する。"""
-        if not warnings:
-            self.app.say(message, interrupt=True)
-            return
-        lines = warnings[:MAX_ARCHIVE_WARNINGS]
-        if len(warnings) > MAX_ARCHIVE_WARNINGS:
-            lines.append(_("ほか %(count)d件") % {"count": len(warnings) - MAX_ARCHIVE_WARNINGS})
-        dialog(_("情報"), "%s\n\n%s" % (message, "\n".join(lines)))
-
-    def _update_after_archive(self, directory, focus_name):
-        """一覧を更新する。表示中のフォルダに書き込んだときは、作った項目にカーソルを合わせる。"""
-        current = os.path.normcase(os.path.abspath(self.active_tab.listObject.rootDirectory))
-        if os.path.normcase(directory) != current:
-            focus_name = ""
-        self.active_tab.UpdateFilelist(silence=True, cursorTargetName=focus_name)
 
     def _on_hash_calc(self, event):
         self.showSubWindow(views.makeHash.MakeHashWindow, _("ファイルハッシュの計算"), self.active_tab.GetFocusedElement().fullpath)

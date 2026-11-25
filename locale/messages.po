@@ -2385,3 +2385,42 @@ msgstr ""
 #: operation_manager.py views\operation_progress.py
 msgid "進行状況を読み上げ"
 msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sが完了しました。注意が%(count)d件あります。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sにパスワードの入力が必要です。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "パスワードの入力"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "パスワードの入力待ち"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "圧縮"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "完了 注意%(count)d件"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "注意"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "確認待ち"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "解凍"
+msgstr ""

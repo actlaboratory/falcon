@@ -23,6 +23,7 @@ import lists
 import misc
 import new_file
 import new_shortcut
+import operation_manager
 import paste_shortcut
 import shell_new
 import StringUtil
@@ -521,7 +522,7 @@ class FileListTab(base.FalconTabBase):
             "to": dest,
             "copy_move_flag": op}
         # 別スレッドで実行し、一覧の更新や結果の通知もそちらに任せる
-        globalVars.app.main_window.operations.add(fileOperator.FileOperator(inst))
+        globalVars.app.main_window.operations.add(operation_manager.PasteOperation(fileOperator.FileOperator(inst)))
     # end past
 
     def getNewNameForPast(self, existingDirname, existingName):

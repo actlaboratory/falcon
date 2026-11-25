@@ -12,6 +12,7 @@ import wx
 
 import misc
 import operation_manager
+import views.extract
 import views.OperationSelecter
 
 from simpleDialog import dialog
@@ -88,9 +89,8 @@ class OperationProgressWindow(viewkit.SubWindow):
 
     def _update_buttons(self):
         operation = self._get_focused()
-        # 実行中は、別スレッドが確認項目を追加しているため表示できない
-        self._enable(self.detail_button, operation is not None and _has_detail(operation))
-        self._enable(self.cancel_button, operation is not None and operation.is_unfinished() and not operation.operator.is_canceled())
+        self._enable(self.detail_button, operation is not None and operation.has_detail())
+        self._enable(self.cancel_button, operation is not None and operation.is_unfinished() and not operation.is_canceled())
         self._enable(self.remove_button, any(not operation.is_unfinished() for operation in self._operations))
 
     def _enable(self, button, enable):
@@ -110,9 +110,14 @@ class OperationProgressWindow(viewkit.SubWindow):
 
     def _on_detail(self, event):
         operation = self._get_focused()
-        if operation is None or not _has_detail(operation):
+        if operation is None or not operation.has_detail():
             return
-        self.showSubWindow(OperationDetailWindow, _("ファイル操作の詳細"), operation)
+        if operation.state == operation_manager.CONFIRMING and isinstance(operation, operation_manager.ExtractOperation):
+            result = self.showSubWindow(views.extract.PasswordWindow, _("パスワードの入力"), operation.get_password_message())
+            if result.code == wx.ID_OK:
+                operation.set_password(result.user_object)
+        else:
+            self.showSubWindow(OperationDetailWindow, _("ファイル操作の詳細"), operation)
         self.parameters.resume(operation)
         self._update()
         self.list_ctrl.SetFocus()
@@ -131,7 +136,7 @@ class OperationProgressWindow(viewkit.SubWindow):
 
 
 class OperationDetailWindow(viewkit.SubWindow):
-    """確認が必要な項目と、処理できなかった項目の一覧。parameters は operation_manager.Operation。"""
+    """確認が必要な項目と、エラーや注意の一覧。parameters は operation_manager.Operation。"""
 
     def __init__(self, parent, ctx, title, parameters: operation_manager.Operation):
         super().__init__(parent, ctx, title, parameters)
@@ -145,10 +150,8 @@ class OperationDetailWindow(viewkit.SubWindow):
         self._confirmations = parameters.get_confirmations() if parameters.state == operation_manager.CONFIRMING else []
         for element in self._confirmations:
             self.list_ctrl.Append((element.GetElement().path, _("確認"), element.GetMessageString()))
-        for element in parameters.get_failed():
-            self.list_ctrl.Append((element.elem, _("エラー"), str(element.msg[1])))
-        if parameters.error is not None:
-            self.list_ctrl.Append((parameters.title, _("エラー"), parameters.error))
+        for target, kind, message in parameters.get_details():
+            self.list_ctrl.Append((target, kind, message.replace("\n", " ")))
         footer = self.creator.makeChild(wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
         self.select_button = footer.button(_("処理方法を選択") + "(&M)...", self._on_select)
         footer.cancelbutton(_("閉じる"))
@@ -197,13 +200,6 @@ class OperationDetailWindow(viewkit.SubWindow):
             # 閉じるまでは処理を始めないので、選び直すこともできる
             if item.IsResponded():
                 self.list_ctrl.SetItem(i, 1, names[item.GetResponse()])
-
-
-def _has_detail(operation):
-    """詳細に表示する項目があるかどうかを返す"""
-    if operation.state in (operation_manager.WAITING, operation_manager.RUNNING):
-        return False
-    return operation.state == operation_manager.CONFIRMING or operation.error is not None or bool(operation.get_failed())
 
 
 def _get_information(source, destination):

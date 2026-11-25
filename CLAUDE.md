@@ -43,7 +43,7 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 | `menuItemsDic.py` / `menuItemsStore.py` | メニュー項目の表示名と ID。`menuItemsStore` は viewkit の RefStore としても使われる |
 | `archiver.py` / `bin/` | 圧縮と解凍。ZIP・TAR系以外は同梱の7-Zip（`bin/7z.exe`）だけを使う（インストール版は使わない） |
 | `network_resource.py` | ネットワーク上のコンピューターの列挙（シェルの「ネットワーク」フォルダを使う。WNetOpenEnum は SMB1 依存で使えない）、共有フォルダの一覧、認証 |
-| `operation_manager.py` / `views/operation_progress.py` | コピー・移動を別スレッドで1つずつ順番に実行し、進行状況を表示する。画面やフォーカスを勝手に切り替えず、終了・確認待ちは読み上げで知らせる。プログレスバーは、メインウィンドウか進行状況のウィンドウのどちらか一方だけに表示する（スクリーンリーダーの報告が重ならないように） |
+| `operation_manager.py` / `views/operation_progress.py` | コピー・移動・圧縮・解凍を別スレッドで1つずつ順番に実行し、進行状況を表示する。画面やフォーカスを勝手に切り替えず、終了・確認待ちは読み上げで知らせる。プログレスバーは、メインウィンドウか進行状況のウィンドウのどちらか一方だけに表示する（スクリーンリーダーの報告が重ならないように） |
 | `background_wait.py` | 時間のかかる処理を別スレッドで実行し、ウィンドウを固めずに待つ。渡す関数の中で画面の部品や表示中の一覧を変更しないこと |
 | `tabs/`, `lists/`, `browsableObjects.py` | タブ（ファイル一覧・ドライブ一覧・検索結果など）とその中身 |
 
