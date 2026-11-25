@@ -1196,10 +1196,7 @@ class FalconMenu:
         self.menu_bar = None
         self.disabled_items = set()  # 無効にしたメニューのref
 
-        # ショートカット無効状態の時に表示するダミーのメニューバー
-        # これがないとメニューバーの高さ分画面がずれてしまうために必要
-        self.disabled_menu_bar = wx.MenuBar()
-        self.disabled_menu_bar.Append(wx.Menu(), _("現在メニューは操作できません"))
+        self.disabled_menu_bar = None  # ショートカット無効状態の時に表示するダミーのメニューバー
 
         self.init_shortcut()
 
@@ -1230,9 +1227,24 @@ class FalconMenu:
 
     def set_menu_bar(self, menu_bar):
         self.menu_bar = menu_bar
+        self._create_disabled_menu_bar()
         for ref in self.disabled_items:
             if menu_bar.FindItemById(ref) is not None:
                 menu_bar.Enable(ref, False)
+
+    def _create_disabled_menu_bar(self):
+        """
+        ショートカット無効状態の時に表示する、操作できないメニューバーを作る。
+        名前の変更中に一覧の大きさが変わると、編集が打ち切られてしまう。
+        幅の狭いウィンドウではメニューバーが折り返されるため、同じ見出しを並べて高さをそろえる。
+        """
+        if self.disabled_menu_bar is not None and not self.disabled_menu_bar.IsAttached():
+            self.disabled_menu_bar.Destroy()
+        self.disabled_menu_bar = wx.MenuBar()
+        for dummy, title in self.menu_bar.GetMenus():
+            menu = wx.Menu()
+            menu.Append(wx.ID_ANY, _("現在メニューは操作できません")).Enable(False)
+            self.disabled_menu_bar.Append(menu, title)
 
     def _to_ref(self, identifier):
         return identifier if isinstance(identifier, int) else menuItemsStore.getRef(identifier)
