@@ -457,6 +457,10 @@ class MainWindow(viewkit.MainWindow):
         """利用者の操作を妨げずに、一覧を更新できるかどうかを返す。名前の変更中や、ダイアログを開いている間は更新しない。"""
         return self.shortcut_enabled and self.IsEnabled()
 
+    def can_ask(self):
+        """確認のダイアログを出してよいかどうかを返す。ほかのアプリの操作中や、名前の変更中などは出さない。"""
+        return self.can_update_in_background() and self.IsActive()
+
     def refresh_file_lists(self, directories, deleted_paths=()):
         """
         update_file_lists と同じだが、カーソルの位置、選択、チェックを維持する。ファイル操作が終わったときに使う。

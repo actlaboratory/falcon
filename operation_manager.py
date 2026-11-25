@@ -19,7 +19,10 @@ import wx
 
 import archiver
 import clipboard
+import fileOperator
 import globalVars
+import reparse_link
+from fileOperator import helper
 
 log = logging.getLogger("falcon.operation_manager")
 
@@ -198,9 +201,12 @@ class FileOperatorOperation(Operation):
         return [element for dummy, element in self.operator.GetConfirmationManager().IterateNotResponded()]
 
     def _get_error_message(self, element):
-        # 理由がわからない失敗は、"fail" になっている
         message = str(element.msg[1])
-        return _("処理できませんでした。") if message == "fail" else message
+        return {
+            helper.UNKNOWN_ERROR: _("処理できませんでした。"),
+            helper.NO_RECYCLE_BIN: _("ゴミ箱を使えない場所のため、削除しませんでした。削除するには「完全削除」を使ってください。"),
+            helper.PERMANENTLY_DELETED: _("ゴミ箱に入らず、完全に削除されました。"),
+        }.get(message, message)
 
     def get_details(self):
         details = [(element.elem, _("エラー"), self._get_error_message(element)) for element in self.operator.CheckFailed()]
@@ -253,19 +259,73 @@ class DeleteOperation(FileOperatorOperation):
         name = _("ゴミ箱への移動") if operator.instructions["operation"] == "trash" else _("完全削除")
         super().__init__(name, {os.path.dirname(target) for target in targets}, targets, operator)
         self.deleted_paths = targets
+        self._set_delete_title(targets)
+        # ゴミ箱を使えない場所のため、削除しなかった項目
+        self._unrecyclable = []
+        # 完全に削除するかどうかを尋ねる文章
+        self._question = ""
+        self._must_resume = False
+
+    def _set_delete_title(self, targets):
         if len(targets) == 1:
-            self.title = _("%(name)s: %(item)s") % {"name": name, "item": targets[0]}
+            self.title = _("%(name)s: %(item)s") % {"name": self.name, "item": targets[0]}
         else:
             self.title = _("%(name)s: %(count)d項目 (%(directory)s)") % {
-                "name": name, "count": len(targets), "directory": os.path.dirname(targets[0])}
+                "name": self.name, "count": len(targets), "directory": os.path.dirname(targets[0])}
+
+    def _run(self):
+        super()._run()
+        self._unrecyclable = [element for element in self.operator.CheckFailed() if element.msg[1] == helper.NO_RECYCLE_BIN]
+        # ネットワーク上の項目を調べるのには時間がかかることがあるので、別スレッドのうちに文章を作る
+        if len(self._unrecyclable) == 1:
+            path = self._unrecyclable[0].elem
+            if reparse_link.is_directory_entry(path):
+                self._question = _("%(path)s\nこのフォルダを完全に削除しますか？") % {"path": path}
+            else:
+                self._question = _("%(path)s\nこのファイルを完全に削除しますか？") % {"path": path}
+        else:
+            self._question = _("これらの %(count)d個の項目を完全に削除しますか？") % {"count": len(self._unrecyclable)}
 
     def _get_result_state(self):
         # 中止の指示が間に合わず、すべて削除された場合は、終わったものとして扱う
         if self.is_canceled() and not any(os.path.lexists(path) for path in self.deleted_paths):
             return FINISHED
+        if not self.is_canceled() and self._unrecyclable and globalVars.app.settings.get_bool("general", "confirm_unrecyclable", True):
+            return CONFIRMING
         return super()._get_result_state()
 
+    def get_question(self):
+        """完全に削除するかどうかを尋ねる文章を返す"""
+        return self._question
+
+    def answer(self, permanently):
+        """完全に削除するかどうかの答えを反映する。削除する場合は、その後に再開する必要がある。"""
+        paths = [element.elem for element in self._unrecyclable]
+        failed = [element for element in self.operator.CheckFailed() if element not in self._unrecyclable]
+        self._unrecyclable = []
+        if not permanently:
+            self.operator.output["failed"] = failed
+            self.state = FAILED if failed else CANCELED
+            return
+        self.name = _("完全削除")
+        self._set_delete_title(paths)
+        self.operator = fileOperator.FileOperator({"operation": "delete", "target": paths})
+        self.operator.output["failed"] = failed
+        self._must_resume = True
+
+    def prepare_resume(self):
+        must_resume, self._must_resume = self._must_resume, False
+        return must_resume
+
+    def get_state_string(self):
+        if self.state == CONFIRMING:
+            return _("確認待ち %(count)d件") % {"count": len(self._unrecyclable)}
+        return super().get_state_string()
+
     def get_finish_message(self):
+        # 失敗の理由を見なくても、どうすればよいかわかるようにする
+        if self.state == FAILED and self._unrecyclable:
+            return _("ゴミ箱を使えない場所のため、削除しませんでした。")
         # すぐに終わった削除では、次の項目の読み上げを優先する
         if self.state == FINISHED and not self.notified:
             return ""
@@ -396,6 +456,8 @@ class OperationManager:
         self._messages = []
         # 検索結果の一覧から取り除くパス
         self._deleted_paths = []
+        # 完全に削除するかどうかを、これから尋ねる操作
+        self._questions = []
         self._timer = wx.Timer(main_window)
         main_window.Bind(wx.EVT_TIMER, self._on_timer, self._timer)
 
@@ -509,8 +571,25 @@ class OperationManager:
         # 一覧の更新による読み上げに消されないよう、更新の後に知らせる
         if self._messages and not self._directories:
             self._flush_messages()
-        if not self.get_running_operations() and not self._directories and not self._main_window.progress_gauge.IsShown():
+        if self._questions and not self._directories and self._main_window.can_ask():
+            self.ask_permanent_delete(self._questions.pop(0))
+        if not self.get_running_operations() and not self._directories and not self._questions and not self._main_window.progress_gauge.IsShown():
             self._timer.Stop()
+
+    def ask_permanent_delete(self, operation, parent=None):
+        """ゴミ箱を使えない項目を完全に削除するか尋ね、答えに応じて再開する。"""
+        # 尋ねる前に、進行状況の一覧で答えたり中止したりしていることがある
+        if operation.state != CONFIRMING:
+            return
+        dlg = wx.MessageDialog(
+            parent or self._main_window, operation.get_question(), _("完全削除の確認"),
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
+        result = dlg.ShowModal()
+        dlg.Destroy()
+        if operation.state != CONFIRMING:
+            return
+        operation.answer(result == wx.ID_YES)
+        self.resume(operation)
 
     def _flush_messages(self):
         messages, self._messages = self._messages, []
@@ -523,6 +602,11 @@ class OperationManager:
         self._directories |= operation.directories
         if isinstance(operation, DeleteOperation):
             self._deleted_paths += operation.deleted_paths
+            if operation.state == CONFIRMING:
+                self._questions.append(operation)
+                # すぐに尋ねられるときは、ダイアログが読み上げられるので知らせない
+                if self._main_window.can_ask():
+                    return
         message = operation.get_finish_message()
         if message:
             self._messages.append(message)

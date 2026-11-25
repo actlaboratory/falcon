@@ -74,6 +74,8 @@ class SettingsWindow(viewkit.SubWindow):
         self.start_path, dummy = horizontal_creator.inputbox(_("起動時に開く場所"), proportion=1, text_layout=None)
         horizontal_creator.button(_("参照"), self._on_browse_dir)
 
+        self.confirm_unrecyclable = creator.checkbox(_("ゴミ箱を使えない場所では、完全に削除するか確認する(&R)"))
+
         creator = creator.makeChild(viewCreator.GridBagSizer, 20, _("一般"), wx.ALL | wx.EXPAND, proportion=1)
         self.log_level, dummy = creator.combobox(_("ログ記録レベル(&L)"), list(LOG_LEVEL_SELECTION.values()))
         self.reader, dummy = creator.combobox(_("出力先(&O)"), list(READER_SELECTION.values()))
@@ -110,6 +112,7 @@ class SettingsWindow(viewkit.SubWindow):
     def _load(self):
         # general
         self._bind(self.start_path, "browse", "startpath", ValueType.STRING)
+        self._bind(self.confirm_unrecyclable, "general", "confirm_unrecyclable", ValueType.BOOL)
         self._bind(self.reader, "speech", "reader", ValueType.DIC, READER_SELECTION)
         self._bind(self.log_level, "general", "log_level", ValueType.DIC, LOG_LEVEL_SELECTION)
         self._bind(self.fx_volume_spin, "speech", "fx_volume", ValueType.INT, 100, 0, 300)
