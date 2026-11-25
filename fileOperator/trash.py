@@ -3,10 +3,8 @@
 # Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 # Note: All comments except these top lines will be written in Japanese.
 import logging
-import os
-from win32com.shell import shell, shellcon
 
-from . import helper
+from . import helper, recycle
 
 VERB = "trash"
 log = logging.getLogger("falcon.%s" % VERB)
@@ -24,19 +22,24 @@ def Execute(op):
     op.output["all_OK"] = True
     op.output["retry"]["target"] = []
     op.output["percentage"] = 0
-    # シェルは1つの項目の途中経過を知らせないので、割合の反映と中止は項目ごとになる
+    # シェルは1つの項目の途中経過を知らせないので、割合の反映は項目ごとになる
     op.is_counting = len(f) == 1
     for index, elem in enumerate(f):
         if op.is_canceled():
             log.info("canceled")
             break
         op.SetPercentage(index * 100 // len(f))
-        sh = (0, shellcon.FO_DELETE, elem, None, shellcon.FOF_ALLOWUNDO |
-              shellcon.FOF_NOCONFIRMATION | shellcon.FOF_NO_UI, None, "")
-        ret = shell.SHFileOperation(sh)
-        if ret[0] != 0:
-            if helper.CommonFailure(op, elem, ret[0], log):
+        try:
+            recycle.move_to_recycle_bin(elem, op.is_canceled)
+        except recycle.Canceled:
+            log.info("canceled while processing %s" % elem)
+            break
+        except recycle.RecycleError as err:
+            log.error("file op error %s %s %s" % (elem, type(err).__name__, err))
+            if err.is_access_denied() and not op.elevated:
                 appendRetry(op.output, elem)
+            else:
+                helper.AppendFailed(op, elem, 0, _get_message(err))
             continue
         # end except
         op.output["succeeded"] += 1
@@ -49,6 +52,15 @@ def Execute(op):
         retry = len(op.output["retry"]["target"])
     # end リトライあるか
     return retry
+
+
+def _get_message(err):
+    """失敗の理由を返す。昇格したプロセスでは翻訳を使えないので、表示するときに文章にする。"""
+    if isinstance(err, recycle.NoRecycleBinError):
+        return helper.NO_RECYCLE_BIN
+    if isinstance(err, recycle.PermanentlyDeletedError):
+        return helper.PERMANENTLY_DELETED
+    return helper.UNKNOWN_ERROR
 
 
 def appendRetry(output, target):

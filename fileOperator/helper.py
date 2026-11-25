@@ -6,6 +6,11 @@
 from . import failedElement
 import winerror
 
+# 失敗の理由。表示するときに文章にする
+UNKNOWN_ERROR = "fail"
+NO_RECYCLE_BIN = "no_recycle_bin"
+PERMANENTLY_DELETED = "permanently_deleted"
+
 # ヘルパー関数
 
 
@@ -25,7 +30,7 @@ def IsAccessDenied(num):
         winerror.ERROR_PRIVILEGE_NOT_HELD)
 
 
-def AppendFailed(op, elem, num, message="fail"):
+def AppendFailed(op, elem, num, message=UNKNOWN_ERROR):
     """失敗したリストに項目を追加。"""
     op.output["failed"].append(
         failedElement.FailedElement(
@@ -36,7 +41,7 @@ def AppendFailed(op, elem, num, message="fail"):
 def CommonFailure(op, elem, err, log):
     """共通の失敗処理。"""
     log.error("file op error %s %s" % (elem, str(err)))
-    message = getattr(err, "strerror", None) or "fail"
+    message = getattr(err, "strerror", None) or UNKNOWN_ERROR
     r = IsAccessDenied(GetErrorNumber(err))
     if not r:
         AppendFailed(op, elem, 0, message)

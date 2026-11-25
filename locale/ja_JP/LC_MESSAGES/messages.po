@@ -2442,3 +2442,38 @@ msgstr ""
 #: operation_manager.py views\operation_progress.py
 msgid "処理できませんでした。"
 msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱に入らず、完全に削除されました。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱を使えない場所のため、削除しませんでした。"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱を使えない場所のため、削除しませんでした。削除するには「完全削除」を使ってください。"
+msgstr ""
+
+#: operation_manager.py
+#, python-format
+msgid ""
+"%(path)s\n"
+"このフォルダを完全に削除しますか？"
+msgstr ""
+
+#: operation_manager.py
+#, python-format
+msgid ""
+"%(path)s\n"
+"このファイルを完全に削除しますか？"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "これらの %(count)d個の項目を完全に削除しますか？"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱を使えない場所では、完全に削除するか確認する(&R)"
+msgstr ""

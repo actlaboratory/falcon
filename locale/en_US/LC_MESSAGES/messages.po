@@ -2478,5 +2478,44 @@ msgstr "Move to recycle bin"
 msgid "処理できませんでした。"
 msgstr "Could not be processed."
 
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱に入らず、完全に削除されました。"
+msgstr "Permanently deleted without going to the recycle bin."
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱を使えない場所のため、削除しませんでした。"
+msgstr "Not deleted because the recycle bin is not available for this location."
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱を使えない場所のため、削除しませんでした。削除するには「完全削除」を使ってください。"
+msgstr "Not deleted because the recycle bin is not available for this location. Use permanent deletion to delete it."
+
+#: operation_manager.py
+#, python-format
+msgid ""
+"%(path)s\n"
+"このフォルダを完全に削除しますか？"
+msgstr ""
+"%(path)s\n"
+"Permanently delete this folder?"
+
+#: operation_manager.py
+#, python-format
+msgid ""
+"%(path)s\n"
+"このファイルを完全に削除しますか？"
+msgstr ""
+"%(path)s\n"
+"Permanently delete this file?"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "これらの %(count)d個の項目を完全に削除しますか？"
+msgstr "Permanently delete these %(count)d items?"
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱を使えない場所では、完全に削除するか確認する(&R)"
+msgstr "Ask whether to delete permanently where the &recycle bin is unavailable"
+
 #~ msgid "ファイル名（空欄なら種類ごとの既定の名前）"
 #~ msgstr "File name (the default name for the type if empty)"

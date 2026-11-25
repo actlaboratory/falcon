@@ -30,6 +30,7 @@ CUSTOM_FIELD_NAME = "falcon"
 # ユーザ側の設定に値がなければここでの値がそのまま利用される。
 DEFAULT_VALUES = {
     "general": {
+        "confirm_unrecyclable": True,
         "language": "ja-JP",
         "fileversion": "100",
         "locale": "ja-JP",

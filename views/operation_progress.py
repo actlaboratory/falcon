@@ -112,6 +112,11 @@ class OperationProgressWindow(viewkit.SubWindow):
         operation = self._get_focused()
         if operation is None or not operation.has_detail():
             return
+        if operation.state == operation_manager.CONFIRMING and isinstance(operation, operation_manager.DeleteOperation):
+            self.parameters.ask_permanent_delete(operation, self)
+            self._update()
+            self.list_ctrl.SetFocus()
+            return
         if operation.state == operation_manager.CONFIRMING and isinstance(operation, operation_manager.ExtractOperation):
             result = self.showSubWindow(views.extract.PasswordWindow, _("パスワードの入力"), operation.get_password_message())
             if result.code == wx.ID_OK:
