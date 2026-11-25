@@ -64,7 +64,7 @@ class FileOperator(object):
         self.callbacks[identifier] = callable
 
     def cancel(self):
-        """中止を指示する。実際に止まるのは少し後。今は貼り付けだけが対応している。"""
+        """中止を指示する。実際に止まるのは少し後。貼り付け、完全削除、ゴミ箱への移動が対応している。"""
         self._cancel.set()
 
     def is_canceled(self):
@@ -169,7 +169,7 @@ class FileOperator(object):
         """権限昇格し、アクセス拒否になった項目を再実行する。"""
         if globalVars.app.is_frozen() is False:  # ビルド済みバイナリじゃないと昇格できないようにしてる
             self._show_error(_("エラー"), _("管理者権限の操作を行うためには、Falconをビルドして実行する必要があります。"))
-            if self.output["retry"]["operation"] == past.VERB:  # 進行状況の詳細に表示するため
+            if self.output["retry"]["operation"] in (past.VERB, delete.VERB, trash.VERB):  # 進行状況の詳細に表示するため
                 self.output["failed"].extend(FileOperator(self.output["retry"]).FailAll())
             return
         # end ビルドしてないとダメ
@@ -222,6 +222,9 @@ class FileOperator(object):
         if self.instructions["operation"] == past.VERB:  # 貼り付けは (コピー元, コピー先) のタプルで持っている
             for elem in self.instructions["target"]:
                 lst.append(failedElement.FailedElement(elem[0], (winerror.ERROR_ACCESS_DENIED, _("アクセスが拒否されました。"))))
+        if self.instructions["operation"] in (delete.VERB, trash.VERB):
+            for elem in self.instructions["target"]:
+                lst.append(failedElement.FailedElement(elem, (winerror.ERROR_ACCESS_DENIED, _("アクセスが拒否されました。"))))
         return lst
 
     def CheckFinished(self):

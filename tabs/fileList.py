@@ -224,8 +224,6 @@ class FileListTab(base.FalconTabBase):
             self.task = workerThreads.RegisterTask(workerThreadTasks.DebugBeep)
 
     def Trash(self):
-        focus_index = self.GetFocusedItem()
-        paths = self.listObject.GetItemPaths()  # パスのリストを取っておく
         target = []
         for elem in self.GetSelectedItems():
             target.append(elem.fullpath)
@@ -239,21 +237,10 @@ class FileListTab(base.FalconTabBase):
             None, msg, _("確認"), wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_NO:
             return
-        inst = {"operation": "trash", "target": target}
-        op = fileOperator.FileOperator(inst)
-        ret = op.Execute()
-        if op.CheckSucceeded() == 0:
-            dialog(_("エラー"), _("ファイルをゴミ箱に移動できませんでした。"))
-            return
-        # end error
-        failed = op.CheckFailed()
-        self.UpdateFilelist(silence=True)
-        focus_index = self._findFocusAfterDeletion(paths, focus_index)
-        self.Focus(focus_index)
+        globalVars.app.main_window.operations.add(operation_manager.DeleteOperation(
+            fileOperator.FileOperator({"operation": "trash", "target": target})))
 
     def Delete(self):
-        focus_index = self.GetFocusedItem()
-        paths = self.listObject.GetItemPaths()  # パスのリストを取っておく
         target = []
         for elem in self.GetSelectedItems():
             target.append(elem.fullpath)
@@ -270,16 +257,8 @@ class FileListTab(base.FalconTabBase):
             wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_NO:
             return
-        inst = {"operation": "delete", "target": target}
-        op = fileOperator.FileOperator(inst)
-        ret = op.Execute()
-        if op.CheckSucceeded() == 0:
-            dialog(_("エラー"), _("削除に失敗しました。"))
-            return
-        # end error
-        self.UpdateFilelist(silence=True)
-        focus_index = self._findFocusAfterDeletion(paths, focus_index)
-        self.Focus(focus_index)
+        globalVars.app.main_window.operations.add(operation_manager.DeleteOperation(
+            fileOperator.FileOperator({"operation": "delete", "target": target})))
 
     def Copy(self):
         globalVars.app.say(_("コピー"))

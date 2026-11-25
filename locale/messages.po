@@ -2424,3 +2424,21 @@ msgstr ""
 #: operation_manager.py views\operation_progress.py
 msgid "解凍"
 msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(count)d項目 (%(directory)s)"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(item)s"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱への移動"
+msgstr ""
+
+#: operation_manager.py views\operation_progress.py
+msgid "処理できませんでした。"
+msgstr ""

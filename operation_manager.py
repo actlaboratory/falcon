@@ -3,7 +3,9 @@
 # Note: All comments except these top lines will be written in Japanese.
 
 """
-時間のかかるファイル操作を、別スレッドで1つずつ順番に実行する処理です。
+時間のかかるファイル操作を、別スレッドで順番に実行する処理です。
+コピー・移動・圧縮・解凍は1つずつ実行します。完全削除とゴミ箱への移動は、待っている間に同じ場所に
+作られた別のファイルを消さないよう、場所が重なる操作がなければ待たずに始めます。
 メインスレッドのタイマーで状態を調べ、プログレスバーと一覧の更新、読み上げによる通知を行います。
 """
 
@@ -29,6 +31,10 @@ FINISHED = "finished"
 FAILED = "failed"
 CANCELED = "canceled"
 
+# 同時に実行しない操作の組
+_LANE_MAIN = "main"
+_LANE_DELETE = "delete"
+
 # 状態を調べる間隔(ミリ秒)
 _INTERVAL = 100
 # 操作がこの秒数で終わらないときは、開始の通知とプログレスバーの表示をする
@@ -40,11 +46,15 @@ _SHUTDOWN_TIMEOUT = 5
 class Operation:
     """別スレッドで実行する1つのファイル操作。操作の種類ごとに派生クラスを作る。"""
 
-    def __init__(self, name, directories):
+    lane = _LANE_MAIN
+
+    def __init__(self, name, directories, paths):
         # 操作の種類の表示名
         self.name = name
         # 終わったときに一覧を更新するフォルダ
         self.directories = directories
+        # 読み書きするパス。場所が重なる操作を同時に実行しないために使う
+        self._paths = [os.path.join(os.path.normcase(path), "") for path in paths]
         self.title = name
         self.state = WAITING
         # 開始を通知したかどうか
@@ -60,6 +70,10 @@ class Operation:
         else:
             self.title = _("%(name)s: %(count)d項目 → %(destination)s") % {
                 "name": self.name, "count": len(sources), "destination": destination}
+
+    def overlaps(self, other):
+        """other と、読み書きする場所が重なるかどうかを返す"""
+        return any(a.startswith(b) or b.startswith(a) for a in self._paths for b in other._paths)
 
     def start(self):
         """別スレッドで実行を始める"""
@@ -139,18 +153,11 @@ class Operation:
         return messages[self.state] % {"name": self.name}
 
 
-class PasteOperation(Operation):
-    """コピーまたは移動。FileOperator を実行する。"""
+class FileOperatorOperation(Operation):
+    """FileOperator を実行する操作"""
 
-    def __init__(self, operator):
-        # 処理が終わると instructions の内容は消えるため、先に求めておく
-        instructions = operator.instructions
-        sources = [source for source, dummy in instructions["target"]]
-        directories = {os.path.dirname(source) for source in sources}
-        directories.add(instructions["to"])
-        name = _("移動") if instructions["copy_move_flag"] == clipboard.MOVE else _("コピー")
-        super().__init__(name, directories)
-        self.set_title(sources, instructions["to"])
+    def __init__(self, name, directories, paths, operator):
+        super().__init__(name, directories, paths)
         self.operator = operator
         # 処理そのものが例外で終わったときの内容
         self._error = None
@@ -190,8 +197,13 @@ class PasteOperation(Operation):
         """応答していない確認項目を返す。実行中は呼ばないこと。"""
         return [element for dummy, element in self.operator.GetConfirmationManager().IterateNotResponded()]
 
+    def _get_error_message(self, element):
+        # 理由がわからない失敗は、"fail" になっている
+        message = str(element.msg[1])
+        return _("処理できませんでした。") if message == "fail" else message
+
     def get_details(self):
-        details = [(element.elem, _("エラー"), str(element.msg[1])) for element in self.operator.CheckFailed()]
+        details = [(element.elem, _("エラー"), self._get_error_message(element)) for element in self.operator.CheckFailed()]
         if self._error is not None:
             details.append((self.title, _("エラー"), self._error))
         return details
@@ -216,11 +228,55 @@ class PasteOperation(Operation):
         return super().get_state_string()
 
 
+class PasteOperation(FileOperatorOperation):
+    """コピーまたは移動"""
+
+    def __init__(self, operator):
+        # 処理が終わると instructions の内容は消えるため、先に求めておく
+        instructions = operator.instructions
+        sources = [source for source, dummy in instructions["target"]]
+        directories = {os.path.dirname(source) for source in sources}
+        directories.add(instructions["to"])
+        name = _("移動") if instructions["copy_move_flag"] == clipboard.MOVE else _("コピー")
+        paths = sources + [destination for dummy, destination in instructions["target"]]
+        super().__init__(name, directories, paths, operator)
+        self.set_title(sources, instructions["to"])
+
+
+class DeleteOperation(FileOperatorOperation):
+    """完全削除またはゴミ箱への移動"""
+
+    lane = _LANE_DELETE
+
+    def __init__(self, operator):
+        targets = list(operator.instructions["target"])
+        name = _("ゴミ箱への移動") if operator.instructions["operation"] == "trash" else _("完全削除")
+        super().__init__(name, {os.path.dirname(target) for target in targets}, targets, operator)
+        self.deleted_paths = targets
+        if len(targets) == 1:
+            self.title = _("%(name)s: %(item)s") % {"name": name, "item": targets[0]}
+        else:
+            self.title = _("%(name)s: %(count)d項目 (%(directory)s)") % {
+                "name": name, "count": len(targets), "directory": os.path.dirname(targets[0])}
+
+    def _get_result_state(self):
+        # 中止の指示が間に合わず、すべて削除された場合は、終わったものとして扱う
+        if self.is_canceled() and not any(os.path.lexists(path) for path in self.deleted_paths):
+            return FINISHED
+        return super()._get_result_state()
+
+    def get_finish_message(self):
+        # すぐに終わった削除では、次の項目の読み上げを優先する
+        if self.state == FINISHED and not self.notified:
+            return ""
+        return super().get_finish_message()
+
+
 class ArchiveOperation(Operation):
     """圧縮または解凍。archiver.Job を実行する。"""
 
-    def __init__(self, name, directories):
-        super().__init__(name, directories)
+    def __init__(self, name, directories, paths):
+        super().__init__(name, directories, paths)
         self._job = None
 
     def _create_job(self):
@@ -275,7 +331,7 @@ class CompressOperation(ArchiveOperation):
     """圧縮"""
 
     def __init__(self, request):
-        super().__init__(_("圧縮"), {os.path.dirname(request.destination)})
+        super().__init__(_("圧縮"), {os.path.dirname(request.destination)}, request.sources + [request.destination])
         self.set_title(request.sources, request.destination)
         self._request = request
 
@@ -287,7 +343,7 @@ class ExtractOperation(ArchiveOperation):
     """1つの書庫の解凍"""
 
     def __init__(self, path, request):
-        super().__init__(_("解凍"), {request.directory})
+        super().__init__(_("解凍"), {request.directory}, [path, request.get_directory(path)])
         self.set_title([path], request.directory)
         self.path = path
         self._request = request
@@ -330,7 +386,7 @@ class ExtractOperation(ArchiveOperation):
 
 
 class OperationManager:
-    """ファイル操作の一覧を持ち、1つずつ順番に実行する。メソッドはメインスレッドから呼ぶこと。"""
+    """ファイル操作の一覧を持ち、順番に実行する。メソッドはメインスレッドから呼ぶこと。"""
 
     def __init__(self, main_window):
         self.operations = []
@@ -338,22 +394,30 @@ class OperationManager:
         # 更新が必要なフォルダ
         self._directories = set()
         self._messages = []
+        # 検索結果の一覧から取り除くパス
+        self._deleted_paths = []
         self._timer = wx.Timer(main_window)
         main_window.Bind(wx.EVT_TIMER, self._on_timer, self._timer)
 
     def add(self, operation):
-        """操作を加える。実行中の操作がなければ、すぐに始める。"""
+        """操作を加える。待つ必要のある操作がなければ、すぐに始める。"""
         self.operations.append(operation)
-        if self.get_running() is not None:
-            self._say(_("%(name)sを待機中に追加しました。") % {"name": operation.name})
         self._start_next()
+        if operation.state == WAITING:
+            self._say(_("%(name)sを待機中に追加しました。") % {"name": operation.name})
+
+    def get_running_operations(self):
+        """実行中の操作のリストを返す"""
+        return [operation for operation in self.operations if operation.state == RUNNING]
 
     def get_running(self):
-        """実行中の操作を返す。なければ None"""
-        for operation in self.operations:
-            if operation.state == RUNNING:
+        """プログレスバーに表示する、実行中の操作を返す。なければ None"""
+        running = self.get_running_operations()
+        # 進み具合がわかるものを優先する
+        for operation in running:
+            if operation.get_percentage() is not None:
                 return operation
-        return None
+        return running[0] if running else None
 
     def get_unfinished_count(self):
         """終わっていない操作の数を返す"""
@@ -382,8 +446,7 @@ class OperationManager:
     def say_progress(self):
         """実行中の操作の進み具合と、確認待ちの件数を読み上げる"""
         messages = []
-        running = self.get_running()
-        if running is not None:
+        for running in self.get_running_operations():
             percentage = running.get_percentage()
             messages.append(running.title)
             messages.append(running.get_state_string() if percentage is None else _("%(percentage)d%%") % {"percentage": percentage})
@@ -406,52 +469,63 @@ class OperationManager:
         for operation in self.operations:
             if operation.is_unfinished():
                 operation.cancel()
-        running = self.get_running()
-        if running is not None:
-            running.join(_SHUTDOWN_TIMEOUT)
+        for operation in self.get_running_operations():
+            operation.join(_SHUTDOWN_TIMEOUT)
 
     def _say(self, message, interrupt=False):
         globalVars.app.say(message, interrupt=interrupt)
 
     def _start_next(self):
-        """実行中の操作がなければ、待機中の操作を始める"""
-        if self.get_running() is None:
-            for operation in self.operations:
-                if operation.state == WAITING:
-                    operation.start()
-                    break
+        """始められる待機中の操作を始める"""
+        blocking = []
+        for operation in self.operations:
+            if operation.state == WAITING and self._can_start(operation, blocking):
+                operation.start()
+            if operation.state in (WAITING, RUNNING):
+                blocking.append(operation)
         if not self._timer.IsRunning():
             self._timer.Start(_INTERVAL)
 
+    def _can_start(self, operation, earlier):
+        """先に加えられた操作と、実行中の操作を待つ必要がないかどうかを返す"""
+        return not any(
+            (other.state == RUNNING and other.lane == operation.lane) or other.overlaps(operation)
+            for other in earlier + self.get_running_operations())
+
     def _on_timer(self, event):
-        running = self.get_running()
-        if running is not None:
+        for running in self.get_running_operations():
             if not running.is_thread_alive():
                 self._on_finish(running)
-                self._start_next()
             elif running.is_long() and not running.notified:
                 running.notified = True
                 self._say(_("%(name)sを開始しました。") % {"name": running.name})
+        self._start_next()
         self.update_gauge()
         if self._directories and self._main_window.can_update_in_background():
             directories, self._directories = self._directories, set()
+            deleted_paths, self._deleted_paths = self._deleted_paths, []
             # ネットワーク上のフォルダでは読み込み中のウィンドウが出て、その間もタイマーが動くことがある
-            self._main_window.refresh_file_lists(directories)
+            self._main_window.refresh_file_lists(directories, deleted_paths)
         # 一覧の更新による読み上げに消されないよう、更新の後に知らせる
         if self._messages and not self._directories:
             self._flush_messages()
-        if self.get_running() is None and not self._directories and not self._main_window.progress_gauge.IsShown():
+        if not self.get_running_operations() and not self._directories and not self._main_window.progress_gauge.IsShown():
             self._timer.Stop()
 
     def _flush_messages(self):
         messages, self._messages = self._messages, []
-        self._say(" ".join(messages))
+        if messages:
+            self._say(" ".join(messages))
 
     def _on_finish(self, operation):
         """操作が終わったときの処理"""
         operation.update_result_state()
         self._directories |= operation.directories
-        self._messages.append(operation.get_finish_message())
+        if isinstance(operation, DeleteOperation):
+            self._deleted_paths += operation.deleted_paths
+        message = operation.get_finish_message()
+        if message:
+            self._messages.append(message)
         # ダイアログを開いている間などは一覧を更新できないので、先に知らせる
         if not self._main_window.can_update_in_background():
             self._flush_messages()

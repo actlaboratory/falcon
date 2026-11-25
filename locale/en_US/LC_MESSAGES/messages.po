@@ -2460,5 +2460,23 @@ msgstr "Confirmation required"
 msgid "解凍"
 msgstr "Extract"
 
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(count)d項目 (%(directory)s)"
+msgstr "%(name)s: %(count)d items (%(directory)s)"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(item)s"
+msgstr "%(name)s: %(item)s"
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱への移動"
+msgstr "Move to recycle bin"
+
+#: operation_manager.py views\operation_progress.py
+msgid "処理できませんでした。"
+msgstr "Could not be processed."
+
 #~ msgid "ファイル名（空欄なら種類ごとの既定の名前）"
 #~ msgstr "File name (the default name for the type if empty)"
