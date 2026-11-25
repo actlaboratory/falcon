@@ -25,22 +25,23 @@ def IsAccessDenied(num):
         winerror.ERROR_PRIVILEGE_NOT_HELD)
 
 
-def AppendFailed(op, elem, num):
+def AppendFailed(op, elem, num, message="fail"):
     """失敗したリストに項目を追加。"""
     op.output["failed"].append(
         failedElement.FailedElement(
-            elem, (num, "fail")))
+            elem, (num, message)))
     op.output["all_OK"] = False
 
 
 def CommonFailure(op, elem, err, log):
     """共通の失敗処理。"""
     log.error("file op error %s %s" % (elem, str(err)))
+    message = getattr(err, "strerror", None) or "fail"
     r = IsAccessDenied(GetErrorNumber(err))
     if not r:
-        AppendFailed(op, elem, 0)
+        AppendFailed(op, elem, 0, message)
     else:
         if op.elevated:
-            AppendFailed(op, elem, 0)  # 昇格してる状態でも無理だった
+            AppendFailed(op, elem, 0, message)  # 昇格してる状態でも無理だった
     # end denied かどうか
     return r

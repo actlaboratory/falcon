@@ -46,10 +46,10 @@ import menuItemsDic
 import menuItemsStore
 import misc
 import network_resource
+import operation_manager
 import reparse_link
 import shortcut_link
 import tabs.navigator
-import views.archive_progress
 import views.bulk_rename
 import views.changeAttribute
 import views.compress
@@ -65,6 +65,7 @@ import views.new_file
 import views.new_shortcut
 import views.objectDetail
 import views.openHere
+import views.operation_progress
 import views.registerOriginalAssociation
 import views.search
 import views.settingsDialog
@@ -81,11 +82,6 @@ EVENT_FROM_SELF = -1
 
 # キーマップ上でのメインウィンドウの識別子
 KEYMAP_IDENTIFIER = "mainView"
-
-# 圧縮・解凍が終わらないとき、進み具合を表示するまでの時間(秒)
-ARCHIVE_PROGRESS_DELAY = 0.3
-# 圧縮・解凍の注意を表示する最大行数
-MAX_ARCHIVE_WARNINGS = 10
 
 
 class UserMenuItemDefinition(viewkit.MenuItemDefinition):
@@ -132,6 +128,12 @@ class MainWindow(viewkit.MainWindow):
         self._add_user_command_keys()
 
         self.tab_ctrl = self.creator.tabCtrl(_("タブ選択"), self._on_change_tab, 0, wx.EXPAND, 1)
+        # 実行中のファイル操作の進み具合。操作がない間は隠す
+        self.progress_gauge, dummy = self.creator.gauge(_("ファイル操作の進行状況"), text_layout=None)
+        self.progress_gauge.SetRange(100)
+        self.progress_gauge.Hide()
+        self._progress_window_opened = False
+        self.operations = operation_manager.OperationManager(self)
         self.Bind(wx.EVT_CLOSE, self._on_close)
         self.Bind(wx.EVT_MENU_OPEN, self._on_menu_open)
 
@@ -215,6 +217,7 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("READ_CURRENTFOLDER", "C"),
                 _menu_item("READ_LISTITEMNUMBER", "N"),
                 _menu_item("READ_LISTINFO", "I"),
+                _menu_item("READ_PROGRESS", "G"),
                 _menu_item("READ_SETMOVEMENTREAD", "M"),
             ]),
             viewkit.TopMenuDefinition(_("ツール"), "T", [
@@ -233,12 +236,12 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("VIEW_SORTCYCLEAD", "A"),
                 _menu_item("VIEW_DRIVE_INFO", "D"),
                 _menu_item("VIEW_TOGGLE_EXTENSION", "E"),
+                _menu_item("VIEW_PROGRESS", "P"),
             ]),
             viewkit.TopMenuDefinition(_("環境"), "O", [
                 _menu_item("ENV_REGIST_ORIGINAL_ASSOCIATION", "A"),
                 _menu_item("ENV_KEY_CONFIG", "K"),
                 _menu_item("ENV_TESTDIALOG", "T"),
-                _menu_item("ENV_PASTTABTEST", "P"),
                 _menu_item("ENV_FONTTEST", "F"),
                 _menu_item("ENV_SETTINGS", "S"),
             ]),
@@ -412,12 +415,14 @@ class MainWindow(viewkit.MainWindow):
             if page_no == -1:
                 return
 
+        if len(self.tabs) == 1:  # 最後のタブなのでソフト終了
+            tab = self.tabs[0]
+            if self.Close():  # 終了の確認で取りやめた場合は、タブを残す
+                tab.OnClose()
+            return
         active_tab = self.active_tab
         popped_tab = self.tabs.pop(page_no)
         popped_tab.OnClose()
-        if len(self.tabs) == 0:  # タブがなくなったらソフト終了
-            self.Close()
-            return
         # この時点で、 noteBook がリストコントロールをデリートするらしいので、他の場所で明示的に消してはいけないとリファレンスに書いてある
         self.tab_ctrl.DeletePage(page_no)
         self.tab_ctrl.SendSizeEvent()
@@ -448,6 +453,97 @@ class MainWindow(viewkit.MainWindow):
             if type(tab) is tabs.fileList.FileListTab and os.path.normcase(tab.listObject.rootDirectory) in directories:
                 tab.UpdateFilelist(silence=True)
 
+    def can_update_in_background(self):
+        """利用者の操作を妨げずに、一覧を更新できるかどうかを返す。名前の変更中や、ダイアログを開いている間は更新しない。"""
+        return self.shortcut_enabled and self.IsEnabled()
+
+    def refresh_file_lists(self, directories, deleted_paths=()):
+        """
+        update_file_lists と同じだが、カーソルの位置、選択、チェックを維持する。ファイル操作が終わったときに使う。
+        検索結果の一覧からは、deleted_paths とその中の項目のうち、なくなったものを取り除く。
+        """
+        directories = {os.path.normcase(directory) for directory in directories}
+        for tab in self.tabs:
+            # 検索結果のタブは FileListTab の派生だが、再検索になるため更新しない
+            if type(tab) is tabs.fileList.FileListTab and os.path.normcase(tab.listObject.rootDirectory) in directories:
+                self._refresh_file_list(tab)
+            elif deleted_paths and isinstance(tab, (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab)):
+                self._remove_deleted_results(tab, deleted_paths)
+        self._update_menu_state(self.active_tab)
+
+    def _remove_deleted_results(self, tab, deleted_paths):
+        # 検索中は結果が追加され続けているため、変更しない
+        if not tab.tempListObject.GetFinishedStatus():
+            return
+        prefixes = tuple(os.path.join(os.path.normcase(path), "") for path in deleted_paths)
+
+        def is_deleted(element):
+            return os.path.join(os.path.normcase(element.fullpath), "").startswith(prefixes) and not os.path.lexists(element.fullpath)
+
+        old_items = list(tab.listObject.GetItemList())
+        if not any(is_deleted(element) for element in old_items):
+            return
+        focused = tab.GetFocusedElement()
+        index = tab.GetFocusedItem()
+        for elements in tab.listObject.lists:
+            elements[:] = [element for element in elements if not is_deleted(element)]
+        items = list(tab.listObject.GetItemList())
+        if focused in items:
+            cursor = items.index(focused)
+        else:
+            cursor = min(index, len(items) - 1)
+        # 検索結果のアイコンのハンドルは破棄されているので、一覧を作り直さず、登録済みの画像のまま行だけを入れ替える
+        tab.checkedItem &= set(items)
+        tab.hListCtrl.set_items(items)
+        tab.Focus(cursor)
+
+    def _refresh_file_list(self, tab):
+        index = tab.GetFocusedItem()
+        old_paths = tab.listObject.GetItemPaths()
+        selected = set()
+        i = tab.hListCtrl.GetFirstSelected()
+        while i >= 0:
+            selected.add(tab.listObject.GetElement(i).fullpath)
+            i = tab.hListCtrl.GetNextSelected(i)
+        focused = tab.GetFocusedElement()
+        checked = {element.fullpath for element in tab.checkedItem}
+        if tab.UpdateFilelist(silence=True) is not None:
+            return  # 更新できなかった
+        items = list(tab.listObject.GetItemList())
+        if not items:
+            return
+        if focused is not None and focused.fullpath not in {item.fullpath for item in items}:
+            # カーソルのあった項目がなくなった
+            tab.Focus(min(tab._findFocusAfterDeletion(old_paths, index), len(items) - 1))
+        for i, item in enumerate(items):
+            if item.fullpath in selected:
+                tab.hListCtrl.Select(i)
+            if item.fullpath in checked:
+                tab.checkedItem.add(item)
+                tab.hListCtrl.SetItemBackgroundColour(i, "#0000FF")
+                tab.hListCtrl.RefreshItem(i)
+
+    def set_progress(self, percentage):
+        """プログレスバーに割合を表示する。None なら隠す。"""
+        visible = percentage is not None and not self._progress_window_opened
+        if visible and self.progress_gauge.GetValue() != percentage:
+            self.progress_gauge.SetValue(percentage)
+        # 名前の変更中に一覧の大きさが変わると、編集が打ち切られてしまう
+        if visible != self.progress_gauge.IsShown() and self.shortcut_enabled:
+            self.progress_gauge.Show(visible)
+            self.creator.getPanel().Layout()
+
+    def _on_view_progress(self, event):
+        """ファイル操作の進行状況を表示する"""
+        # スクリーンリーダーの報告が重ならないよう、プログレスバーはどちらか一方だけに表示する
+        self._progress_window_opened = True
+        self.operations.update_gauge()
+        try:
+            self.showSubWindow(views.operation_progress.OperationProgressWindow, _("ファイル操作の進行状況"), self.operations)
+        finally:
+            self._progress_window_opened = False
+            self.operations.update_gauge()
+
     def update_tab_name(self):
         """タブ名変更の可能性があるときにtabsからたたかれる"""
         index = self.get_tab_index(self.active_tab)
@@ -466,7 +562,11 @@ class MainWindow(viewkit.MainWindow):
         """ウィンドウが閉じられる直前に呼ばれる。"""
         self.log.info("received close event(force=" + ("true" if not event.CanVeto() else "false") + ")")
         if not event.CanVeto():  # 強制シャットダウン
+            self.operations.shutdown()
             self.Destroy()
+            return
+        if not self._confirm_stop_operations():
+            event.Veto()
             return
         num = self.get_number_of_tabs()
         if num > 1:
@@ -481,7 +581,22 @@ class MainWindow(viewkit.MainWindow):
                 event.Veto()
                 self.log.info("CloseEvent.Veto(). user select cancel.")
                 return
+        self.operations.shutdown()
         event.Skip()
+
+    def _confirm_stop_operations(self):
+        """終わっていないファイル操作があれば、終了してよいか確認する。"""
+        count = self.operations.get_unfinished_count()
+        if count == 0:
+            return True
+        dlg = wx.MessageDialog(
+            self,
+            _("%(count)d件のファイル操作が終わっていません。中止して、Falconを終了してもよろしいですか？") % {"count": count},
+            _("終了確認"),
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+        result = dlg.ShowModal()
+        dlg.Destroy()
+        return result == wx.ID_YES
 
     # ---- ショートカットキー・メニュー ----
 
@@ -638,6 +753,7 @@ class MainWindow(viewkit.MainWindow):
             "READ_CURRENTFOLDER": delaied("ReadCurrentFolder"),
             "READ_LISTITEMNUMBER": delaied("ReadListItemNumber"),
             "READ_LISTINFO": delaied("ReadListInfo"),
+            "READ_PROGRESS": lambda event: self._delaied_call(self.operations.say_progress),
             "READ_SETMOVEMENTREAD": tab("SetMovementRead"),
 
             "TOOL_COMPRESS": self._on_compress,
@@ -653,12 +769,12 @@ class MainWindow(viewkit.MainWindow):
             "VIEW_SORTSELECT": tab("SortSelect"),
             "VIEW_SORTCYCLEAD": delaied("SortCycleAd"),
             "VIEW_DRIVE_INFO": self._on_drive_info,
+            "VIEW_PROGRESS": self._on_view_progress,
             "VIEW_TOGGLE_EXTENSION": lambda event: self._delaied_call(self._toggle_extension),
 
             "ENV_REGIST_ORIGINAL_ASSOCIATION": self._on_regist_original_association,
             "ENV_KEY_CONFIG": self._on_key_config,
             "ENV_TESTDIALOG": lambda event: None,
-            "ENV_PASTTABTEST": lambda event: self.navigate({"action": "past"}, as_new_tab=True),
             "ENV_FONTTEST": self._on_font_test,
             "ENV_SETTINGS": self._on_settings,
 
@@ -892,14 +1008,7 @@ class MainWindow(viewkit.MainWindow):
         result = self.showSubWindow(views.compress.CompressWindow, _("圧縮"), parameters)
         if result.code == wx.ID_CANCEL:
             return
-        request = result.user_object
-        job = archiver.Job(archiver.compress, request)
-        self._run_archive_job(job, _("圧縮しています"))
-        if self._show_archive_error(job):
-            return
-        directory, name = os.path.split(request.destination)
-        self._update_after_archive(directory, name)
-        self._show_archive_result(_("圧縮しました。"), job.warnings)
+        self.operations.add(operation_manager.CompressOperation(result.user_object))
 
     def _on_extract(self, event):
         """選択中の書庫を解凍する"""
@@ -914,40 +1023,8 @@ class MainWindow(viewkit.MainWindow):
         result = self.showSubWindow(views.extract.ExtractWindow, _("解凍"), self.active_tab.listObject.rootDirectory)
         if result.code == wx.ID_CANCEL:
             return
-        request = result.user_object
-        warnings = []
-        focus_name = ""
-        succeeded = 0
         for path in archives:
-            directory = request.get_directory(path)
-            job = self._extract_archive(path, directory, request.conflict)
-            if job is None:  # パスワードの入力をやめた
-                continue
-            if self._show_archive_error(job, path):
-                if isinstance(job.error, archiver.Canceled):
-                    break
-                continue
-            succeeded += 1
-            warnings += job.warnings
-            if request.make_folder and focus_name == "":
-                focus_name = os.path.basename(directory)
-        self._update_after_archive(request.directory, focus_name)
-        if succeeded > 0:
-            self._show_archive_result(_("%(count)d件を解凍しました。") % {"count": succeeded}, warnings)
-
-    def _extract_archive(self, path, directory, conflict):
-        """1つの書庫を、必要ならパスワードを尋ねて解凍し、終わった Job を返す。パスワードの入力をやめたら None。"""
-        password = ""
-        while True:
-            job = archiver.Job(archiver.extract, path, directory, conflict, password)
-            self._run_archive_job(job, _("解凍しています"))
-            if not isinstance(job.error, archiver.PasswordError):
-                return job
-            message = "%s\n%s" % (os.path.basename(path), job.error)
-            result = self.showSubWindow(views.extract.PasswordWindow, _("パスワードの入力"), message)
-            if result.code == wx.ID_CANCEL:
-                return None
-            password = result.user_object
+            self.operations.add(operation_manager.ExtractOperation(path, result.user_object))
 
     def _get_archive_targets(self):
         """圧縮・解凍の対象として、選択中のファイル・フォルダのパスを返す"""
@@ -955,40 +1032,6 @@ class MainWindow(viewkit.MainWindow):
         if not isinstance(self.active_tab, tabs.fileList.FileListTab):
             return []
         return [e.fullpath for e in self.active_tab.GetSelectedItems() if isinstance(e, browsableObjects.File)]
-
-    def _run_archive_job(self, job, title):
-        """圧縮・解凍を別スレッドで実行し、終わるまで待つ。時間がかかるときは進み具合を表示する。"""
-        job.start()
-        if not job.wait(ARCHIVE_PROGRESS_DELAY):
-            self.showSubWindow(views.archive_progress.ArchiveProgressWindow, title, job)
-
-    def _show_archive_error(self, job, path=""):
-        """圧縮・解凍が失敗・中止していれば、知らせてTrueを返す"""
-        if job.error is None:
-            return False
-        if isinstance(job.error, archiver.Canceled):
-            self.app.say(_("中止しました。"), interrupt=True)
-        else:
-            message = str(job.error)
-            dialog(_("エラー"), "%s\n%s" % (os.path.basename(path), message) if path else message)
-        return True
-
-    def _show_archive_result(self, message, warnings):
-        """圧縮・解凍の結果を知らせる。注意があればダイアログで表示する。"""
-        if not warnings:
-            self.app.say(message, interrupt=True)
-            return
-        lines = warnings[:MAX_ARCHIVE_WARNINGS]
-        if len(warnings) > MAX_ARCHIVE_WARNINGS:
-            lines.append(_("ほか %(count)d件") % {"count": len(warnings) - MAX_ARCHIVE_WARNINGS})
-        dialog(_("情報"), "%s\n\n%s" % (message, "\n".join(lines)))
-
-    def _update_after_archive(self, directory, focus_name):
-        """一覧を更新する。表示中のフォルダに書き込んだときは、作った項目にカーソルを合わせる。"""
-        current = os.path.normcase(os.path.abspath(self.active_tab.listObject.rootDirectory))
-        if os.path.normcase(directory) != current:
-            focus_name = ""
-        self.active_tab.UpdateFilelist(silence=True, cursorTargetName=focus_name)
 
     def _on_hash_calc(self, event):
         self.showSubWindow(views.makeHash.MakeHashWindow, _("ファイルハッシュの計算"), self.active_tab.GetFocusedElement().fullpath)

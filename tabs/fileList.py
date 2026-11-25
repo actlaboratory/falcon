@@ -23,6 +23,7 @@ import lists
 import misc
 import new_file
 import new_shortcut
+import operation_manager
 import paste_shortcut
 import shell_new
 import StringUtil
@@ -223,8 +224,6 @@ class FileListTab(base.FalconTabBase):
             self.task = workerThreads.RegisterTask(workerThreadTasks.DebugBeep)
 
     def Trash(self):
-        focus_index = self.GetFocusedItem()
-        paths = self.listObject.GetItemPaths()  # パスのリストを取っておく
         target = []
         for elem in self.GetSelectedItems():
             target.append(elem.fullpath)
@@ -238,21 +237,10 @@ class FileListTab(base.FalconTabBase):
             None, msg, _("確認"), wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_NO:
             return
-        inst = {"operation": "trash", "target": target}
-        op = fileOperator.FileOperator(inst)
-        ret = op.Execute()
-        if op.CheckSucceeded() == 0:
-            dialog(_("エラー"), _("ファイルをゴミ箱に移動できませんでした。"))
-            return
-        # end error
-        failed = op.CheckFailed()
-        self.UpdateFilelist(silence=True)
-        focus_index = self._findFocusAfterDeletion(paths, focus_index)
-        self.Focus(focus_index)
+        globalVars.app.main_window.operations.add(operation_manager.DeleteOperation(
+            fileOperator.FileOperator({"operation": "trash", "target": target})))
 
     def Delete(self):
-        focus_index = self.GetFocusedItem()
-        paths = self.listObject.GetItemPaths()  # パスのリストを取っておく
         target = []
         for elem in self.GetSelectedItems():
             target.append(elem.fullpath)
@@ -269,16 +257,8 @@ class FileListTab(base.FalconTabBase):
             wx.YES_NO | wx.ICON_QUESTION)
         if dlg.ShowModal() == wx.ID_NO:
             return
-        inst = {"operation": "delete", "target": target}
-        op = fileOperator.FileOperator(inst)
-        ret = op.Execute()
-        if op.CheckSucceeded() == 0:
-            dialog(_("エラー"), _("削除に失敗しました。"))
-            return
-        # end error
-        self.UpdateFilelist(silence=True)
-        focus_index = self._findFocusAfterDeletion(paths, focus_index)
-        self.Focus(focus_index)
+        globalVars.app.main_window.operations.add(operation_manager.DeleteOperation(
+            fileOperator.FileOperator({"operation": "delete", "target": target})))
 
     def Copy(self):
         globalVars.app.say(_("コピー"))
@@ -520,16 +500,8 @@ class FileListTab(base.FalconTabBase):
             "target": target,
             "to": dest,
             "copy_move_flag": op}
-        op = fileOperator.FileOperator(inst)
-        op.Execute()
-        directories = {os.path.dirname(source) for source, dummy in target}
-        directories.add(dest)
-        globalVars.app.main_window.update_file_lists(directories)
-
-        # 今はテストで、常にダイアログを表示して処理刷る
-        nav = {"action": "past", "operator": op}
-        globalVars.app.main_window.navigate(nav, as_new_tab=True)
-        return  # このあとのことは新しいタブに任せる
+        # 別スレッドで実行し、一覧の更新や結果の通知もそちらに任せる
+        globalVars.app.main_window.operations.add(operation_manager.PasteOperation(fileOperator.FileOperator(inst)))
     # end past
 
     def getNewNameForPast(self, existingDirname, existingName):

@@ -2303,5 +2303,180 @@ msgstr ""
 "Check your Wi-Fi or other network connection and the status of the device you are connecting to.\n"
 "(%(error)s)"
 
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(count)d件のファイル操作が終わっていません。中止して、Falconを終了してもよろしいですか？"
+msgstr "%(count)d file operations are not finished. Cancel them and exit Falcon?"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(count)d項目 → %(destination)s"
+msgstr "%(name)s: %(count)d items → %(destination)s"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(item)s → %(destination)s"
+msgstr "%(name)s: %(item)s → %(destination)s"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sが完了しました。"
+msgstr "%(name)s finished."
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sでエラーが発生しました。"
+msgstr "%(name)s encountered errors."
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sの確認が必要です。"
+msgstr "%(name)s requires confirmation."
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sを中止しました。"
+msgstr "%(name)s was canceled."
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sを待機中に追加しました。"
+msgstr "%(name)s has been queued."
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sを開始しました。"
+msgstr "%(name)s started."
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(percentage)d%%"
+msgstr "%(percentage)d%%"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "エラー %(count)d件"
+msgstr "Errors: %(count)d"
+
+#: operation_manager.py views\operation_progress.py
+msgid "ファイル操作"
+msgstr "File operations"
+
+#: operation_manager.py views\operation_progress.py
+msgid "ファイル操作の詳細"
+msgstr "File operation details"
+
+#: operation_manager.py views\operation_progress.py
+msgid "ファイル操作の進行状況"
+msgstr "File operation progress"
+
+#: operation_manager.py views\operation_progress.py
+msgid "中止しています"
+msgstr "Canceling"
+
+#: operation_manager.py views\operation_progress.py
+msgid "処理方法を選択"
+msgstr "Choose action"
+
+#: operation_manager.py views\operation_progress.py
+msgid "実行中"
+msgstr "Running"
+
+#: operation_manager.py views\operation_progress.py
+msgid "実行中のファイル操作はありません。"
+msgstr "No file operations are running."
+
+#: operation_manager.py views\operation_progress.py
+msgid "実行中の操作"
+msgstr "Current operation"
+
+#: operation_manager.py views\operation_progress.py
+msgid "待機中"
+msgstr "Waiting"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "待機中 %(count)d件"
+msgstr "Waiting: %(count)d"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "確認待ち %(count)d件"
+msgstr "Confirmation required: %(count)d"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "確認待ちの操作 %(count)d件"
+msgstr "Operations awaiting confirmation: %(count)d"
+
+#: operation_manager.py views\operation_progress.py
+msgid "終了した操作を消去"
+msgstr "Clear finished operations"
+
+#: operation_manager.py views\operation_progress.py
+msgid "進行状況を確認"
+msgstr "View progress"
+
+#: operation_manager.py views\operation_progress.py
+msgid "進行状況を読み上げ"
+msgstr "Read progress"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sが完了しました。注意が%(count)d件あります。"
+msgstr "%(name)s finished with %(count)d notices."
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)sにパスワードの入力が必要です。"
+msgstr "%(name)s requires a password."
+
+#: operation_manager.py views\operation_progress.py
+msgid "パスワードの入力"
+msgstr "Enter password"
+
+#: operation_manager.py views\operation_progress.py
+msgid "パスワードの入力待ち"
+msgstr "Password required"
+
+#: operation_manager.py views\operation_progress.py
+msgid "圧縮"
+msgstr "Compress"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "完了 注意%(count)d件"
+msgstr "Finished, notices: %(count)d"
+
+#: operation_manager.py views\operation_progress.py
+msgid "注意"
+msgstr "Notice"
+
+#: operation_manager.py views\operation_progress.py
+msgid "確認待ち"
+msgstr "Confirmation required"
+
+#: operation_manager.py views\operation_progress.py
+msgid "解凍"
+msgstr "Extract"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(count)d項目 (%(directory)s)"
+msgstr "%(name)s: %(count)d items (%(directory)s)"
+
+#: operation_manager.py views\operation_progress.py
+#, python-format
+msgid "%(name)s: %(item)s"
+msgstr "%(name)s: %(item)s"
+
+#: operation_manager.py views\operation_progress.py
+msgid "ゴミ箱への移動"
+msgstr "Move to recycle bin"
+
+#: operation_manager.py views\operation_progress.py
+msgid "処理できませんでした。"
+msgstr "Could not be processed."
+
 #~ msgid "ファイル名（空欄なら種類ごとの既定の名前）"
 #~ msgstr "File name (the default name for the type if empty)"

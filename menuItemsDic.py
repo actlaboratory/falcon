@@ -58,6 +58,7 @@ dic = {
     "READ_CURRENTFOLDER": _("現在のフォルダ名を読み上げ"),
     "READ_LISTITEMNUMBER": _("リスト項目数を読み上げ"),
     "READ_LISTINFO": _("一覧情報を読み上げ"),
+    "READ_PROGRESS": _("進行状況を読み上げ"),
     "READ_SETMOVEMENTREAD": _("移動先の読み方を設定"),
 
     "TOOL_COMPRESS": _("圧縮"),
@@ -74,12 +75,12 @@ dic = {
     "VIEW_SORTCYCLEAD": _("昇順/降順切り替え"),
     "VIEW_DRIVE_INFO": _("ドライブ情報の表示"),
     "VIEW_TOGGLE_EXTENSION": _("拡張子の非表示/表示"),
+    "VIEW_PROGRESS": _("進行状況を確認"),
     "VIEW_SORT_COLUMN": _("カラムの並び替え"),
 
     "ENV_REGIST_ORIGINAL_ASSOCIATION": _("独自関連付けの管理"),
     "ENV_KEY_CONFIG": _("キーボードショートカットの設定"),
     "ENV_TESTDIALOG": _("テストダイアログを表示"),
-    "ENV_PASTTABTEST": _("貼り付け状況ダイアログテスト"),
     "ENV_FONTTEST": _("フォントテストダイアログを表示"),
     "ENV_SETTINGS": _("環境設定"),
 

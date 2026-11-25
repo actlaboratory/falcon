@@ -56,6 +56,7 @@ defaultKeymap["MAINVIEW"] = {
     "READ_CONTENT_READFOOTER": "alt+end",
     "READ_LISTITEMNUMBER": "alt+f3",
     "READ_LISTINFO": "alt+f1",
+    "READ_PROGRESS": "alt+f6",
     "READ_SETMOVEMENTREAD": "",
 
     "TOOL_COMPRESS": "",
@@ -72,6 +73,7 @@ defaultKeymap["MAINVIEW"] = {
     "VIEW_SORTCYCLEAD": "shift+F11",
     "VIEW_DRIVE_INFO": "alt+f2",
     "VIEW_TOGGLE_EXTENSION": "",
+    "VIEW_PROGRESS": "ctrl+p",
 
     "ENV_REGIST_ORIGINAL_ASSOCIATION": "",
     "ENV_KEY_CONFIG": "",

@@ -49,6 +49,8 @@ class FileOperator(object):
         # になっている。なので、エラーを無視したりとかする。処理に渡されたファイルは、問答無用で処理刷る(上書きするとかしないとかは、
         # confirmationManager が追加するかどうかのみに左右される)
         self.resume = False
+        self._cancel = threading.Event()
+        self.is_counting = False  # 処理する項目を数えている間は、割合がわからない
         if isinstance(instructions, str):
             self.unpickle(instructions)
             self.writeBack = instructions
@@ -60,6 +62,14 @@ class FileOperator(object):
     def SetCallback(self, identifier, callable):
         """終了したときのコールバックを設定。"""
         self.callbacks[identifier] = callable
+
+    def cancel(self):
+        """中止を指示する。実際に止まるのは少し後。貼り付け、完全削除、ゴミ箱への移動が対応している。"""
+        self._cancel.set()
+
+    def is_canceled(self):
+        """中止を指示されたかどうかを返す"""
+        return self._cancel.is_set()
 
     def GetPercentage(self):
         return self.output["percentage"]
@@ -158,8 +168,8 @@ class FileOperator(object):
     def _elevate(self):
         """権限昇格し、アクセス拒否になった項目を再実行する。"""
         if globalVars.app.is_frozen() is False:  # ビルド済みバイナリじゃないと昇格できないようにしてる
-            dialog(_("エラー"), _("管理者権限の操作を行うためには、Falconをビルドして実行する必要があります。"))
-            if self.output["retry"]["operation"] == past.VERB:  # 貼り付けの状況のタブに表示するため
+            self._show_error(_("エラー"), _("管理者権限の操作を行うためには、Falconをビルドして実行する必要があります。"))
+            if self.output["retry"]["operation"] in (past.VERB, delete.VERB, trash.VERB):  # 進行状況の詳細に表示するため
                 self.output["failed"].extend(FileOperator(self.output["retry"]).FailAll())
             return
         # end ビルドしてないとダメ
@@ -171,7 +181,7 @@ class FileOperator(object):
         except pywintypes.error as e:
             self.log.error("Cannot elevate (%s)" % str(e))
             self.output["failed"].extend(o.FailAll())  # FailAll はリストを返すので、要素として追加する
-            dialog("error", "error")
+            self._show_error("error", "error")
             return
         # end except
         pid = ret["hProcess"]
@@ -186,6 +196,13 @@ class FileOperator(object):
             self.output["need_to_confirm"].Append(elem)
         self.log.debug("after elevation: success %s, failure %s." %
                        (self.output["succeeded"], len(self.output["failed"])))
+
+    def _show_error(self, title, message):
+        """エラーを表示する。別スレッドからはウィンドウを出せないので記録だけする(失敗した項目は CheckFailed でわかる)。"""
+        if wx.IsMainThread():
+            dialog(title, message)
+        else:
+            self.log.error(message)
 
     def _postElevation(self):
         """昇格して処理したので、状態を書き戻す。"""
@@ -205,6 +222,9 @@ class FileOperator(object):
         if self.instructions["operation"] == past.VERB:  # 貼り付けは (コピー元, コピー先) のタプルで持っている
             for elem in self.instructions["target"]:
                 lst.append(failedElement.FailedElement(elem[0], (winerror.ERROR_ACCESS_DENIED, _("アクセスが拒否されました。"))))
+        if self.instructions["operation"] in (delete.VERB, trash.VERB):
+            for elem in self.instructions["target"]:
+                lst.append(failedElement.FailedElement(elem, (winerror.ERROR_ACCESS_DENIED, _("アクセスが拒否されました。"))))
         return lst
 
     def CheckFinished(self):
