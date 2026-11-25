@@ -13,6 +13,15 @@ class FalconVirtualListCtrl(virtual_listctrl.virtualListCtrl):
     def __init__(self, *pArg, **kArg):
         super().__init__(*pArg, **kArg)
 
+    def set_items(self, items):
+        """
+        リストの中身をまとめて入れ替える。1件ずつ追加するより大幅に速い。
+        viewkit の setList は途中でイベントを処理してしまい、更新中に操作される恐れがあるので使わない。
+        """
+        self.lst = list(items)
+        self.SetItemCount(len(self.lst))
+        self.Refresh()
+
     def OnGetItemText(self, item, column):
         """表示する文字列を返す。設定に応じて、ファイル名の拡張子を取り除く。"""
         text = super().OnGetItemText(item, column)

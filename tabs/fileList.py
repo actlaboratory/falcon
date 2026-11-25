@@ -21,7 +21,6 @@ import fileSystemManager
 import globalVars
 import lists
 import misc
-import network_resource
 import new_file
 import new_shortcut
 import paste_shortcut
@@ -35,7 +34,7 @@ import workerThreadTasks
 
 
 from simpleDialog import *
-from . import base
+from . import base, navigator
 
 # 名前の一括置換で、変更できなかった項目を表示する最大行数
 _MAX_FAILED_LINES = 10
@@ -43,6 +42,25 @@ _MAX_FAILED_LINES = 10
 
 class FileListTab(base.FalconTabBase):
     """ファイル/フォルダリストが表示されているタブ。"""
+
+    def UpdateListContent(self, content, soft=False):
+        """
+        リストコントロールの中身を更新する。項目数が多くても時間がかからないように、まとめて追加する。
+        soft=True の場合は、同一リストの再描画。
+        """
+        self.log.debug("Updating list control...")
+        if soft:
+            self.ClearAllItems()
+        else:
+            self.DeleteAllItems()
+        t = misc.Timer()
+        for elem in content:
+            if elem.hIcon >= 0:
+                icon_index = self.GetIconIndex(elem.hIcon)
+                if icon_index >= 0:
+                    elem.list_imageIndex = icon_index
+        self.hListCtrl.set_items(content)
+        self.log.debug("List control updated in %f seconds." % t.elapsed)
 
     def OnLabelEditStart(self, evt):
         """
@@ -540,15 +558,7 @@ class FileListTab(base.FalconTabBase):
 
     def GoBackward(self):
         """内包しているフォルダ/ドライブ一覧へ移動する。"""
-        share_root = network_resource.split_share_root(self.listObject.rootDirectory)
-        if share_root is None:
-            return super().GoBackward()
-        # 共有フォルダのルートからは、コンピューターの共有フォルダの一覧へ移動する
-        server, share = share_root
-        result = self.Move(server, share)
-        if isinstance(result, int):  # 移動できない時はドライブ一覧へ
-            result = self.Move("", server)
-        return result
+        return navigator.go_to_parent(self, self.listObject.rootDirectory)
 
     def GetTabName(self):
         """タブコントロールに表示する名前"""

@@ -13,6 +13,7 @@ import logging
 import os
 import sys
 import wx
+import background_wait
 import errorCodes
 import lists
 import globalVars
@@ -84,13 +85,22 @@ def Navigate(
     if target != "" and not network_resource.is_server_path(target):
         # ネットワーク上の場所で認証が必要な場合は、資格情報の入力画面が出る
         try:
-            exists = network_resource.exists_with_auth(target, globalVars.app.main_window.GetHandle())
+            status = network_resource.check_path_with_auth(target, globalVars.app.main_window.GetHandle())
+        except background_wait.Canceled:
+            return errorCodes.CANCELED
         except pywintypes.error as err:
             log.error("navigate failed: cannot connect to %s: %s" % (target, err))
+            if network_resource.is_connection_error(err.winerror):
+                dialog(_("エラー"), network_resource.get_connection_error_message(target, err.strerror))
+                return errorCodes.NETWORK_UNAVAILABLE
             if not network_resource.is_cancelled_error(err):
                 dialog(_("エラー"), _("移動に失敗しました(%(error)s)") % {"error": err.strerror})
             return errorCodes.ACCESS_DENIED
-        if not exists:
+        if status.is_connection_error():
+            log.error("navigate failed: cannot connect to %s: %s" % (target, status.message))
+            dialog(_("エラー"), network_resource.get_connection_error_message(target, status.message))
+            return errorCodes.NETWORK_UNAVAILABLE
+        if not status.exists:
             log.error("navigate failed: %s not exist." % target)
             dialog(_("エラー"), _("移動に失敗しました。移動先が存在しません。"))
             return errorCodes.FILE_NOT_FOUND
@@ -118,7 +128,7 @@ def Navigate(
             targetItemIndex = lst.Search(cursor)
         newtab = NetworkResourceList.NetworkResourceListTab(environment)
         newtab.Initialize(parent, creator, hListCtrl)
-    elif os.path.isfile(target):  # 副ストリームへ移動
+    elif status.is_file:  # 副ストリームへ移動
         lst = lists.StreamList()
         lst.Initialize(target)
         if isinstance(previous_tab, streamList.StreamListTab):  # 再利用
@@ -162,3 +172,35 @@ def Navigate(
         globalVars.app.main_window.replace_current_tab(newtab)
     return newtab
 # end Navigate
+
+
+def go_to_parent(tab, path):
+    """
+    path を含むフォルダへ移動する。なくなっている場合は、存在するフォルダまでさかのぼる。
+    たどり着けない場合は、共有フォルダならコンピューター、それ以外ならドライブ一覧へ移動する。
+    ネットワークに接続できない場合は、エラーを知らせてドライブ一覧へ移動する。
+    """
+    is_unc = network_resource.is_unc_path(path)
+    cursor_for_drive_list = network_resource.get_server_path(path) if is_unc else path[0]
+    current = path
+    while True:
+        parent, name = os.path.split(current)
+        if parent == current or name == "":
+            break
+        try:
+            status = network_resource.check_path(parent)
+        except background_wait.Canceled:
+            return errorCodes.CANCELED
+        if status.is_connection_error():
+            log.error("cannot connect to %s: %s" % (parent, status.message))
+            dialog(_("エラー"), network_resource.get_connection_error_message(parent, status.message))
+            return tab.Move("", cursor_for_drive_list)
+        if status.exists and not status.is_file:
+            return tab.Move(parent, name)
+        current = parent
+    if is_unc:
+        server = network_resource.get_server_path(path)
+        result = tab.Move(server, os.path.splitdrive(path)[0][len(server) + 1:])
+        if not isinstance(result, int) or result in (errorCodes.OK, errorCodes.CANCELED):
+            return result
+    return tab.Move("", cursor_for_drive_list)

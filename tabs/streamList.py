@@ -24,7 +24,7 @@ from tabs.driveList import *
 import StringUtil
 
 from simpleDialog import *
-from . import base
+from . import base, navigator
 
 
 class StreamListTab(base.FalconTabBase):
@@ -169,6 +169,10 @@ class StreamListTab(base.FalconTabBase):
 
     def MarkSet(self):
         return errorCodes.NOT_SUPPORTED  # 基底クラスではなにも許可しない
+
+    def GoBackward(self):
+        """ファイルを含むフォルダへ移動する。"""
+        return navigator.go_to_parent(self, self.listObject.rootDirectory)
 
     def ReadCurrentFolder(self):
         curdir = os.path.basename(self.listObject.rootDirectory)

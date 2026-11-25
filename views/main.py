@@ -32,6 +32,7 @@ from logging import getLogger
 from viewkit.menu import Menu as ViewkitMenu
 
 import archiver
+import background_wait
 import browsableObjects
 import constants
 import content_reader
@@ -44,6 +45,7 @@ import keymap
 import menuItemsDic
 import menuItemsStore
 import misc
+import network_resource
 import reparse_link
 import shortcut_link
 import tabs.navigator
@@ -340,7 +342,8 @@ class MainWindow(viewkit.MainWindow):
             result = self.navigate(misc.analyzeUserInputPath(sys.argv[1], os.getcwd()), as_new_tab=True)
             if result == errorCodes.OK:
                 return
-            dialog("Error", _("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
+            if result not in (errorCodes.CANCELED, errorCodes.NETWORK_UNAVAILABLE):  # 理由を既に知らせている
+                dialog("Error", _("引数で指定されたディレクトリ '%(dir)s' は存在しません。") % {"dir": sys.argv[1]})
         start_path = self.app.settings.get("browse", "startpath")
         if start_path != "":
             result = self.navigate(misc.analyzeUserInputPath(start_path, os.getcwd()), as_new_tab=True)
@@ -348,7 +351,9 @@ class MainWindow(viewkit.MainWindow):
             result = self.navigate("", as_new_tab=True)
         if result == errorCodes.OK:
             return
-        if os.path.abspath(os.path.expandvars(start_path)) != "":
+        # 中止した場合や接続できない場合は、既に知らせている
+        already_notified = result in (errorCodes.CANCELED, errorCodes.NETWORK_UNAVAILABLE)
+        if not already_notified and os.path.abspath(os.path.expandvars(start_path)) != "":
             dialog("Error", _("設定された起動時ディレクトリ '%(dir)s' は存在しません。") % {"dir": start_path})
         result = self.navigate("", as_new_tab=True)
         if result != errorCodes.OK:
@@ -806,10 +811,18 @@ class MainWindow(viewkit.MainWindow):
 
     def _on_new_tab(self, event):
         start_path = os.path.expandvars(self.app.settings.get("browse", "startpath"))
-        if os.path.isdir(start_path):
+        if start_path != "" and self._is_available_directory(start_path):
             self.navigate(start_path, as_new_tab=True)
         else:
             self.navigate("", as_new_tab=True)
+
+    def _is_available_directory(self, path):
+        """フォルダが存在するかどうかを、ウィンドウを固めずに調べる"""
+        try:
+            status = network_resource.check_path(path)
+        except background_wait.Canceled:
+            return False
+        return status.exists and not status.is_file
 
     def _on_close_current_tab(self, event):
         self.close_tab(self.active_tab)

@@ -6,6 +6,7 @@
 import wx
 import pywintypes
 
+import background_wait
 import misc
 import network_resource
 import browsableObjects
@@ -15,7 +16,6 @@ import errorCodes
 from simpleDialog import dialog
 from .base import *
 from .constants import *
-from win32com.shell import shell, shellcon
 
 
 class NetworkResourceList(FalconListBase):
@@ -43,28 +43,33 @@ class NetworkResourceList(FalconListBase):
             self.resources += path
             return errorCodes.OK
         # end copy
-        self.rootDirectory = path
-        self.resources.clear()
         if not silent:
             globalVars.app.say(path[2:])
 
         # 共有フォルダの一覧の取得
         try:
-            shares = network_resource.get_shares_with_auth(path, globalVars.app.main_window.GetHandle())
+            shares = network_resource.get_share_icons_with_auth(path, globalVars.app.main_window.GetHandle())
+        except background_wait.Canceled:
+            return errorCodes.CANCELED
         except pywintypes.error as er:
             self.log.error("Cannot get shares of %s: %s" % (path, er))
             if network_resource.is_cancelled_error(er):
                 return errorCodes.ACCESS_DENIED
+            if network_resource.is_connection_error(er.winerror):
+                dialog(_("エラー"), network_resource.get_connection_error_message(path, er.strerror))
+                return errorCodes.NETWORK_UNAVAILABLE
             dialog(
                 _("エラー"),
                 _("ネットワーク上のリソース一覧を取得できませんでした(%(error)s)") % {
                     "error": er.strerror})
             return errorCodes.ACCESS_DENIED
 
-        for share in shares:
-            dummy, shfileinfo = shell.SHGetFileInfo(share, 0, shellcon.SHGFI_ICON)
+        # 取得に失敗した時に表示中の一覧が壊れないように、取得できてから入れ替える
+        self.rootDirectory = path
+        self.resources.clear()
+        for share, icon in shares:
             s = browsableObjects.NetworkResource()
-            s.Initialize(share[len(path) + 1:], share, "", shfileinfo[0])
+            s.Initialize(share[len(path) + 1:], share, "", icon)
             self.resources.append(s)
         self.ApplySort()
 

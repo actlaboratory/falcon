@@ -11,7 +11,7 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 - proxyUtil は `dukpy~=0.2.2` を指定しているが、dukpy 0.2 系には 32bit Python 3.12 向けのビルド済みファイルがなく CI でコンパイルにも失敗する。そのため proxyUtil は `requirements-nodeps.txt` に分けて `--no-deps` で入れ、依存パッケージ（dukpy 0.3.1 など）は requirements.txt に書く。proxyUtil は他の管理下なので変更しない
 - 実行: `python falcon.py`（`python -m falcon.py` ではない）
 - ドライブ一覧では、ネットワークドライブの容量を一覧の作成時には調べず、ドライブごとの専用スレッドで後から取得する（`tabs/driveList.py`）。接続できないドライブは数十秒後に種類が「ネットワーク（未接続）」になる。エラーではない
-- 接続できないネットワークドライブの中に入ると、ファイル一覧の取得で数十秒待たされる（未対応）
+- 移動先の確認とファイル一覧・共有フォルダの一覧の取得は、`background_wait.run()` により別スレッドで行う。0.3秒で終わらないときは中止できる「読み込み中」ウィンドウ（`views/waiting.py`）を出す。接続できないときは数十秒後に `errorCodes.NETWORK_UNAVAILABLE` になる
 
 ## 作業の基本方針
 
@@ -43,6 +43,7 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 | `menuItemsDic.py` / `menuItemsStore.py` | メニュー項目の表示名と ID。`menuItemsStore` は viewkit の RefStore としても使われる |
 | `archiver.py` / `bin/` | 圧縮と解凍。ZIP・TAR系以外は同梱の7-Zip（`bin/7z.exe`）だけを使う（インストール版は使わない） |
 | `network_resource.py` | ネットワーク上のコンピューターの列挙（シェルの「ネットワーク」フォルダを使う。WNetOpenEnum は SMB1 依存で使えない）、共有フォルダの一覧、認証 |
+| `background_wait.py` | 時間のかかる処理を別スレッドで実行し、ウィンドウを固めずに待つ。渡す関数の中で画面の部品や表示中の一覧を変更しないこと |
 | `tabs/`, `lists/`, `browsableObjects.py` | タブ（ファイル一覧・ドライブ一覧・検索結果など）とその中身 |
 
 ### 設定の読み書き
