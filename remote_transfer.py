@@ -39,11 +39,11 @@ _RESERVED_NAMES = re.compile(r"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$", re
 def get_conflict_names():
     """CONFLICTS と同じ順の、同じ名前があるときの扱いの表示名"""
     return [
-        _("別の名前にする"),
-        _("転送しない"),
-        _("上書きする"),
-        _("転送元のほうが新しい場合だけ上書きする"),
-        _("続きから転送する（転送先のほうが小さい場合）"),
+        _("名前を変更して保存"),
+        _("スキップ"),
+        _("上書き"),
+        _("転送元が新しい場合のみ上書き"),
+        _("レジューム（転送先が小さい場合）"),
     ]
 
 
@@ -265,7 +265,7 @@ class RemoteJob:
             self._client = remote_storage.connect(location, remote_storage.credential_store.get(location))
         except (remote_storage.AuthRequired, remote_storage.UnknownHostKey, remote_storage.UntrustedCertificate) as err:
             # 一覧を開いたときに確認しているので、通常は起きない
-            raise remote_storage.RemoteError(_("接続できませんでした。一覧を開き直してから、もう一度お試しください。\n(%(error)s)") % {"error": err})
+            raise remote_storage.RemoteError(_("接続できませんでした。\n(%(error)s)") % {"error": err})
 
     def _reconnect(self):
         try:
@@ -368,7 +368,7 @@ class DownloadJob(TransferJob):
             for candidate in _numbered_names(name):
                 candidate_path = os.path.join(directory, candidate)
                 if os.path.normcase(candidate_path) not in self._planned and not os.path.lexists(candidate_path):
-                    self.warnings.append((source, _("ほかの項目と同じ名前になるため、「%(name)s」という名前で保存します。") % {"name": candidate}))
+                    self.warnings.append((source, _("名前が重複するため「%(name)s」として保存") % {"name": candidate}))
                     path = candidate_path
                     break
         self._planned.add(os.path.normcase(path))
@@ -406,19 +406,19 @@ class DownloadJob(TransferJob):
         name = item.get_name()
         local_name = get_local_name(name)
         if local_name != name:
-            self.warnings.append((item.path, _("Windows で使えない文字を含むため、「%(name)s」という名前で保存します。") % {"name": local_name}))
+            self.warnings.append((item.path, _("Windows で使用できない文字を含むため「%(name)s」として保存") % {"name": local_name}))
         local_path = os.path.join(self._request.directory, local_name)
         if not os.path.lexists(local_path):
             return local_path, False
         conflict = self._conflict
         if conflict == CONFLICT_SKIP:
-            self.warnings.append((item.path, _("同じ名前の項目が保存先にあるため、保存しませんでした。")))
+            self.warnings.append((item.path, _("保存先に同名の項目が存在するためスキップ")))
             return None, False
         if conflict == CONFLICT_RENAME:
             return make_unique_path(local_path), False
         # フォルダとファイルの種類が違う場合は上書きできない
         if item.is_dir != os.path.isdir(local_path):
-            self.errors.append((item.path, _("保存先に、種類の違う同じ名前の項目があるため、上書きできません。")))
+            self.errors.append((item.path, _("保存先に種類の異なる同名の項目が存在するため、上書きできません。")))
             return None, False
         return local_path, True
 
@@ -440,7 +440,7 @@ class DownloadJob(TransferJob):
         実際のパスを調べられないサーバー（FTP）では、深さの上限で止める。
         """
         if depth >= MAX_DEPTH:
-            self.errors.append((path, _("フォルダが深すぎるため、これより下はダウンロードしませんでした。シンボリックリンクがループしている可能性があります。")))
+            self.errors.append((path, _("階層の上限を超えたため、以下をスキップ（シンボリックリンクのループの可能性）")))
             return
         os.makedirs(local_path, exist_ok=True)
         for entry in self._client.list_dir(path):
@@ -448,14 +448,14 @@ class DownloadJob(TransferJob):
             child_path = remote_storage.join_path(path, entry.name)
             local_name = get_local_name(entry.name)
             if local_name != entry.name:
-                self.warnings.append((child_path, _("Windows で使えない文字を含むため、「%(name)s」という名前で保存します。") % {"name": local_name}))
+                self.warnings.append((child_path, _("Windows で使用できない文字を含むため「%(name)s」として保存") % {"name": local_name}))
             child_local = self._reserve(os.path.join(local_path, local_name), child_path)
             if entry.is_dir:
                 if entry.is_link:
                     # リンクだけはサーバーに実際のパスを尋ねる。それ以外は親の実際のパスから求める
                     child_real = self._client.get_real_path(child_path)
                     if child_real is not None and child_real in ancestors:
-                        self.warnings.append((child_path, _("シンボリックリンクが、たどってきたフォルダを指しているため（ループ）、中身はダウンロードしませんでした。")))
+                        self.warnings.append((child_path, _("シンボリックリンクのループを検出したため、中身をスキップ")))
                         continue
                 else:
                     child_real = remote_storage.join_path(real, entry.name) if real else None
@@ -516,13 +516,13 @@ class UploadJob(TransferJob):
         entry = existing.get(name)
         if entry is not None:
             if self._conflict == CONFLICT_SKIP:
-                self.warnings.append((item.local_path, _("同じ名前の項目がアップロード先にあるため、アップロードしませんでした。")))
+                self.warnings.append((item.local_path, _("アップロード先に同名の項目が存在するためスキップ")))
                 return
             if self._conflict == CONFLICT_RENAME:
                 name = make_unique_name(name, existing)
                 entry = None
             elif entry.is_dir != is_dir:
-                self.errors.append((item.local_path, _("アップロード先に、種類の違う同じ名前の項目があるため、上書きできません。")))
+                self.errors.append((item.local_path, _("アップロード先に種類の異なる同名の項目が存在するため、上書きできません。")))
                 return
         # 同じ操作の中で、同じ名前を2回使わないようにする
         existing.setdefault(name, remote_storage.Entry(name, is_dir))
@@ -549,7 +549,7 @@ class UploadJob(TransferJob):
         ancestors はたどってきたフォルダの実際のパス。ジャンクションやシンボリックリンクがその中を指していれば、たどらない。
         """
         if depth >= MAX_DEPTH:
-            self.errors.append((local_path, _("フォルダが深すぎるため、これより下はアップロードしませんでした。")))
+            self.errors.append((local_path, _("階層の上限を超えたため、以下をスキップ")))
             return
         if merge:
             existing = {entry.name: entry for entry in self._client.list_dir(path)}
@@ -565,16 +565,16 @@ class UploadJob(TransferJob):
             try:
                 if child.is_dir():
                     if entry is not None and not entry.is_dir:
-                        self.errors.append((child.path, _("アップロード先に、同じ名前のファイルがあるため、上書きできません。")))
+                        self.errors.append((child.path, _("アップロード先に同名のファイルが存在するため、上書きできません。")))
                         continue
                     real = _real_path(child.path)
                     if real in ancestors:
-                        self.warnings.append((child.path, _("ジャンクションまたはシンボリックリンクが、たどってきたフォルダを指しているため（ループ）、中身はアップロードしませんでした。")))
+                        self.warnings.append((child.path, _("ジャンクションまたはシンボリックリンクのループを検出したため、中身をスキップでした。")))
                         continue
                     self._plan_folder(child.path, child_path, files, entry is not None, ancestors | {real}, depth + 1)
                 elif child.is_file():
                     if entry is not None and entry.is_dir:
-                        self.errors.append((child.path, _("アップロード先に、同じ名前のフォルダがあるため、上書きできません。")))
+                        self.errors.append((child.path, _("アップロード先に同名のフォルダが存在するため、上書きできません。")))
                         continue
                     self._add_file(child.path, child_path, entry, files)
             except remote_storage.ConnectError:

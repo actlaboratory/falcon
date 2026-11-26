@@ -29,14 +29,14 @@ class DownloadWindow(viewkit.SubWindow):
         self.directory.hideScrollBar(wx.HORIZONTAL)
         directory_creator.button(_("参照"), self._on_browse)
         self.conflict, dummy = creator.combobox(
-            _("同じ名前の項目があるとき"), remote_transfer.get_conflict_names(), state=0)
+            _("既存の項目の処理"), remote_transfer.get_conflict_names(), state=0)
 
         footer = self.creator.makeChild(wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
         footer.okbutton(_("ＯＫ"), self._on_ok)
         footer.cancelbutton(_("キャンセル"))
 
     def _on_browse(self, event):
-        d = wx.DirDialog(self, _("保存先のフォルダを選択"), defaultPath=self.directory.GetLineText(0))
+        d = wx.DirDialog(self, _("保存先のフォルダの選択"), defaultPath=self.directory.GetLineText(0))
         if d.ShowModal() != wx.ID_CANCEL:
             self.directory.SetValue(d.GetPath())
         d.Destroy()
@@ -45,7 +45,7 @@ class DownloadWindow(viewkit.SubWindow):
     def _on_ok(self, event):
         directory = os.path.expandvars(self.directory.GetLineText(0).strip().strip("\""))
         if not os.path.isabs(directory) or os.path.isfile(directory):
-            simpleDialog.errorDialog(_("保存先のフォルダを、ドライブ名から正しく入力してください。"), self)
+            simpleDialog.errorDialog(_("保存先には絶対パスを指定してください。"), self)
             self.directory.SetFocus()
             return
         self._result = (os.path.abspath(directory), remote_transfer.CONFLICTS[max(0, self.conflict.GetSelection())])

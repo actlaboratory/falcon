@@ -41,7 +41,7 @@ class RemotePermissionsWindow(viewkit.SubWindow):
         creator = self.creator.makeChild(wx.VERTICAL, 20, style=wx.ALL | wx.EXPAND, margin=20)
         message = _("対象: %(target)s") % {"target": parameters.target}
         if parameters.mode is None:
-            message += "\n" + _("今のパーミッションはわかりません。")
+            message += "\n" + _("現在のパーミッション: 不明")
         creator.staticText(message)
         self.checks = []
         for label, bit in _BITS:
@@ -80,7 +80,7 @@ class RemotePermissionsWindow(viewkit.SubWindow):
     def _on_ok(self, event):
         mode = _parse(self.number.GetLineText(0))
         if mode is None:
-            simpleDialog.errorDialog(_("数値は 755 のように、0から7の数字を3桁か4桁で入力してください。"), self)
+            simpleDialog.errorDialog(_("8進数 3～4桁で指定してください（例: 755）。"), self)
             self.number.SetFocus()
             return
         self._result = mode

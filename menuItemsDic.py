@@ -75,7 +75,7 @@ dic = {
     "TOOL_REMOVE_NETWORK_PLACE": _("ネットワークの場所の削除"),
     "TOOL_DOWNLOAD": _("ダウンロード"),
     "TOOL_UPLOAD": _("アップロード"),
-    "TOOL_COMPARE_TABS": _("他のタブと比較"),
+    "TOOL_COMPARE_TABS": _("フォルダの比較"),
 
     "VIEW_SORTNEXT": _("次の並び順"),
     "VIEW_SORTSELECT": _("並び順を選択"),

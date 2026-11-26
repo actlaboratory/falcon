@@ -186,7 +186,7 @@ def parse_url(text):
     """
     text = text.strip()
     if not is_remote_url(text):
-        raise ValueError(_("ftp://、ftps://、sftp:// のいずれかで始まる URL を入力してください。"))
+        raise ValueError(_("URL のスキームには ftp://、ftps://、sftp:// のいずれかを指定してください。"))
     scheme, rest = text.split("://", 1)
     scheme = scheme.lower()
     rest = rest.replace("\\", "/")
@@ -200,16 +200,16 @@ def parse_url(text):
         user, authority = authority.rsplit("@", 1)
         # パスワードを URL に含めることはできない（履歴や設定にパスワードが残るため）
         if ":" in user:
-            raise ValueError(_("URL にパスワードを含めることはできません。パスワードは接続するときに入力してください。"))
+            raise ValueError(_("URL にパスワードは指定できません。"))
     port = None
     if authority.startswith("["):
         end = authority.find("]")
         if end < 0:
-            raise ValueError(_("サーバーの名前が正しくありません。"))
+            raise ValueError(_("ホスト名が不正です。"))
         host, port_text = authority[1:end], authority[end + 1:]
         if port_text:
             if not port_text.startswith(":"):
-                raise ValueError(_("サーバーの名前が正しくありません。"))
+                raise ValueError(_("ホスト名が不正です。"))
             port_text = port_text[1:]
     elif ":" in authority:
         host, port_text = authority.rsplit(":", 1)
@@ -217,10 +217,10 @@ def parse_url(text):
         host, port_text = authority, ""
     if port_text:
         if not port_text.isdigit() or not 0 < int(port_text) < 65536:
-            raise ValueError(_("ポート番号が正しくありません。"))
+            raise ValueError(_("ポート番号が不正です。"))
         port = int(port_text)
     if host == "" or re.search(r"[\s/\\@]", host):
-        raise ValueError(_("サーバーの名前が正しくありません。"))
+        raise ValueError(_("ホスト名が不正です。"))
     return Location(scheme, host, port, user, normalize_path(path) if path else "")
 
 
@@ -253,9 +253,9 @@ def validate_name(name):
     if name.strip() == "":
         return _("名前を入力してください。")
     if "/" in name or "\\" in name or "\0" in name:
-        return _("名前に / や \\ は使えません。")
+        return _("名前に / と \\ は使用できません。")
     if name in (".", ".."):
-        return _("この名前は使えません。")
+        return _("この名前は使用できません。")
     return ""
 
 
@@ -434,7 +434,7 @@ def describe_certificate(der):
     try:
         from cryptography import x509
         cert = x509.load_der_x509_certificate(der)
-        return _("発行先: %(subject)s\n発行者: %(issuer)s\n有効期限: %(start)s から %(end)s まで") % {
+        return _("サブジェクト: %(subject)s\n発行者: %(issuer)s\n有効期間: %(start)s ～ %(end)s") % {
             "subject": cert.subject.rfc4514_string(), "issuer": cert.issuer.rfc4514_string(),
             "start": cert.not_valid_before_utc.strftime("%Y-%m-%d"), "end": cert.not_valid_after_utc.strftime("%Y-%m-%d")}
     except Exception as err:
@@ -479,11 +479,11 @@ def open_socket(host, port, timeout):
                 raise ConnectionError(_("プロキシサーバーが接続を閉じました。"))
             response += data
             if len(response) > 65536:
-                raise ConnectionError(_("プロキシサーバーの応答が正しくありません。"))
+                raise ConnectionError(_("プロキシサーバーの応答が不正です。"))
         status = response.split(b"\r\n", 1)[0].decode("latin-1")
         parts = status.split(" ", 2)
         if len(parts) < 2 or parts[1] != "200":
-            raise ConnectionError(_("プロキシサーバーが中継を断りました。(%(status)s)") % {"status": status})
+            raise ConnectionError(_("プロキシサーバーが CONNECT を拒否しました。(%(status)s)") % {"status": status})
         # CONNECT の応答の後に、サーバーからのデータが続いて届いていることはない（サーバーはまだ何も送っていない）
         return sock
     except BaseException:
@@ -607,7 +607,7 @@ class Client:
             entry = None
         if entry is not None:
             if not entry.is_dir:
-                raise RemoteError(_("同じ名前のファイルがあるため、フォルダを作れません。"))
+                raise RemoteError(_("同名のファイルが存在するため、フォルダを作成できません。"))
             return
         parent = get_parent_path(path)
         if parent is not None and parent != path:
@@ -629,16 +629,16 @@ def connect(location, credentials):
 
 
 def _connection_error_message(location, err):
-    return _("%(host)s に接続できませんでした。\nサーバーの名前とポート番号、ネットワークの接続を確認してください。\n(%(error)s)") % {
+    return _("%(host)s に接続できませんでした。\n(%(error)s)") % {
         "host": location.get_display_host(), "error": _describe(err)}
 
 
 def _describe(err):
     """例外を、利用者に見せる短い文章にする"""
     if isinstance(err, socket.timeout):
-        return _("応答がありません")
+        return _("タイムアウト")
     if isinstance(err, socket.gaierror):
-        return _("サーバーが見つかりません")
+        return _("ホスト名を解決できません")
     if isinstance(err, OSError) and err.strerror:
         return err.strerror
     return str(err) or err.__class__.__name__
@@ -782,13 +782,13 @@ class _FtpClient(Client):
         """検証できない証明書を取り出して、指紋を付けた UntrustedCertificate を作る"""
         der = self._fetch_certificate()
         return UntrustedCertificate(
-            _("%(host)s の証明書を確認できませんでした。\n(%(error)s)") % {
+            _("%(host)s のサーバー証明書を検証できません。\n(%(error)s)") % {
                 "host": self.location.get_display_host(), "error": err.verify_message or err},
             get_certificate_fingerprint(der) if der else "", describe_certificate(der) if der else "")
 
     def _changed(self, err):
         return UntrustedCertificate(
-            _("%(host)s の証明書が、以前に許可したものと違います。\nなりすましの可能性があります。") % {
+            _("%(host)s のサーバー証明書が、保存済みの証明書と一致しません。\n中間者攻撃の可能性があります。") % {
                 "host": self.location.get_display_host()},
             get_certificate_fingerprint(err.der), describe_certificate(err.der), changed=True)
 
@@ -845,9 +845,9 @@ class _FtpClient(Client):
         except ftplib.error_perm as err:
             ftp.close()
             if str(err).startswith("530"):
-                raise AuthRequired(_("ユーザー名またはパスワードが違います。") if credentials else _("このサーバーには、ユーザー名とパスワードが必要です。"))
+                raise AuthRequired(_("ユーザー名またはパスワードが正しくありません。") if credentials else _("認証が必要です。"))
             if location.scheme == SCHEME_FTPS and str(err)[:3] in ("500", "502", "504", "534"):
-                raise ConnectError(_("%(host)s は FTPS（暗号化）に対応していません。\n(%(error)s)") % {
+                raise ConnectError(_("%(host)s は FTPS (AUTH TLS) に対応していません。\n(%(error)s)") % {
                     "host": location.get_display_host(), "error": err})
             raise RemoteError(_("ログインできませんでした。\n(%(error)s)") % {"error": err})
         except AuthRequired:
@@ -870,21 +870,21 @@ class _FtpClient(Client):
         except UnicodeDecodeError:
             # UTF-8 に対応していないサーバーでは、日本語のファイル名は Shift_JIS のことが多い
             if self._ftp.encoding == "cp932":
-                raise RemoteError(_("ファイル名の文字コードがわかりません。"))
+                raise RemoteError(_("ファイル名の文字コードを判別できません。"))
             log.info("switch the encoding to cp932: %s" % self.location.get_server_key())
             self._ftp.encoding = "cp932"
             return self._call(func, *args)
         except ftplib.error_perm as err:
             code = str(err)[:3]
             if code == "550":
-                raise RemoteError(_("見つからないか、アクセスが拒否されました。\n(%(error)s)") % {"error": err})
+                raise RemoteError(_("存在しないか、アクセスが拒否されました。\n(%(error)s)") % {"error": err})
             raise RemoteError(str(err))
         except _CertificateChanged as err:
             # データ用の接続で、許可した証明書と違う証明書が出てきた
             raise ConnectError(str(self._changed(err)))
         except ValueError as err:
             # 改行を含む名前など、FTP のコマンドで送れない名前
-            raise RemoteError(_("この名前は、FTP では扱えません。\n(%(error)s)") % {"error": err})
+            raise RemoteError(_("この名前は FTP で使用できません。\n(%(error)s)") % {"error": err})
         except (OSError, EOFError, ftplib.Error) as err:
             raise ConnectError(_connection_error_message(self.location, err))
 
@@ -1042,7 +1042,7 @@ class _FtpClient(Client):
             raise
         except RemoteError as err:
             if str(err)[:3] in ("500", "502", "504"):
-                raise RemoteError(_("このサーバーは、パーミッションの変更に対応していません。\n(%(error)s)") % {"error": err})
+                raise RemoteError(_("サーバーが SITE CHMOD に対応していません。\n(%(error)s)") % {"error": err})
             raise
 
     def set_modified(self, path, modified):
@@ -1137,7 +1137,7 @@ class _RejectUnknownHost:
     """まだ確認していないホスト鍵の場合に、UnknownHostKey を投げる paramiko のポリシー"""
 
     def missing_host_key(self, client, hostname, key):
-        raise UnknownHostKey(_("%(host)s に初めて接続します。") % {"host": hostname}, hostname, key)
+        raise UnknownHostKey(_("%(host)s のホスト鍵は未登録です。") % {"host": hostname}, hostname, key)
 
 
 class _SftpClient(Client):
@@ -1193,9 +1193,9 @@ class _SftpClient(Client):
         except paramiko.AuthenticationException:
             self._ssh.close()
             if key_file:
-                message = _("鍵ファイル、パスフレーズ、またはユーザー名が違います。")
+                message = _("鍵ファイル、パスフレーズ、またはユーザー名が正しくありません。")
             elif password:
-                message = _("ユーザー名またはパスワードが違います。")
+                message = _("ユーザー名またはパスワードが正しくありません。")
             else:
                 message = _("パスワードを入力してください。")
             raise AuthRequired(message)
@@ -1213,14 +1213,14 @@ class _SftpClient(Client):
         except (socket.timeout, socket.gaierror, ConnectionError, EOFError, self._paramiko.SSHException) as err:
             raise ConnectError(_connection_error_message(self.location, err))
         except UnicodeDecodeError:
-            raise RemoteError(_("ファイル名の文字コードがわかりません。"))
+            raise RemoteError(_("ファイル名の文字コードを判別できません。"))
         except OSError as err:
             # SFTP サーバーが返したエラー
             raise RemoteError(_describe(err))
 
     def check_alive(self):
         if not self._ssh.get_transport() or not self._ssh.get_transport().is_active():
-            raise ConnectError(_connection_error_message(self.location, ConnectionError(_("接続が切れました"))))
+            raise ConnectError(_connection_error_message(self.location, ConnectionError(_("接続が切断されました"))))
         self._call(self._sftp.normalize, ".")
 
     def get_real_path(self, path):

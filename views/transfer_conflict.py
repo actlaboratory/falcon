@@ -25,8 +25,8 @@ class TransferConflictWindow(viewkit.SubWindow):
         names = "\n".join(parameters[:_MAX_NAMES])
         if len(parameters) > _MAX_NAMES:
             names += "\n" + _("ほか %(count)d件") % {"count": len(parameters) - _MAX_NAMES}
-        creator.staticText(_("転送先に、同じ名前の項目が %(count)d件あります。\n%(names)s") % {"count": len(parameters), "names": names})
-        self.conflict, dummy = creator.combobox(_("同じ名前の項目があるとき"), remote_transfer.get_conflict_names(), state=0)
+        creator.staticText(_("転送先に同名の項目が %(count)d件存在します。\n%(names)s") % {"count": len(parameters), "names": names})
+        self.conflict, dummy = creator.combobox(_("既存の項目の処理"), remote_transfer.get_conflict_names(), state=0)
 
         footer = self.creator.makeChild(wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
         footer.okbutton(_("ＯＫ"))

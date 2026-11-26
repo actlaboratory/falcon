@@ -1278,7 +1278,7 @@ class MainWindow(viewkit.MainWindow):
             return
         paths = [elem.fullpath for elem in tab.GetSelectedItems() if isinstance(elem, browsableObjects.File)]
         if not paths:
-            dialog(_("エラー"), _("アップロードするファイル・フォルダを選択してください。"))
+            dialog(_("エラー"), _("アップロードする項目が選択されていません。"))
             return
         result = self.showSubWindow(views.upload.UploadWindow, _("アップロード"), self._get_upload_parameters())
         if result.code == wx.ID_CANCEL:
@@ -1332,12 +1332,12 @@ class MainWindow(viewkit.MainWindow):
             return
         others = [t for t in self.tabs if t is not tab and self._is_comparable_tab(t)]
         if not others:
-            dialog(_("エラー"), _("比べる相手のタブがありません。ファイル一覧かサーバーの一覧のタブを、もう1つ開いてください。"))
+            dialog(_("エラー"), _("比較できるタブが他にありません。"))
             return
         other = others[0]
         if len(others) > 1:
             names = ["%s (%s)" % (t.GetTabName(), t.listObject.rootDirectory) for t in others]
-            result = self.showSubWindow(views.compare_tabs.CompareTabsWindow, _("他のタブと比較"), names)
+            result = self.showSubWindow(views.compare_tabs.CompareTabsWindow, _("フォルダの比較"), names)
             if result.code == wx.ID_CANCEL:
                 return
             other = others[result.user_object]
@@ -1346,14 +1346,14 @@ class MainWindow(viewkit.MainWindow):
         differences = folder_compare.compare(tab.listObject.GetItemList(), other.listObject.GetItemList(), case_sensitive)
         self._set_checked_items(tab, {difference.element for difference in differences})
         if not differences:
-            self.app.say(_("違いはありません。"), interrupt=True)
+            self.app.say(_("差異なし"), interrupt=True)
             return
         counts = {}
         for difference in differences:
             counts[difference.kind] = counts.get(difference.kind, 0) + 1
         self.app.say(_(
-            "違う項目 %(total)d件にチェックを付けました。相手にない %(only)d件、種類が違う %(type)d件、"
-            "大きさが違う %(size)d件、こちらが新しい %(newer)d件") % {
+            "差異 %(total)d件を選択。比較先に存在しない %(only)d件、種類の不一致 %(type)d件、"
+            "サイズの不一致 %(size)d件、更新日時が新しい %(newer)d件") % {
             "total": len(differences), "only": counts.get(folder_compare.ONLY_HERE, 0),
             "type": counts.get(folder_compare.TYPE_DIFFERS, 0), "size": counts.get(folder_compare.SIZE_DIFFERS, 0),
             "newer": counts.get(folder_compare.NEWER, 0)}, interrupt=True)
@@ -1398,8 +1398,8 @@ class MainWindow(viewkit.MainWindow):
             return
         for edited in remote_edit.edit_tracker.pop_changed():
             message = _(
-                "サーバーからダウンロードして開いた %(name)s が変更されています。\n"
-                "サーバーにアップロードして、%(url)s を上書きしますか？") % {
+                "%(name)s が変更されました。\n"
+                "%(url)s にアップロードして上書きしますか？") % {
                 "name": edited.get_name(), "url": edited.location.get_url(edited.path)}
             if not self._ask_yes_no(_("ファイルの変更"), message):
                 continue

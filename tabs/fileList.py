@@ -427,7 +427,7 @@ class FileListTab(base.FalconTabBase):
     def _paste_remote(self, data, dest):
         """FTP・SFTP のサーバーでコピーした項目(remote_clipboard.RemoteClipboardData)を、dest にダウンロードする"""
         if data.is_move():
-            dialog(_("エラー"), _("サーバー上で切り取った項目は、同じサーバーのフォルダにだけ貼り付けられます。\nダウンロードする場合は、コピーしてから貼り付けてください。"))
+            dialog(_("エラー"), _("サーバー上で切り取った項目は、同じサーバー内にのみ貼り付けできます。\nダウンロードするにはコピーしてください。"))
             return
         conflicts = [
             item.get_name() for item in data.items

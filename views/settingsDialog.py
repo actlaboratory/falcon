@@ -104,7 +104,7 @@ class SettingsWindow(viewkit.SubWindow):
         self.server.hideScrollBar(wx.HORIZONTAL)
         self.port, dummy = creator.spinCtrl(_("ポート番号"), 0, 65535, default_value=8080)
         # 既定では使わない（Web 用のプロキシは、FTP・SFTP のポートへの中継を断ることが多いため）
-        self.remote_proxy = creator.checkbox(_("FTP・SFTP の接続にもプロキシを使う（HTTP の CONNECT で中継）(&F)"))
+        self.remote_proxy = creator.checkbox(_("FTP・SFTP でもプロキシを使用（HTTP CONNECT）(&F)"))
 
         # buttons
         footer = self.creator.makeChild(wx.HORIZONTAL, style=wx.ALIGN_RIGHT)

@@ -56,7 +56,7 @@ class RemoteListTab(base.FalconTabBase):
         try:
             os.makedirs(directory)
         except OSError as err:
-            dialog(_("エラー"), _("一時フォルダを作れませんでした。\n(%(error)s)") % {"error": err})
+            dialog(_("エラー"), _("一時フォルダを作成できませんでした。\n(%(error)s)") % {"error": err})
             return errorCodes.ACCESS_DENIED
         local_path = os.path.join(directory, remote_transfer.get_local_name(elem.basename))
         globalVars.app.say(_("ダウンロード中"), interrupt=True)
@@ -107,7 +107,7 @@ class RemoteListTab(base.FalconTabBase):
         """新しく作る・付ける名前を調べ、使えなければエラーを表示して False を返す"""
         error = remote_storage.validate_name(name)
         if error == "" and name in self._get_names():
-            error = _("同じ名前の項目が既にあります。")
+            error = _("同名の項目が既に存在します。")
         if error:
             dialog(_("エラー"), error)
             return False
@@ -172,9 +172,9 @@ class RemoteListTab(base.FalconTabBase):
         if not elems:
             return
         if len(elems) == 1:
-            message = _("%(name)s\nこの項目をサーバーから削除してもよろしいですか？\nサーバーにはごみ箱がないため、元に戻せません。") % {"name": elems[0].basename}
+            message = _("%(name)s\nサーバーから完全に削除しますか？\nこの操作は元に戻せません。") % {"name": elems[0].basename}
         else:
-            message = _("選択中の項目 %(count)d件をサーバーから削除してもよろしいですか？\nサーバーにはごみ箱がないため、元に戻せません。") % {"count": len(elems)}
+            message = _("選択した %(count)d件をサーバーから完全に削除しますか？\nこの操作は元に戻せません。") % {"count": len(elems)}
         dlg = wx.MessageDialog(None, message, _("削除の確認"), wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING)
         answer = dlg.ShowModal()
         dlg.Destroy()
@@ -202,7 +202,7 @@ class RemoteListTab(base.FalconTabBase):
             return
         self.UpdateFilelist(silence=True)
         if errors is not True and errors:
-            _show_errors(_("パーミッションを変更できなかった項目があります。"), errors)
+            _show_errors(_("一部の項目のパーミッションを変更できませんでした。"), errors)
             return
         globalVars.app.say(_("パーミッションを変更しました。"), interrupt=True)
 
@@ -258,23 +258,23 @@ class RemoteListTab(base.FalconTabBase):
         destination = self.listObject.location
         if not data.is_move():
             dialog(_("エラー"), _(
-                "サーバー上の項目は、サーバーの中でコピーできません。\n"
-                "移動する場合は切り取ってから貼り付けてください。ダウンロードする場合は、ファイル一覧のタブで貼り付けてください。"))
+                "サーバー内でのコピーには対応していません。\n"
+                "移動は切り取り、ダウンロードはファイル一覧のタブへの貼り付けで行ってください。"))
             return
         if not remote_storage.is_same_server(data.location, destination):
-            dialog(_("エラー"), _("切り取った項目は、同じサーバーの中でだけ移動できます。"))
+            dialog(_("エラー"), _("切り取った項目は同じサーバー内でのみ移動できます。"))
             return
         if data.location.path == destination.path:
-            dialog(_("エラー"), _("切り取った項目は、既にこのフォルダにあります。"))
+            dialog(_("エラー"), _("移動元と移動先が同じフォルダです。"))
             return
         for item in data.items:
             if item.is_dir and (destination.path + "/").startswith(item.path.rstrip("/") + "/"):
-                dialog(_("エラー"), _("フォルダを、そのフォルダ自身やその中に移動することはできません。"))
+                dialog(_("エラー"), _("フォルダをそれ自身またはサブフォルダに移動することはできません。"))
                 return
         names = self._get_names()
         conflicts = [item.get_name() for item in data.items if item.get_name() in names]
         if conflicts:
-            dialog(_("エラー"), _("このフォルダには、同じ名前の項目があるため移動できません。\n%(names)s") % {"names": "\n".join(conflicts[:_MAX_ERROR_LINES])})
+            dialog(_("エラー"), _("移動先に同名の項目が存在します。\n%(names)s") % {"names": "\n".join(conflicts[:_MAX_ERROR_LINES])})
             return
 
         def move(client):
@@ -296,7 +296,7 @@ class RemoteListTab(base.FalconTabBase):
         # 移動元のフォルダを表示しているタブも更新する
         globalVars.app.main_window.refresh_file_lists({data.location.get_url()})
         if errors is not True and errors:
-            _show_errors(_("移動できなかった項目があります。"), errors)
+            _show_errors(_("一部の項目を移動できませんでした。"), errors)
             return
         globalVars.app.say(_("%(count)d件を移動しました。") % {"count": len(data.items)}, interrupt=True)
 
@@ -306,7 +306,7 @@ class RemoteListTab(base.FalconTabBase):
         貼り付けとドラッグアンドドロップで使う。dest は表示中のフォルダの URL。
         """
         if op == clipboard.MOVE:
-            dialog(_("エラー"), _("切り取ったファイルは、サーバーに移動できません。コピーしてから貼り付けてください。"))
+            dialog(_("エラー"), _("ローカルからサーバーへの移動には対応していません。コピーして貼り付けてください。"))
             return
         if not target:
             return
@@ -330,7 +330,7 @@ class RemoteListTab(base.FalconTabBase):
     def upload_files(self):
         """ファイルを選んで、表示中のフォルダにアップロードする。フォルダは貼り付けかドラッグアンドドロップで"""
         d = wx.FileDialog(
-            globalVars.app.main_window, _("アップロードするファイルを選択"),
+            globalVars.app.main_window, _("アップロードするファイルの選択"),
             style=wx.FD_OPEN | wx.FD_MULTIPLE | wx.FD_FILE_MUST_EXIST)
         answer = d.ShowModal()
         paths = d.GetPaths()

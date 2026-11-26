@@ -32,9 +32,9 @@ class UploadWindow(viewkit.SubWindow):
         self._result = None
         creator = self.creator.makeChild(wx.VERTICAL, 20, style=wx.ALL | wx.EXPAND, margin=20)
         self.destination, dummy = creator.comboEdit(
-            _("アップロード先のフォルダ（ftp://、ftps://、sftp:// の URL）"), parameters.candidates,
+            _("アップロード先（ftp://、ftps://、sftp:// の URL）"), parameters.candidates,
             default_value=parameters.default_value, x=500)
-        self.conflict, dummy = creator.combobox(_("同じ名前の項目があるとき"), remote_transfer.get_conflict_names(), state=0)
+        self.conflict, dummy = creator.combobox(_("既存の項目の処理"), remote_transfer.get_conflict_names(), state=0)
 
         footer = self.creator.makeChild(wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
         footer.okbutton(_("ＯＫ"), self._on_ok)
@@ -48,7 +48,7 @@ class UploadWindow(viewkit.SubWindow):
             self.destination.SetFocus()
             return
         if location.path == "":
-            simpleDialog.errorDialog(_("アップロード先のフォルダのパスを、サーバー名の後に / から入力してください。"), self)
+            simpleDialog.errorDialog(_("アップロード先のパスは / から始まる絶対パスで指定してください。"), self)
             self.destination.SetFocus()
             return
         self._result = (location, remote_transfer.CONFLICTS[max(0, self.conflict.GetSelection())])

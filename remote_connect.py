@@ -129,11 +129,10 @@ def _save_key_file(location, key_file):
 def _confirm_host_key(location, err):
     """初めて接続する SFTP サーバーの鍵を確認してもらう"""
     message = _(
-        "%(host)s に初めて接続します。\n"
-        "サーバーの鍵の指紋: %(fingerprint)s\n\n"
-        "接続先がこのサーバーで間違いなければ「はい」を選んでください。鍵を保存して接続します。\n"
-        "次からは、鍵が変わっていた場合に警告します。") % {"host": location.get_display_host(), "fingerprint": err.get_fingerprint()}
-    return _ask_yes_no(_("サーバーの確認"), message)
+        "%(host)s のホスト鍵は未登録です。\n"
+        "フィンガープリント: %(fingerprint)s\n\n"
+        "このホスト鍵を信頼して接続しますか？（known_hosts に保存されます）") % {"host": location.get_display_host(), "fingerprint": err.get_fingerprint()}
+    return _ask_yes_no(_("ホスト鍵の確認"), message)
 
 
 def _confirm_certificate(location, err):
@@ -142,22 +141,21 @@ def _confirm_certificate(location, err):
     許可した証明書だけを、次からも使う（違う証明書なら、また確認する）。
     """
     if not err.fingerprint:
-        dialog(_("エラー"), _("%(error)s\n\n証明書を取り出せなかったため、接続できません。") % {"error": err})
+        dialog(_("エラー"), _("%(error)s\n\n証明書を取得できないため、接続を中止しました。") % {"error": err})
         return False
     details = ("\n" + err.details) if err.details else ""
     if err.changed:
         message = _(
             "%(error)s\n\n"
-            "新しい証明書の指紋: %(fingerprint)s%(details)s\n\n"
-            "サーバーの管理者が証明書を更新した場合を除き、接続しないでください。\n"
-            "この新しい証明書を許可して接続しますか？") % {"error": err, "fingerprint": err.fingerprint, "details": details}
+            "新しい証明書のフィンガープリント: %(fingerprint)s%(details)s\n\n"
+            "証明書の更新が確認できない場合は、接続しないでください。\n"
+            "この証明書を信頼して接続しますか？") % {"error": err, "fingerprint": err.fingerprint, "details": details}
     else:
         message = _(
             "%(error)s\n\n"
-            "証明書の指紋: %(fingerprint)s%(details)s\n\n"
-            "自分で作った証明書を使っている機器（NASなど）では、この表示が出ることがあります。\n"
-            "指紋が機器の設定画面などに表示されているものと同じであれば、接続先は本物です。\n"
-            "この証明書を許可して接続しますか？許可した証明書は保存し、次からは違う証明書の場合だけ確認します。") % {
+            "フィンガープリント: %(fingerprint)s%(details)s\n\n"
+            "自己署名証明書の場合は、サーバー側に表示されるフィンガープリントと一致することを確認してください。\n"
+            "この証明書を信頼して接続しますか？（信頼した証明書は保存されます）") % {
             "error": err, "fingerprint": err.fingerprint, "details": details}
     return _ask_yes_no(_("証明書の確認"), message)
 
