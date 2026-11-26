@@ -187,6 +187,53 @@ def _get_local_modified(path):
         return None
 
 
+# 転送速度を求めるときに使う、直近の期間（秒）と、記録する間隔（秒）
+_SPEED_PERIOD = 5
+_SPEED_SAMPLE_INTERVAL = 0.25
+
+
+class TransferStatistics:
+    """
+    転送の状況（転送したバイト数、全体のバイト数、ファイルの数、転送速度、残り時間）。
+    転送のスレッドが書き込み、画面のスレッドが読む。値の読み書きだけなので、ロックは使わない
+    """
+
+    def __init__(self, total_bytes, file_count):
+        self.total_bytes = total_bytes
+        self.done_bytes = 0
+        self.file_count = file_count
+        # 転送中のファイルの番号（1から）と名前
+        self.file_index = 0
+        self.file_name = ""
+        # 直近の (時刻, 転送したバイト数)
+        self._samples = [(time.monotonic(), 0)]
+
+    def add(self, size):
+        """(転送のスレッド) size バイト転送した"""
+        self.done_bytes += size
+        now = time.monotonic()
+        samples = self._samples
+        if now - samples[-1][0] >= _SPEED_SAMPLE_INTERVAL:
+            # 古い記録を捨てる。新しいリストに置き換えるので、読む側が途中の状態を見ることはない
+            self._samples = [sample for sample in samples if now - sample[0] <= _SPEED_PERIOD] + [(now, self.done_bytes)]
+
+    def get_speed(self):
+        """直近の転送速度（バイト/秒）。測り始めたばかりでわからなければ None"""
+        samples = self._samples
+        now = time.monotonic()
+        start_time, start_bytes = samples[0]
+        if now - start_time < 1:
+            return None
+        return (self.done_bytes - start_bytes) / (now - start_time)
+
+    def get_remaining_seconds(self):
+        """残り時間（秒）。わからなければ None"""
+        speed = self.get_speed()
+        if not speed or self.total_bytes <= 0:
+            return None
+        return max(self.total_bytes - self.done_bytes, 0) / speed
+
+
 class _File:
     """転送するファイル1つ"""
 
@@ -218,6 +265,8 @@ class RemoteJob:
         self.phase = PHASE_CONNECTING
         # 準備の段階で見つけた、転送するファイルの数
         self.found = 0
+        # 転送の状況（TransferStatistics）。転送を始めるまでは None
+        self.statistics = None
         # 利用者に知らせる注意（名前を変えて保存した項目など）の (対象, 内容) のリスト
         self.warnings = []
         # 失敗した項目の (対象, 内容) のリスト
@@ -368,18 +417,21 @@ class TransferJob(RemoteJob):
     def _transfer(self, files):
         total = sum(max(f.size - f.offset, 0) for f in files)
         log.info("%s: %d files, %d bytes (conflict: %s)" % (self.__class__.__name__, len(files), total, self._conflict))
-        done = [0]
+        statistics = TransferStatistics(total, len(files))
+        self.statistics = statistics
         self.percentage = 0
 
         def on_progress(size):
             self._check_canceled()
-            done[0] += size
+            statistics.add(size)
             self._transferred_bytes += size
             if total > 0:
-                self.percentage = min(100, done[0] * 100 // total)
+                self.percentage = min(100, statistics.done_bytes * 100 // total)
 
         for index, f in enumerate(files):
             self._check_canceled()
+            statistics.file_index = index + 1
+            statistics.file_name = remote_storage.get_name(f.source) if isinstance(self, DownloadJob) else os.path.basename(f.source)
             log.debug("transfer %s -> %s (size: %d, offset: %d)" % (f.source, f.destination, f.size, f.offset))
             start = time.monotonic()
             try:

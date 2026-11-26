@@ -6,6 +6,7 @@
 
 import datetime
 import os
+import time
 
 import viewkit
 import wx
@@ -19,6 +20,8 @@ from simpleDialog import dialog
 
 # 進み具合を調べる間隔(ミリ秒)
 _INTERVAL = 200
+# 転送の状況の欄を書き換える間隔(秒)。読んでいる途中で変わりすぎないようにする
+_STATUS_INTERVAL = 1
 
 
 class OperationProgressWindow(viewkit.SubWindow):
@@ -34,6 +37,11 @@ class OperationProgressWindow(viewkit.SubWindow):
         self.list_ctrl.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_detail)
         self.gauge, dummy = creator.gauge(_("実行中の操作"), x=400)
         self.gauge.SetRange(100)
+        # 転送速度・残り時間など。Tab キーで移り、矢印キーで読めるように、読み取り専用の入力欄にする
+        self.status, dummy = creator.inputbox(
+            _("転送の状況"), style=wx.TE_MULTILINE | wx.TE_READONLY | wx.BORDER_RAISED, x=500)
+        self.status.SetMinSize((500, 90))
+        self._status_time = 0
 
         footer = self.creator.makeChild(wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
         self.detail_button = footer.button(_("詳細") + "(&D)...", self._on_detail)
@@ -85,7 +93,28 @@ class OperationProgressWindow(viewkit.SubWindow):
         percentage = (running.get_percentage() or 0) if running is not None else 0
         if self.gauge.GetValue() != percentage:
             self.gauge.SetValue(percentage)
+        self._update_status()
         self._update_buttons()
+
+    def _update_status(self):
+        """カーソルのある操作（実行中でなければ、実行中の操作）の、転送速度などを表示する"""
+        operation = self._get_focused()
+        if operation is None or operation.state != operation_manager.RUNNING:
+            operation = self.parameters.get_running()
+        lines = operation.get_status_lines() if operation is not None else []
+        text = "\n".join(lines)
+        current = self.status.GetValue()
+        if current == text:
+            return
+        # 内容が変わり続けるときだけ間隔を空ける。表示し始めと、終わって消すときはすぐに反映する
+        now = time.monotonic()
+        if current and text and now - self._status_time < _STATUS_INTERVAL:
+            return
+        self._status_time = now
+        # 読んでいる位置が先頭に戻らないようにする
+        position = self.status.GetInsertionPoint()
+        self.status.ChangeValue(text)
+        self.status.SetInsertionPoint(min(position, self.status.GetLastPosition()))
 
     def _update_buttons(self):
         operation = self._get_focused()
@@ -106,6 +135,9 @@ class OperationProgressWindow(viewkit.SubWindow):
 
     def _on_focus(self, event):
         self._update_buttons()
+        # カーソルを動かしたら、その操作の状況をすぐに表示する
+        self._status_time = 0
+        self._update_status()
         event.Skip()
 
     def _on_detail(self, event):

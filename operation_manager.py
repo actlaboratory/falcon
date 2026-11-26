@@ -21,6 +21,7 @@ import archiver
 import clipboard
 import fileOperator
 import globalVars
+import misc
 import operation_result
 import remote_transfer
 import reparse_link
@@ -46,6 +47,23 @@ _INTERVAL = 100
 _NOTIFY_DELAY = 0.3
 # falcon の終了時に、中止した操作が止まるのを待つ秒数
 _SHUTDOWN_TIMEOUT = 5
+
+
+def format_speed(speed):
+    """転送速度（バイト/秒）を「1.50MB/秒」の形にする"""
+    return _("%(size)s/秒") % {"size": misc.ConvertBytesTo(int(speed), misc.UNIT_AUTO, True)}
+
+
+def format_duration(seconds):
+    """残り時間（秒）を「約1時間2分」「約3分20秒」「約45秒」の形にする"""
+    seconds = int(seconds + 0.5)
+    hours, rest = divmod(seconds, 3600)
+    minutes, seconds = divmod(rest, 60)
+    if hours:
+        return _("約%(hours)d時間%(minutes)d分") % {"hours": hours, "minutes": minutes}
+    if minutes:
+        return _("約%(minutes)d分%(seconds)d秒") % {"minutes": minutes, "seconds": seconds}
+    return _("約%(seconds)d秒") % {"seconds": max(seconds, 1)}
 
 
 class Operation:
@@ -151,6 +169,10 @@ class Operation:
         return {
             WAITING: _("待機中"), RUNNING: _("実行中"), CONFIRMING: _("確認待ち"),
             FINISHED: _("完了"), FAILED: _("エラー"), CANCELED: _("中止")}[self.state]
+
+    def get_status_lines(self):
+        """進行状況のウィンドウに表示する、実行中の詳しい状況（転送速度など）の行のリスト。なければ空"""
+        return []
 
     def get_progress_string(self):
         """進み具合の読み上げに使う文章を返す"""
@@ -509,7 +531,40 @@ class RemoteOperation(Operation):
         return super().get_state_string()
 
     def get_progress_string(self):
-        return self.get_state_string()
+        text = self.get_state_string()
+        statistics = self._get_running_statistics()
+        if statistics is None:
+            return text
+        remaining = statistics.get_remaining_seconds()
+        if remaining is not None:
+            text += " " + _("残り %(time)s") % {"time": format_duration(remaining)}
+        speed = statistics.get_speed()
+        if speed is not None:
+            text += " " + format_speed(speed)
+        return text
+
+    def _get_running_statistics(self):
+        """転送中なら、転送の状況（remote_transfer.TransferStatistics）を返す"""
+        if self.state != RUNNING or self._job is None:
+            return None
+        return getattr(self._job, "statistics", None)
+
+    def get_status_lines(self):
+        statistics = self._get_running_statistics()
+        if statistics is None:
+            return []
+        lines = []
+        if statistics.file_name:
+            lines.append(_("ファイル: %(name)s（%(index)d / %(count)d）") % {
+                "name": statistics.file_name, "index": statistics.file_index, "count": statistics.file_count})
+        lines.append(_("サイズ: %(done)s / %(total)s") % {
+            "done": misc.ConvertBytesTo(statistics.done_bytes, misc.UNIT_AUTO, True),
+            "total": misc.ConvertBytesTo(statistics.total_bytes, misc.UNIT_AUTO, True)})
+        speed = statistics.get_speed()
+        lines.append(_("速度: %(speed)s") % {"speed": format_speed(speed) if speed is not None else _("計測中")})
+        remaining = statistics.get_remaining_seconds()
+        lines.append(_("残り時間: %(time)s") % {"time": format_duration(remaining) if remaining is not None else _("計算中")})
+        return lines
 
     def get_finish_message(self):
         if self.state == FINISHED and self._get_warning_count():
