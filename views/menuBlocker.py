@@ -40,6 +40,7 @@ tabTypeBlockList = {
         "VIEW_TOGGLE_EXTENSION",
         "TOOL_DOWNLOAD",
         "TOOL_UPLOAD",
+        "TOOL_COMPARE_TABS",
     ],
     tabs.fileList.FileListTab: [
         "TOOL_EJECT_DRIVE",
@@ -77,6 +78,7 @@ tabTypeBlockList = {
         "TOOL_REMOVE_NETWORK_PLACE",
         "TOOL_DOWNLOAD",
         "TOOL_UPLOAD",
+        "TOOL_COMPARE_TABS",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
@@ -114,6 +116,7 @@ tabTypeBlockList = {
         "TOOL_REMOVE_NETWORK_PLACE",
         "TOOL_DOWNLOAD",
         "TOOL_UPLOAD",
+        "TOOL_COMPARE_TABS",
         "TOOL_EXEC_PROGRAM",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
@@ -168,6 +171,7 @@ _REMOTE_ALLOWED = {
     "TOOL_ADD_NETWORK_PLACE",
     "TOOL_DOWNLOAD",
     "TOOL_UPLOAD",
+    "TOOL_COMPARE_TABS",
     "VIEW_SORTNEXT",
     "VIEW_SORTSELECT",
     "VIEW_SORTCYCLEAD",
@@ -209,6 +213,7 @@ for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
         "TOOL_DOWNLOAD",
+        "TOOL_COMPARE_TABS",
         "TOOL_EXEC_PROGRAM"
     ]
 

@@ -515,10 +515,12 @@ class DownloadOperation(RemoteOperation):
 class UploadOperation(RemoteOperation):
     """FTP・SFTP のサーバーへのアップロード。終わったら、アップロード先のフォルダの一覧を更新する"""
 
-    def __init__(self, request):
+    def __init__(self, request, on_success=None):
         url = request.location.get_url()
         super().__init__(_("アップロード"), {url}, [url], request)
         self.set_title([item.local_path for item in request.items], url)
+        # 成功したときにメインスレッドで呼ぶ関数（編集したファイルの書き戻しで使う）
+        self.on_success = on_success
 
     def _make_job(self):
         return remote_transfer.UploadJob(self._request)
@@ -696,6 +698,8 @@ class OperationManager:
     def _on_finish(self, operation):
         """操作が終わったときの処理"""
         operation.update_result_state()
+        if isinstance(operation, UploadOperation) and operation.state == FINISHED and operation.on_success is not None:
+            operation.on_success()
         self._directories |= operation.directories
         self._deleted_paths += operation.deleted_paths
         if isinstance(operation, DeleteOperation):

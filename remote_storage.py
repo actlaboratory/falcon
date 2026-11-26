@@ -8,8 +8,13 @@ FTP・FTPS・SFTP のサーバーに接続し、フォルダの一覧の取得�
 
 場所は「ftp://ユーザー名@サーバー:ポート/パス」の形の URL で表します。
 - ftp: 暗号化しない FTP
-- ftps: 接続後に TLS で暗号化する FTP（Explicit FTPS、AUTH TLS）
+- ftps: TLS で暗号化する FTP。接続後に暗号化を始める方式（Explicit FTPS、AUTH TLS）。
+  ポート番号が 990 の場合は、接続した直後から暗号化する方式（Implicit FTPS）
 - sftp: SSH の SFTP
+
+FTPS で検証できない証明書（自分で作った証明書など）は、利用者が指紋を確かめて許可した証明書だけを使います（ピン留め）。
+許可した証明書と違う証明書が出てきた場合は、接続しません。
+プロキシを使う設定の場合は、HTTP プロキシの CONNECT で接続します（FTP のデータ用の接続も同じ）。
 
 この中の関数は別スレッドから呼ばれます。画面の部品には触りません。
 認証の入力やホスト鍵の確認が必要なときは、例外（AuthRequired など）で呼び出し側に知らせます。
@@ -21,6 +26,7 @@ import datetime
 import ftplib
 import hashlib
 import io
+import json
 import logging
 import os
 import posixpath
@@ -53,6 +59,10 @@ _SFTP_WINDOW = 4 * 1024 * 1024
 _CREDENTIAL_PREFIX = "falcon:"
 # falcon が確認したSFTPサーバーのホスト鍵を保存するファイル
 KNOWN_HOSTS_FILE_NAME = "known_hosts"
+# 利用者が許可した、検証できない FTPS の証明書の指紋を保存するファイル
+TRUSTED_CERTIFICATES_FILE_NAME = "trusted_certificates.json"
+# このポート番号の ftps は、接続した直後から暗号化する方式（Implicit FTPS）にする
+IMPLICIT_FTPS_PORT = 990
 
 
 class RemoteError(Exception):
@@ -82,7 +92,17 @@ class UnknownHostKey(RemoteError):
 
 
 class UntrustedCertificate(RemoteError):
-    """FTPSサーバーの証明書を検証できない"""
+    """
+    FTPSサーバーの証明書を検証できない、または以前に許可した証明書と違う。
+    fingerprint は証明書の指紋（SHA256）、details は発行先・発行者・有効期限などの説明。
+    changed が True の場合は、以前に許可した証明書と違う（なりすましの可能性がある）。
+    """
+
+    def __init__(self, message, fingerprint="", details="", changed=False):
+        super().__init__(message)
+        self.fingerprint = fingerprint
+        self.details = details
+        self.changed = changed
 
 
 class Canceled(Exception):
@@ -143,9 +163,12 @@ class Entry:
 class Credentials:
     """接続に使う資格情報"""
 
-    def __init__(self, user="", password=""):
+    def __init__(self, user="", password="", key_file=""):
         self.user = user
+        # パスワード。鍵ファイルを使う場合は鍵のパスフレーズとしても使う。わからない場合は None
         self.password = password
+        # SFTP で使う秘密鍵のファイル。使わない場合は空文字列
+        self.key_file = key_file
 
 
 def is_remote_url(text):
@@ -276,19 +299,36 @@ class CredentialStore:
     def __init__(self):
         self._lock = threading.Lock()
         self._memory = {}
+        # サーバーの key -> SFTP の鍵ファイルのパス。秘密の情報ではないので falcon の設定に保存する（remote_connect）
+        self._key_files = {}
 
     def get(self, location):
-        """保存されている資格情報を返す。なければ None。URL のユーザー名と違うものは返さない"""
+        """
+        保存されている資格情報を返す。なければ None。URL のユーザー名と違うものは返さない。
+        パスワードがなくても鍵ファイルが指定されていれば、鍵ファイルだけの資格情報を返す。
+        """
         key = location.get_server_key()
         with self._lock:
             credentials = self._memory.get(key)
+            key_file = self._key_files.get(key, "")
         if credentials is None:
             credentials = self._read_windows(key)
+        if credentials is not None and location.user and credentials.user != location.user:
+            credentials = None
         if credentials is None:
-            return None
-        if location.user and credentials.user != location.user:
-            return None
-        return credentials
+            if not key_file or not location.user:
+                return None
+            return Credentials(location.user, None, key_file)
+        return Credentials(credentials.user, credentials.password, credentials.key_file or key_file)
+
+    def set_key_files(self, key_files):
+        """鍵ファイルの一覧（サーバーの key -> パス）を入れ替える"""
+        with self._lock:
+            self._key_files = dict(key_files)
+
+    def get_key_file(self, location):
+        with self._lock:
+            return self._key_files.get(location.get_server_key(), "")
 
     def remember(self, location, credentials, save=False):
         """資格情報を覚える。save=True なら資格情報マネージャーにも保存する"""
@@ -301,7 +341,7 @@ class CredentialStore:
                     "Type": win32cred.CRED_TYPE_GENERIC,
                     "TargetName": _CREDENTIAL_PREFIX + key,
                     "UserName": credentials.user,
-                    "CredentialBlob": credentials.password,
+                    "CredentialBlob": credentials.password or "",
                     "Persist": win32cred.CRED_PERSIST_LOCAL_MACHINE,
                 }, 0)
             except pywintypes.error as err:
@@ -331,22 +371,124 @@ credential_store = CredentialStore()
 
 
 class TrustStore:
-    """利用者が接続を許可した、検証できない FTPS の証明書のサーバー。falcon を終了するまで覚える"""
+    """
+    利用者が接続を許可した、検証できない FTPS の証明書の指紋（サーバーの key -> SHA256）。
+    trusted_certificates.json（設定ファイルと同じ場所）に保存する。保存できない場合も、falcon を終了するまでは使う。
+    """
 
-    def __init__(self):
+    def __init__(self, path=None):
         self._lock = threading.Lock()
-        self._servers = set()
+        self._path = path
+        self._pins = None
 
-    def is_trusted(self, location):
-        with self._lock:
-            return location.get_server_key() in self._servers
+    def _load(self):
+        """(ロックを持って呼ぶ)ファイルから読む"""
+        if self._pins is not None:
+            return
+        self._pins = {}
+        path = self._get_path()
+        if not os.path.isfile(path):
+            return
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                self._pins = {str(k): str(v) for k, v in data.items()}
+        except (OSError, ValueError) as err:
+            log.warning("Cannot load %s: %s" % (path, err))
 
-    def trust(self, location):
+    def _get_path(self):
+        return self._path or os.path.abspath(TRUSTED_CERTIFICATES_FILE_NAME)
+
+    def get_pin(self, location):
+        """許可した証明書の指紋を返す。なければ None"""
         with self._lock:
-            self._servers.add(location.get_server_key())
+            self._load()
+            return self._pins.get(location.get_server_key())
+
+    def trust(self, location, fingerprint):
+        """証明書を許可して保存する"""
+        with self._lock:
+            self._load()
+            self._pins[location.get_server_key()] = fingerprint
+            pins = dict(self._pins)
+        path = self._get_path()
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(pins, f, ensure_ascii=False, indent=1)
+        except OSError as err:
+            log.warning("Cannot save %s: %s" % (path, err))
 
 
 certificate_trust = TrustStore()
+
+
+def get_certificate_fingerprint(der):
+    """証明書（DER）の指紋を、SHA256:xx:xx:… の形で返す"""
+    digest = hashlib.sha256(der).hexdigest().upper()
+    return "SHA256:" + ":".join(digest[i:i + 2] for i in range(0, len(digest), 2))
+
+
+def describe_certificate(der):
+    """証明書の発行先・発行者・有効期限を、利用者に見せる文章にする。読めなければ空文字列"""
+    try:
+        from cryptography import x509
+        cert = x509.load_der_x509_certificate(der)
+        return _("発行先: %(subject)s\n発行者: %(issuer)s\n有効期限: %(start)s から %(end)s まで") % {
+            "subject": cert.subject.rfc4514_string(), "issuer": cert.issuer.rfc4514_string(),
+            "start": cert.not_valid_before_utc.strftime("%Y-%m-%d"), "end": cert.not_valid_after_utc.strftime("%Y-%m-%d")}
+    except Exception as err:
+        log.debug("Cannot describe the certificate: %s" % err)
+        return ""
+
+
+# ---- プロキシ ----
+
+_proxy = None
+_proxy_lock = threading.Lock()
+
+
+def set_proxy(proxy):
+    """FTP・SFTP の接続に使う HTTP プロキシ (サーバー, ポート) を設定する。None なら直接接続する"""
+    global _proxy
+    with _proxy_lock:
+        _proxy = proxy
+
+
+def get_proxy():
+    with _proxy_lock:
+        return _proxy
+
+
+def open_socket(host, port, timeout):
+    """
+    サーバーへの TCP の接続を開く。プロキシを使う設定なら、HTTP プロキシの CONNECT で中継してもらう。
+    失敗した場合は OSError になる。
+    """
+    proxy = get_proxy()
+    if proxy is None:
+        return socket.create_connection((host, port), timeout)
+    sock = socket.create_connection(proxy, timeout)
+    try:
+        target = "[%s]:%d" % (host, port) if ":" in host else "%s:%d" % (host, port)
+        sock.sendall(("CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n" % (target, target)).encode("ascii"))
+        response = b""
+        while b"\r\n\r\n" not in response:
+            data = sock.recv(4096)
+            if not data:
+                raise ConnectionError(_("プロキシサーバーが接続を閉じました。"))
+            response += data
+            if len(response) > 65536:
+                raise ConnectionError(_("プロキシサーバーの応答が正しくありません。"))
+        status = response.split(b"\r\n", 1)[0].decode("latin-1")
+        parts = status.split(" ", 2)
+        if len(parts) < 2 or parts[1] != "200":
+            raise ConnectionError(_("プロキシサーバーが中継を断りました。(%(status)s)") % {"status": status})
+        # CONNECT の応答の後に、サーバーからのデータが続いて届いていることはない（サーバーはまだ何も送っていない）
+        return sock
+    except BaseException:
+        sock.close()
+        raise
 
 
 def get_known_hosts_path():
@@ -447,6 +589,14 @@ class Client:
         """更新日時を変える。サーバーが対応していない場合は何もしない。変えられたら True を返す"""
         raise NotImplementedError
 
+    def check_alive(self):
+        """接続が使えるかを確かめる。切れていれば ConnectError"""
+        raise NotImplementedError
+
+    def get_real_path(self, path):
+        """シンボリックリンクをたどった実際のパスを返す。調べられない場合は None"""
+        return None
+
     def make_dirs(self, path):
         """途中のフォルダも含めて、フォルダを作る。既にある場合は何もしない"""
         try:
@@ -507,38 +657,175 @@ _MONTHS = {name: index + 1 for index, name in enumerate(
     ("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"))}
 
 
+class _CertificateChanged(Exception):
+    """(内部用)許可した証明書と違う証明書が出てきた。der は出てきた証明書"""
+
+    def __init__(self, der):
+        super().__init__("certificate changed")
+        self.der = der
+
+
+class _ConnectionMixin:
+    """
+    ftplib の FTP・FTP_TLS に足す処理。
+    - 接続は open_socket で開く（プロキシに対応するため）
+    - データ用の接続はパッシブだけにして、サーバーが返すアドレスではなく制御用の接続と同じサーバーに接続する
+    - 接続した直後から暗号化する方式（Implicit FTPS）に対応する
+    - ピン留めした証明書と同じかを確かめる
+    """
+
+    _implicit = False
+    _pin = None
+
+    def connect(self, host="", port=0, timeout=-999, source_address=None):
+        self.host = host
+        self.port = port
+        self.sock = open_socket(host, port, self.timeout)
+        self.af = self.sock.family
+        if self._implicit:
+            self.sock = self.context.wrap_socket(self.sock, server_hostname=host)
+            self._check_pin(self.sock)
+        self.file = self.sock.makefile("r", encoding=self.encoding)
+        self.welcome = self.getresp()
+        return self.welcome
+
+    def _check_pin(self, sock):
+        """ピン留めした証明書と違えば _CertificateChanged を投げる"""
+        if self._pin is None:
+            return
+        der = sock.getpeercert(binary_form=True) or b""
+        if get_certificate_fingerprint(der) != self._pin:
+            raise _CertificateChanged(der)
+
+    def makepasv(self):
+        """
+        パッシブのデータ用の接続先を返す。サーバーが返すアドレスは使わず、制御用の接続と同じサーバーにする。
+        プロキシを使う場合は、プロキシのアドレスではなくサーバーの名前にする。
+        """
+        if self.af == socket.AF_INET:
+            dummy, port = ftplib.parse227(self.sendcmd("PASV"))
+        else:
+            dummy, port = ftplib.parse229(self.sendcmd("EPSV"), self.sock.getpeername())
+        if get_proxy() is not None:
+            return self.host, port
+        return self.sock.getpeername()[0], port
+
+    def ntransfercmd(self, cmd, rest=None):
+        host, port = self.makepasv()
+        conn = open_socket(host, port, self.timeout)
+        try:
+            if rest is not None:
+                self.sendcmd("REST %s" % rest)
+            resp = self.sendcmd(cmd)
+            # 2xx が先に返るサーバーがある
+            if resp[0] == "2":
+                resp = self.getresp()
+            if resp[0] != "1":
+                raise ftplib.error_reply(resp)
+        except BaseException:
+            conn.close()
+            raise
+        size = ftplib.parse150(resp) if resp[:3] == "150" else None
+        return conn, size
+
+
+class _Ftp(_ConnectionMixin, ftplib.FTP):
+    """暗号化しない FTP"""
+
+
+class _FtpTls(_ConnectionMixin, ftplib.FTP_TLS):
+    """FTPS"""
+
+    def __init__(self, implicit, pin, **kwargs):
+        super().__init__(**kwargs)
+        self._implicit = implicit
+        self._pin = pin
+
+    def auth(self):
+        resp = super().auth()
+        self._check_pin(self.sock)
+        return resp
+
+    def ntransfercmd(self, cmd, rest=None):
+        conn, size = _ConnectionMixin.ntransfercmd(self, cmd, rest)
+        if self._prot_p:
+            try:
+                # vsftpd や FileZilla Server は、データ用の接続で制御用の接続の TLS セッションを再利用することを求める。
+                # ftplib はこれに対応していないので、ここで再利用する
+                conn = self.context.wrap_socket(conn, server_hostname=self.host, session=self.sock.session)
+                self._check_pin(conn)
+            except BaseException:
+                conn.close()
+                raise
+        return conn, size
+
+
 class _FtpClient(Client):
     """FTP・FTPS の接続"""
 
     def __init__(self, location, credentials):
         super().__init__(location)
         self._mlsd_supported = True
+        self._implicit = location.scheme == SCHEME_FTPS and location.port == IMPLICIT_FTPS_PORT
+        self._pin = certificate_trust.get_pin(location) if location.scheme == SCHEME_FTPS else None
         self._ftp = self._open(credentials)
 
-    def _make_context(self):
+    def _make_context(self, verify=True):
         context = ssl.create_default_context()
-        if certificate_trust.is_trusted(self.location):
-            # 利用者が、検証できない証明書でも接続することを選んだ
+        if self._pin is not None or not verify:
+            # 証明書の検証の代わりに、利用者が許可した証明書と同じかを確かめる（_ConnectionMixin._check_pin）
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
         return context
 
+    def _untrusted(self, err):
+        """検証できない証明書を取り出して、指紋を付けた UntrustedCertificate を作る"""
+        der = self._fetch_certificate()
+        return UntrustedCertificate(
+            _("%(host)s の証明書を確認できませんでした。\n(%(error)s)") % {
+                "host": self.location.get_display_host(), "error": err.verify_message or err},
+            get_certificate_fingerprint(der) if der else "", describe_certificate(der) if der else "")
+
+    def _changed(self, err):
+        return UntrustedCertificate(
+            _("%(host)s の証明書が、以前に許可したものと違います。\nなりすましの可能性があります。") % {
+                "host": self.location.get_display_host()},
+            get_certificate_fingerprint(err.der), describe_certificate(err.der), changed=True)
+
+    def _fetch_certificate(self):
+        """検証せずに接続して、サーバーの証明書（DER）を取り出す。取り出せなければ None"""
+        location = self.location
+        ftp = _FtpTls(self._implicit, None, context=self._make_context(verify=False), timeout=_TIMEOUT, encoding="utf-8")
+        try:
+            ftp.connect(location.host, location.port)
+            if not self._implicit:
+                ftp.auth()
+            return ftp.sock.getpeercert(binary_form=True)
+        except (OSError, EOFError, ftplib.Error) as err:
+            log.info("Cannot fetch the certificate of %s: %s" % (location.get_server_key(), err))
+            return None
+        finally:
+            ftp.close()
+
     def _open(self, credentials):
         location = self.location
         if location.scheme == SCHEME_FTPS:
-            ftp = ftplib.FTP_TLS(context=self._make_context(), timeout=_TIMEOUT, encoding="utf-8")
+            ftp = _FtpTls(self._implicit, self._pin, context=self._make_context(), timeout=_TIMEOUT, encoding="utf-8")
         else:
-            # データ用の接続には、サーバーが返すアドレスではなく制御用の接続と同じサーバーを使う（Python 3.12 の既定）
-            ftp = ftplib.FTP(timeout=_TIMEOUT, encoding="utf-8")
+            ftp = _Ftp(timeout=_TIMEOUT, encoding="utf-8")
         try:
             ftp.connect(location.host, location.port)
         except ssl.SSLCertVerificationError as err:
-            raise UntrustedCertificate(_("%(host)s の証明書を確認できませんでした。\n(%(error)s)") % {
-                "host": location.get_display_host(), "error": err.verify_message or err})
+            ftp.close()
+            raise self._untrusted(err)
+        except _CertificateChanged as err:
+            ftp.close()
+            raise self._changed(err)
         except (OSError, EOFError, ftplib.Error) as err:
+            ftp.close()
             raise ConnectError(_connection_error_message(location, err))
         try:
-            if location.scheme == SCHEME_FTPS:
+            if location.scheme == SCHEME_FTPS and not self._implicit:
                 ftp.auth()
             if credentials is None:
                 user, password = (location.user or "anonymous"), ("" if location.user else "anonymous@")
@@ -551,8 +838,10 @@ class _FtpClient(Client):
                 ftp.prot_p()
         except ssl.SSLCertVerificationError as err:
             ftp.close()
-            raise UntrustedCertificate(_("%(host)s の証明書を確認できませんでした。\n(%(error)s)") % {
-                "host": location.get_display_host(), "error": err.verify_message or err})
+            raise self._untrusted(err)
+        except _CertificateChanged as err:
+            ftp.close()
+            raise self._changed(err)
         except ftplib.error_perm as err:
             ftp.close()
             if str(err).startswith("530"):
@@ -590,8 +879,17 @@ class _FtpClient(Client):
             if code == "550":
                 raise RemoteError(_("見つからないか、アクセスが拒否されました。\n(%(error)s)") % {"error": err})
             raise RemoteError(str(err))
+        except _CertificateChanged as err:
+            # データ用の接続で、許可した証明書と違う証明書が出てきた
+            raise ConnectError(str(self._changed(err)))
+        except ValueError as err:
+            # 改行を含む名前など、FTP のコマンドで送れない名前
+            raise RemoteError(_("この名前は、FTP では扱えません。\n(%(error)s)") % {"error": err})
         except (OSError, EOFError, ftplib.Error) as err:
             raise ConnectError(_connection_error_message(self.location, err))
+
+    def check_alive(self):
+        self._call(self._ftp.voidcmd, "NOOP")
 
     def get_initial_path(self):
         return normalize_path(self._call(self._ftp.pwd))
@@ -866,14 +1164,21 @@ class _SftpClient(Client):
         user = credentials.user if credentials is not None else location.user
         if not user:
             raise AuthRequired(_("ユーザー名を入力してください。"))
+        password = credentials.password if credentials is not None else None
+        key_file = credentials.key_file if credentials is not None else ""
+        if key_file and not os.path.isfile(key_file):
+            raise AuthRequired(_("鍵ファイル %(path)s が見つかりません。") % {"path": key_file})
         try:
+            sock = open_socket(location.host, location.port, _TIMEOUT) if get_proxy() is not None else None
             self._ssh.connect(
-                location.host, location.port, username=user,
-                password=credentials.password if credentials is not None else None,
+                location.host, location.port, username=user, password=password,
+                key_filename=key_file or None, passphrase=password if key_file else None, sock=sock,
                 timeout=_TIMEOUT, banner_timeout=_TIMEOUT, auth_timeout=_TIMEOUT,
                 # パスワードがわかっている場合も、鍵による認証を先に試す
                 allow_agent=True, look_for_keys=True)
             self._sftp = self._ssh.open_sftp()
+            # 応答が返ってこないときに、いつまでも待たないようにする（中止もできなくなるため）
+            self._sftp.get_channel().settimeout(_TIMEOUT)
         except UnknownHostKey:
             self._ssh.close()
             raise
@@ -882,9 +1187,18 @@ class _SftpClient(Client):
             raise ConnectError(_(
                 "%(host)s のホスト鍵が、以前に接続したときと違います。\n"
                 "なりすましの可能性があるため、接続を中止しました。サーバーの管理者に確認してください。") % {"host": location.get_display_host()})
+        except paramiko.PasswordRequiredException:
+            self._ssh.close()
+            raise AuthRequired(_("鍵ファイルのパスフレーズを入力してください。"))
         except paramiko.AuthenticationException:
             self._ssh.close()
-            raise AuthRequired(_("ユーザー名またはパスワードが違います。") if credentials and credentials.password else _("パスワードを入力してください。"))
+            if key_file:
+                message = _("鍵ファイル、パスフレーズ、またはユーザー名が違います。")
+            elif password:
+                message = _("ユーザー名またはパスワードが違います。")
+            else:
+                message = _("パスワードを入力してください。")
+            raise AuthRequired(message)
         except (OSError, EOFError, paramiko.SSHException) as err:
             self._ssh.close()
             raise ConnectError(_connection_error_message(location, err))
@@ -898,9 +1212,24 @@ class _SftpClient(Client):
             raise RemoteError(_("アクセスが拒否されました。"))
         except (socket.timeout, socket.gaierror, ConnectionError, EOFError, self._paramiko.SSHException) as err:
             raise ConnectError(_connection_error_message(self.location, err))
+        except UnicodeDecodeError:
+            raise RemoteError(_("ファイル名の文字コードがわかりません。"))
         except OSError as err:
             # SFTP サーバーが返したエラー
             raise RemoteError(_describe(err))
+
+    def check_alive(self):
+        if not self._ssh.get_transport() or not self._ssh.get_transport().is_active():
+            raise ConnectError(_connection_error_message(self.location, ConnectionError(_("接続が切れました"))))
+        self._call(self._sftp.normalize, ".")
+
+    def get_real_path(self, path):
+        try:
+            return normalize_path(self._call(self._sftp.normalize, path))
+        except ConnectError:
+            raise
+        except RemoteError:
+            return None
 
     def get_initial_path(self):
         return normalize_path(self._call(self._sftp.normalize, "."))
@@ -1026,7 +1355,8 @@ class SessionPool:
     def run(self, location, func, *args):
         """
         (別スレッド)接続を用意して func(client, *args) を呼び、その戻り値を返す。
-        接続が切れていた場合は、つなぎ直してもう一度呼ぶ。
+        使い回す接続は、func を呼ぶ前に切れていないかを確かめ、切れていればつなぎ直す。
+        func の途中で切れた場合はやり直さない（フォルダの作成などを2回実行しないため）。
         func が RemoteError 以外の例外（中止など）で終わった場合は、接続の状態がわからないので捨てる。
         """
         key = location.get_server_key()
@@ -1035,9 +1365,15 @@ class SessionPool:
         # 中止されて置き去りにしたスレッドが使っている場合は、別の接続を作る
         if busy is not None and busy.acquire(timeout=1):
             try:
-                return self._call(location, client, func, args)
-            except ConnectError:
-                log.info("reconnect to %s" % key)
+                alive = True
+                try:
+                    client.check_alive()
+                except RemoteError:
+                    alive = False
+                    log.info("reconnect to %s" % key)
+                    self.discard(location, client)
+                if alive:
+                    return self._call(location, client, func, args)
             finally:
                 busy.release()
         client = connect(location, credential_store.get(location))

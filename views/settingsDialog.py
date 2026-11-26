@@ -103,6 +103,8 @@ class SettingsWindow(viewkit.SubWindow):
         self.server, dummy = creator.inputbox(_("サーバーURL"))
         self.server.hideScrollBar(wx.HORIZONTAL)
         self.port, dummy = creator.spinCtrl(_("ポート番号"), 0, 65535, default_value=8080)
+        # 既定では使わない（Web 用のプロキシは、FTP・SFTP のポートへの中継を断ることが多いため）
+        self.remote_proxy = creator.checkbox(_("FTP・SFTP の接続にもプロキシを使う（HTTP の CONNECT で中継）(&F)"))
 
         # buttons
         footer = self.creator.makeChild(wx.HORIZONTAL, style=wx.ALIGN_RIGHT)
@@ -137,6 +139,7 @@ class SettingsWindow(viewkit.SubWindow):
         self._bind(self.use_manual_setting, "proxy", "usemanualsetting", ValueType.BOOL)
         self._bind(self.server, "proxy", "server", ValueType.STRING)
         self._bind(self.port, "proxy", "port", ValueType.STRING)
+        self._bind(self.remote_proxy, "remote", "use_proxy", ValueType.BOOL, False)
 
     def _bind(self, obj, section, key, value_type, prm=None, prm2=None, prm3=None):
         """設定値を画面の部品に反映し、保存時のために対応を記録する"""

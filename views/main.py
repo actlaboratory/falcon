@@ -41,6 +41,7 @@ import defaultKeymap
 import deviceCtrl
 import disk_info
 import errorCodes
+import folder_compare
 import file_properties
 import fileSystemManager
 import globalVars
@@ -62,6 +63,7 @@ import tabs.navigator
 import views.add_network_place
 import views.bulk_rename
 import views.changeAttribute
+import views.compare_tabs
 import views.compress
 import views.download
 import views.extract
@@ -252,6 +254,7 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("TOOL_REMOVE_NETWORK_PLACE", "L"),
                 _menu_item("TOOL_DOWNLOAD", "W"),
                 _menu_item("TOOL_UPLOAD", "U"),
+                _menu_item("TOOL_COMPARE_TABS", "K"),
             ]),
             viewkit.TopMenuDefinition(_("表示"), "V", [
                 _menu_item("VIEW_SORTNEXT", "N"),
@@ -564,6 +567,7 @@ class MainWindow(viewkit.MainWindow):
         self.log.info("received close event(force=" + ("true" if not event.CanVeto() else "false") + ")")
         if not event.CanVeto():  # 強制シャットダウン
             self.operations.shutdown()
+            self._close_remote()
             self.Destroy()
             return
         if not self._confirm_stop_operations():
@@ -583,7 +587,16 @@ class MainWindow(viewkit.MainWindow):
                 self.log.info("CloseEvent.Veto(). user select cancel.")
                 return
         self.operations.shutdown()
+        self._close_remote()
         event.Skip()
+
+    def _close_remote(self):
+        """FTP・SFTP の接続を閉じ、サーバーと同じ内容のままの一時ファイルを消す"""
+        try:
+            remote_storage.pool.close_all()
+            remote_edit.edit_tracker.cleanup()
+        except Exception:
+            self.log.exception("cannot close remote connections")
 
     def _confirm_stop_operations(self):
         """終わっていないファイル操作があれば、終了してよいか確認する。"""
@@ -771,6 +784,7 @@ class MainWindow(viewkit.MainWindow):
             "TOOL_REMOVE_NETWORK_PLACE": self._on_remove_network_place,
             "TOOL_DOWNLOAD": self._on_download,
             "TOOL_UPLOAD": self._on_upload,
+            "TOOL_COMPARE_TABS": self._on_compare_tabs,
 
             "VIEW_SORTNEXT": lambda event: self._delaied_call(self._sort_next),
             "VIEW_SORTSELECT": tab("SortSelect"),
@@ -1290,7 +1304,7 @@ class MainWindow(viewkit.MainWindow):
         candidates = list(dict.fromkeys(candidates))
         return views.upload.UploadParameters(candidates, candidates[0] if candidates else "")
 
-    def _start_upload(self, request):
+    def _start_upload(self, request, on_success=None):
         """
         アップロードを始める。一覧を開いていないサーバーでも転送の途中で画面を出さないよう、
         先に接続を確かめ、ログインやサーバーの確認が必要ならここで済ませる。
@@ -1302,7 +1316,60 @@ class MainWindow(viewkit.MainWindow):
         except remote_storage.RemoteError as err:
             dialog(_("エラー"), _("%(url)s に接続できませんでした。\n%(error)s") % {"url": request.location.get_url(), "error": err})
             return
-        self.operations.add(operation_manager.UploadOperation(request))
+        self.operations.add(operation_manager.UploadOperation(request, on_success))
+
+    def _is_comparable_tab(self, tab):
+        """他のタブとの比較に使えるタブ（ファイル一覧・サーバーの一覧）かどうか"""
+        return type(tab) in (tabs.fileList.FileListTab, tabs.remote_list.RemoteListTab)
+
+    def _on_compare_tabs(self, event):
+        """
+        アクティブなタブのフォルダを、ほかのタブのフォルダと比べ、違う項目にチェックを付ける。
+        相手にない項目、大きさが違うファイル、こちらのほうが新しいファイルが対象。チェックした項目をコピーなどで転送すれば同期できる。
+        """
+        tab = self.active_tab
+        if not self._is_comparable_tab(tab):
+            return
+        others = [t for t in self.tabs if t is not tab and self._is_comparable_tab(t)]
+        if not others:
+            dialog(_("エラー"), _("比べる相手のタブがありません。ファイル一覧かサーバーの一覧のタブを、もう1つ開いてください。"))
+            return
+        other = others[0]
+        if len(others) > 1:
+            names = ["%s (%s)" % (t.GetTabName(), t.listObject.rootDirectory) for t in others]
+            result = self.showSubWindow(views.compare_tabs.CompareTabsWindow, _("他のタブと比較"), names)
+            if result.code == wx.ID_CANCEL:
+                return
+            other = others[result.user_object]
+        # サーバー同士なら名前の大文字と小文字を区別する。Windows のフォルダと比べる場合は区別しない
+        case_sensitive = isinstance(tab, tabs.remote_list.RemoteListTab) and isinstance(other, tabs.remote_list.RemoteListTab)
+        differences = folder_compare.compare(tab.listObject.GetItemList(), other.listObject.GetItemList(), case_sensitive)
+        self._set_checked_items(tab, {difference.element for difference in differences})
+        if not differences:
+            self.app.say(_("違いはありません。"), interrupt=True)
+            return
+        counts = {}
+        for difference in differences:
+            counts[difference.kind] = counts.get(difference.kind, 0) + 1
+        self.app.say(_(
+            "違う項目 %(total)d件にチェックを付けました。相手にない %(only)d件、種類が違う %(type)d件、"
+            "大きさが違う %(size)d件、こちらが新しい %(newer)d件") % {
+            "total": len(differences), "only": counts.get(folder_compare.ONLY_HERE, 0),
+            "type": counts.get(folder_compare.TYPE_DIFFERS, 0), "size": counts.get(folder_compare.SIZE_DIFFERS, 0),
+            "newer": counts.get(folder_compare.NEWER, 0)}, interrupt=True)
+
+    def _set_checked_items(self, tab, elements):
+        """タブの項目のチェックを、elements だけに付けた状態にする（読み上げやカーソルの移動はしない）"""
+        for index, item in enumerate(tab.listObject.GetItemList()):
+            if item in elements:
+                tab.checkedItem.add(item)
+                tab.hListCtrl.SetItemBackgroundColour(index, "#0000FF")
+            else:
+                tab.checkedItem.discard(item)
+                tab.hListCtrl.SetItemBackgroundColour(index, "#000000")
+            tab.hListCtrl.RefreshItem(index)
+        self.menu.enable("EDIT_UNMARKITEM_ALL", tab.hasCheckedItem())
+        self.menu.enable("EDIT_MARKITEM_ALL", len(tab.checkedItem) != len(tab.listObject))
 
     def _change_remote_permissions(self):
         """サーバーの一覧で、選択中の項目のパーミッションを変える"""
@@ -1338,7 +1405,9 @@ class MainWindow(viewkit.MainWindow):
                 continue
             item = remote_transfer.UploadItem(edited.local_path, edited.get_name())
             request = remote_transfer.UploadRequest(edited.location, [item], remote_transfer.CONFLICT_OVERWRITE)
-            self._start_upload(request)
+            stamp = edited.begin_upload()
+            # 成功したら、終了時に一時ファイルを消してよい状態にする
+            self._start_upload(request, lambda edited=edited, stamp=stamp: edited.finish_upload(stamp))
 
     def _on_remove_network_place(self, event):
         """選択中のネットワークの場所を削除する"""

@@ -9,7 +9,6 @@ FTP・SFTP のサーバー上のフォルダを表示するタブです。
 """
 
 import os
-import tempfile
 import uuid
 
 import wx
@@ -32,8 +31,6 @@ import views.transfer_conflict
 from simpleDialog import dialog
 from . import base
 
-# 開くためにダウンロードしたファイルを置くフォルダ
-_TEMP_DIRECTORY_NAME = "falcon_remote"
 # エラーの一覧で表示する件数
 _MAX_ERROR_LINES = 10
 
@@ -55,7 +52,7 @@ class RemoteListTab(base.FalconTabBase):
         ファイルを一時フォルダにダウンロードして、関連付けられたアプリで開く。
         開いたファイルを編集して保存した場合は、falcon に戻ったときにアップロードするかを尋ねる（remote_edit）。
         """
-        directory = os.path.join(tempfile.gettempdir(), _TEMP_DIRECTORY_NAME, uuid.uuid4().hex)
+        directory = os.path.join(remote_edit.get_temp_root(), uuid.uuid4().hex)
         try:
             os.makedirs(directory)
         except OSError as err:
@@ -71,6 +68,8 @@ class RemoteListTab(base.FalconTabBase):
             self.log.error("Cannot download %s: %s" % (elem.fullpath, err))
             dialog(_("エラー"), _("%(name)s をダウンロードできませんでした。\n%(error)s") % {"name": elem.basename, "error": err})
             return errorCodes.ACCESS_DENIED
+        # インターネットから来たファイルとして扱わせる（SmartScreen や Office の保護ビューのため）
+        remote_transfer.mark_from_internet(local_path, elem.location.get_url(elem.path, with_user=False))
         remote_edit.edit_tracker.add(local_path, elem.location, elem.path)
         misc.RunFile(local_path, admin=False, workdir=directory)
         return errorCodes.OK

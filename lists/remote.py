@@ -96,6 +96,8 @@ class RemoteList(FalconListBase):
             elem = browsableObjects.RemoteFile()
             type_string, icon = _get_file_type(entry.name)
         elem.Initialize(self.location, path, entry.size, entry.modified, type_string, icon, entry.permissions, entry.is_link)
+        # 更新日時の精度（秒）。他のタブとの比較で使う
+        elem.precision = entry.precision
         (self.folders if entry.is_dir else self.files).append(elem)
 
     def _getSortFunction(self, attrib):

@@ -31,6 +31,8 @@ CONFLICTS = (CONFLICT_RENAME, CONFLICT_SKIP, CONFLICT_OVERWRITE, CONFLICT_NEWER,
 
 # Windows のファイル名に使えない文字
 _INVALID_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+# フォルダをたどる深さの上限。シンボリックリンクがループしていて、実際のパスを調べられない場合に止めるため
+MAX_DEPTH = 64
 _RESERVED_NAMES = re.compile(r"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$", re.IGNORECASE)
 
 
@@ -162,6 +164,19 @@ def decide(conflict, source_size, source_modified, destination_size, destination
             return False, 0
         return True, destination_size
     return True, 0
+
+
+def mark_from_internet(local_path, url):
+    """
+    ダウンロードしたファイルに、インターネットから来たことを表す印（Zone.Identifier）を付ける。
+    Windows の SmartScreen や Office の保護ビューが、ブラウザーでダウンロードしたファイルと同じように働く。
+    印を付けられないドライブ（FAT など）では何もしない。url にはユーザー名を含めないこと。
+    """
+    try:
+        with open(local_path + ":Zone.Identifier", "w", encoding="utf-8") as f:
+            f.write("[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=%s\r\n" % url)
+    except OSError as err:
+        log.debug("Cannot mark %s: %s" % (local_path, err))
 
 
 def _get_local_modified(path):
@@ -337,9 +352,27 @@ class DownloadJob(TransferJob):
     def __init__(self, request):
         super().__init__(request.location, request.conflict)
         self._request = request
+        # この操作で保存するパス（normcase）。サーバー上では違う名前が、Windows では同じ名前になる場合に区別する
+        self._planned = set()
 
     def _prepare(self):
         os.makedirs(self._request.directory, exist_ok=True)
+
+    def _reserve(self, path, source):
+        """
+        この操作の中で、ほかの項目と同じ保存先にならないようにしたパスを返す
+        （「a:b」と「a_b」は、どちらも「a_b」になるため）。
+        """
+        if os.path.normcase(path) in self._planned:
+            directory, name = os.path.split(path)
+            for candidate in _numbered_names(name):
+                candidate_path = os.path.join(directory, candidate)
+                if os.path.normcase(candidate_path) not in self._planned and not os.path.lexists(candidate_path):
+                    self.warnings.append((source, _("ほかの項目と同じ名前になるため、「%(name)s」という名前で保存します。") % {"name": candidate}))
+                    path = candidate_path
+                    break
+        self._planned.add(os.path.normcase(path))
+        return path
 
     def _get_destination_name(self):
         return self._request.directory
@@ -352,8 +385,10 @@ class DownloadJob(TransferJob):
                 local_path, merge = self._get_top_local_path(item)
                 if local_path is None:
                     continue
+                local_path = self._reserve(local_path, item.path)
                 if item.is_dir:
-                    self._plan_folder(item.path, local_path, files)
+                    real = self._client.get_real_path(item.path)
+                    self._plan_folder(item.path, local_path, files, {real} if real else set(), real, 0)
                 else:
                     entry = self._client.get_entry(item.path)
                     self._add_file(item.path, entry, local_path, files, merge)
@@ -397,8 +432,16 @@ class DownloadJob(TransferJob):
                 return
         files.append(_File(path, local_path, entry.size, offset, entry.modified))
 
-    def _plan_folder(self, path, local_path, files):
-        """フォルダの中を順に調べ、フォルダを作ってファイルを files に加える"""
+    def _plan_folder(self, path, local_path, files, ancestors, real, depth):
+        """
+        フォルダの中を順に調べ、フォルダを作ってファイルを files に加える。
+        ancestors はたどってきたフォルダの実際のパス、real はこのフォルダの実際のパス（わからなければ None）。
+        リンクの先がたどってきたフォルダならループなので、たどらない。
+        実際のパスを調べられないサーバー（FTP）では、深さの上限で止める。
+        """
+        if depth >= MAX_DEPTH:
+            self.errors.append((path, _("フォルダが深すぎるため、これより下はダウンロードしませんでした。シンボリックリンクがループしている可能性があります。")))
+            return
         os.makedirs(local_path, exist_ok=True)
         for entry in self._client.list_dir(path):
             self._check_canceled()
@@ -406,10 +449,19 @@ class DownloadJob(TransferJob):
             local_name = get_local_name(entry.name)
             if local_name != entry.name:
                 self.warnings.append((child_path, _("Windows で使えない文字を含むため、「%(name)s」という名前で保存します。") % {"name": local_name}))
-            child_local = os.path.join(local_path, local_name)
+            child_local = self._reserve(os.path.join(local_path, local_name), child_path)
             if entry.is_dir:
+                if entry.is_link:
+                    # リンクだけはサーバーに実際のパスを尋ねる。それ以外は親の実際のパスから求める
+                    child_real = self._client.get_real_path(child_path)
+                    if child_real is not None and child_real in ancestors:
+                        self.warnings.append((child_path, _("シンボリックリンクが、たどってきたフォルダを指しているため（ループ）、中身はダウンロードしませんでした。")))
+                        continue
+                else:
+                    child_real = remote_storage.join_path(real, entry.name) if real else None
+                child_ancestors = ancestors | {child_real} if child_real else ancestors
                 try:
-                    self._plan_folder(child_path, child_local, files)
+                    self._plan_folder(child_path, child_local, files, child_ancestors, child_real, depth + 1)
                 except remote_storage.ConnectError:
                     raise
                 except (remote_storage.RemoteError, OSError) as err:
@@ -421,6 +473,7 @@ class DownloadJob(TransferJob):
 
     def _transfer_file(self, f, on_progress):
         self._client.download(f.source, f.destination, on_progress, f.offset)
+        mark_from_internet(f.destination, self._location.get_url(f.source, with_user=False))
 
     def _set_modified(self, f):
         timestamp = f.modified.timestamp()
@@ -475,7 +528,7 @@ class UploadJob(TransferJob):
         existing.setdefault(name, remote_storage.Entry(name, is_dir))
         path = remote_storage.join_path(directory, name)
         if is_dir:
-            self._plan_folder(item.local_path, path, files, merge=entry is not None)
+            self._plan_folder(item.local_path, path, files, entry is not None, {_real_path(item.local_path)}, 0)
         else:
             self._add_file(item.local_path, path, entry, files)
 
@@ -490,8 +543,14 @@ class UploadJob(TransferJob):
                 return
         files.append(_File(local_path, path, size, offset, modified))
 
-    def _plan_folder(self, local_path, path, files, merge):
-        """フォルダの中を順に調べ、サーバーにフォルダを作ってファイルを files に加える"""
+    def _plan_folder(self, local_path, path, files, merge, ancestors, depth):
+        """
+        フォルダの中を順に調べ、サーバーにフォルダを作ってファイルを files に加える。
+        ancestors はたどってきたフォルダの実際のパス。ジャンクションやシンボリックリンクがその中を指していれば、たどらない。
+        """
+        if depth >= MAX_DEPTH:
+            self.errors.append((local_path, _("フォルダが深すぎるため、これより下はアップロードしませんでした。")))
+            return
         if merge:
             existing = {entry.name: entry for entry in self._client.list_dir(path)}
         else:
@@ -508,7 +567,11 @@ class UploadJob(TransferJob):
                     if entry is not None and not entry.is_dir:
                         self.errors.append((child.path, _("アップロード先に、同じ名前のファイルがあるため、上書きできません。")))
                         continue
-                    self._plan_folder(child.path, child_path, files, merge=entry is not None)
+                    real = _real_path(child.path)
+                    if real in ancestors:
+                        self.warnings.append((child.path, _("ジャンクションまたはシンボリックリンクが、たどってきたフォルダを指しているため（ループ）、中身はアップロードしませんでした。")))
+                        continue
+                    self._plan_folder(child.path, child_path, files, entry is not None, ancestors | {real}, depth + 1)
                 elif child.is_file():
                     if entry is not None and entry.is_dir:
                         self.errors.append((child.path, _("アップロード先に、同じ名前のフォルダがあるため、上書きできません。")))
@@ -524,6 +587,11 @@ class UploadJob(TransferJob):
 
     def _set_modified(self, f):
         self._client.set_modified(f.destination, f.modified)
+
+
+def _real_path(path):
+    """ローカルのフォルダの、リンクをたどった実際のパス（大文字・小文字をそろえたもの）"""
+    return os.path.normcase(os.path.realpath(path))
 
 
 class DeleteJob(RemoteJob):
