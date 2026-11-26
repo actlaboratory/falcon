@@ -107,4 +107,9 @@ def exchandler(type, exc, tb):
 sys.excepthook = exchandler
 
 if __name__ == "__main__":
-    main()
+    import fileop
+    if len(sys.argv) == 4 and sys.argv[1] == fileop.ARGUMENT:
+        # 管理者権限でのファイル操作のやり直し。本体のログや設定を書き換えないよう、main() より前に分ける
+        fileop.run(sys.argv[2], sys.argv[3])
+    else:
+        main()

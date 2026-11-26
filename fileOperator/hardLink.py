@@ -23,9 +23,9 @@ def Execute(op):
     op.output["all_OK"] = True
     op.output["retry"]["from"] = []
     op.output["retry"]["to"] = []
-    i = 0
     retry = 0
-    for elem in op.instructions["from"]:
+    # 失敗した項目があっても、作成先との対応がずれないよう、番号は enumerate で数える
+    for i, elem in enumerate(op.instructions["from"]):
         try:
             win32file.CreateHardLink(t[i], elem)
         except win32file.error as err:
@@ -34,7 +34,6 @@ def Execute(op):
             continue
         # end except
         op.output["succeeded"] += 1
-        i += 1
     # end 項目の数だけ
     if len(op.output["retry"]["from"]) > 0:
         op.output["retry"]["operation"] = VERB
