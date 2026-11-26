@@ -6,9 +6,9 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 ## 環境
 
 - Python 3.12 **32bit**（`py -3.12-32`）。仮想環境はリポジトリ直下の `.venv`（git 管理外）
-  - 作成: `py -3.12-32 -m venv .venv` → 有効化: `.\.venv\Scripts\Activate.ps1` → `python -m pip install -r requirements.txt` → `python -m pip install --no-deps -r requirements-nodeps.txt`
+  - 作成: `py -3.12-32 -m venv .venv` → 有効化: `.\.venv\Scripts\Activate.ps1` → `python -m pip install -r requirements.txt`
 - 依存パッケージのバージョンは viewkit の指定（wxPython 4.2.2 / Pillow 9.5 / PyInstaller 6.11.0）に合わせる。viewkit 本体は requirements.txt で GitHub のアーカイブ URL（コミット固定）から入れる
-- proxyUtil は `dukpy~=0.2.2` を指定しているが、dukpy 0.2 系には 32bit Python 3.12 向けのビルド済みファイルがなく CI でコンパイルにも失敗する。そのため proxyUtil は `requirements-nodeps.txt` に分けて `--no-deps` で入れ、依存パッケージ（dukpy 0.3.1 など）は requirements.txt に書く。proxyUtil は他の管理下なので変更しない
+- 32bit Python 3.12 向けのビルド済みファイルがないパッケージは、CI でのコンパイルに失敗する。新しい版で 32bit 向けが出なくなることがあるので、依存パッケージの版を上げるときは 32bit 向けのビルド済みファイルがあるかを確かめる（例: proxyUtil が使う dukpy は 0.3.1 に固定）。proxyUtil は他の管理下なので変更しない
 - 実行: `python falcon.py`（`python -m falcon.py` ではない）
 - ドライブ一覧では、ネットワークドライブの容量を一覧の作成時には調べず、ドライブごとの専用スレッドで後から取得する（`tabs/driveList.py`）。接続できないドライブは数十秒後に種類が「ネットワーク（未接続）」になる。エラーではない
 - 移動先の確認とファイル一覧・共有フォルダの一覧の取得は、`background_wait.run()` により別スレッドで行う。0.3秒で終わらないときは中止できる「読み込み中」ウィンドウ（`views/waiting.py`）を出す。接続できないときは数十秒後に `errorCodes.NETWORK_UNAVAILABLE` になる

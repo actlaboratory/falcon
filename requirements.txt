@@ -6,8 +6,6 @@ https://github.com/actlaboratory/history/archive/v1.0.3.zip
 https://github.com/actlaboratory/viewkit/archive/cb8475e5270563c6bd19fbdf200098046fb0cda1.zip
 autopep8
 pillow==9.5
-# proxyUtil(requirements-nodeps.txt)が利用するパッケージ
-# proxyUtilはdukpy 0.2系を指定しているが、32bit Python 3.12向けのビルド済みファイルがないため0.3.1を使う
+https://github.com/actlaboratory/proxyutil/archive/0.2.5.zip
+# proxyUtil が利用するパッケージ。32bit Python 3.12 向けのビルド済みファイルがある版に固定する
 dukpy==0.3.1
-requests>=2.0.0,<3.0.0
-tld~=0.9

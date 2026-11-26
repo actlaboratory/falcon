@@ -1,4 +1,0 @@
-# 依存関係の解決をせずに(pip install --no-deps -r requirements-nodeps.txt)インストールするパッケージ
-# proxyUtilは dukpy~=0.2.2 を指定しているが、dukpy 0.2系には32bit Python 3.12向けのビルド済みファイルがなく、
-# CIでのコンパイルにも失敗するため、依存関係はrequirements.txtで指定する(dukpy 0.3.1で動作確認済み)
-https://github.com/actlaboratory/proxyutil/archive/0.2.4.zip
