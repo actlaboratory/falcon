@@ -21,6 +21,7 @@ import archiver
 import clipboard
 import fileOperator
 import globalVars
+import operation_result
 import reparse_link
 from fileOperator import helper
 
@@ -202,16 +203,8 @@ class FileOperatorOperation(Operation):
         """応答していない確認項目を返す。実行中は呼ばないこと。"""
         return [element for dummy, element in self.operator.GetConfirmationManager().IterateNotResponded()]
 
-    def _get_error_message(self, element):
-        message = str(element.msg[1])
-        return {
-            helper.UNKNOWN_ERROR: _("処理できませんでした。"),
-            helper.NO_RECYCLE_BIN: _("ゴミ箱を使えない場所のため、削除しませんでした。削除するには「完全削除」を使ってください。"),
-            helper.PERMANENTLY_DELETED: _("ゴミ箱に入らず、完全に削除されました。"),
-        }.get(message, message)
-
     def get_details(self):
-        details = [(element.elem, _("エラー"), self._get_error_message(element)) for element in self.operator.CheckFailed()]
+        details = [(element.elem, _("エラー"), operation_result.get_error_message(element)) for element in self.operator.CheckFailed()]
         if self._error is not None:
             details.append((self.title, _("エラー"), self._error))
         return details
