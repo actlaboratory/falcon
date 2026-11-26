@@ -23,21 +23,23 @@ def Execute(op):
     op.output["all_OK"] = True
     op.output["retry"]["from"] = []
     op.output["retry"]["to"] = []
-    i = 0
+    # 管理者権限でやり直すときにも、相対パスで作るかどうかを引き継ぐ
+    relative = op.instructions.get("relative", False)
+    op.output["retry"]["relative"] = relative
     retry = 0
-    for elem in op.instructions["from"]:
+    # 失敗した項目があっても、作成先との対応がずれないよう、番号は enumerate で数える
+    for i, elem in enumerate(op.instructions["from"]):
         try:
             flag = 0
             if os.path.isdir(elem):
                 flag = win32file.SYMBOLIC_LINK_FLAG_DIRECTORY
 
-            # 相対パスで作成の場合
-            if op.instructions["relative"]:
-                elem = os.path.relpath(elem, start=os.path.dirname(t[i]))
+            # 相対パスで作成の場合。やり直しのために、元のパス（elem）は変えない
+            source = os.path.relpath(elem, start=os.path.dirname(t[i])) if relative else elem
 
             win32file.CreateSymbolicLink(
                 t[i],
-                elem,
+                source,
                 flag | win32file.SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE)  # これで、昇格しなくてもできるのか？
         except win32file.error as err:
             if helper.CommonFailure(op, elem, err, log):
@@ -45,7 +47,6 @@ def Execute(op):
             continue
         # end except
         op.output["succeeded"] += 1
-        i += 1
     # end 項目の数だけ
     if len(op.output["retry"]["from"]) > 0:
         op.output["retry"]["operation"] = VERB

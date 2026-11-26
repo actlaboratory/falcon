@@ -266,6 +266,9 @@ class FileOperator(object):
         if self.instructions["operation"] in (delete.VERB, trash.VERB):
             for elem in self.instructions["target"]:
                 lst.append(failedElement.FailedElement(elem, (winerror.ERROR_ACCESS_DENIED, _("アクセスが拒否されました。"))))
+        # 属性の変更・シンボリックリンク・ハードリンクは、対象を from に持っている
+        for elem in self.instructions.get("from", []):
+            lst.append(failedElement.FailedElement(elem, (winerror.ERROR_ACCESS_DENIED, _("アクセスが拒否されました。"))))
         return lst
 
     def CheckFinished(self):

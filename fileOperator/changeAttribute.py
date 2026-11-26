@@ -22,18 +22,17 @@ def Execute(op):
     op.output["all_OK"] = True
     op.output["retry"]["from"] = []
     op.output["retry"]["to_attrib"] = []
-    i = 0
     retry = 0
-    for elem in op.instructions["from"]:
+    # 失敗した項目があっても、変更する属性との対応がずれないよう、番号は enumerate で数える
+    for i, elem in enumerate(op.instructions["from"]):
         try:
             win32file.SetFileAttributes(elem, to_attrib[i])
         except win32file.error as err:
             if helper.CommonFailure(op, elem, err, log):
-                appendRetry(op.output, elem, to[i])
+                appendRetry(op.output, elem, to_attrib[i])
             continue
         # end except
         op.output["succeeded"] += 1
-        i += 1
     # end 項目の数だけ
     if len(op.output["retry"]["from"]) > 0:
         op.output["retry"]["operation"] = VERB
@@ -45,7 +44,7 @@ def Execute(op):
 def appendRetry(output, file, to):
     """リトライするリストに追加する。"""
     output["retry"]["from"].append(file)
-    output["retry"]["to"].append(to)
+    output["retry"]["to_attrib"].append(to)
 
 
 """
