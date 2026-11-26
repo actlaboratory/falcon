@@ -9,6 +9,8 @@
 """
 
 import os
+
+import win32file
 import wx
 
 import browsableObjects
@@ -24,6 +26,7 @@ import misc
 import new_file
 import new_shortcut
 import operation_manager
+import operation_result
 import paste_shortcut
 import shell_new
 import StringUtil
@@ -37,7 +40,7 @@ import workerThreadTasks
 from simpleDialog import *
 from . import base, navigator
 
-# 名前の一括置換で、変更できなかった項目を表示する最大行数
+# ショートカットの貼り付けで、作成できなかった項目を表示する最大行数
 _MAX_FAILED_LINES = 10
 
 
@@ -51,7 +54,10 @@ class FileListTab(base.FalconTabBase):
         """
         self.log.debug("Updating list control...")
         if soft:
+            # 並べ替えでは項目そのものは変わらない。フォルダ容量計算の結果は一覧の位置ではなく項目に書き込むので、止めずに続ける
+            tasks, self.background_tasks = self.background_tasks, []
             self.ClearAllItems()
+            self.background_tasks = tasks
         else:
             self.DeleteAllItems()
         t = misc.Timer()
@@ -70,21 +76,26 @@ class FileListTab(base.FalconTabBase):
         """
         super().OnLabelEditStart(evt)
         elem = self.listObject.GetElement(evt.GetIndex())
+        # 検索結果では、入力中に見つかった項目が前に入って位置がずれることがあるため、番号ではなく項目で持つ
+        self.renaming_element = elem
         edit = self.hListCtrl.GetEditControl()
         if edit is not None and elem is not None and edit.GetValue() != elem.basename:
             edit.SetValue(elem.basename)
 
     def OnLabelEditEnd(self, evt):
         """
-                ファイル名変更の入力終了イベント
-                入力中にリストが並び替えされると自動でキャンセル扱いになるのでインデックスによる処理でよい
+        ファイル名変更の入力終了イベント
+        対象は、入力を始めたときの項目。
         """
         self.isRenaming = False
         self.parent.set_shortcut_enabled(True)
+        f = getattr(self, "renaming_element", None)
+        self.renaming_element = None
         if evt.IsEditCancelled():  # ユーザによる編集キャンセル
             return
         e = self.hListCtrl.GetEditControl()
-        f = self.listObject.GetElement(self.GetFocusedItem())
+        if f is None:
+            f = self.listObject.GetElement(self.GetFocusedItem())
         if isinstance(f, browsableObjects.Folder):
             newName = os.path.join(f.directory, e.GetLineText(0))
             error = fileSystemManager.ValidationObjectName(
@@ -132,42 +143,55 @@ class FileListTab(base.FalconTabBase):
                 focused_new_name = plan.new_name
         op = fileOperator.FileOperator(inst)
         op.Execute()
-        succeeded = op.CheckSucceeded()
-        # 開発時は権限の昇格ができず、失敗した項目が記録されないことがあるため、件数は成功数から求める
-        failed_count = len(plans) - succeeded
         self.UpdateFilelist(silence=True, cursorTargetName=focused_new_name)
-        if failed_count <= 0:
-            globalVars.app.say(_("%(count)d件の名前を変更しました。") % {"count": succeeded}, interrupt=True)
-            return
-        failed_paths = [e.elem for e in op.CheckFailed()]
-        lines = failed_paths[:_MAX_FAILED_LINES]
-        if len(failed_paths) > _MAX_FAILED_LINES:
-            lines.append(_("ほか %(count)d件") % {"count": len(failed_paths) - _MAX_FAILED_LINES})
-        dialog(_("エラー"), _("%(succeeded)d件の名前を変更しました。\n%(failed)d件は名前を変更できませんでした。\n\n%(lines)s") % {
-            "succeeded": succeeded, "failed": failed_count, "lines": "\n".join(lines)})
+        operation_result.report(
+            len(plans), op.CheckSucceeded(), op.CheckFailed(),
+            _("%(count)d件の名前を変更しました。"),
+            _("%(succeeded)d件の名前を変更しました。\n%(failed)d件は名前を変更できませんでした。"))
 
     def ChangeAttribute(self, attrib_checks):
-        lst = self.GetSelectedItems()
-        inst = {"operation": "changeAttribute"}
-        f = []
-        t = []
-        for elem in lst:
+        """選択中の項目の属性を変更し、一覧の表示に反映して、結果を知らせる。"""
+        paths = []
+        attributes = []
+        keys = set()
+        for elem in self.GetSelectedItems():
+            # ファイル内容検索では、同じファイルが複数ヒットしていることがある
+            key = os.path.normcase(elem.fullpath)
+            if key in keys:
+                continue
+            keys.add(key)
             attrib = elem.GetNewAttributes(attrib_checks)
             if attrib != -1:  # 変更の必要があるので追加
-                f.append(elem.fullpath)
-                t.append(attrib)
-            # end 追加
-        # end 選択中のファイルの数だけ
-        inst['from'] = f
-        inst['to_attrib'] = t  # to じゃないのは、日時変更に対応していたときのなごり
-        op = fileOperator.FileOperator(inst)
-        if len(t) == 0:
-            dialog(_("情報"), _("変更が必要な俗世はありませんでした。"))
+                paths.append(elem.fullpath)
+                attributes.append(attrib)
+        if not paths:
+            dialog(_("情報"), _("変更が必要な属性はありませんでした。"))
             return
-        # end なにも変更しなくてよかった
-        ret = op.Execute()
-        if op.CheckSucceeded() == 0:
-            dialog(_("エラー"), _("属性が変更できません。"))
+        # to じゃないのは、日時変更に対応していたときのなごり
+        op = fileOperator.FileOperator({"operation": "changeAttribute", "from": paths, "to_attrib": attributes})
+        op.Execute()
+        self._reload_attributes(paths)
+        operation_result.report(
+            len(paths), op.CheckSucceeded(), op.CheckFailed(),
+            _("%(count)d件の属性を変更しました。"),
+            _("%(succeeded)d件の属性を変更しました。\n%(failed)d件は属性を変更できませんでした。"))
+
+    def _reload_attributes(self, paths):
+        """
+        一覧の中で paths の項目の属性を、ファイルから読み直す。
+        検索結果では同じパスの項目が複数あることがあるので、すべて読み直す。
+        """
+        keys = {os.path.normcase(path) for path in paths}
+        for elem in self.listObject.GetItemList():
+            if os.path.normcase(elem.fullpath) not in keys:
+                continue
+            try:
+                elem.attributes = win32file.GetFileAttributes(elem.fullpath)
+            except win32file.error as err:
+                self.log.warning("Cannot reload attributes of %s (%s)" % (elem.fullpath, err))
+                continue
+            elem.GetAttributesString()
+        self.hListCtrl.Refresh()
 
     def MakeDirectory(self, newdir):
         dir = self.listObject.rootDirectory
@@ -283,28 +307,37 @@ class FileListTab(base.FalconTabBase):
             globalVars.app.say(_("ファイルなし"))
 
     def DirCalc(self):
+        """
+        選択中のフォルダの容量を計算する。
+        計算中に検索結果が増えたり並び替えたりして位置が変わることがあるため、対象は一覧の番号ではなく項目で持つ。
+        """
         lst = []
-        for i in self.GetSelectedItems(index_mode=True):
-            elem = self.listObject.GetElement(i)
+        for elem in self.GetSelectedItems():
             elem.size = constants.DIR_SIZE_CALCURATING
-            self.hListCtrl.RefreshItem(i)
-            lst.append((i, elem.fullpath))
-        # end for
-        param = {'lst': lst, 'callback': self._dirCalc_receive}
+            lst.append((elem, elem.fullpath))
+        self.hListCtrl.Refresh()
+        param = {"lst": lst, "callback": self._dirCalc_receive}
         self.background_tasks.append(
             workerThreads.RegisterTask(
                 workerThreadTasks.DirCalc, param))
 
     def _dirCalc_receive(self, results, taskState):
-        """DirCalc の結果を受ける。"""
-        for elem in results:
-            self.listObject.GetElement(elem[0]).size = elem[1][0]
-            if elem[1][0] >= 0:
-                self.listObject.GetElement(elem[0]).fileCount = elem[1][1]
-                self.listObject.GetElement(elem[0]).dirCount = elem[1][2]
-            self.hListCtrl.RefreshItem(elem[0])
-        # end for
-        self.background_tasks.remove(taskState)
+        """
+        DirCalc の結果を受ける。
+        計算中にファイル操作などで一覧が作り直された場合は、同じパスの新しい項目にも反映する。
+        """
+        current = {os.path.normcase(elem.fullpath): elem for elem in self.listObject.GetItemList()}
+        for elem, (size, file_count, dir_count) in results:
+            targets = {elem, current.get(os.path.normcase(elem.fullpath), elem)}
+            for target in targets:
+                target.size = size
+                if size >= 0:
+                    target.fileCount = file_count
+                    target.dirCount = dir_count
+        self.hListCtrl.Refresh()
+        # 結果が届く直前に、移動などで中止されていることがある
+        if taskState in self.background_tasks:
+            self.background_tasks.remove(taskState)
 
     def ReadCurrentFolder(self):
         curdir = os.path.basename(self.listObject.rootDirectory)

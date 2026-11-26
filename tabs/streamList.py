@@ -17,6 +17,7 @@ import browsableObjects
 import globalVars
 import fileOperator
 import misc
+import operation_result
 import workerThreads
 import workerThreadTasks
 import fileSystemManager
@@ -138,14 +139,15 @@ class StreamListTab(base.FalconTabBase):
             return
         inst = {"operation": "delete", "target": target}
         op = fileOperator.FileOperator(inst)
-        ret = op.Execute()
-        if op.CheckSucceeded() == 0:
-            dialog(_("エラー"), _("削除に失敗しました。"))
-            return
-        # end error
-        self.UpdateFilelist(silence=True)
-        focus_index = self._findFocusAfterDeletion(paths, focus_index)
-        self.Focus(focus_index)
+        op.Execute()
+        if op.CheckSucceeded() > 0:
+            self.UpdateFilelist(silence=True)
+            focus_index = self._findFocusAfterDeletion(paths, focus_index)
+            self.Focus(focus_index)
+        operation_result.report(
+            len(target), op.CheckSucceeded(), op.CheckFailed(),
+            _("%(count)d件の副ストリームを削除しました。"),
+            _("%(succeeded)d件の副ストリームを削除しました。\n%(failed)d件は削除できませんでした。"))
 
     def Copy(self):
         if not self.IsItemSelected():

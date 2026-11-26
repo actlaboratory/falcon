@@ -30,6 +30,10 @@ class SearchResultTabCommon(searchResultTabBase.SearchResultTabBase):
     def __init__(self, environment):
         super().__init__(environment)
         self.list_task = None  # ファイル一覧を取得するタスク
+        # 検索で見つかった項目を加える前の、カーソルと選択の状態。_get_position の戻り値
+        self._saved_position = None
+        # _saved_position を覚えた後に、一覧を並べ替えたかどうか
+        self._sorted_after_save = False
 
     def StartSearch(self, rootPath, searches, keyword, isRegularExpression, list_task=None):
         """
@@ -83,6 +87,54 @@ class SearchResultTabCommon(searchResultTabBase.SearchResultTabBase):
             True)
         self.taskState = workerThreads.RegisterTask(workerThreadTasks.PerformSearch, {
             "listObject": self.tempListObject, "tabObject": self})
+
+    def _onSearchHitCallback(self, hits, taskState):
+        """
+        検索で見つかった項目を一覧に加える。
+        フォルダは一覧のフォルダの末尾に入るため、その後ろの項目の位置がずれる。SearchResultTabBase では、
+        カーソルと選択が一覧の位置のまま残り、別の項目に移ってしまっていた（そのまま削除などをすると、選んでいない項目が対象になる）。
+        ここでは、カーソルと選択を同じ項目に保つ。名前の変更中は、入力が打ち切られないよう、終わってから直す。
+        """
+        if self._saved_position is None:
+            self._saved_position = self._get_position()
+        super()._onSearchHitCallback(hits, taskState)
+        # 検索が終わると、SearchResultTabBase が並べ替えて一覧を作り直すため、カーソルと選択がなくなる
+        if self.tempListObject.GetFinishedStatus() and self.hListCtrl.GetItemCount() == len(self.tempListObject):
+            self._sorted_after_save = True
+        if not self.isRenaming:
+            self._restore_position()
+
+    def _get_position(self):
+        """カーソルのある項目、選択中の項目のリスト、その時点のフォルダの数を返す"""
+        selected = []
+        i = self.hListCtrl.GetFirstSelected()
+        while i >= 0:
+            selected.append(self.listObject.GetElement(i))
+            i = self.hListCtrl.GetNextSelected(i)
+        return self.GetFocusedElement(), selected, self.folderCount
+
+    def _restore_position(self):
+        """_get_position で覚えたカーソルと選択を、項目の位置が変わっていれば、同じ項目に戻す"""
+        position, self._saved_position = self._saved_position, None
+        sorted_after_save, self._sorted_after_save = self._sorted_after_save, False
+        if position is None:
+            return
+        focused, selected, folder_count = position
+        # フォルダが加わらず、並べ替えもしていなければ、位置は変わらない
+        if folder_count == self.folderCount and not sorted_after_save:
+            return
+        indexes = {id(elem): i for i, elem in enumerate(self.listObject.GetItemList())}
+        selected_indexes = {indexes[id(elem)] for elem in selected if id(elem) in indexes}
+        i = self.hListCtrl.GetFirstSelected()
+        while i >= 0:
+            next_index = self.hListCtrl.GetNextSelected(i)
+            if i not in selected_indexes:
+                self.hListCtrl.Select(i, False)
+            i = next_index
+        for i in selected_indexes:
+            self.hListCtrl.Select(i)
+        if focused is not None and id(focused) in indexes and self.GetFocusedItem() != indexes[id(focused)]:
+            self.hListCtrl.Focus(indexes[id(focused)])
 
     def _refresh_focused_element(self):
         """カーソル位置の項目のサイズ・日時・属性を読み直す。なくなっていれば一覧から取り除く。"""
@@ -148,9 +200,13 @@ class SearchResultTabCommon(searchResultTabBase.SearchResultTabBase):
         名前の変更が終わったら、変更した項目と、その中にある項目のパスを新しい名前に合わせる。再検索はしない。
         ファイル内容検索で同じファイルが複数ヒットしている場合は、そのすべてを変更する。
         """
-        renamed = self.listObject.GetElement(self.GetFocusedItem())
+        renamed = getattr(self, "renaming_element", None)
+        if renamed is None:
+            renamed = self.GetFocusedElement()
         old_path = renamed.fullpath if renamed is not None else ""
         super().OnLabelEditEnd(evt)
+        # 入力中に見つかったフォルダが前に入り、カーソルと選択の位置がずれていれば直す
+        self._restore_position()
         if renamed is None or evt.IsEditCancelled() or not evt.IsAllowed():
             return
         new_path = os.path.join(renamed.directory, renamed.basename)
