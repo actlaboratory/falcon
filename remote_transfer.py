@@ -200,6 +200,12 @@ class _File:
         self.modified = modified
 
 
+# 操作の段階。転送を始める前の接続とファイルの洗い出しには時間がかかることがあるので、状態として見せる
+PHASE_CONNECTING = "connecting"
+PHASE_PREPARING = "preparing"
+PHASE_RUNNING = "running"
+
+
 class RemoteJob:
     """サーバーへの操作を別スレッドで実行し、進み具合と結果を持つ。操作ごとに派生クラスを作る"""
 
@@ -209,6 +215,9 @@ class RemoteJob:
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._client = None
         self.percentage = None
+        self.phase = PHASE_CONNECTING
+        # 準備の段階で見つけた、転送するファイルの数
+        self.found = 0
         # 利用者に知らせる注意（名前を変えて保存した項目など）の (対象, 内容) のリスト
         self.warnings = []
         # 失敗した項目の (対象, 内容) のリスト
@@ -237,6 +246,8 @@ class RemoteJob:
         name = self.__class__.__name__
         log.info("%s started: %s" % (name, self._describe()))
         start = time.monotonic()
+        # 接続や準備の間も、プログレスバーを出しておく
+        self.percentage = 0
         try:
             self._prepare()
             self._connect()
@@ -324,11 +335,13 @@ class TransferJob(RemoteJob):
         return "%d files, %d bytes, skipped: %d" % (self._transferred_files, self._transferred_bytes, self._skipped)
 
     def _execute(self):
+        self.phase = PHASE_PREPARING
         files = self._plan()
+        self.phase = PHASE_RUNNING
         self._transfer(files)
         if self._skipped:
             self._add_warning(self._get_destination_name(), _(
-                "転送先に同じ名前の新しいファイル、または同じ大きさのファイルがあったため、%(count)d件は転送しませんでした。") % {"count": self._skipped},
+                "転送先の同名のファイルが新しいか同じサイズのため、%(count)d件をスキップ") % {"count": self._skipped},
                 "%d files not transferred (the destination is newer or has the same size)" % self._skipped)
 
     def _plan(self):
@@ -365,7 +378,7 @@ class TransferJob(RemoteJob):
             if total > 0:
                 self.percentage = min(100, done[0] * 100 // total)
 
-        for f in files:
+        for index, f in enumerate(files):
             self._check_canceled()
             log.debug("transfer %s -> %s (size: %d, offset: %d)" % (f.source, f.destination, f.size, f.offset))
             start = time.monotonic()
@@ -388,6 +401,9 @@ class TransferJob(RemoteJob):
                     self._reconnect()
                 except (remote_storage.RemoteError, OSError, ValueError, OverflowError) as err:
                     log.info("Cannot set the modified time of %s: %s" % (f.destination, remote_storage.get_log_text(err)))
+            if total <= 0:
+                # 大きさがわからない（すべて 0 バイトの場合も）ときは、ファイルの数で進み具合を出す
+                self.percentage = (index + 1) * 100 // len(files)
         self.percentage = 100
 
 
@@ -485,6 +501,7 @@ class DownloadJob(TransferJob):
             if not transfer:
                 return
         files.append(_File(path, local_path, entry.size, offset, entry.modified))
+        self.found += 1
 
     def _plan_folder(self, path, local_path, files, ancestors, real, depth):
         """
@@ -609,6 +626,7 @@ class UploadJob(TransferJob):
             if not transfer:
                 return
         files.append(_File(local_path, path, size, offset, modified))
+        self.found += 1
 
     def _plan_folder(self, local_path, path, files, merge, ancestors, depth):
         """
@@ -639,7 +657,7 @@ class UploadJob(TransferJob):
                     real = _real_path(child.path)
                     if real in ancestors:
                         self._add_warning(
-                            child.path, _("ジャンクションまたはシンボリックリンクのループを検出したため、中身をスキップでした。"),
+                            child.path, _("ジャンクションまたはシンボリックリンクのループを検出したため、中身をスキップ"),
                             "skipped the contents (junction or symbolic link loop to %s)" % real)
                         continue
                     self._plan_folder(child.path, child_path, files, entry is not None, ancestors | {real}, depth + 1)
@@ -684,6 +702,7 @@ class DeleteJob(RemoteJob):
 
     def _execute(self):
         items = self._request.items
+        self.phase = PHASE_RUNNING
         self.percentage = 0
         for index, item in enumerate(items):
             self._check_canceled()

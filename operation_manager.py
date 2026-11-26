@@ -152,6 +152,11 @@ class Operation:
             WAITING: _("待機中"), RUNNING: _("実行中"), CONFIRMING: _("確認待ち"),
             FINISHED: _("完了"), FAILED: _("エラー"), CANCELED: _("中止")}[self.state]
 
+    def get_progress_string(self):
+        """進み具合の読み上げに使う文章を返す"""
+        percentage = self.get_percentage()
+        return self.get_state_string() if percentage is None else _("%(percentage)d%%") % {"percentage": percentage}
+
     def get_finish_message(self):
         """実行が終わったときに読み上げる文章を返す"""
         messages = {
@@ -493,7 +498,18 @@ class RemoteOperation(Operation):
             return _("エラー %(count)d件") % {"count": len(self._job.errors)}
         if self.state == FINISHED and self._get_warning_count():
             return _("完了 注意%(count)d件") % {"count": self._get_warning_count()}
+        if self.state == RUNNING and not self.is_canceled() and self._job is not None:
+            # 接続と準備に時間がかかることがあるので、段階を見せる
+            if self._job.phase == remote_transfer.PHASE_CONNECTING:
+                return _("実行中（接続中）")
+            if self._job.phase == remote_transfer.PHASE_PREPARING:
+                return _("実行中（準備中 %(count)d件）") % {"count": self._job.found}
+            if self._job.percentage is not None:
+                return _("実行中 %(percentage)d%%") % {"percentage": self._job.percentage}
         return super().get_state_string()
+
+    def get_progress_string(self):
+        return self.get_state_string()
 
     def get_finish_message(self):
         if self.state == FINISHED and self._get_warning_count():
@@ -608,9 +624,8 @@ class OperationManager:
         """実行中の操作の進み具合と、確認待ちの件数を読み上げる"""
         messages = []
         for running in self.get_running_operations():
-            percentage = running.get_percentage()
             messages.append(running.title)
-            messages.append(running.get_state_string() if percentage is None else _("%(percentage)d%%") % {"percentage": percentage})
+            messages.append(running.get_progress_string())
         waiting = sum(operation.state == WAITING for operation in self.operations)
         if waiting:
             messages.append(_("待機中 %(count)d件") % {"count": waiting})
