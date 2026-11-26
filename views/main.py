@@ -464,7 +464,7 @@ class MainWindow(viewkit.MainWindow):
     def refresh_file_lists(self, directories, deleted_paths=()):
         """
         update_file_lists と同じだが、カーソルの位置、選択、チェックを維持する。ファイル操作が終わったときに使う。
-        検索結果の一覧からは、deleted_paths とその中の項目のうち、なくなったものを取り除く。
+        検索結果の一覧は再検索せず、deleted_paths（削除・移動した項目）とその中の項目のうち、なくなったものを取り除く。
         """
         directories = {os.path.normcase(directory) for directory in directories}
         for tab in self.tabs:
@@ -472,34 +472,8 @@ class MainWindow(viewkit.MainWindow):
             if type(tab) is tabs.fileList.FileListTab and os.path.normcase(tab.listObject.rootDirectory) in directories:
                 self._refresh_file_list(tab)
             elif deleted_paths and isinstance(tab, (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab)):
-                self._remove_deleted_results(tab, deleted_paths)
+                tab.remove_deleted_items(deleted_paths)
         self._update_menu_state(self.active_tab)
-
-    def _remove_deleted_results(self, tab, deleted_paths):
-        # 検索中は結果が追加され続けているため、変更しない
-        if not tab.tempListObject.GetFinishedStatus():
-            return
-        prefixes = tuple(os.path.join(os.path.normcase(path), "") for path in deleted_paths)
-
-        def is_deleted(element):
-            return os.path.join(os.path.normcase(element.fullpath), "").startswith(prefixes) and not os.path.lexists(element.fullpath)
-
-        old_items = list(tab.listObject.GetItemList())
-        if not any(is_deleted(element) for element in old_items):
-            return
-        focused = tab.GetFocusedElement()
-        index = tab.GetFocusedItem()
-        for elements in tab.listObject.lists:
-            elements[:] = [element for element in elements if not is_deleted(element)]
-        items = list(tab.listObject.GetItemList())
-        if focused in items:
-            cursor = items.index(focused)
-        else:
-            cursor = min(index, len(items) - 1)
-        # 検索結果のアイコンのハンドルは破棄されているので、一覧を作り直さず、登録済みの画像のまま行だけを入れ替える
-        tab.checkedItem &= set(items)
-        tab.hListCtrl.set_items(items)
-        tab.Focus(cursor)
 
     def _refresh_file_list(self, tab):
         index = tab.GetFocusedItem()

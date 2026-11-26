@@ -58,6 +58,8 @@ class Operation:
         self.directories = directories
         # 読み書きするパス。場所が重なる操作を同時に実行しないために使う
         self._paths = [os.path.join(os.path.normcase(path), "") for path in paths]
+        # 削除・移動によって元の場所からなくなるパス。終わったときに検索結果の一覧から取り除く
+        self.deleted_paths = []
         self.title = name
         self.state = WAITING
         # 開始を通知したかどうか
@@ -246,6 +248,8 @@ class PasteOperation(FileOperatorOperation):
         name = _("移動") if instructions["copy_move_flag"] == clipboard.MOVE else _("コピー")
         paths = sources + [destination for dummy, destination in instructions["target"]]
         super().__init__(name, directories, paths, operator)
+        if instructions["copy_move_flag"] == clipboard.MOVE:
+            self.deleted_paths = sources
         self.set_title(sources, instructions["to"])
 
 
@@ -600,8 +604,8 @@ class OperationManager:
         """操作が終わったときの処理"""
         operation.update_result_state()
         self._directories |= operation.directories
+        self._deleted_paths += operation.deleted_paths
         if isinstance(operation, DeleteOperation):
-            self._deleted_paths += operation.deleted_paths
             if operation.state == CONFIRMING:
                 self._questions.append(operation)
                 # すぐに尋ねられるときは、ダイアログが読み上げられるので知らせない
