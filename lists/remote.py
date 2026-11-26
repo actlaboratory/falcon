@@ -81,20 +81,25 @@ class RemoteList(FalconListBase):
         self.rootDirectory = self.location.get_url()
         self.folders.clear()
         self.files.clear()
+        # アイコンは読み込みのたびに取り直す（拡張子ごとに1つ）
+        icons = {}
         for entry in entries:
-            self._append(entry)
+            self._append(entry, icons)
         self.ApplySort()
         self.log.debug("%d items found in %f seconds." % (len(self), t.elapsed))
         return errorCodes.OK
 
-    def _append(self, entry):
+    def _append(self, entry, icons):
         path = remote_storage.join_path(self.location.path, entry.name)
         if entry.is_dir:
             elem = browsableObjects.RemoteFolder()
-            type_string, icon = _get_folder_type()
+            key = None
         else:
             elem = browsableObjects.RemoteFile()
-            type_string, icon = _get_file_type(entry.name)
+            key = _get_extension(entry.name)
+        if key not in icons:
+            icons[key] = _get_type(key)
+        type_string, icon = icons[key]
         elem.Initialize(self.location, path, entry.size, entry.modified, type_string, icon, entry.permissions, entry.is_link)
         # 更新日時の精度（秒）。他のタブとの比較で使う
         elem.precision = entry.precision
@@ -113,26 +118,20 @@ def _load(client, path):
     return path, client.list_dir(path)
 
 
-# 拡張子ごとの (種類, アイコン)。同じアイコンを何度も作らないように覚えておく
-_file_types = {}
+def _get_extension(name):
+    """ファイル名の拡張子（小文字）。なければ空文字列"""
+    return name.rsplit(".", 1)[-1].lower() if "." in name else ""
 
 
-def _get_file_type(name):
-    """ファイルの種類の名前とアイコンを、拡張子から求める。サーバーには問い合わせない"""
-    extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-    if extension not in _file_types:
-        dummy, info = shell.SHGetFileInfo(
-            "dummy." + extension if extension else "dummy", win32file.FILE_ATTRIBUTE_NORMAL,
-            shellcon.SHGFI_USEFILEATTRIBUTES | shellcon.SHGFI_TYPENAME | shellcon.SHGFI_ICON)
-        _file_types[extension] = (info[4], info[0])
-    return _file_types[extension]
-
-
-def _get_folder_type():
-    """フォルダの種類の名前とアイコン"""
-    if None not in _file_types:
-        dummy, info = shell.SHGetFileInfo(
-            "dummy", win32file.FILE_ATTRIBUTE_DIRECTORY,
-            shellcon.SHGFI_USEFILEATTRIBUTES | shellcon.SHGFI_TYPENAME | shellcon.SHGFI_ICON)
-        _file_types[None] = (info[4], info[0])
-    return _file_types[None]
+def _get_type(extension):
+    """
+    種類の名前と、新しく作ったアイコンのハンドルを、拡張子から求める（None ならフォルダ）。サーバーには問い合わせない。
+    アイコンのハンドルは、一覧に表示するときに wx.Icon が受け取って破棄するので、使い回してはいけない
+    （破棄済みのハンドルを渡すと「Couldn't add an image to the image list.」になる）。
+    """
+    if extension is None:
+        name, attributes = "dummy", win32file.FILE_ATTRIBUTE_DIRECTORY
+    else:
+        name, attributes = "dummy." + extension if extension else "dummy", win32file.FILE_ATTRIBUTE_NORMAL
+    dummy, info = shell.SHGetFileInfo(name, attributes, shellcon.SHGFI_USEFILEATTRIBUTES | shellcon.SHGFI_TYPENAME | shellcon.SHGFI_ICON)
+    return info[4], info[0]
