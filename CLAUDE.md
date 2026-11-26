@@ -43,7 +43,8 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 | `menuItemsDic.py` / `menuItemsStore.py` | メニュー項目の表示名と ID。`menuItemsStore` は viewkit の RefStore としても使われる |
 | `archiver.py` / `bin/` | 圧縮と解凍。ZIP・TAR系以外は同梱の7-Zip（`bin/7z.exe`）だけを使う（インストール版は使わない） |
 | `network_resource.py` | ネットワーク上のコンピューターの列挙（シェルの「ネットワーク」フォルダを使う。WNetOpenEnum は SMB1 依存で使えない）、共有フォルダの一覧、認証 |
-| `network_drive.py` / `network_place.py` | ネットワークドライブの割り当て・切断と、ネットワークの場所（`Network Shortcuts` フォルダ内の desktop.ini＋target.lnk）の追加・削除・一覧。ネットワークの場所はドライブ一覧に `browsableObjects.NetworkPlace` として表示する |
+| `network_drive.py` / `network_place.py` | ネットワークドライブの割り当て・切断と、ネットワークの場所（`Network Shortcuts` フォルダ内の desktop.ini＋target.lnk）の追加・削除・一覧。ネットワークの場所はドライブ一覧に `browsableObjects.NetworkPlace` として表示する。FTP・SFTP の場所は Windows の形式で保存できないので、設定の `remote_places`（名前→URL）に保存する |
+| `remote_storage.py` / `remote_connect.py` / `remote_download.py` | FTP・FTPS（Explicit）・SFTP の閲覧とダウンロード。場所は `sftp://user@host:port/path` の URL で表し、`tabs/remote_list.py`（`RemoteListTab`）と `lists/remote.py` で表示する。`remote_storage` は別スレッド用で画面に触らず、認証・SFTP のホスト鍵・FTPS の証明書の確認は例外で知らせ、`remote_connect.run()` がメインスレッドで画面を出してやり直す。パスワードはメモリと（指定時のみ）Windows の資格情報マネージャーに保存し、設定ファイルや URL には入れない。確認したホスト鍵は `known_hosts`（設定ファイルと同じ場所）に保存する。SFTP は paramiko を使う（読み込みが遅いので使うときだけ import） |
 | `operation_manager.py` / `views/operation_progress.py` | コピー・移動・圧縮・解凍・削除を別スレッドで順番に実行し（場所が重ならない削除は待たずに始める）、進行状況を表示する。画面やフォーカスを勝手に切り替えず、終了・確認待ちは読み上げで知らせる。プログレスバーは、メインウィンドウか進行状況のウィンドウのどちらか一方だけに表示する（スクリーンリーダーの報告が重ならないように） |
 | `fileOperator/elevation.py` / `fileop.py` | アクセス拒否になったファイル操作を、falcon 自身を `--fileop` 付きで管理者権限で起動してやり直す（別の exe は使わない）。受け渡しは名前付きパイプと JSON のみで、pickle と一時ファイルは使わない。管理者権限の側はファイル（ログ・設定）に書き込まない。割り当てたネットワークドライブは見えないので UNC パスにして渡す |
 | `background_wait.py` | 時間のかかる処理を別スレッドで実行し、ウィンドウを固めずに待つ。渡す関数の中で画面の部品や表示中の一覧を変更しないこと |

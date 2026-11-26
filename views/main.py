@@ -30,6 +30,7 @@ import wx
 
 from logging import getLogger
 from viewkit.menu import Menu as ViewkitMenu
+from win32com.shell import shell
 
 import archiver
 import background_wait
@@ -51,6 +52,9 @@ import network_drive
 import network_place
 import network_resource
 import operation_manager
+import remote_connect
+import remote_download
+import remote_storage
 import reparse_link
 import shortcut_link
 import tabs.navigator
@@ -58,6 +62,7 @@ import views.add_network_place
 import views.bulk_rename
 import views.changeAttribute
 import views.compress
+import views.download
 import views.extract
 import views.favoriteDirectory
 import views.file_properties
@@ -240,6 +245,7 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("TOOL_DISCONNECT_NETWORK_DRIVE", "N"),
                 _menu_item("TOOL_ADD_NETWORK_PLACE", "A"),
                 _menu_item("TOOL_REMOVE_NETWORK_PLACE", "L"),
+                _menu_item("TOOL_DOWNLOAD", "W"),
             ]),
             viewkit.TopMenuDefinition(_("表示"), "V", [
                 _menu_item("VIEW_SORTNEXT", "N"),
@@ -757,6 +763,7 @@ class MainWindow(viewkit.MainWindow):
             "TOOL_DISCONNECT_NETWORK_DRIVE": self._on_disconnect_network_drive,
             "TOOL_ADD_NETWORK_PLACE": self._on_add_network_place,
             "TOOL_REMOVE_NETWORK_PLACE": self._on_remove_network_place,
+            "TOOL_DOWNLOAD": self._on_download,
 
             "VIEW_SORTNEXT": lambda event: self._delaied_call(self._sort_next),
             "VIEW_SORTSELECT": tab("SortSelect"),
@@ -1063,12 +1070,18 @@ class MainWindow(viewkit.MainWindow):
         elif ret == errorCodes.UNKNOWN:
             dialog(_("エラー"), _("デバイスの取り外しに失敗しました。"))
 
-    def _get_network_path_for_input(self):
+    def _get_network_path_for_input(self, allow_remote=False):
         r"""
         ネットワークドライブの割り当てなどで、フォルダの入力欄に最初に入れておくパスを返す。
         選択中の項目がネットワーク上のフォルダ・コンピューターならそのパス、そうでなければ表示中の場所が \\ で始まればそのパス。
+        allow_remote=True の場合は、FTP・SFTP のフォルダの URL も返す。
         """
         elem = self.active_tab.GetFocusedElement()
+        if allow_remote:
+            if isinstance(elem, (browsableObjects.RemoteFolder, browsableObjects.NetworkPlace)) and remote_storage.is_remote_url(elem.fullpath):
+                return elem.fullpath
+            if isinstance(self.active_tab, tabs.remote_list.RemoteListTab):
+                return self.active_tab.listObject.rootDirectory
         if isinstance(elem, (browsableObjects.Folder, browsableObjects.NetworkResource)) and network_resource.is_unc_path(elem.fullpath):
             return network_drive.get_initial_path(elem.fullpath)
         return network_drive.get_initial_path(getattr(self.active_tab.listObject, "rootDirectory", ""))
@@ -1145,26 +1158,29 @@ class MainWindow(viewkit.MainWindow):
 
     def _on_add_network_place(self, event):
         """ネットワークの場所を追加する"""
-        result = self.showSubWindow(views.add_network_place.AddNetworkPlaceWindow, _("ネットワークの場所の追加"), self._get_network_path_for_input())
+        result = self.showSubWindow(views.add_network_place.AddNetworkPlaceWindow, _("ネットワークの場所の追加"), self._get_network_path_for_input(allow_remote=True))
         if result.code == wx.ID_CANCEL:
             return
         request = result.user_object
         if not self._check_network_folder(request.target):
             return
         try:
-            folder = network_place.add(request.name, request.target)
+            network_place.add(request.name, request.target)
         except (OSError, pywintypes.error, pywintypes.com_error) as err:
             self.log.error("cannot add network place %s: %s" % (request.name, err))
             dialog(_("エラー"), _("ネットワークの場所を追加できませんでした。\n(%(error)s)") % {"error": err})
             return
-        self._update_drive_lists(lambda elem: isinstance(elem, browsableObjects.NetworkPlace) and elem.place_folder == folder)
+        self._update_drive_lists(lambda elem: isinstance(elem, browsableObjects.NetworkPlace) and elem.basename == request.name)
         self.app.say(_("ネットワークの場所を追加しました。"))
 
     def _check_network_folder(self, path):
         """
         ネットワーク上のフォルダを開けるかどうかを確かめ、開けなければエラーを表示してFalseを返す。
         認証が必要な場合は、資格情報の入力画面が出る。コンピューター(\\server)は確かめずにTrueを返す。
+        FTP・SFTP の URL の場合は、接続してフォルダの中身を取得できるかを確かめる。
         """
+        if remote_storage.is_remote_url(path):
+            return self._check_remote_folder(path)
         if network_resource.is_server_path(path):
             return True
         try:
@@ -1185,6 +1201,39 @@ class MainWindow(viewkit.MainWindow):
             return False
         return True
 
+    def _check_remote_folder(self, url):
+        """FTP・SFTP のフォルダを開けるかどうかを確かめ、開けなければエラーを表示してFalseを返す。"""
+        location = remote_storage.parse_url(url)
+        try:
+            remote_connect.run(location, lambda client: client.list_dir(location.path or client.get_initial_path()))
+        except background_wait.Canceled:
+            return False
+        except remote_storage.RemoteError as err:
+            dialog(_("エラー"), _("%(url)s を開けませんでした。\n%(error)s") % {"url": url, "error": err})
+            return False
+        return True
+
+    def _on_download(self, event):
+        """選択中のファイル・フォルダを、FTP・SFTP のサーバーからダウンロードする"""
+        tab = self.active_tab
+        # FTP・SFTP の一覧以外では menuBlocker で無効にしている
+        if not isinstance(tab, tabs.remote_list.RemoteListTab):
+            return
+        elems = [elem for elem in tab.GetSelectedItems() if isinstance(elem, browsableObjects.RemoteFile)]
+        if not elems:
+            return
+        directory = self.app.settings.get_str("remote", "download_directory", "")
+        if directory == "" or not os.path.isdir(directory):
+            directory = shell.SHGetKnownFolderPath(shell.FOLDERID_Downloads)
+        result = self.showSubWindow(views.download.DownloadWindow, _("ダウンロード"), directory)
+        if result.code == wx.ID_CANCEL:
+            return
+        directory, conflict = result.user_object
+        self.app.settings.set("remote", "download_directory", directory)
+        items = [remote_download.DownloadItem(elem.path, isinstance(elem, browsableObjects.RemoteFolder)) for elem in elems]
+        request = remote_download.DownloadRequest(tab.listObject.location, items, directory, conflict)
+        self.operations.add(operation_manager.DownloadOperation(request))
+
     def _on_remove_network_place(self, event):
         """選択中のネットワークの場所を削除する"""
         place = self.active_tab.GetFocusedElement()
@@ -1194,9 +1243,9 @@ class MainWindow(viewkit.MainWindow):
         if not self._ask_yes_no(_("確認"), _("ネットワークの場所「%(name)s」を削除しますか？\nリンク先のフォルダとその中身は削除されません。") % {"name": place.basename}):
             return
         try:
-            network_place.remove(place.place_folder)
+            network_place.remove(place.basename, place.place_folder)
         except (OSError, ValueError) as err:
-            self.log.error("cannot remove network place %s: %s" % (place.place_folder, err))
+            self.log.error("cannot remove network place %s: %s" % (place.basename, err))
             dialog(_("エラー"), _("ネットワークの場所を削除できませんでした。\n(%(error)s)") % {"error": err})
             return
         self._update_drive_lists()
@@ -1333,6 +1382,13 @@ class MainWindow(viewkit.MainWindow):
         d = views.objectDetail.ObjectDetailParameters()
         d.add(_("名前"), elem.basename)
         d.add(_("パス"), elem.fullpath)
+        if isinstance(elem, browsableObjects.RemoteFile):
+            if elem.size >= 0:
+                d.add(_("サイズ"), misc.ConvertBytesTo(elem.size, misc.UNIT_AUTO, True))
+                d.add(_("サイズ(バイト)"), elem.size)
+            if elem.modDate is not None:
+                d.add(_("更新日時"), misc.PTime2string(elem.modDate))
+            d.add(_("種類"), elem.typeString)
         if isinstance(elem, browsableObjects.File) or isinstance(elem, browsableObjects.Stream):
             if elem.size >= 0:
                 d.add(_("サイズ"), misc.ConvertBytesTo(elem.size, misc.UNIT_AUTO, True))

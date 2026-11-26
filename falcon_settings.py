@@ -91,6 +91,14 @@ DEFAULT_VALUES = {
         "descending": 0,
         "column_width_0": 620,
     },
+    "RemoteList": {
+        "sorting": 0,
+        "descending": 0,
+        "column_width_0": 500,
+        "column_width_1": 110,
+        "column_width_2": 200,
+        "column_width_3": 230,
+    },
     "view": {
         "header_title_length": 20,
         "hide_extension": False,
@@ -172,6 +180,7 @@ _CASE_SENSITIVE_SECTIONS = (
     "favorite_directories_shortcut",
     "open_here",
     "open_here_shortcut",
+    "remote_places",
 )
 
 

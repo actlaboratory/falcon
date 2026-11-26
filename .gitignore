@@ -4,6 +4,7 @@ data/options.dat
 __pycache__
 settings.ini
 settings.json
+known_hosts
 keymap.ini
 falcon.build/
 falcon.dist/

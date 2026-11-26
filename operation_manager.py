@@ -22,6 +22,7 @@ import clipboard
 import fileOperator
 import globalVars
 import operation_result
+import remote_download
 import reparse_link
 from fileOperator import helper
 
@@ -439,6 +440,62 @@ class ExtractOperation(ArchiveOperation):
     def get_finish_message(self):
         if self.state == CONFIRMING:
             return _("%(name)sにパスワードの入力が必要です。") % {"name": self.name}
+        return super().get_finish_message()
+
+
+class DownloadOperation(Operation):
+    """FTP・SFTP のサーバーからのダウンロード。remote_download.DownloadJob を実行する。"""
+
+    def __init__(self, request):
+        super().__init__(_("ダウンロード"), {request.directory}, [request.directory])
+        self.set_title([item.get_name() for item in request.items], request.directory)
+        self._request = request
+        self._job = None
+
+    def _start_thread(self):
+        self._job = remote_download.DownloadJob(self._request)
+        self._job.start()
+
+    def is_thread_alive(self):
+        return self._job is not None and not self._job.is_finished()
+
+    def join(self, seconds):
+        if self._job is not None:
+            self._job.wait(seconds)
+
+    def cancel(self):
+        if self._job is not None:
+            self._job.cancel()
+        super().cancel()
+
+    def get_percentage(self):
+        return self._job.percentage if self._job is not None else None
+
+    def get_details(self):
+        if self._job is None:
+            return []
+        details = [(target, _("注意"), message) for target, message in self._job.warnings]
+        details += [(target, _("エラー"), message) for target, message in self._job.errors]
+        return details
+
+    def _get_warning_count(self):
+        return len(self._job.warnings) if self._job is not None else 0
+
+    def _get_result_state(self):
+        if self._job.canceled:
+            return CANCELED
+        return FAILED if self._job.errors else FINISHED
+
+    def get_state_string(self):
+        if self.state == FAILED:
+            return _("エラー %(count)d件") % {"count": len(self._job.errors)}
+        if self.state == FINISHED and self._get_warning_count():
+            return _("完了 注意%(count)d件") % {"count": self._get_warning_count()}
+        return super().get_state_string()
+
+    def get_finish_message(self):
+        if self.state == FINISHED and self._get_warning_count():
+            return _("%(name)sが完了しました。注意が%(count)d件あります。") % {"name": self.name, "count": self._get_warning_count()}
         return super().get_finish_message()
 
 

@@ -6,6 +6,7 @@
 import win32file
 
 import browsableObjects
+import menuItemsDic
 import tabs.navigator  # 全てのタブのモジュールを、循環importにならない順序で読み込む
 import menuItemsStore
 
@@ -37,12 +38,14 @@ tabTypeBlockList = {
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
         "VIEW_TOGGLE_EXTENSION",
+        "TOOL_DOWNLOAD",
     ],
     tabs.fileList.FileListTab: [
         "TOOL_EJECT_DRIVE",
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
-        "TOOL_REMOVE_NETWORK_PLACE"
+        "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
     ],
     tabs.NetworkResourceList.NetworkResourceListTab: [
         "FILE_RENAME",
@@ -71,6 +74,7 @@ tabTypeBlockList = {
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
@@ -106,6 +110,7 @@ tabTypeBlockList = {
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
         "TOOL_EXEC_PROGRAM",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
@@ -113,6 +118,58 @@ tabTypeBlockList = {
         "VIEW_TOGGLE_EXTENSION",
     ]
 }
+
+# FTP・SFTP の一覧のタブでは、閲覧とダウンロードに関する機能だけを使えるようにする
+_REMOTE_ALLOWED = {
+    "FILE_VIEW_DETAIL",
+    "FILE_EXIT",
+    "EDIT_NAMECOPY",
+    "EDIT_FULLPATHCOPY",
+    "EDIT_SELECTALL",
+    "EDIT_UPDATEFILELIST",
+    "EDIT_MARKITEM",
+    "EDIT_MARKITEM_ALL",
+    "EDIT_UNMARKITEM_ALL",
+    "EDIT_MARKITEM_INVERSE",
+    "EDIT_OPENCONTEXTMENU",
+    "MOVE_FORWARD",
+    "MOVE_FORWARD_TAB",
+    "MOVE_BACKWARD",
+    "MOVE_NEWTAB",
+    "MOVE_CLOSECURRENTTAB",
+    "MOVE_SPECIAL_UP",
+    "MOVE_SPECIAL_DOWN",
+    "MOVE_HIST_NEXT",
+    "MOVE_HIST_PREV",
+    "MOVE_MARKSET",
+    "MOVE_MARK",
+    "MOVE_INPUT_DIR",
+    "MOVE_SETTING_FAVORITE",
+    "MOVE_SETTING_OPEN_HERE",
+    "READ_CURRENTFOLDER",
+    "READ_LISTITEMNUMBER",
+    "READ_LISTINFO",
+    "READ_PROGRESS",
+    "READ_SETMOVEMENTREAD",
+    "TOOL_MAP_NETWORK_DRIVE",
+    "TOOL_ADD_NETWORK_PLACE",
+    "TOOL_DOWNLOAD",
+    "VIEW_SORTNEXT",
+    "VIEW_SORTSELECT",
+    "VIEW_SORTCYCLEAD",
+    "VIEW_PROGRESS",
+    "VIEW_SORT_COLUMN",
+    "ENV_REGIST_ORIGINAL_ASSOCIATION",
+    "ENV_KEY_CONFIG",
+    "ENV_TESTDIALOG",
+    "ENV_FONTTEST",
+    "ENV_SETTINGS",
+    "HELP_VERINFO",
+    "HELP_UPDATE",
+}
+tabTypeBlockList[tabs.remote_list.RemoteListTab] = [identifier for identifier in menuItemsDic.dic if identifier and identifier not in _REMOTE_ALLOWED]
+# 「ここで開く」は、表示中のフォルダのパスをコマンドに渡すため使えない
+tabTypeBlockList[tabs.remote_list.RemoteListTab].append("MOVE_OPEN_HERE_")
 
 # 検索結果タブ共通のブロック要素を適用
 for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
@@ -137,6 +194,7 @@ for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
         "TOOL_EXEC_PROGRAM"
     ]
 
@@ -171,6 +229,7 @@ selectedItemCountBlockList = {
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
@@ -221,6 +280,7 @@ selectedItemTypeBlockList = {
     ],
     browsableObjects.Drive: [
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
     ],
     browsableObjects.NetworkResource: [
         "FILE_RENAME",
@@ -228,7 +288,13 @@ selectedItemTypeBlockList = {
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
         "READ_CONTENT_PREVIEW"
+    ],
+    browsableObjects.RemoteFile: [
+        "MOVE_FORWARD_TAB",
+    ],
+    browsableObjects.RemoteFolder: [
     ],
     browsableObjects.NetworkPlace: [
         "FILE_RENAME",  # ドライブ一覧での名前の変更はボリュームラベルの変更になるため

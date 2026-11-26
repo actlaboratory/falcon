@@ -8,6 +8,7 @@ import viewkit
 import wx
 
 import network_drive
+import remote_storage
 import simpleDialog
 
 
@@ -48,6 +49,11 @@ class MapNetworkDriveWindow(viewkit.SubWindow):
         self.remote_path.SetFocus()
 
     def _on_ok(self, event):
+        if remote_storage.is_remote_url(self.remote_path.GetLineText(0).strip()):
+            # Windows は FTP・SFTP をドライブに割り当てられない
+            simpleDialog.errorDialog(_("FTP・SFTP のサーバーは、ドライブに割り当てられません。\n「ネットワークの場所の追加」で登録すると、ドライブ一覧から開けます。"), self)
+            self.remote_path.SetFocus()
+            return
         path = network_drive.normalize_remote_path(self.remote_path.GetLineText(0))
         error = network_drive.validate_folder_path(path)
         if error:

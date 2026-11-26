@@ -25,6 +25,7 @@ import constants
 import globalVars
 import lists
 import network_resource
+import remote_storage
 import reparse_link
 
 from logging import getLogger
@@ -494,6 +495,9 @@ def analyzeUserInputPath(path, parent="C:\\"):
     path = os.path.expandvars(path)
     if not isinstance(path, str):
         return None
+    if remote_storage.is_remote_url(path):
+        # FTP・SFTP の URL は、Windows のパスとして整えない
+        return path.strip()
     if len(path) == 2 and path[0].upper(
     ) >= 'A' and path[0].upper() <= 'Z' and path[1] == ':':
         # アルファベット:はドライブルートと仮定
