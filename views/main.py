@@ -40,6 +40,7 @@ import defaultKeymap
 import deviceCtrl
 import disk_info
 import errorCodes
+import file_properties
 import fileSystemManager
 import globalVars
 import keymap
@@ -56,6 +57,7 @@ import views.changeAttribute
 import views.compress
 import views.extract
 import views.favoriteDirectory
+import views.file_properties
 import views.fonttest
 import views.globalKeyConfig
 import views.key_value_setting
@@ -1172,6 +1174,11 @@ class MainWindow(viewkit.MainWindow):
             detail.add(_("リンクの状態"), _("リンク先が見つかりません"))
 
     def show_detail(self, elem):
+        properties = None
+        if isinstance(elem, browsableObjects.File):
+            properties = self._load_file_properties(elem.fullpath)
+            if properties is False:
+                return  # 利用者が中止した
         d = views.objectDetail.ObjectDetailParameters()
         d.add(_("名前"), elem.basename)
         d.add(_("パス"), elem.fullpath)
@@ -1187,8 +1194,11 @@ class MainWindow(viewkit.MainWindow):
                 d.add(_("内容"), views.objectDetail.CALCURATING)
                 d.dir_calc_path = elem.fullpath
         if isinstance(elem, browsableObjects.File):
-            d.add(_("作成日時"), elem.creationDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
-            d.add(_("更新日時"), elem.modDate.strftime("%Y/%m/%d(%a) %H:%M:%S"))
+            # 作成日時・更新日時は、プロパティ情報を読み込めたときは直接書き換えられる
+            d.add(_("作成日時"), _format_detail_date(elem.creationDate),
+                  properties.get_item(file_properties.DATE_CREATED) if properties else None)
+            d.add(_("更新日時"), _format_detail_date(elem.modDate),
+                  properties.get_item(file_properties.DATE_MODIFIED) if properties else None)
             d.add(_("属性"), elem.longAttributesString)
             d.add(_("種類"), elem.typeString)
             if not elem.shortName == "":
@@ -1244,10 +1254,26 @@ class MainWindow(viewkit.MainWindow):
             d.add(_("IPアドレス"), elem.address)
         if isinstance(elem, browsableObjects.File) and shortcut_link.is_shortcut(elem.fullpath):
             d.shortcut_path = elem.fullpath
+        if properties:
+            d.properties = properties
+            d.property_items = [prop for prop in properties.items if prop.name not in _DETAIL_SHOWN_PROPERTIES]
         result = self.showSubWindow(views.objectDetail.ObjectDetailWindow, _("詳細情報"), d)
-        # ショートカットの設定を変えると更新日時が変わるので、一覧を更新する
+        # ショートカットの設定やプロパティ情報を変えると更新日時が変わるので、一覧を更新する
         if getattr(result, "user_object", None) is True and hasattr(self.active_tab, "UpdateFilelist"):
             self.active_tab.UpdateFilelist(silence=True)
+
+    def _load_file_properties(self, path):
+        """
+        ファイルのプロパティ情報を別スレッドで読み込む。
+        file_properties.FileProperties を返す。読み込めなければ None、利用者が中止した場合は False を返す。
+        """
+        try:
+            return views.file_properties.load(path)
+        except background_wait.Canceled:
+            return False
+        except Exception as e:
+            self.log.warning("cannot load the properties of %s (%s)" % (path, e))
+            return None
 
     def _load_drive_details(self, drive):
         """
@@ -1283,6 +1309,28 @@ class MainWindow(viewkit.MainWindow):
                 d.add(_("メディアの状態"), _("、").join(media.states))
             if media.free_for_writing >= 0:
                 d.add(_("書き込める容量"), misc.ConvertBytesTo(media.free_for_writing, misc.UNIT_AUTO, True))
+
+
+def _format_detail_date(value):
+    """
+    詳細情報に表示する日時の文字列を作る（例: 2024/01/31(水) 13:45:00）。
+    strftime の %a は、wxPython がロケールを ja-JP にすると曜日が文字化けするので使わない。
+    """
+    weekdays = (_("月"), _("火"), _("水"), _("木"), _("金"), _("土"), _("日"))
+    return "%s(%s) %s" % (value.strftime("%Y/%m/%d"), weekdays[value.weekday()], value.strftime("%H:%M:%S"))
+
+
+# 詳細情報で、falcon が別に表示しているので、プロパティの一覧には出さない項目
+_DETAIL_SHOWN_PROPERTIES = {
+    "System.ItemNameDisplay",
+    "System.ItemType",
+    "System.ItemTypeText",
+    "System.ItemFolderPathDisplay",
+    "System.Size",
+    "System.FileAttributes",
+    file_properties.DATE_CREATED,
+    file_properties.DATE_MODIFIED,
+}
 
 
 class FalconMenu:
