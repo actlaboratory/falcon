@@ -447,3 +447,16 @@ class NetworkResource(FalconBrowsableBase):
 
     def GetRootDrivePath(self):
         return self.basename
+
+
+class NetworkPlace(NetworkResource):
+    """
+    ネットワークの場所（ネットワーク上のフォルダへのショートカット）を表す。ドライブ一覧に表示する。
+    fullpath はリンク先、place_folder はネットワークの場所を保存しているフォルダ。
+    """
+
+    def initialize_place(self, name, target, place_folder, hIcon=-1):
+        """必要な情報をセットする"""
+        self.Initialize(name, target, "", hIcon)
+        self.typeString = _("ネットワークの場所")
+        self.place_folder = place_folder

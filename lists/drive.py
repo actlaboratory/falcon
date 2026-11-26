@@ -15,6 +15,7 @@ import misc
 import browsableObjects
 import globalVars
 import errorCodes
+import network_place
 
 from simpleDialog import dialog
 from .base import *
@@ -70,7 +71,8 @@ class DriveList(FalconListBase):
                 self.Append(i)  # ドライブ検出
             check <<= 1
         # end ドライブ25個分調べる
-        # ネットワークリソースの追加はタブ側から来ることになった
+        self._append_network_places()
+        # ネットワーク上のコンピューターの追加はタブ側から来ることになった
         self.log.debug("Drives list created in %d seconds." % t.elapsed)
         self.log.debug("%d drives and %d unusableDrives found." %
                        (len(self.drives), len(self.unusableDrives)))
@@ -90,6 +92,16 @@ class DriveList(FalconListBase):
             # end ファイルかフォルダか
         # end for
     # end _copyFromList
+
+    def _append_network_places(self):
+        """ネットワークの場所を一覧に加える。リンク先には接続しない。"""
+        for place in network_place.get_places():
+            # リンク先に接続せずにアイコンを得るため、ファイルの属性だけからアイコンを決める
+            dummy, info = shell.SHGetFileInfo(
+                place.folder, win32file.FILE_ATTRIBUTE_DIRECTORY, shellcon.SHGFI_ICON | shellcon.SHGFI_USEFILEATTRIBUTES)
+            elem = browsableObjects.NetworkPlace()
+            elem.initialize_place(place.name, place.target, place.folder, info[0])
+            self.networkResources.append(elem)
 
     def AppendNetworkResource(self, resource):
         self.networkResources.append(resource)

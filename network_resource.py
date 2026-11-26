@@ -137,6 +137,11 @@ def is_connection_error(error_code):
     return error_code in _CONNECTION_ERRORS
 
 
+def is_auth_error(error_code):
+    """Windowsのエラーコードが、資格情報を入力して接続し直せば解決する可能性があるものかどうかを返す。"""
+    return error_code in _AUTH_ERRORS
+
+
 def get_connection_error_message(path, message):
     """ネットワークに接続できないことを利用者に知らせる文を返す。message はWindowsのエラーの説明。"""
     return _("ネットワークに接続できないため、%(path)s を開けませんでした。\nWi-Fiなどのネットワークの接続と、接続先の機器の状態を確認してください。\n(%(error)s)") % {

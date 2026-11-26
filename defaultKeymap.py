@@ -67,6 +67,10 @@ defaultKeymap["MAINVIEW"] = {
     "TOOL_ADDPATH": "",
     "TOOL_EJECT_DRIVE": "delete",
     "TOOL_EJECT_DEVICE": "",
+    "TOOL_MAP_NETWORK_DRIVE": "",
+    "TOOL_DISCONNECT_NETWORK_DRIVE": "",
+    "TOOL_ADD_NETWORK_PLACE": "",
+    "TOOL_REMOVE_NETWORK_PLACE": "",
 
     "VIEW_SORTNEXT": "shift+F1",
     "VIEW_SORTSELECT": "ctrl+S",

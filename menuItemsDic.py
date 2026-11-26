@@ -69,6 +69,10 @@ dic = {
     "TOOL_ADDPATH": _("環境変数PATHに追加"),
     "TOOL_EJECT_DRIVE": _("ドライブの取り外し"),
     "TOOL_EJECT_DEVICE": _("デバイスの取り外し"),
+    "TOOL_MAP_NETWORK_DRIVE": _("ネットワークドライブの割り当て"),
+    "TOOL_DISCONNECT_NETWORK_DRIVE": _("ネットワークドライブの切断"),
+    "TOOL_ADD_NETWORK_PLACE": _("ネットワークの場所の追加"),
+    "TOOL_REMOVE_NETWORK_PLACE": _("ネットワークの場所の削除"),
 
     "VIEW_SORTNEXT": _("次の並び順"),
     "VIEW_SORTSELECT": _("並び順を選択"),
