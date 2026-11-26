@@ -2477,3 +2477,16 @@ msgstr ""
 #: operation_manager.py views\operation_progress.py
 msgid "ゴミ箱を使えない場所では、完全に削除するか確認する(&R)"
 msgstr ""
+
+#: lists\search_common.py
+#, python-format
+msgid "%(keyword)sの検索結果 %(dir)s から"
+msgstr ""
+
+#: tabs\search_result_common.py
+msgid "現在検索中です。再検索はできません。"
+msgstr ""
+
+#: tabs\search_result_common.py
+msgid "再検索"
+msgstr ""

@@ -19,6 +19,8 @@ import network_resource
 import time
 import browsableObjects
 
+from lists.search_common import SEARCH_EOL
+
 log = logging.getLogger("falcon.workerThreadTasks")
 
 
@@ -44,11 +46,12 @@ def DirCalc(taskState, param):
 
 def GetRecursiveFileList(taskState, param):
     """
-            path から全てのフォルダを再帰的にたどって、ファイル名を out のリストに入れていく。なお、入る値は、 path からの相対パス。EOL=True にしておくと、ファイルリストを全部なめた段階で、eol という文字列をリストに追加してから終了する。検索終了の判定に使っている。
+            path から全てのフォルダを再帰的にたどって、ファイル名を out のリストに入れていく。なお、入る値は、 path からの相対パス。EOL=True にしておくと、ファイルリストを全部なめた段階で、SEARCH_EOL をリストに追加してから終了する。検索終了の判定に使っている。
+            シンボリックリンクとジャンクションの中はたどらない(リンク自体は入れる)。同じファイルが重複して見つかったり、リンクが循環して終わらなくなったりしないようにするため。
     """
     out_lst = param['out_lst']
     path = param['path']
-    for elem in misc.IteratePaths(path):
+    for elem in misc.IteratePaths(path, follow_links=False):
         if taskState.canceled:
             return False
         out_lst.append(str(pathlib.Path(elem).relative_to(path)))
@@ -56,7 +59,7 @@ def GetRecursiveFileList(taskState, param):
     if taskState.canceled:
         return False
     if param['eol']:
-        out_lst.append('eol')
+        out_lst.append(SEARCH_EOL)
     return True
 
 
@@ -76,13 +79,10 @@ def PerformSearch(taskState, param):
             wx.CallAfter(t._onSearchHitCallback, hits, taskState)
         if finished:
             break  # 全て検索した
-        time.sleep(0.1)
+        if l.IsWaitingForFileList():
+            time.sleep(0.1)  # ファイル一覧の取得が追いつくのを待つ
     # end 検索ループ
     return True
-
-    for elem in misc.IteratePaths(param['path']):
-        if taskState.canceled:
-            return False
 
 
 def DebugBeep(taskState, param):

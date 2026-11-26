@@ -11,10 +11,10 @@ grep検索の結果が格納されます。同じファイルで複数のヒッ�
 import globalVars
 import lists
 
-from . import searchResultTabBase
+from . import search_result_common
 
 
-class GrepResultTab(searchResultTabBase.SearchResultTabBase):
+class GrepResultTab(search_result_common.SearchResultTabCommon):
     """grepの検索結果が表示されているタブ。"""
 
     # 内部で利用するリストの種類を定義

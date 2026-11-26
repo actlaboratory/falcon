@@ -1162,7 +1162,8 @@ class MainWindow(viewkit.MainWindow):
             'basePath': base_path,
             'out_lst': out_lst,
             'keyword': val['keyword'],
-            'isRegularExpression': val['isRegularExpression']}
+            'isRegularExpression': val['isRegularExpression'],
+            'listTask': task}
         self.navigate(target, as_new_tab=True)
 
         if val['type'] == 0:

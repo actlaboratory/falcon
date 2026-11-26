@@ -57,7 +57,8 @@ def Navigate(
                 target['basePath'],
                 target['out_lst'],
                 target['keyword'],
-                target['isRegularExpression'])
+                target['isRegularExpression'],
+                target.get('listTask'))
         # end 検索
         if target['action'] == 'grep':
             newtab = grepResult.GrepResultTab({})
@@ -66,7 +67,8 @@ def Navigate(
                 target['basePath'],
                 target['out_lst'],
                 target['keyword'],
-                target['isRegularExpression'])
+                target['isRegularExpression'],
+                target.get('listTask'))
         # end grep検索
         # かならずviews.Main.Navigateを経由して呼び出されているはず
         return newtab

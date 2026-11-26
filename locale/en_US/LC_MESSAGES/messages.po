@@ -2517,5 +2517,18 @@ msgstr "Permanently delete these %(count)d items?"
 msgid "ゴミ箱を使えない場所では、完全に削除するか確認する(&R)"
 msgstr "Ask whether to delete permanently where the &recycle bin is unavailable"
 
+#: lists\search_common.py
+#, python-format
+msgid "%(keyword)sの検索結果 %(dir)s から"
+msgstr "Search results for %(keyword)s from %(dir)s"
+
+#: tabs\search_result_common.py
+msgid "現在検索中です。再検索はできません。"
+msgstr "Searching now. Cannot search again."
+
+#: tabs\search_result_common.py
+msgid "再検索"
+msgstr "Search again"
+
 #~ msgid "ファイル名（空欄なら種類ごとの既定の名前）"
 #~ msgstr "File name (the default name for the type if empty)"

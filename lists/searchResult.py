@@ -5,17 +5,15 @@
 # Note: All comments except these top lines will be written in Japanese.
 
 import os
-import re
 import wx
 import browsableObjects
-import globalVars
 import errorCodes
 
-from .searchResultBase import *
+from .search_common import SearchResultCommon, has_wildcard
 from .constants import *
 
 
-class SearchResultList(SearchResultBase):
+class SearchResultList(SearchResultCommon):
     """ファイルとフォルダの一覧を扱うリスト。"""
 
     def __init__(self):
@@ -60,23 +58,27 @@ class SearchResultList(SearchResultBase):
         self.rootDirectory = rootDirectory
         self.searches = searches
         self._initKeyword(keyword, isRegularExpression, silent)
+        # ワイルドカードを使うときは、名前全体が一致するものだけにする(*.txt が a.txt.bak に一致しないように)
+        self.match_whole_name = not isRegularExpression and has_wildcard(keyword)
+        # 「\」を含むときは、検索した場所からの相対パスと比べる。それ以外は名前だけと比べる
+        self.match_relative_path = not isRegularExpression and "\\" in keyword
         self._initSearch()
 
     def HitTest(self, path, ret_list):
         """_performSearchStepから呼ばれ、与えられたpathのファイルが検索にヒットするならリスト追加する"""
-        if re.search(self.keyword, path):
-            fullpath = os.path.join(self.rootDirectory, path)
-            if os.path.isfile(fullpath):
-                f = self._MakeObject(browsableObjects.SearchedFile, fullpath)
-                self.files.append(f)
-            else:
-                f = self._MakeObject(
-                    browsableObjects.SearchedFolder, fullpath, True)
-                self.folders.append(f)
-            # end ファイルかフォルダか
-            ret_list.append(f)
-            return 1
-        return 0
+        target = path if self.match_relative_path else os.path.basename(path)
+        if self._match(target, self.match_whole_name) is None:
+            return 0
+        fullpath = os.path.join(self.rootDirectory, path)
+        if os.path.isdir(fullpath):
+            f = self._MakeObject(browsableObjects.SearchedFolder, fullpath, True)
+            self.folders.append(f)
+        else:
+            f = self._MakeObject(browsableObjects.SearchedFile, fullpath)
+            self.files.append(f)
+        # end ファイルかフォルダか
+        ret_list.append(f)
+        return 1
 
     def GetFolderFileNumber(self):
         return len(self.folders), len(self.files)

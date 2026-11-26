@@ -257,7 +257,7 @@ class SearchedFolder(Folder):
             return (
                 self.basename,
                 misc.ConvertBytesTo(self.size, misc.UNIT_AUTO, True),
-                self.fullpath,
+                self.relpath,
                 misc.PTime2string(self.modDate),
                 self.attributesString,
                 self.typeString)

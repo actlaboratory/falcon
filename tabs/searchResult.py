@@ -11,10 +11,10 @@
 import globalVars
 import lists
 
-from . import searchResultTabBase
+from . import search_result_common
 
 
-class SearchResultTab(searchResultTabBase.SearchResultTabBase):
+class SearchResultTab(search_result_common.SearchResultTabCommon):
     """検索結果が表示されているタブ。"""
 
     # 内部で利用するリストの種類を定義
