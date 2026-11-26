@@ -39,11 +39,11 @@ class RemoteListTab(base.FalconTabBase):
     """FTP・SFTP のサーバー上のフォルダを表示するタブ。"""
 
     def GoForward(self, stream, admin=False):
-        """フォルダなら中に入り、ファイルならダウンロードして開く"""
+        """フォルダなら中に入り、ファイルならダウンロードして開く。stream=True（右矢印キー）ではフォルダに入るだけ"""
         elem = self.GetFocusedElement()
         if isinstance(elem, browsableObjects.RemoteFolder):
             return self.Move(elem.fullpath)
-        if isinstance(elem, browsableObjects.RemoteFile):
+        if isinstance(elem, browsableObjects.RemoteFile) and not stream:
             return self._open_file(elem)
         return errorCodes.NOT_SUPPORTED
 

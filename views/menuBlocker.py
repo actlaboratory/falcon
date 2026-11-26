@@ -150,11 +150,13 @@ _REMOTE_ALLOWED = {
     "EDIT_OPENCONTEXTMENU",
     "MOVE_FORWARD",
     "MOVE_FORWARD_TAB",
+    "MOVE_FORWARD_STREAM",  # フォルダでは中に入る（右矢印キー）
     "MOVE_BACKWARD",
     "MOVE_NEWTAB",
     "MOVE_CLOSECURRENTTAB",
     "MOVE_SPECIAL_UP",
     "MOVE_SPECIAL_DOWN",
+    "MOVE_TOPFILE",
     "MOVE_HIST_NEXT",
     "MOVE_HIST_PREV",
     "MOVE_MARKSET",
@@ -312,6 +314,7 @@ selectedItemTypeBlockList = {
     ],
     browsableObjects.RemoteFile: [
         "MOVE_FORWARD_TAB",
+        "MOVE_FORWARD_STREAM",  # サーバー上のファイルにストリームはない
     ],
     browsableObjects.RemoteFolder: [
     ],
