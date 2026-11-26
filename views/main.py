@@ -38,6 +38,7 @@ import constants
 import content_reader
 import defaultKeymap
 import deviceCtrl
+import disk_info
 import errorCodes
 import fileSystemManager
 import globalVars
@@ -1223,6 +1224,9 @@ class MainWindow(viewkit.MainWindow):
                 d.add(_("追加情報"), tmp)
 
         if isinstance(elem, browsableObjects.Drive):
+            disk, media = self._load_drive_details(elem)
+            if disk is False:
+                return  # 利用者が中止した
             if elem.free >= 0:
                 d.add(_("フォーマット"), fileSystemManager.GetFileSystemObject(elem.letter))
                 if elem.total > 0:
@@ -1230,9 +1234,12 @@ class MainWindow(viewkit.MainWindow):
                 else:
                     d.add(_("空き容量"), misc.ConvertBytesTo(elem.free, misc.UNIT_AUTO, True))
                 d.add(_("総容量"), misc.ConvertBytesTo(elem.total, misc.UNIT_AUTO, True))
+            elif media is not None and media.is_blank:
+                d.add(_("フォーマット"), _("なし"))  # 何も書き込まれていない光学メディア
             else:
                 d.add(_("フォーマット"), _("未挿入"))
             d.add(_("種類"), elem.typeString)
+            self._add_drive_details(d, disk, media)
         if isinstance(elem, browsableObjects.NetworkResource) and elem.address != "":
             d.add(_("IPアドレス"), elem.address)
         if isinstance(elem, browsableObjects.File) and shortcut_link.is_shortcut(elem.fullpath):
@@ -1241,6 +1248,41 @@ class MainWindow(viewkit.MainWindow):
         # ショートカットの設定を変えると更新日時が変わるので、一覧を更新する
         if getattr(result, "user_object", None) is True and hasattr(self.active_tab, "UpdateFilelist"):
             self.active_tab.UpdateFilelist(silence=True)
+
+    def _load_drive_details(self, drive):
+        """
+        ドライブがあるディスクの情報と、光学ドライブに入っているメディアの情報を別スレッドで調べる。
+        (DiskInfo または None, DiscMediaInfo または None) を返す。利用者が中止した場合は (False, None) を返す。
+        """
+        if drive.type == win32file.DRIVE_REMOTE:
+            return None, None  # ネットワークドライブは、接続できないと長く待たされるうえ、ディスクの情報はない
+        try:
+            return background_wait.run(disk_info.load_drive_details, drive.letter, drive.type == win32file.DRIVE_CDROM)
+        except background_wait.Canceled:
+            return False, None
+        except Exception:
+            self.log.exception("cannot get the details of the drive %s" % drive.letter)
+            return None, None
+
+    def _add_drive_details(self, d, disk, media):
+        """ディスクとメディアの情報を、詳細情報の項目に追加する"""
+        if disk is not None:
+            if disk.disk_numbers:
+                d.add(_("物理ディスク"), ", ".join(_("ディスク %d") % number for number in disk.disk_numbers))
+            if disk.model:
+                d.add(_("型番"), disk.model)
+            if disk.bus_type:
+                d.add(_("接続方式"), disk.bus_type)
+            if disk.is_ssd is not None:
+                d.add(_("ディスクの種類"), "SSD" if disk.is_ssd else "HDD")
+            if disk.size >= 0:
+                d.add(_("ディスクの容量"), misc.ConvertBytesTo(disk.size, misc.UNIT_AUTO, True))
+        if media is not None:
+            d.add(_("メディアの種類"), media.media_type if media.media_type else _("なし"))
+            if media.states:
+                d.add(_("メディアの状態"), _("、").join(media.states))
+            if media.free_for_writing >= 0:
+                d.add(_("書き込める容量"), misc.ConvertBytesTo(media.free_for_writing, misc.UNIT_AUTO, True))
 
 
 class FalconMenu:
