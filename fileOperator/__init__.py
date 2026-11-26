@@ -3,25 +3,86 @@
 # Copyright (C) 2019 Yukio Nozawa <personal@nyanchangames.com>
 # Note: All comments except these top lines will be written in Japanese.
 import logging
-import os
-import pickle
 import pywintypes
-import random
 import threading
-import win32api
-import win32event
+import win32wnet
 import winerror
 import wx
-from win32com.shell import shell, shellcon
 from simpleDialog import dialog
 
 import globalVars
 import misc
 
 from . import rename, changeAttribute, mkdir, trash, shortcut, symbolicLink, hardLink, delete, past
-from . import failedElement, confirmElement
+from . import failedElement, confirmElement, elevation
 
 """ファイルオペレーターのインスタンスを作って、辞書で支持を与えます。"""
+
+# 昇格したプロセスに渡すとき、割り当てたネットワークドライブのパスを UNC パスにする操作。
+# ショートカットなどは、作るものの中身（リンク先）が変わってしまうので変換しない
+_UNC_CONVERTIBLE_OPERATIONS = (past.VERB, delete.VERB, trash.VERB, mkdir.VERB)
+
+
+def _get_owner_window():
+    """UAC の画面の親にするウィンドウを返す。ない場合は 0。"""
+    window = getattr(getattr(globalVars, "app", None), "main_window", None)
+    try:
+        return window.GetHandle() if window else 0
+    except RuntimeError:  # ウィンドウが破棄されている
+        return 0
+
+
+def _to_unc(path):
+    """割り当てたネットワークドライブ上のパスを UNC パスにする。それ以外はそのまま返す。"""
+    if not isinstance(path, str) or len(path) < 2 or path[1] != ":":
+        return path
+    try:
+        return win32wnet.WNetGetUniversalName(path, 1)  # 1: UNIVERSAL_NAME_INFO_LEVEL
+    except pywintypes.error:  # ネットワークドライブではない
+        return path
+
+
+def _convert_targets_to_unc(instructions):
+    """
+    instructions["target"] のパスを UNC パスにした指示と、UNC パスから元のパスへの対応を返す。
+    target の要素は、パスか、貼り付けの場合は (コピー元, コピー先) のタプル。
+    """
+    unc_map = {}
+    if instructions.get("operation") not in _UNC_CONVERTIBLE_OPERATIONS:
+        return instructions, unc_map
+
+    def convert(path):
+        unc = _to_unc(path)
+        if unc != path:
+            unc_map[unc] = path
+        return unc
+
+    targets = []
+    for elem in instructions.get("target", []):
+        if isinstance(elem, tuple):
+            targets.append(tuple(convert(p) for p in elem))
+        else:
+            targets.append(convert(elem))
+    converted = dict(instructions)
+    converted["target"] = targets
+    return converted, unc_map
+
+
+def _restore_path(path, unc_map):
+    """UNC パスにしたパスを、元のパスに戻す。フォルダの中の項目は、フォルダの部分だけを戻す。"""
+    if not isinstance(path, str):
+        return path
+    for unc, original in unc_map.items():
+        if path == unc or path.startswith(unc.rstrip("\\") + "\\"):
+            return original + path[len(unc):]
+    return path
+
+
+def _restore_failed_paths(failed, unc_map):
+    """失敗した項目のパスを、UNC パスから元のパスに戻す。"""
+    for elem in failed:
+        elem.elem = _restore_path(elem.elem, unc_map)
+    return failed
 
 
 class FileOperator(object):
@@ -51,12 +112,7 @@ class FileOperator(object):
         self.resume = False
         self._cancel = threading.Event()
         self.is_counting = False  # 処理する項目を数えている間は、割合がわからない
-        if isinstance(instructions, str):
-            self.unpickle(instructions)
-            self.writeBack = instructions
-        else:
-            self.instructions = instructions
-        # end str or dict
+        self.instructions = instructions
     # end __init__
 
     def SetCallback(self, identifier, callable):
@@ -148,8 +204,6 @@ class FileOperator(object):
                 self.output["failed"])))
         if not self.elevated and retry > 0:
             self._elevate()  # 昇格してリトライ
-        if self.elevated:
-            self._postElevation()  # 昇格した後の後処理
         self.working = False
         self.log.info("Finished (%f sec)" % self.opTimer.elapsed)
         self._doCallback("finished")
@@ -166,33 +220,27 @@ class FileOperator(object):
 # end _doCallback
 
     def _elevate(self):
-        """権限昇格し、アクセス拒否になった項目を再実行する。"""
-        if globalVars.app.is_frozen() is False:  # ビルド済みバイナリじゃないと昇格できないようにしてる
-            self._show_error(_("エラー"), _("管理者権限の操作を行うためには、Falconをビルドして実行する必要があります。"))
-            if self.output["retry"]["operation"] in (past.VERB, delete.VERB, trash.VERB):  # 進行状況の詳細に表示するため
-                self.output["failed"].extend(FileOperator(self.output["retry"]).FailAll())
-            return
-        # end ビルドしてないとダメ
-        o = FileOperator(self.output["retry"])
-        fn = o.pickle()
+        """権限昇格し、アクセス拒否になった項目を再実行する。falcon 自身を、ファイル操作だけを行うモードで管理者権限で起動する。"""
+        # 管理者権限のプロセスからは、割り当てたネットワークドライブが見えないので、UNC パスにして渡す
+        instructions, unc_map = _convert_targets_to_unc(self.output["retry"])
+        o = FileOperator(instructions)
         try:
-            ret = shell.ShellExecuteEx(
-                shellcon.SEE_MASK_NOCLOSEPROCESS, 0, "runas", "fileop.exe", fn)
-        except pywintypes.error as e:
+            result = elevation.run_elevated(instructions, _get_owner_window())
+        except elevation.ElevationCanceled:
+            self.log.info("Elevation was canceled by the user.")
+            self.output["failed"].extend(_restore_failed_paths(o.FailAll(), unc_map))  # FailAll はリストを返すので、要素として追加する
+            return
+        except elevation.ElevationError as e:
             self.log.error("Cannot elevate (%s)" % str(e))
-            self.output["failed"].extend(o.FailAll())  # FailAll はリストを返すので、要素として追加する
-            self._show_error("error", "error")
+            self.output["failed"].extend(_restore_failed_paths(o.FailAll(), unc_map))
             return
         # end except
-        pid = ret["hProcess"]
-        win32event.WaitForSingleObject(pid, win32event.INFINITE)
-        win32api.CloseHandle(pid)
         # 昇格先で失敗した項目を拾ってくる
-        o = FileOperator(fn)
-        self.output["succeeded"] += o.output["succeeded"]
-        l = len(self.output["failed"])
-        self.output["failed"][l:l] = o.output["failed"]
-        for elem in o.output["need_to_confirm"].Iterate():
+        self.output["succeeded"] += result["succeeded"]
+        self.output["failed"].extend(_restore_failed_paths(result["failed"], unc_map))
+        for elem in result["confirmations"]:
+            elem.elem.path = _restore_path(elem.elem.path, unc_map)
+            elem.elem.destpath = _restore_path(elem.elem.destpath, unc_map)
             self.output["need_to_confirm"].Append(elem)
         self.log.debug("after elevation: success %s, failure %s." %
                        (self.output["succeeded"], len(self.output["failed"])))
@@ -203,13 +251,6 @@ class FileOperator(object):
             dialog(title, message)
         else:
             self.log.error(message)
-
-    def _postElevation(self):
-        """昇格して処理したので、状態を書き戻す。"""
-        self.log.debug(
-            "Processing post elevation, write back to %s." %
-            self.writeBack)
-        self.pickle(self.writeBack)
 
     def FailAll(self):
         """今ある要素を、全部失敗したことにする。権限昇格失敗したときに使う。"""
@@ -264,77 +305,3 @@ class FileOperator(object):
             # end overwrite なら追加
         # end for
     # end UpdateConfirmation
-
-    def pickle(self, name=""):
-        """ファイルオペレーションの現在の状態を、テンポラリフォルダに保存する。保存したファイル名(完全なファイル名ではない)を帰す。これをそのまま unpickle に渡す。固められなかったらFalse。name に指定すると、強制的にその名前で書く。"""
-        temp = win32api.GetEnvironmentVariable("TEMP")
-        if name != "":
-            fi = name + "i"
-            fo = name + "o"
-        else:
-            while(True):
-                r = random.randint(0, 9999)
-                fi = "falcon%04di" % r
-                fo = "falcon%04do" % r
-                if os.path.isfile(fi) or os.path.isfile(fo):
-                    continue
-                break
-            # end 保存できるファイル名を探す処理
-        # end 強制指定かそうでないか
-        self.log.debug(
-            "Saving file operation status: directory=%s, filename=%s, %s" %
-            (temp, fi, fo))
-        try:
-            f = open(temp + "\\" + fi, "wb")
-        except IOError:
-            self.log.error("Failed to write to %s" % fi)
-            return False
-        # end except
-        pickle.dump(self.instructions, f)
-        f.close()
-        try:
-            f = open(temp + "\\" + fo, "wb")
-        except IOError as er:
-            self.debug.error("Failed to write to %s" % fo)
-            return False
-        # end except
-        pickle.dump(self.output, f)
-        f.close()
-        return "falcon%04d" % (r) if name == "" else name
-    # end pickle
-
-    def unpickle(self, name):
-        """ファイルから状態を読み込む。よみこめなかったらFalse。"""
-        temp = win32api.GetEnvironmentVariable("TEMP")
-        self.log.debug("Loading fileOp state from %s" % name)
-        fi = name + "i"
-        fo = name + "o"
-        try:
-            f = open(temp + "\\" + fi, "rb")
-        except IOError as er:
-            self.log.error("Cannot read %s (%s)" % (fi, str(er)))
-            return False
-        # end except
-        try:
-            self.instructions = pickle.load(f)
-        except (pickle.PickleError, EOFError) as err:
-            self.log.error("Cannot extract %s(%s)" % (fi, str(err)))
-            return False
-        # end except
-        f.close()
-        try:
-            f = open(temp + "\\" + fo, "rb")
-        except IOError as er:
-            self.log.error("Cannot read %s (%s)" % (fo, str(er)))
-            return False
-        # end except
-        try:
-            self.output = pickle.load(f)
-        except (pickle.PickleError, EOFError) as err:
-            self.log.error("Cannot extract %s(%s)" % (fo, str(err)))
-            return False
-        # end except
-        f.close()
-        os.remove(temp + "\\" + fi)
-        os.remove(temp + "\\" + fo)
-        return True
