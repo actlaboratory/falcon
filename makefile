@@ -3,7 +3,6 @@ run:
 
 setup:
 	py -m pip install -r requirements.txt
-	py -m pip install --no-deps -r requirements-nodeps.txt
 
 fmt:
 	py -m autopep8 -r -i -a -a --ignore=E402,E721 --max-line-length 150 .
