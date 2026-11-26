@@ -455,8 +455,9 @@ class FileListTab(base.FalconTabBase):
         # コピー元、コピー先をそれぞれ設定。ドラッグアンドドロップの場合も、パスのリストで渡される
         target = [(path, os.path.join(dest, os.path.basename(path))) for path in target]
 
-        # 自身のサブフォルダへの貼り付けはできない
+        # 自身やそのサブフォルダへの貼り付けはできない。同じフォルダへの貼り付けは、名前を変えればできる
         errors = []
+        sub_dir_errors = []
         # リンクを経由した場所でも判定できるよう、実際のパスで比べる。項目自体がリンクの場合は、リンクのある場所で比べる
         destination = os.path.normcase(os.path.realpath(dest))
         real_parents = {}
@@ -466,10 +467,22 @@ class FileListTab(base.FalconTabBase):
             if parent not in real_parents:
                 real_parents[parent] = os.path.realpath(parent)
             source = os.path.normcase(os.path.join(real_parents[parent], os.path.basename(i)))
-            if destination == source or destination.startswith(os.path.join(source, "")) or os.path.dirname(source) == destination:
+            if destination == source or destination.startswith(os.path.join(source, "")):
+                sub_dir_errors.append(it)
+            elif os.path.dirname(source) == destination:
                 errors.append(i)
             # end サブディレクトリ、あるいは、同じディレクトリへのコピー/貼り付け
         # end 事前チェック
+        if sub_dir_errors:
+            # 名前を変えても自身の中に入ることに変わりはないので、選択肢を出さずにスキップする
+            for it in sub_dir_errors:
+                target.remove(it)
+            lines = [path for path, dummy in sub_dir_errors[:_MAX_FAILED_LINES]]
+            if len(sub_dir_errors) > _MAX_FAILED_LINES:
+                lines.append(_("ほか %(count)d件") % {"count": len(sub_dir_errors) - _MAX_FAILED_LINES})
+            dialog(_("エラー"), _("自身またはそのサブフォルダへの%(op)sはできないため、次の項目をスキップします。\n\n%(lines)s") % {
+                "op": op_str, "lines": "\n".join(lines)})
+        # end 自身のサブフォルダへの貼り付け
         if errors:
             all = ""
             for i in errors:
@@ -492,7 +505,7 @@ class FileListTab(base.FalconTabBase):
                 ]
                 ret = globalVars.app.main_window.showSubWindow(
                     views.OperationSelecter.OperationSelecterWindow, _("ファイル操作確認"),
-                    views.OperationSelecter.OperationSelecterParameters(_("自身のサブディレクトリへの%sはできません。") % op_str, info, views.OperationSelecter.GetMethod("OWN_SUB_DIR"), False)).user_object
+                    views.OperationSelecter.OperationSelecterParameters(_("同じフォルダへの%sはできません。") % op_str, info, views.OperationSelecter.GetMethod("OWN_SUB_DIR"), False)).user_object
                 if ret["all"]:
                     all = ret["response"]
                 # end 「以降も同様に処理」が指定されていたら、そのレスポンスを覚える

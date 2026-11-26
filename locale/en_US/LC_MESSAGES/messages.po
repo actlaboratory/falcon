@@ -2532,3 +2532,19 @@ msgstr "Search again"
 
 #~ msgid "ファイル名（空欄なら種類ごとの既定の名前）"
 #~ msgstr "File name (the default name for the type if empty)"
+
+#: tabs\fileList.py
+#, python-format
+msgid ""
+"自身またはそのサブフォルダへの%(op)sはできないため、次の項目をスキップします。\n"
+"\n"
+"%(lines)s"
+msgstr ""
+"Cannot %(op)s an item into itself or its subfolder, so the following items will be skipped.\n"
+"\n"
+"%(lines)s"
+
+#: tabs\fileList.py
+#, python-format
+msgid "同じフォルダへの%sはできません。"
+msgstr "Cannot %s to the same folder."
