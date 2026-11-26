@@ -10,6 +10,7 @@
 
 import os
 import threading
+import win32file
 import wx
 
 import browsableObjects
@@ -228,14 +229,20 @@ class DriveListTab(base.FalconTabBase):
 
     def OpenContextMenu(self, event):
         menu = wx.Menu()
-        if isinstance(self.GetFocusedElement(), browsableObjects.Drive):
-            globalVars.app.main_window.menu.register_menu_command(menu, (
-                "TOOL_EJECT_DRIVE",
-                "TOOL_EJECT_DEVICE",
-            ))
+        focused = self.GetFocusedElement()
+        if isinstance(focused, browsableObjects.Drive):
+            if focused.type == win32file.DRIVE_REMOTE:
+                commands = ("TOOL_DISCONNECT_NETWORK_DRIVE",)
+            else:
+                commands = ("TOOL_EJECT_DRIVE", "TOOL_EJECT_DEVICE")
+            globalVars.app.main_window.menu.register_menu_command(menu, commands)
+        elif isinstance(focused, browsableObjects.NetworkPlace):
+            globalVars.app.main_window.menu.register_menu_command(menu, ("TOOL_REMOVE_NETWORK_PLACE",))
         globalVars.app.main_window.menu.register_menu_command(menu, (
             "VIEW_DRIVE_INFO",
-            "FILE_SHOWPROPERTIES"
+            "FILE_SHOWPROPERTIES",
+            "TOOL_MAP_NETWORK_DRIVE",
+            "TOOL_ADD_NETWORK_PLACE",
         ))
         globalVars.app.main_window.PopupMenu(menu)
 

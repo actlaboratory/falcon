@@ -3,6 +3,8 @@
 # Copyright (C) 2021 yamahubuki <itiro.ishino@gmail.com>
 # Note: All comments except these top lines will be written in Japanese.
 
+import win32file
+
 import browsableObjects
 import tabs.navigator  # 全てのタブのモジュールを、循環importにならない順序で読み込む
 import menuItemsStore
@@ -38,7 +40,9 @@ tabTypeBlockList = {
     ],
     tabs.fileList.FileListTab: [
         "TOOL_EJECT_DRIVE",
-        "TOOL_EJECT_DEVICE"
+        "TOOL_EJECT_DEVICE",
+        "TOOL_DISCONNECT_NETWORK_DRIVE",
+        "TOOL_REMOVE_NETWORK_PLACE"
     ],
     tabs.NetworkResourceList.NetworkResourceListTab: [
         "FILE_RENAME",
@@ -65,6 +69,8 @@ tabTypeBlockList = {
         "TOOL_EXEC_PROGRAM",
         "TOOL_EJECT_DRIVE",
         "TOOL_EJECT_DEVICE",
+        "TOOL_DISCONNECT_NETWORK_DRIVE",
+        "TOOL_REMOVE_NETWORK_PLACE",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
@@ -98,6 +104,8 @@ tabTypeBlockList = {
         "TOOL_ADDPATH",
         "TOOL_EJECT_DRIVE",
         "TOOL_EJECT_DEVICE",
+        "TOOL_DISCONNECT_NETWORK_DRIVE",
+        "TOOL_REMOVE_NETWORK_PLACE",
         "TOOL_EXEC_PROGRAM",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
@@ -127,6 +135,8 @@ for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
         "TOOL_ADDPATH",
         "TOOL_EJECT_DRIVE",
         "TOOL_EJECT_DEVICE",
+        "TOOL_DISCONNECT_NETWORK_DRIVE",
+        "TOOL_REMOVE_NETWORK_PLACE",
         "TOOL_EXEC_PROGRAM"
     ]
 
@@ -159,6 +169,8 @@ selectedItemCountBlockList = {
         "TOOL_ADDPATH",
         "TOOL_EJECT_DRIVE",
         "TOOL_EJECT_DEVICE",
+        "TOOL_DISCONNECT_NETWORK_DRIVE",
+        "TOOL_REMOVE_NETWORK_PLACE",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
@@ -179,6 +191,8 @@ selectedItemCountBlockList = {
         "TOOL_HASHCALC",
         "TOOL_EJECT_DRIVE",
         "TOOL_EJECT_DEVICE",
+        "TOOL_DISCONNECT_NETWORK_DRIVE",
+        "TOOL_REMOVE_NETWORK_PLACE",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
@@ -206,14 +220,33 @@ selectedItemTypeBlockList = {
         "TOOL_EJECT_DEVICE"
     ],
     browsableObjects.Drive: [
+        "TOOL_REMOVE_NETWORK_PLACE",
     ],
     browsableObjects.NetworkResource: [
         "FILE_RENAME",
         "TOOL_EJECT_DRIVE",
         "TOOL_EJECT_DEVICE",
+        "TOOL_DISCONNECT_NETWORK_DRIVE",
+        "TOOL_REMOVE_NETWORK_PLACE",
+        "READ_CONTENT_PREVIEW"
+    ],
+    browsableObjects.NetworkPlace: [
+        "FILE_RENAME",  # ドライブ一覧での名前の変更はボリュームラベルの変更になるため
+        "TOOL_EJECT_DRIVE",
+        "TOOL_EJECT_DEVICE",
+        "TOOL_DISCONNECT_NETWORK_DRIVE",
         "READ_CONTENT_PREVIEW"
     ],
 }
+
+# ドライブの種類によるブロック。ネットワークドライブとそれ以外のドライブで、使える機能が違う
+remoteDriveBlockList = [
+    "TOOL_EJECT_DRIVE",
+    "TOOL_EJECT_DEVICE",
+]
+localDriveBlockList = [
+    "TOOL_DISCONNECT_NETWORK_DRIVE",
+]
 # 検索結果のフォルダ・ファイルは通常のファイル・フォルダと同じにする
 selectedItemTypeBlockList[browsableObjects.SearchedFile] = selectedItemTypeBlockList[browsableObjects.File]
 selectedItemTypeBlockList[browsableObjects.SearchedFolder] = selectedItemTypeBlockList[browsableObjects.Folder]
@@ -235,6 +268,8 @@ for k, l in selectedItemTypeBlockList.items():
     l3[k] = []
     for r in l:
         l3[k].append(menuItemsStore.getRef(r))
+_remote_drive_refs = {menuItemsStore.getRef(r) for r in remoteDriveBlockList}
+_local_drive_refs = {menuItemsStore.getRef(r) for r in localDriveBlockList}
 
 # 指定されたactiveTabにおいて無効なメニューの一覧を返す
 
@@ -267,6 +302,11 @@ def testMenu(tab):
             ret |= set(l3[i])
         except KeyError:
             pass
+
+    # L4 ドライブの種類によるブロック
+    for i in lst:
+        if isinstance(i, browsableObjects.Drive):
+            ret |= _remote_drive_refs if i.type == win32file.DRIVE_REMOTE else _local_drive_refs
 
     # 結果を返却
     return ret

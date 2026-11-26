@@ -47,11 +47,14 @@ import keymap
 import menuItemsDic
 import menuItemsStore
 import misc
+import network_drive
+import network_place
 import network_resource
 import operation_manager
 import reparse_link
 import shortcut_link
 import tabs.navigator
+import views.add_network_place
 import views.bulk_rename
 import views.changeAttribute
 import views.compress
@@ -62,6 +65,7 @@ import views.fonttest
 import views.globalKeyConfig
 import views.key_value_setting
 import views.makeHash
+import views.map_network_drive
 import views.makeShortcut
 import views.menuBlocker
 import views.new_file
@@ -232,6 +236,10 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("TOOL_ADDPATH", "P"),
                 _menu_item("TOOL_EJECT_DRIVE", "E"),
                 _menu_item("TOOL_EJECT_DEVICE", "V"),
+                _menu_item("TOOL_MAP_NETWORK_DRIVE", "M"),
+                _menu_item("TOOL_DISCONNECT_NETWORK_DRIVE", "N"),
+                _menu_item("TOOL_ADD_NETWORK_PLACE", "A"),
+                _menu_item("TOOL_REMOVE_NETWORK_PLACE", "L"),
             ]),
             viewkit.TopMenuDefinition(_("表示"), "V", [
                 _menu_item("VIEW_SORTNEXT", "N"),
@@ -745,6 +753,10 @@ class MainWindow(viewkit.MainWindow):
             "TOOL_ADDPATH": self._on_add_path,
             "TOOL_EJECT_DRIVE": self._on_eject_drive,
             "TOOL_EJECT_DEVICE": self._on_eject_device,
+            "TOOL_MAP_NETWORK_DRIVE": self._on_map_network_drive,
+            "TOOL_DISCONNECT_NETWORK_DRIVE": self._on_disconnect_network_drive,
+            "TOOL_ADD_NETWORK_PLACE": self._on_add_network_place,
+            "TOOL_REMOVE_NETWORK_PLACE": self._on_remove_network_place,
 
             "VIEW_SORTNEXT": lambda event: self._delaied_call(self._sort_next),
             "VIEW_SORTSELECT": tab("SortSelect"),
@@ -1050,6 +1062,145 @@ class MainWindow(viewkit.MainWindow):
             self.update_file_list(False)
         elif ret == errorCodes.UNKNOWN:
             dialog(_("エラー"), _("デバイスの取り外しに失敗しました。"))
+
+    def _get_network_path_for_input(self):
+        r"""
+        ネットワークドライブの割り当てなどで、フォルダの入力欄に最初に入れておくパスを返す。
+        選択中の項目がネットワーク上のフォルダ・コンピューターならそのパス、そうでなければ表示中の場所が \\ で始まればそのパス。
+        """
+        elem = self.active_tab.GetFocusedElement()
+        if isinstance(elem, (browsableObjects.Folder, browsableObjects.NetworkResource)) and network_resource.is_unc_path(elem.fullpath):
+            return network_drive.get_initial_path(elem.fullpath)
+        return network_drive.get_initial_path(getattr(self.active_tab.listObject, "rootDirectory", ""))
+
+    def _update_drive_lists(self, is_focus_target=None):
+        """
+        開いているドライブ一覧のタブを最新の状態に更新する。
+        is_focus_target を指定した場合は、アクティブなタブで、それが True を返す項目にフォーカスする。
+        """
+        for tab in self.tabs:
+            if not isinstance(tab, tabs.driveList.DriveListTab):
+                continue
+            tab.UpdateFilelist(silence=True)
+            if tab is not self.active_tab or is_focus_target is None:
+                continue
+            for index in range(len(tab.listObject)):
+                if is_focus_target(tab.listObject.GetElement(index)):
+                    tab.Focus(index)
+                    break
+
+    def _ask_yes_no(self, title, message):
+        """はい・いいえで確認する。既定は「いいえ」。「はい」ならTrueを返す。"""
+        dlg = wx.MessageDialog(self, message, title, wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
+        result = dlg.ShowModal()
+        dlg.Destroy()
+        return result == wx.ID_YES
+
+    def _on_map_network_drive(self, event):
+        """ネットワークドライブを割り当てる"""
+        letters = network_drive.get_free_letters()
+        if not letters:
+            dialog(_("エラー"), _("割り当てられるドライブ文字がありません。"))
+            return
+        parameters = views.map_network_drive.MapNetworkDriveParameters(letters, self._get_network_path_for_input())
+        result = self.showSubWindow(views.map_network_drive.MapNetworkDriveWindow, _("ネットワークドライブの割り当て"), parameters)
+        if result.code == wx.ID_CANCEL:
+            return
+        request = result.user_object
+        try:
+            network_drive.map_drive(request, self.GetHandle())
+        except background_wait.Canceled:
+            return
+        except pywintypes.error as err:
+            self.log.error("cannot map %s to %s: %s" % (request.letter, request.remote_path, err))
+            if not network_resource.is_cancelled_error(err):
+                dialog(_("エラー"), network_drive.get_map_error_message(err, request))
+            return
+        self._update_drive_lists(lambda elem: isinstance(elem, browsableObjects.Drive) and elem.letter == request.letter)
+        self.app.say(_("%(letter)s: ドライブに割り当てました。") % {"letter": request.letter})
+
+    def _on_disconnect_network_drive(self, event):
+        """選択中のネットワークドライブを切断する"""
+        drive = self.active_tab.GetFocusedElement()
+        # ネットワークドライブ以外では menuBlocker で無効にしている
+        if not isinstance(drive, browsableObjects.Drive) or drive.type != win32file.DRIVE_REMOTE:
+            return
+        try:
+            result = network_drive.disconnect(drive.letter)
+            if result == network_drive.DisconnectResult.IN_USE:
+                if not self._ask_yes_no(_("確認"), _("%(letter)s: ドライブのファイルが使用中です。強制的に切断しますか？\n開いているファイルの、保存していない変更は失われることがあります。") % {"letter": drive.letter}):
+                    return
+                result = network_drive.disconnect(drive.letter, force=True)
+        except background_wait.Canceled:
+            return
+        except pywintypes.error as err:
+            self.log.error("cannot disconnect %s: %s" % (drive.letter, err))
+            dialog(_("エラー"), _("ネットワークドライブを切断できませんでした。\n(%(error)s)") % {"error": err.strerror})
+            return
+        if result == network_drive.DisconnectResult.NOT_CONNECTED:
+            dialog(_("エラー"), _("%(letter)s: ドライブは既に切断されています。") % {"letter": drive.letter})
+        else:
+            self.app.say(_("%(letter)s: ドライブを切断しました。") % {"letter": drive.letter})
+        self._update_drive_lists()
+
+    def _on_add_network_place(self, event):
+        """ネットワークの場所を追加する"""
+        result = self.showSubWindow(views.add_network_place.AddNetworkPlaceWindow, _("ネットワークの場所の追加"), self._get_network_path_for_input())
+        if result.code == wx.ID_CANCEL:
+            return
+        request = result.user_object
+        if not self._check_network_folder(request.target):
+            return
+        try:
+            folder = network_place.add(request.name, request.target)
+        except (OSError, pywintypes.error, pywintypes.com_error) as err:
+            self.log.error("cannot add network place %s: %s" % (request.name, err))
+            dialog(_("エラー"), _("ネットワークの場所を追加できませんでした。\n(%(error)s)") % {"error": err})
+            return
+        self._update_drive_lists(lambda elem: isinstance(elem, browsableObjects.NetworkPlace) and elem.place_folder == folder)
+        self.app.say(_("ネットワークの場所を追加しました。"))
+
+    def _check_network_folder(self, path):
+        """
+        ネットワーク上のフォルダを開けるかどうかを確かめ、開けなければエラーを表示してFalseを返す。
+        認証が必要な場合は、資格情報の入力画面が出る。コンピューター(\\server)は確かめずにTrueを返す。
+        """
+        if network_resource.is_server_path(path):
+            return True
+        try:
+            status = network_resource.check_path_with_auth(path, self.GetHandle())
+        except background_wait.Canceled:
+            return False
+        except pywintypes.error as err:
+            if network_resource.is_connection_error(err.winerror):
+                dialog(_("エラー"), network_resource.get_connection_error_message(path, err.strerror))
+            elif not network_resource.is_cancelled_error(err):
+                dialog(_("エラー"), _("%(path)s に接続できませんでした。\n(%(error)s)") % {"path": path, "error": err.strerror})
+            return False
+        if status.is_connection_error():
+            dialog(_("エラー"), network_resource.get_connection_error_message(path, status.message))
+            return False
+        if not status.exists or status.is_file:
+            dialog(_("エラー"), _("フォルダ %(path)s が見つかりません。") % {"path": path})
+            return False
+        return True
+
+    def _on_remove_network_place(self, event):
+        """選択中のネットワークの場所を削除する"""
+        place = self.active_tab.GetFocusedElement()
+        # ネットワークの場所以外では menuBlocker で無効にしている
+        if not isinstance(place, browsableObjects.NetworkPlace):
+            return
+        if not self._ask_yes_no(_("確認"), _("ネットワークの場所「%(name)s」を削除しますか？\nリンク先のフォルダとその中身は削除されません。") % {"name": place.basename}):
+            return
+        try:
+            network_place.remove(place.place_folder)
+        except (OSError, ValueError) as err:
+            self.log.error("cannot remove network place %s: %s" % (place.place_folder, err))
+            dialog(_("エラー"), _("ネットワークの場所を削除できませんでした。\n(%(error)s)") % {"error": err})
+            return
+        self._update_drive_lists()
+        self.app.say(_("ネットワークの場所を削除しました。"))
 
     def _sort_next(self):
         """sortNext アクションを実行。"""
