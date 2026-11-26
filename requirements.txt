@@ -6,8 +6,10 @@ https://github.com/actlaboratory/history/archive/v1.0.3.zip
 https://github.com/actlaboratory/viewkit/archive/cb8475e5270563c6bd19fbdf200098046fb0cda1.zip
 autopep8
 pillow==9.5
-# SFTP の接続に使う。cryptography などの依存パッケージも 32bit Python 3.12 向けのビルド済みファイルがある
+# SFTP の接続に使う
 paramiko==5.1.0
+# paramiko が利用するパッケージ。cryptography 49 以降には 32bit 向けのビルド済みファイルがなく、Rust でのビルドにも失敗するため固定する
+cryptography==48.0.1
 https://github.com/actlaboratory/proxyutil/archive/0.2.5.zip
 # proxyUtil が利用するパッケージ。32bit Python 3.12 向けのビルド済みファイルがある版に固定する
 dukpy==0.3.1

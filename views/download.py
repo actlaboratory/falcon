@@ -9,14 +9,14 @@ import os
 import viewkit
 import wx
 
-import remote_download
+import remote_transfer
 import simpleDialog
 
 
 class DownloadWindow(viewkit.SubWindow):
     """
     保存先のフォルダと、同じ名前の項目があるときの扱いを入力するウィンドウ。
-    parameters は保存先の初期値。結果は (保存先のフォルダ, remote_download.CONFLICT_*)。
+    parameters は保存先の初期値。結果は (保存先のフォルダ, remote_transfer.CONFLICT_*)。
     """
 
     def __init__(self, parent, ctx, title, parameters: str):
@@ -29,7 +29,7 @@ class DownloadWindow(viewkit.SubWindow):
         self.directory.hideScrollBar(wx.HORIZONTAL)
         directory_creator.button(_("参照"), self._on_browse)
         self.conflict, dummy = creator.combobox(
-            _("同じ名前の項目があるとき"), [_("別の名前で保存する"), _("保存しない"), _("上書きする")], state=0)
+            _("同じ名前の項目があるとき"), remote_transfer.get_conflict_names(), state=0)
 
         footer = self.creator.makeChild(wx.HORIZONTAL, 20, style=wx.ALIGN_RIGHT)
         footer.okbutton(_("ＯＫ"), self._on_ok)
@@ -48,7 +48,7 @@ class DownloadWindow(viewkit.SubWindow):
             simpleDialog.errorDialog(_("保存先のフォルダを、ドライブ名から正しく入力してください。"), self)
             self.directory.SetFocus()
             return
-        self._result = (os.path.abspath(directory), remote_download.CONFLICTS[max(0, self.conflict.GetSelection())])
+        self._result = (os.path.abspath(directory), remote_transfer.CONFLICTS[max(0, self.conflict.GetSelection())])
         event.Skip()
 
     def result(self):

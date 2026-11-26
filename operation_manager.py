@@ -22,7 +22,7 @@ import clipboard
 import fileOperator
 import globalVars
 import operation_result
-import remote_download
+import remote_transfer
 import reparse_link
 from fileOperator import helper
 
@@ -443,17 +443,19 @@ class ExtractOperation(ArchiveOperation):
         return super().get_finish_message()
 
 
-class DownloadOperation(Operation):
-    """FTP・SFTP のサーバーからのダウンロード。remote_download.DownloadJob を実行する。"""
+class RemoteOperation(Operation):
+    """FTP・SFTP のサーバーへの操作。remote_transfer.RemoteJob の派生クラスを実行する。"""
 
-    def __init__(self, request):
-        super().__init__(_("ダウンロード"), {request.directory}, [request.directory])
-        self.set_title([item.get_name() for item in request.items], request.directory)
+    def __init__(self, name, directories, paths, request):
+        super().__init__(name, directories, paths)
         self._request = request
         self._job = None
 
+    def _make_job(self):
+        raise NotImplementedError
+
     def _start_thread(self):
-        self._job = remote_download.DownloadJob(self._request)
+        self._job = self._make_job()
         self._job.start()
 
     def is_thread_alive(self):
@@ -497,6 +499,47 @@ class DownloadOperation(Operation):
         if self.state == FINISHED and self._get_warning_count():
             return _("%(name)sが完了しました。注意が%(count)d件あります。") % {"name": self.name, "count": self._get_warning_count()}
         return super().get_finish_message()
+
+
+class DownloadOperation(RemoteOperation):
+    """FTP・SFTP のサーバーからのダウンロード"""
+
+    def __init__(self, request):
+        super().__init__(_("ダウンロード"), {request.directory}, [request.directory], request)
+        self.set_title([item.get_name() for item in request.items], request.directory)
+
+    def _make_job(self):
+        return remote_transfer.DownloadJob(self._request)
+
+
+class UploadOperation(RemoteOperation):
+    """FTP・SFTP のサーバーへのアップロード。終わったら、アップロード先のフォルダの一覧を更新する"""
+
+    def __init__(self, request):
+        url = request.location.get_url()
+        super().__init__(_("アップロード"), {url}, [url], request)
+        self.set_title([item.local_path for item in request.items], url)
+
+    def _make_job(self):
+        return remote_transfer.UploadJob(self._request)
+
+
+class RemoteDeleteOperation(RemoteOperation):
+    """FTP・SFTP のサーバー上の項目の削除。サーバーにはごみ箱がないので、完全に削除する"""
+
+    lane = _LANE_DELETE
+
+    def __init__(self, request):
+        url = request.location.get_url()
+        super().__init__(_("削除"), {url}, [request.location.get_url(item.path) for item in request.items], request)
+        names = [item.get_name() for item in request.items]
+        if len(names) == 1:
+            self.title = _("%(name)s: %(item)s") % {"name": self.name, "item": names[0]}
+        else:
+            self.title = _("%(name)s: %(count)d項目") % {"name": self.name, "count": len(names)}
+
+    def _make_job(self):
+        return remote_transfer.DeleteJob(self._request)
 
 
 class OperationManager:

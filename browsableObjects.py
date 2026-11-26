@@ -470,9 +470,12 @@ class RemoteFile(FalconBrowsableBase):
     ドライブ一覧のファイルと同じ列（名前・サイズ・更新日時・種類）で表示する。
     """
 
-    def Initialize(self, location, path, size=-1, modDate=None, typeString="", hIcon=-1):
+    def Initialize(self, location, path, size=-1, modDate=None, typeString="", hIcon=-1, permissions=None, is_link=False):
         """必要な情報をセットする。location は remote_storage.Location"""
         self.location = location
+        # UNIX のパーミッション（わからない場合は None）と、シンボリックリンクかどうか
+        self.permissions = permissions
+        self.is_link = is_link
         self.path = path
         self.basename = path.rsplit("/", 1)[-1]
         self.fullpath = location.get_url(path)

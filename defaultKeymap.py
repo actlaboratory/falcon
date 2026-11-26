@@ -72,6 +72,7 @@ defaultKeymap["MAINVIEW"] = {
     "TOOL_ADD_NETWORK_PLACE": "",
     "TOOL_REMOVE_NETWORK_PLACE": "",
     "TOOL_DOWNLOAD": "ctrl+d",
+    "TOOL_UPLOAD": "ctrl+u",
 
     "VIEW_SORTNEXT": "shift+F1",
     "VIEW_SORTSELECT": "ctrl+S",

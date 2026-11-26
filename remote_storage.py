@@ -3,7 +3,8 @@
 # Note: All comments except these top lines will be written in Japanese.
 
 """
-FTP・FTPS・SFTP のサーバーに接続し、フォルダの一覧の取得とファイルのダウンロードを行う処理です。
+FTP・FTPS・SFTP のサーバーに接続し、フォルダの一覧の取得、ファイルの転送（ダウンロード・アップロード）、
+フォルダの作成、削除、名前の変更、パーミッションの変更を行う処理です。
 
 場所は「ftp://ユーザー名@サーバー:ポート/パス」の形の URL で表します。
 - ftp: 暗号化しない FTP
@@ -19,6 +20,7 @@ import base64
 import datetime
 import ftplib
 import hashlib
+import io
 import logging
 import os
 import posixpath
@@ -124,12 +126,18 @@ class Location:
 class Entry:
     """フォルダの中の1つの項目"""
 
-    def __init__(self, name, is_dir, size=-1, modified=None):
+    def __init__(self, name, is_dir, size=-1, modified=None, permissions=None, precision=1, is_link=False):
         self.name = name
         self.is_dir = is_dir
+        # シンボリックリンクかどうか。is_dir はリンク先がフォルダかどうかを表す
+        self.is_link = is_link
         self.size = size
         # 更新日時（タイムゾーン付きの datetime）。わからない場合は None
         self.modified = modified
+        # UNIX のパーミッション（0o755 など）。わからない場合は None
+        self.permissions = permissions
+        # 更新日時の精度（秒）。FTP の LIST では分や日までしかわからない
+        self.precision = precision
 
 
 class Credentials:
@@ -210,6 +218,51 @@ def get_parent_path(path):
 def join_path(directory, name):
     """フォルダのパスと名前をつなげる"""
     return posixpath.join(directory, name)
+
+
+def get_name(path):
+    """パスの最後の名前を返す"""
+    return path.rstrip("/").rsplit("/", 1)[-1]
+
+
+def validate_name(name):
+    """サーバー上のファイル・フォルダの名前として使えるかどうかを調べ、使えなければ理由を返す。使えれば空文字列"""
+    if name.strip() == "":
+        return _("名前を入力してください。")
+    if "/" in name or "\\" in name or "\0" in name:
+        return _("名前に / や \\ は使えません。")
+    if name in (".", ".."):
+        return _("この名前は使えません。")
+    return ""
+
+
+def is_same_server(a, b):
+    """2つの Location が、同じサーバーに同じユーザーで接続するものかどうかを返す"""
+    return a.get_server_key() == b.get_server_key() and a.user == b.user
+
+
+def format_permissions(mode):
+    """パーミッションを rwxr-xr-x (755) の形の文字列にする"""
+    if mode is None:
+        return ""
+    text = ""
+    for shift in (6, 3, 0):
+        bits = (mode >> shift) & 7
+        text += ("r" if bits & 4 else "-") + ("w" if bits & 2 else "-") + ("x" if bits & 1 else "-")
+    return "%s (%03o)" % (text, mode & 0o777)
+
+
+def _parse_permission_string(text):
+    """LIST の rwxr-xr-x の部分をパーミッションの数値にする。わからなければ None"""
+    if len(text) < 9:
+        return None
+    mode = 0
+    for index, char in enumerate(text[:9]):
+        if char not in "-rwxsStT":
+            return None
+        if char != "-" and char not in "ST":
+            mode |= 1 << (8 - index)
+    return mode
 
 
 # ---- 資格情報 ----
@@ -350,12 +403,66 @@ class Client:
         """パスの項目を Entry で返す。見つからなければ RemoteError"""
         raise NotImplementedError
 
-    def download(self, path, local_path, on_progress=None):
+    def download(self, path, local_path, on_progress=None, offset=0):
         """
         ファイルをダウンロードする。on_progress(今回読んだバイト数) を呼ぶ。
-        on_progress が Canceled を投げると中止し、途中まで書いたファイルを消す。
+        offset を指定した場合は、その位置から読み、ローカルのファイルの末尾に書き足す（続きからの転送）。
+        on_progress が Canceled を投げると中止する。offset が 0 の場合は、途中まで書いたファイルを消す。
         """
         raise NotImplementedError
+
+    def upload(self, local_path, path, on_progress=None, offset=0):
+        """
+        ファイルをアップロードする。on_progress(今回送ったバイト数) を呼ぶ。
+        offset を指定した場合は、ローカルのファイルのその位置から送り、サーバーのファイルの末尾に書き足す。
+        on_progress が Canceled を投げると中止する。
+        """
+        raise NotImplementedError
+
+    def create_file(self, path):
+        """空のファイルを作る"""
+        raise NotImplementedError
+
+    def make_dir(self, path):
+        """フォルダを作る"""
+        raise NotImplementedError
+
+    def remove_file(self, path):
+        """ファイルを削除する"""
+        raise NotImplementedError
+
+    def remove_dir(self, path):
+        """空のフォルダを削除する"""
+        raise NotImplementedError
+
+    def rename(self, old_path, new_path):
+        """名前を変える（同じサーバーの中で移動する）"""
+        raise NotImplementedError
+
+    def chmod(self, path, mode):
+        """パーミッションを変える"""
+        raise NotImplementedError
+
+    def set_modified(self, path, modified):
+        """更新日時を変える。サーバーが対応していない場合は何もしない。変えられたら True を返す"""
+        raise NotImplementedError
+
+    def make_dirs(self, path):
+        """途中のフォルダも含めて、フォルダを作る。既にある場合は何もしない"""
+        try:
+            entry = self.get_entry(path)
+        except ConnectError:
+            raise
+        except RemoteError:
+            entry = None
+        if entry is not None:
+            if not entry.is_dir:
+                raise RemoteError(_("同じ名前のファイルがあるため、フォルダを作れません。"))
+            return
+        parent = get_parent_path(path)
+        if parent is not None and parent != path:
+            self.make_dirs(parent)
+        self.make_dir(path)
 
     def close(self):
         raise NotImplementedError
@@ -391,7 +498,7 @@ def _describe(err):
 
 # LIST の結果（UNIX の ls -l 形式）
 _UNIX_LIST = re.compile(
-    r"^(?P<type>[\-dlbcps])\S*\s+\d+\s+\S+\s+\S+\s+(?P<size>\d+)\s+"
+    r"^(?P<type>[\-dlbcps])(?P<perms>\S*)\s+\d+\s+\S+\s+\S+\s+(?P<size>\d+)\s+"
     r"(?P<month>[A-Za-z]{3})\s+(?P<day>\d{1,2})\s+(?P<time>\d{1,2}:\d{2}|\d{4})\s(?P<name>.+)$")
 # LIST の結果（Windows の IIS の形式）
 _DOS_LIST = re.compile(
@@ -504,12 +611,15 @@ class _FtpClient(Client):
 
     def _list_mlsd(self, path):
         entries = []
-        for name, facts in self._ftp.mlsd(path, ["type", "size", "modify"]):
+        for name, facts in self._ftp.mlsd(path, ["type", "size", "modify", "unix.mode"]):
             kind = facts.get("type", "").lower()
             if kind in ("cdir", "pdir") or name in (".", ".."):
                 continue
-            is_dir = kind == "dir" or kind.startswith("os.unix=slink") and self._is_dir(join_path(path, name))
-            entries.append(Entry(name, is_dir, int(facts.get("size", -1)) if not is_dir else -1, _parse_mlsd_time(facts.get("modify"))))
+            is_link = kind.startswith("os.unix=slink")
+            is_dir = kind == "dir" or is_link and self._is_dir(join_path(path, name))
+            entries.append(Entry(
+                name, is_dir, int(facts.get("size", -1)) if not is_dir else -1, _parse_mlsd_time(facts.get("modify")),
+                _parse_octal(facts.get("unix.mode")), is_link=is_link))
         return entries
 
     def _list_list(self, path):
@@ -535,12 +645,15 @@ class _FtpClient(Client):
             else:
                 is_dir = kind == "d"
             modified = _parse_unix_time(match.group("month"), match.group("day"), match.group("time"))
-            return Entry(name, is_dir, -1 if is_dir else int(match.group("size")), modified)
+            precision = 60 if ":" in match.group("time") else 24 * 60 * 60
+            return Entry(
+                name, is_dir, -1 if is_dir else int(match.group("size")), modified,
+                _parse_permission_string(match.group("perms")), precision, is_link=kind == "l")
         match = _DOS_LIST.match(line)
         if match:
             is_dir = match.group("size") == "<DIR>"
             modified = _parse_dos_time(match.group("date"), match.group("time"))
-            return Entry(match.group("name"), is_dir, -1 if is_dir else int(match.group("size")), modified)
+            return Entry(match.group("name"), is_dir, -1 if is_dir else int(match.group("size")), modified, precision=60)
         if line.strip() and not line.lower().startswith("total"):
             log.warning("Cannot parse the LIST line: %s" % line)
         return None
@@ -570,28 +683,96 @@ class _FtpClient(Client):
         except ftplib.error_perm as err:
             if str(err)[:3] == "550":
                 raise
-        return Entry(name, False, size)
+        # 更新日時（UTC）。MDTM に対応していないサーバーでは、わからないままにする
+        modified = None
+        try:
+            response = self._ftp.sendcmd("MDTM " + path)
+            if response[:3] == "213":
+                modified = _parse_mlsd_time(response[3:].strip())
+        except ftplib.error_perm:
+            pass
+        return Entry(name, False, size, modified)
 
-    def download(self, path, local_path, on_progress=None):
+    def download(self, path, local_path, on_progress=None, offset=0):
         def write(data):
             f.write(data)
             if on_progress is not None:
                 on_progress(len(data))
 
-        with open(local_path, "wb") as f:
+        with open(local_path, "ab" if offset else "wb") as f:
             try:
-                self._call(self._ftp.retrbinary, "RETR " + path, write, _BLOCK_SIZE)
+                self._call(self._ftp.retrbinary, "RETR " + path, write, _BLOCK_SIZE, offset or None)
             except BaseException:
                 f.close()
-                _remove_partial(local_path)
+                if not offset:
+                    _remove_partial(local_path)
                 # 転送を途中でやめると制御用の接続の状態がわからなくなるので、作り直してもらう
                 raise
+
+    def upload(self, local_path, path, on_progress=None, offset=0):
+        def sent(data):
+            if on_progress is not None:
+                on_progress(len(data))
+
+        with open(local_path, "rb") as f:
+            if offset:
+                # 続きからの場合は、末尾に書き足す APPE を使う（REST と STOR の組み合わせより対応しているサーバーが多い）
+                f.seek(offset)
+                self._call(self._ftp.storbinary, "APPE " + path, f, _BLOCK_SIZE, sent)
+            else:
+                self._call(self._ftp.storbinary, "STOR " + path, f, _BLOCK_SIZE, sent)
+
+    def create_file(self, path):
+        self._call(self._ftp.storbinary, "STOR " + path, io.BytesIO(b""))
+
+    def make_dir(self, path):
+        self._call(self._ftp.mkd, path)
+
+    def remove_file(self, path):
+        self._call(self._ftp.delete, path)
+
+    def remove_dir(self, path):
+        self._call(self._ftp.rmd, path)
+
+    def rename(self, old_path, new_path):
+        self._call(self._ftp.rename, old_path, new_path)
+
+    def chmod(self, path, mode):
+        try:
+            self._call(self._ftp.sendcmd, "SITE CHMOD %03o %s" % (mode & 0o7777, path))
+        except ConnectError:
+            raise
+        except RemoteError as err:
+            if str(err)[:3] in ("500", "502", "504"):
+                raise RemoteError(_("このサーバーは、パーミッションの変更に対応していません。\n(%(error)s)") % {"error": err})
+            raise
+
+    def set_modified(self, path, modified):
+        # MFMT は多くの FTP サーバーが対応している拡張コマンド。対応していなければ何もしない
+        # wx がロケールを設定していると strftime の結果が変わることがあるため、数字を自分で並べる
+        utc = modified.astimezone(datetime.timezone.utc)
+        text = "%04d%02d%02d%02d%02d%02d" % (utc.year, utc.month, utc.day, utc.hour, utc.minute, utc.second)
+        try:
+            self._call(self._ftp.sendcmd, "MFMT %s %s" % (text, path))
+            return True
+        except ConnectError:
+            raise
+        except RemoteError:
+            return False
 
     def close(self):
         try:
             self._ftp.quit()
         except (OSError, EOFError, ftplib.Error):
             self._ftp.close()
+
+
+def _parse_octal(text):
+    """MLSD の unix.mode（0755 など）を数値にする。わからなければ None"""
+    try:
+        return int(text, 8) & 0o7777 if text else None
+    except ValueError:
+        return None
 
 
 def _parse_mlsd_time(text):
@@ -731,31 +912,36 @@ class _SftpClient(Client):
         entries = []
         for attributes in self._sftp.listdir_attr(path):
             mode = attributes.st_mode or 0
-            if stat.S_ISLNK(mode):
+            is_link = stat.S_ISLNK(mode)
+            if is_link:
                 try:
                     mode = self._sftp.stat(join_path(path, attributes.filename)).st_mode or 0
                 except OSError:
                     pass  # リンク先がない
-            entries.append(self._make_entry(attributes.filename, mode, attributes))
+            entries.append(self._make_entry(attributes.filename, mode, attributes, is_link))
         return entries
 
-    def _make_entry(self, name, mode, attributes):
+    def _make_entry(self, name, mode, attributes, is_link=False):
         is_dir = stat.S_ISDIR(mode)
         modified = None
         if attributes.st_mtime is not None:
             modified = datetime.datetime.fromtimestamp(attributes.st_mtime, datetime.timezone.utc)
         size = attributes.st_size if attributes.st_size is not None and not is_dir else -1
-        return Entry(name, is_dir, size, modified)
+        permissions = (attributes.st_mode & 0o7777) if attributes.st_mode is not None else None
+        return Entry(name, is_dir, size, modified, permissions, is_link=is_link)
 
     def get_entry(self, path):
         attributes = self._call(self._sftp.stat, path)
         return self._make_entry(posixpath.basename(path), attributes.st_mode or 0, attributes)
 
-    def download(self, path, local_path, on_progress=None):
+    def download(self, path, local_path, on_progress=None, offset=0):
+        start = offset
+
         def read_all():
-            with self._sftp.open(path, "rb") as remote, open(local_path, "wb") as f:
+            with self._sftp.open(path, "rb") as remote, open(local_path, "ab" if start else "wb") as f:
                 size = remote.stat().st_size or 0
-                offset = 0
+                offset = start
+                remote.seek(offset)
                 # 読み込みの要求をまとめて送ると速いが、paramiko の prefetch は要求を送るスレッドが残り、
                 # 中止して接続を閉じるとそのスレッドで例外になる。そのため、一定の大きさごとに readv で読む
                 while offset < size:
@@ -778,8 +964,50 @@ class _SftpClient(Client):
         try:
             self._call(read_all)
         except BaseException:
-            _remove_partial(local_path)
+            if not start:
+                _remove_partial(local_path)
             raise
+
+    def upload(self, local_path, path, on_progress=None, offset=0):
+        def write_all():
+            with open(local_path, "rb") as f, self._sftp.open(path, "ab" if offset else "wb") as remote:
+                # 応答を待たずに続けて送る。閉じるときにまとめて結果を確かめる
+                remote.set_pipelined(True)
+                f.seek(offset)
+                while True:
+                    data = f.read(_SFTP_CHUNK)
+                    if not data:
+                        break
+                    remote.write(data)
+                    if on_progress is not None:
+                        on_progress(len(data))
+
+        self._call(write_all)
+
+    def create_file(self, path):
+        def create():
+            self._sftp.open(path, "wb").close()
+        self._call(create)
+
+    def make_dir(self, path):
+        self._call(self._sftp.mkdir, path)
+
+    def remove_file(self, path):
+        self._call(self._sftp.remove, path)
+
+    def remove_dir(self, path):
+        self._call(self._sftp.rmdir, path)
+
+    def rename(self, old_path, new_path):
+        self._call(self._sftp.rename, old_path, new_path)
+
+    def chmod(self, path, mode):
+        self._call(self._sftp.chmod, path, mode & 0o7777)
+
+    def set_modified(self, path, modified):
+        timestamp = modified.timestamp()
+        self._call(self._sftp.utime, path, (timestamp, timestamp))
+        return True
 
     def close(self):
         self._ssh.close()

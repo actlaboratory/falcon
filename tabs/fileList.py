@@ -28,11 +28,14 @@ import new_shortcut
 import operation_manager
 import operation_result
 import paste_shortcut
+import remote_clipboard
+import remote_transfer
 import shell_new
 import StringUtil
 import tabs.streamList
 import views.OperationSelecter
 import views.newNameForPast
+import views.transfer_conflict
 import workerThreads
 import workerThreadTasks
 
@@ -396,6 +399,11 @@ class FileListTab(base.FalconTabBase):
 
     def Past(self):
         dest = self.listObject.rootDirectory
+        # FTP・SFTP のサーバーの一覧でコピーした項目は、ダウンロードする
+        data = remote_clipboard.remote_clipboard.get()
+        if data is not None:
+            self._paste_remote(data, dest)
+            return
         # クリップボードから情報取得し
         c = clipboard.ClipboardFile()
         # コピー元、コピー先をそれぞれ設定
@@ -415,6 +423,23 @@ class FileListTab(base.FalconTabBase):
             # Preferred DropEffect を付けないアプリからのコピーはコピー扱いにする
             op = clipboard.COPY
         self.PastOperation(paths, dest, op)
+
+    def _paste_remote(self, data, dest):
+        """FTP・SFTP のサーバーでコピーした項目(remote_clipboard.RemoteClipboardData)を、dest にダウンロードする"""
+        if data.is_move():
+            dialog(_("エラー"), _("サーバー上で切り取った項目は、同じサーバーのフォルダにだけ貼り付けられます。\nダウンロードする場合は、コピーしてから貼り付けてください。"))
+            return
+        conflicts = [
+            item.get_name() for item in data.items
+            if os.path.lexists(os.path.join(dest, remote_transfer.get_local_name(item.get_name())))]
+        conflict = remote_transfer.CONFLICT_RENAME
+        if conflicts:
+            result = globalVars.app.main_window.showSubWindow(views.transfer_conflict.TransferConflictWindow, _("ダウンロード"), conflicts)
+            if getattr(result, "code", wx.ID_CANCEL) == wx.ID_CANCEL:
+                return
+            conflict = result.user_object
+        request = remote_transfer.DownloadRequest(data.location, data.items, dest, conflict)
+        globalVars.app.main_window.operations.add(operation_manager.DownloadOperation(request))
 
     def PasteShortcut(self):
         """クリップボードの項目のショートカットを今のディレクトリに作る（エクスプローラーの「ショートカットの貼り付け」）。"""

@@ -39,6 +39,7 @@ tabTypeBlockList = {
         "READ_CONTENT_READFOOTER",
         "VIEW_TOGGLE_EXTENSION",
         "TOOL_DOWNLOAD",
+        "TOOL_UPLOAD",
     ],
     tabs.fileList.FileListTab: [
         "TOOL_EJECT_DRIVE",
@@ -75,6 +76,7 @@ tabTypeBlockList = {
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
         "TOOL_DOWNLOAD",
+        "TOOL_UPLOAD",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
@@ -111,6 +113,7 @@ tabTypeBlockList = {
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
         "TOOL_DOWNLOAD",
+        "TOOL_UPLOAD",
         "TOOL_EXEC_PROGRAM",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
@@ -119,10 +122,20 @@ tabTypeBlockList = {
     ]
 }
 
-# FTP・SFTP の一覧のタブでは、閲覧とダウンロードに関する機能だけを使えるようにする
+# FTP・SFTP の一覧のタブでは、サーバーで実行できる機能だけを使えるようにする
 _REMOTE_ALLOWED = {
+    "FILE_RENAME",
+    "FILE_CHANGEATTRIBUTE",  # パーミッションの変更になる
+    "FILE_TRASH",  # サーバーにはごみ箱がないので、確認してから完全に削除する
+    "FILE_DELETE",
+    "FILE_NEW",
+    "FILE_MKDIR",
+    "FILE_MKFILE",  # 空のファイルだけを作れる
     "FILE_VIEW_DETAIL",
     "FILE_EXIT",
+    "EDIT_COPY",
+    "EDIT_CUT",
+    "EDIT_PAST",
     "EDIT_NAMECOPY",
     "EDIT_FULLPATHCOPY",
     "EDIT_SELECTALL",
@@ -154,6 +167,7 @@ _REMOTE_ALLOWED = {
     "TOOL_MAP_NETWORK_DRIVE",
     "TOOL_ADD_NETWORK_PLACE",
     "TOOL_DOWNLOAD",
+    "TOOL_UPLOAD",
     "VIEW_SORTNEXT",
     "VIEW_SORTSELECT",
     "VIEW_SORTCYCLEAD",
