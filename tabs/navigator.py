@@ -87,7 +87,7 @@ def Navigate(
         else:
             newtab = remote_list.RemoteListTab(environment)
             newtab.Initialize(parent, creator, hListCtrl)
-        newtab.Update(lst, targetItemIndex)
+        _show_list(newtab, previous_tab, lst, targetItemIndex)
         return _finish_navigate(newtab, previous_tab)
 
     target = os.path.expandvars(target)
@@ -171,12 +171,22 @@ def Navigate(
             newtab = fileList.FileListTab(environment)
             newtab.Initialize(parent, creator, hListCtrl)
         # end 再利用するかどうか
-    newtab.Update(lst, targetItemIndex)
+    _show_list(newtab, previous_tab, lst, targetItemIndex)
     if target == "" and targetItemIndex == -1 and network_resource.is_server_path(cursor):
         newtab.set_pending_focus(cursor)
     # end ターゲットにフォーカス
     return _finish_navigate(newtab, previous_tab)
 # end Navigate
+
+
+def _show_list(newtab, previous_tab, lst, cursor):
+    """移動先のタブに一覧を表示する。"""
+    if newtab is not previous_tab and previous_tab is not None:
+        # リストコントロールは新しいタブに引き継がれる。一覧の表示中に、前のタブで遅れて届いた結果
+        # （ドライブの容量など）が新しい一覧に反映されないように、表示する前に前のタブを止める。
+        # replace_current_tab でもう一度呼ばれるが、OnClose は何度呼んでもよい
+        previous_tab.OnClose()
+    newtab.Update(lst, cursor)
 
 
 def _finish_navigate(newtab, previous_tab):
