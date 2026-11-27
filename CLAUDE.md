@@ -102,6 +102,7 @@ value = result.user_object
 ## 確認方法
 
 - 変更後は、少なくとも全モジュールの import と `python falcon.py` での起動を確認する。`errorLog.txt` が作られていないこと、`falcon.log` に ERROR がないことを見る
+- 自動テスト: `python -m pip install -r requirements-test.txt` の後、`python -m unittest discover -s tests -p "test_*.py"`（CI でも実行する）。FTP・FTPS・SFTP の接続テスト（`tests/test_remote_ftp.py`・`tests/test_remote_sftp.py`）は、ローカルで起動したテスト用のサーバー（`tests/remote_servers.py`。FTP は pyftpdlib、SFTP は paramiko）に接続する。共通の操作・転送のテストは `tests/remote_test_base.py` にあり、資格情報・証明書・ホスト鍵は一時フォルダに分ける（PC の資格情報マネージャーや設定に触らない）。`remote_storage`・`remote_transfer` を変更したら実行する
 - 画面を変更した場合は、そのウィンドウを生成・レイアウト・`result()` 取得・破棄できることを確認する。自動で閉じるには `wx.CallLater(500, window.EndModal, wx.ID_OK)` などを使う
 - テスト用に起動した falcon はタイムアウトなどで必ず終了させる。wx のアサーションダイアログを出したままにしない
 - スクリーンリーダーでの読み上げなど、実機でしか確認できないことは、未確認であることをユーザーに伝える。ただし、プルリクエストの説明にはスクリーンリーダーの動作が未確認であることを書かない

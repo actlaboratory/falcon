@@ -4,6 +4,11 @@ run:
 setup:
 	py -m pip install -r requirements.txt
 
+.PHONY: test
+test:
+	py -m pip install -r requirements-test.txt
+	py -m unittest discover -s tests -p "test_*.py"
+
 fmt:
 	py -m autopep8 -r -i -a -a --ignore=E402,E721 --max-line-length 150 .
 

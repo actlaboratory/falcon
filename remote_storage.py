@@ -1324,11 +1324,13 @@ class _SftpClient(Client):
         key_file = credentials.key_file if credentials is not None else ""
         if key_file and not os.path.isfile(key_file):
             raise AuthRequired(_("鍵ファイル %(path)s が見つかりません。") % {"path": key_file}, "key file not found: %s" % key_file)
+        pkey = self._load_key(key_file, password) if key_file else None
         try:
             sock = open_socket(location.host, location.port, _TIMEOUT) if get_proxy() is not None else None
             self._ssh.connect(
-                location.host, location.port, username=user, password=password,
-                key_filename=key_file or None, passphrase=password if key_file else None, sock=sock,
+                location.host, location.port, username=user,
+                # 鍵ファイルを使う場合のパスワード欄は鍵のパスフレーズなので、ログインのパスワードとしてサーバーに送らない
+                password=None if key_file else password, pkey=pkey, sock=sock,
                 timeout=_TIMEOUT, banner_timeout=_TIMEOUT, auth_timeout=_TIMEOUT,
                 # パスワードがわかっている場合も、鍵による認証を先に試す
                 allow_agent=True, look_for_keys=True)
@@ -1358,8 +1360,42 @@ class _SftpClient(Client):
                 message = _("パスワードを入力してください。")
             raise AuthRequired(message, "authentication failed: %r" % err)
         except (OSError, EOFError, paramiko.SSHException) as err:
+            transport = self._ssh.get_transport()
+            authenticating = transport is not None and transport.is_active() and not transport.is_authenticated()
             self._ssh.close()
+            if authenticating and isinstance(err, paramiko.SSHException):
+                # パスワードがなく、使える鍵もない（"No authentication methods available"）。
+                # 接続はできているので、パスワードを入力してもらう
+                raise AuthRequired(_("パスワードを入力してください。"), "no authentication method: %r" % err)
             raise _connect_error(location, err)
+
+    def _load_key(self, key_file, passphrase):
+        """
+        SFTP の鍵ファイルを読む。パスフレーズが必要・違う場合は AuthRequired。
+        paramiko の connect に key_filename を渡すと、鍵の種類を順に試すうちにパスフレーズが必要という例外が
+        別の種類の失敗で上書きされ、パスフレーズの入力を求められなくなるので、ここで読んでおく。
+        """
+        paramiko = self._paramiko
+        # PKey.from_path は暗号化された鍵で TypeError になるなど、失敗の理由を区別できないので、種類ごとのクラスで読む
+        key_classes = [getattr(paramiko, name) for name in ("RSAKey", "ECDSAKey", "Ed25519Key", "DSSKey") if hasattr(paramiko, name)]
+        needs_passphrase = False
+        errors = []
+        for key_class in key_classes:
+            try:
+                return key_class.from_private_key_file(key_file, password=passphrase or None)
+            except paramiko.PasswordRequiredException:
+                needs_passphrase = True
+            except (paramiko.SSHException, ValueError) as err:
+                # 種類が違う、パスフレーズが違う、または形式が正しくない
+                errors.append("%s: %r" % (key_class.__name__, err))
+            except OSError as err:
+                raise AuthRequired(
+                    _("鍵ファイル %(path)s が見つかりません。") % {"path": key_file}, "cannot read the key file %s: %r" % (key_file, err))
+        if needs_passphrase:
+            raise AuthRequired(_("鍵ファイルのパスフレーズを入力してください。"), "passphrase required: %s" % key_file)
+        raise AuthRequired(
+            _("鍵ファイル、パスフレーズ、またはユーザー名が正しくありません。"),
+            "cannot load the key file %s: %s" % (key_file, "; ".join(errors)))
 
     def _log_transport(self):
         """接続したサーバーのソフトウェアと、使っている暗号をログに書く"""

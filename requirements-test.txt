@@ -1,0 +1,7 @@
+# テスト（python -m unittest discover -s tests -p "test_*.py"）だけで使うパッケージ
+# FTP・FTPS のテスト用サーバー
+pyftpdlib==2.2.0
+# pyftpdlib の FTPS に必要。新しい版（26.4.0 など）は cryptography 49 以降を求めるが、
+# cryptography 49 以降には 32bit 向けのビルド済みファイルがないため、cryptography 48 で使える版に固定する
+
+pyOpenSSL==26.2.0
