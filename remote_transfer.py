@@ -20,11 +20,6 @@ import remote_storage
 
 log = logging.getLogger("falcon.remote_transfer")
 
-
-def _one_line(text):
-    """ログに書くために、文章を1行にする"""
-    return str(text).replace("\r", " ").replace("\n", " ")
-
 # 同じ名前のファイル・フォルダがあるとき
 CONFLICT_RENAME = "rename"
 CONFLICT_SKIP = "skip"
@@ -248,27 +243,37 @@ class RemoteJob:
             self._execute()
         except remote_storage.Canceled:
             self.canceled = True
-        except remote_storage.RemoteError as err:
-            self.errors.append((self._location.get_url(), str(err)))
-        except OSError as err:
-            self.errors.append((self._location.get_url(), err.strerror or str(err)))
+        except (remote_storage.RemoteError, OSError) as err:
+            self._add_exception(self._location.get_url(), err)
         except Exception as err:
             log.exception("remote operation failed")
-            self.errors.append((self._location.get_url(), str(err)))
+            self._add_exception(self._location.get_url(), err)
         finally:
             if self._client is not None:
                 try:
                     self._client.close()
                 except Exception as err:
                     log.debug("close failed: %s" % err)
-            # 利用者には一覧で見せる内容を、ログにも残す
-            for target, message in self.warnings:
-                log.info("%s warning: %s: %s" % (name, target, _one_line(message)))
-            for target, message in self.errors:
-                log.warning("%s error: %s: %s" % (name, target, _one_line(message)))
             log.info("%s %s (%.1fs, %s, errors: %d, warnings: %d)" % (
                 name, "canceled" if self.canceled else "finished", time.monotonic() - start,
                 self._get_summary(), len(self.errors), len(self.warnings)))
+
+    def _add_error(self, target, message, detail):
+        """
+        利用者に見せるエラーを加える。message は利用者向けの文章（翻訳されている）。
+        ログには英語の detail を書く（利用者向けの文章は書かない）
+        """
+        self.errors.append((target, message))
+        log.warning("%s error: %s: %s" % (self.__class__.__name__, target, detail))
+
+    def _add_warning(self, target, message, detail):
+        """利用者に見せる注意を加える。ログには英語の detail を書く"""
+        self.warnings.append((target, message))
+        log.info("%s warning: %s: %s" % (self.__class__.__name__, target, detail))
+
+    def _add_exception(self, target, err):
+        """例外を、利用者に見せるエラーとして加える。ログには remote_storage.get_log_text の説明を書く"""
+        self._add_error(target, getattr(err, "strerror", None) or str(err), remote_storage.get_log_text(err))
 
     def _describe(self):
         """ログに書く、操作の内容"""
@@ -290,7 +295,8 @@ class RemoteJob:
             self._client = remote_storage.connect(location, remote_storage.credential_store.get(location))
         except (remote_storage.AuthRequired, remote_storage.UnknownHostKey, remote_storage.UntrustedCertificate) as err:
             # 一覧を開いたときに確認しているので、通常は起きない
-            raise remote_storage.RemoteError(_("接続できませんでした。\n(%(error)s)") % {"error": err})
+            raise remote_storage.RemoteError(
+                _("接続できませんでした。\n(%(error)s)") % {"error": err}, "cannot connect: %s" % remote_storage.get_log_text(err))
 
     def _reconnect(self):
         log.info("%s: reconnect to %s" % (self.__class__.__name__, self._location.get_server_key()))
@@ -321,8 +327,9 @@ class TransferJob(RemoteJob):
         files = self._plan()
         self._transfer(files)
         if self._skipped:
-            self.warnings.append((self._get_destination_name(), _(
-                "転送先に同じ名前の新しいファイル、または同じ大きさのファイルがあったため、%(count)d件は転送しませんでした。") % {"count": self._skipped}))
+            self._add_warning(self._get_destination_name(), _(
+                "転送先に同じ名前の新しいファイル、または同じ大きさのファイルがあったため、%(count)d件は転送しませんでした。") % {"count": self._skipped},
+                "%d files not transferred (the destination is newer or has the same size)" % self._skipped)
 
     def _plan(self):
         """転送するファイルの一覧を作る。転送先のフォルダはここで作る"""
@@ -368,11 +375,11 @@ class TransferJob(RemoteJob):
                 log.debug("transferred %s (%.2fs)" % (f.source, time.monotonic() - start))
             except remote_storage.ConnectError as err:
                 # 接続が切れた場合は、つなぎ直して続ける
-                self.errors.append((f.source, str(err)))
+                self._add_exception(f.source, err)
                 self._reconnect()
                 continue
             except (remote_storage.RemoteError, OSError) as err:
-                self.errors.append((f.source, getattr(err, "strerror", None) or str(err)))
+                self._add_exception(f.source, err)
                 continue
             if f.modified is not None:
                 try:
@@ -380,7 +387,7 @@ class TransferJob(RemoteJob):
                 except remote_storage.ConnectError:
                     self._reconnect()
                 except (remote_storage.RemoteError, OSError, ValueError, OverflowError) as err:
-                    log.info("Cannot set the modified time of %s: %s" % (f.destination, err))
+                    log.info("Cannot set the modified time of %s: %s" % (f.destination, remote_storage.get_log_text(err)))
         self.percentage = 100
 
 
@@ -410,7 +417,8 @@ class DownloadJob(TransferJob):
             for candidate in _numbered_names(name):
                 candidate_path = os.path.join(directory, candidate)
                 if os.path.normcase(candidate_path) not in self._planned and not os.path.lexists(candidate_path):
-                    self.warnings.append((source, _("名前が重複するため「%(name)s」として保存") % {"name": candidate}))
+                    self._add_warning(
+                        source, _("名前が重複するため「%(name)s」として保存") % {"name": candidate}, "saved as %s (duplicate name)" % candidate)
                     path = candidate_path
                     break
         self._planned.add(os.path.normcase(path))
@@ -437,7 +445,7 @@ class DownloadJob(TransferJob):
             except remote_storage.ConnectError:
                 raise
             except (remote_storage.RemoteError, OSError) as err:
-                self.errors.append((item.path, getattr(err, "strerror", None) or str(err)))
+                self._add_exception(item.path, err)
         return files
 
     def _get_top_local_path(self, item):
@@ -448,19 +456,23 @@ class DownloadJob(TransferJob):
         name = item.get_name()
         local_name = get_local_name(name)
         if local_name != name:
-            self.warnings.append((item.path, _("Windows で使用できない文字を含むため「%(name)s」として保存") % {"name": local_name}))
+            self._add_warning(
+                item.path, _("Windows で使用できない文字を含むため「%(name)s」として保存") % {"name": local_name},
+                "saved as %s (invalid characters for Windows)" % local_name)
         local_path = os.path.join(self._request.directory, local_name)
         if not os.path.lexists(local_path):
             return local_path, False
         conflict = self._conflict
         if conflict == CONFLICT_SKIP:
-            self.warnings.append((item.path, _("保存先に同名の項目が存在するためスキップ")))
+            self._add_warning(item.path, _("保存先に同名の項目が存在するためスキップ"), "skipped (the destination exists)")
             return None, False
         if conflict == CONFLICT_RENAME:
             return make_unique_path(local_path), False
         # フォルダとファイルの種類が違う場合は上書きできない
         if item.is_dir != os.path.isdir(local_path):
-            self.errors.append((item.path, _("保存先に種類の異なる同名の項目が存在するため、上書きできません。")))
+            self._add_error(
+                item.path, _("保存先に種類の異なる同名の項目が存在するため、上書きできません。"),
+                "cannot overwrite (the destination is of a different type)")
             return None, False
         return local_path, True
 
@@ -482,7 +494,9 @@ class DownloadJob(TransferJob):
         実際のパスを調べられないサーバー（FTP）では、深さの上限で止める。
         """
         if depth >= MAX_DEPTH:
-            self.errors.append((path, _("階層の上限を超えたため、以下をスキップ（シンボリックリンクのループの可能性）")))
+            self._add_error(
+                path, _("階層の上限を超えたため、以下をスキップ（シンボリックリンクのループの可能性）"),
+                "skipped (exceeded the depth limit %d)" % MAX_DEPTH)
             return
         os.makedirs(local_path, exist_ok=True)
         for entry in self._client.list_dir(path):
@@ -490,14 +504,18 @@ class DownloadJob(TransferJob):
             child_path = remote_storage.join_path(path, entry.name)
             local_name = get_local_name(entry.name)
             if local_name != entry.name:
-                self.warnings.append((child_path, _("Windows で使用できない文字を含むため「%(name)s」として保存") % {"name": local_name}))
+                self._add_warning(
+                    child_path, _("Windows で使用できない文字を含むため「%(name)s」として保存") % {"name": local_name},
+                    "saved as %s (invalid characters for Windows)" % local_name)
             child_local = self._reserve(os.path.join(local_path, local_name), child_path)
             if entry.is_dir:
                 if entry.is_link:
                     # リンクだけはサーバーに実際のパスを尋ねる。それ以外は親の実際のパスから求める
                     child_real = self._client.get_real_path(child_path)
                     if child_real is not None and child_real in ancestors:
-                        self.warnings.append((child_path, _("シンボリックリンクのループを検出したため、中身をスキップ")))
+                        self._add_warning(
+                            child_path, _("シンボリックリンクのループを検出したため、中身をスキップ"),
+                            "skipped the contents (symbolic link loop to %s)" % child_real)
                         continue
                 else:
                     child_real = remote_storage.join_path(real, entry.name) if real else None
@@ -507,9 +525,11 @@ class DownloadJob(TransferJob):
                 except remote_storage.ConnectError:
                     raise
                 except (remote_storage.RemoteError, OSError) as err:
-                    self.errors.append((child_path, getattr(err, "strerror", None) or str(err)))
+                    self._add_exception(child_path, err)
             elif os.path.isdir(child_local):
-                self.errors.append((child_path, _("保存先に、同じ名前のフォルダがあるため、上書きできません。")))
+                self._add_error(
+                    child_path, _("保存先に、同じ名前のフォルダがあるため、上書きできません。"),
+                    "cannot overwrite (a folder with the same name exists)")
             else:
                 self._add_file(child_path, entry, child_local, files, True)
 
@@ -548,7 +568,7 @@ class UploadJob(TransferJob):
             except remote_storage.ConnectError:
                 raise
             except (remote_storage.RemoteError, OSError) as err:
-                self.errors.append((item.local_path, getattr(err, "strerror", None) or str(err)))
+                self._add_exception(item.local_path, err)
         return files
 
     def _plan_top(self, item, directory, existing, files):
@@ -556,18 +576,20 @@ class UploadJob(TransferJob):
         name = item.get_name()
         is_dir = os.path.isdir(item.local_path)
         if not is_dir and not os.path.isfile(item.local_path):
-            self.errors.append((item.local_path, _("見つかりません。")))
+            self._add_error(item.local_path, _("見つかりません。"), "not found")
             return
         entry = existing.get(name)
         if entry is not None:
             if self._conflict == CONFLICT_SKIP:
-                self.warnings.append((item.local_path, _("アップロード先に同名の項目が存在するためスキップ")))
+                self._add_warning(item.local_path, _("アップロード先に同名の項目が存在するためスキップ"), "skipped (the destination exists)")
                 return
             if self._conflict == CONFLICT_RENAME:
                 name = make_unique_name(name, existing)
                 entry = None
             elif entry.is_dir != is_dir:
-                self.errors.append((item.local_path, _("アップロード先に種類の異なる同名の項目が存在するため、上書きできません。")))
+                self._add_error(
+                    item.local_path, _("アップロード先に種類の異なる同名の項目が存在するため、上書きできません。"),
+                    "cannot overwrite (the destination is of a different type)")
                 return
         # 同じ操作の中で、同じ名前を2回使わないようにする
         existing.setdefault(name, remote_storage.Entry(name, is_dir))
@@ -594,7 +616,7 @@ class UploadJob(TransferJob):
         ancestors はたどってきたフォルダの実際のパス。ジャンクションやシンボリックリンクがその中を指していれば、たどらない。
         """
         if depth >= MAX_DEPTH:
-            self.errors.append((local_path, _("階層の上限を超えたため、以下をスキップ")))
+            self._add_error(local_path, _("階層の上限を超えたため、以下をスキップ"), "skipped (exceeded the depth limit %d)" % MAX_DEPTH)
             return
         if merge:
             existing = {entry.name: entry for entry in self._client.list_dir(path)}
@@ -610,22 +632,28 @@ class UploadJob(TransferJob):
             try:
                 if child.is_dir():
                     if entry is not None and not entry.is_dir:
-                        self.errors.append((child.path, _("アップロード先に同名のファイルが存在するため、上書きできません。")))
+                        self._add_error(
+                            child.path, _("アップロード先に同名のファイルが存在するため、上書きできません。"),
+                            "cannot overwrite (a file with the same name exists)")
                         continue
                     real = _real_path(child.path)
                     if real in ancestors:
-                        self.warnings.append((child.path, _("ジャンクションまたはシンボリックリンクのループを検出したため、中身をスキップでした。")))
+                        self._add_warning(
+                            child.path, _("ジャンクションまたはシンボリックリンクのループを検出したため、中身をスキップでした。"),
+                            "skipped the contents (junction or symbolic link loop to %s)" % real)
                         continue
                     self._plan_folder(child.path, child_path, files, entry is not None, ancestors | {real}, depth + 1)
                 elif child.is_file():
                     if entry is not None and entry.is_dir:
-                        self.errors.append((child.path, _("アップロード先に同名のフォルダが存在するため、上書きできません。")))
+                        self._add_error(
+                            child.path, _("アップロード先に同名のフォルダが存在するため、上書きできません。"),
+                            "cannot overwrite (a folder with the same name exists)")
                         continue
                     self._add_file(child.path, child_path, entry, files)
             except remote_storage.ConnectError:
                 raise
             except (remote_storage.RemoteError, OSError) as err:
-                self.errors.append((child.path, getattr(err, "strerror", None) or str(err)))
+                self._add_exception(child.path, err)
 
     def _transfer_file(self, f, on_progress):
         self._client.upload(f.source, f.destination, on_progress, f.offset)
@@ -666,10 +694,10 @@ class DeleteJob(RemoteJob):
                     self._client.remove_file(item.path)
                 self.deleted.append(item.path)
             except remote_storage.ConnectError as err:
-                self.errors.append((item.path, str(err)))
+                self._add_exception(item.path, err)
                 self._reconnect()
             except remote_storage.RemoteError as err:
-                self.errors.append((item.path, str(err)))
+                self._add_exception(item.path, err)
             self.percentage = (index + 1) * 100 // len(items)
 
     def _remove_folder(self, path):

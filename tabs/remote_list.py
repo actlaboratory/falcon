@@ -65,7 +65,8 @@ class RemoteListTab(base.FalconTabBase):
         except background_wait.Canceled:
             return errorCodes.CANCELED
         except (remote_storage.RemoteError, OSError) as err:
-            self.log.error("Cannot download %s: %s" % (elem.fullpath, err))
+            # 利用者向けの文章（翻訳されている）ではなく、英語の説明をログに書く
+            self.log.error("Cannot download %s: %s" % (elem.fullpath, remote_storage.get_log_text(err)))
             dialog(_("エラー"), _("%(name)s をダウンロードできませんでした。\n%(error)s") % {"name": elem.basename, "error": err})
             return errorCodes.ACCESS_DENIED
         # インターネットから来たファイルとして扱わせる（SmartScreen や Office の保護ビューのため）
@@ -98,7 +99,7 @@ class RemoteListTab(base.FalconTabBase):
         except background_wait.Canceled:
             return None
         except remote_storage.RemoteError as err:
-            self.log.error("remote operation failed: %s" % err)
+            self.log.error("remote operation failed: %s" % remote_storage.get_log_text(err))
             dialog(_("エラー"), str(err))
             return None
         return True if result is None else result

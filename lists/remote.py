@@ -70,7 +70,8 @@ class RemoteList(FalconListBase):
         except background_wait.Canceled:
             return errorCodes.CANCELED
         except remote_storage.RemoteError as err:
-            self.log.error("Cannot list %s: %s" % (location.get_url(), err))
+            # 利用者向けの文章（翻訳されている）ではなく、英語の説明をログに書く
+            self.log.error("Cannot list %s: %s" % (location.get_url(), remote_storage.get_log_text(err)))
             dialog(_("エラー"), _("%(url)s を開けませんでした。\n%(error)s") % {"url": location.get_url(), "error": err})
             if isinstance(err, remote_storage.ConnectError):
                 return errorCodes.NETWORK_UNAVAILABLE
