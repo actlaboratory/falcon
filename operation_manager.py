@@ -21,7 +21,9 @@ import archiver
 import clipboard
 import fileOperator
 import globalVars
+import misc
 import operation_result
+import remote_transfer
 import reparse_link
 from fileOperator import helper
 
@@ -45,6 +47,23 @@ _INTERVAL = 100
 _NOTIFY_DELAY = 0.3
 # falcon の終了時に、中止した操作が止まるのを待つ秒数
 _SHUTDOWN_TIMEOUT = 5
+
+
+def format_speed(speed):
+    """転送速度（バイト/秒）を「1.50MB/秒」の形にする"""
+    return _("%(size)s/秒") % {"size": misc.ConvertBytesTo(int(speed), misc.UNIT_AUTO, True)}
+
+
+def format_duration(seconds):
+    """残り時間（秒）を「約1時間2分」「約3分20秒」「約45秒」の形にする"""
+    seconds = int(seconds + 0.5)
+    hours, rest = divmod(seconds, 3600)
+    minutes, seconds = divmod(rest, 60)
+    if hours:
+        return _("約%(hours)d時間%(minutes)d分") % {"hours": hours, "minutes": minutes}
+    if minutes:
+        return _("約%(minutes)d分%(seconds)d秒") % {"minutes": minutes, "seconds": seconds}
+    return _("約%(seconds)d秒") % {"seconds": max(seconds, 1)}
 
 
 class Operation:
@@ -150,6 +169,15 @@ class Operation:
         return {
             WAITING: _("待機中"), RUNNING: _("実行中"), CONFIRMING: _("確認待ち"),
             FINISHED: _("完了"), FAILED: _("エラー"), CANCELED: _("中止")}[self.state]
+
+    def get_status_lines(self):
+        """進行状況のウィンドウに表示する、実行中の詳しい状況（転送速度など）の行のリスト。なければ空"""
+        return []
+
+    def get_progress_string(self):
+        """進み具合の読み上げに使う文章を返す"""
+        percentage = self.get_percentage()
+        return self.get_state_string() if percentage is None else _("%(percentage)d%%") % {"percentage": percentage}
 
     def get_finish_message(self):
         """実行が終わったときに読み上げる文章を返す"""
@@ -442,6 +470,154 @@ class ExtractOperation(ArchiveOperation):
         return super().get_finish_message()
 
 
+class RemoteOperation(Operation):
+    """FTP・SFTP のサーバーへの操作。remote_transfer.RemoteJob の派生クラスを実行する。"""
+
+    def __init__(self, name, directories, paths, request):
+        super().__init__(name, directories, paths)
+        self._request = request
+        self._job = None
+
+    def _make_job(self):
+        raise NotImplementedError
+
+    def _start_thread(self):
+        self._job = self._make_job()
+        self._job.start()
+
+    def is_thread_alive(self):
+        return self._job is not None and not self._job.is_finished()
+
+    def join(self, seconds):
+        if self._job is not None:
+            self._job.wait(seconds)
+
+    def cancel(self):
+        if self._job is not None:
+            self._job.cancel()
+        super().cancel()
+
+    def get_percentage(self):
+        return self._job.percentage if self._job is not None else None
+
+    def get_details(self):
+        if self._job is None:
+            return []
+        details = [(target, _("注意"), message) for target, message in self._job.warnings]
+        details += [(target, _("エラー"), message) for target, message in self._job.errors]
+        return details
+
+    def _get_warning_count(self):
+        return len(self._job.warnings) if self._job is not None else 0
+
+    def _get_result_state(self):
+        if self._job.canceled:
+            return CANCELED
+        return FAILED if self._job.errors else FINISHED
+
+    def get_state_string(self):
+        if self.state == FAILED:
+            return _("エラー %(count)d件") % {"count": len(self._job.errors)}
+        if self.state == FINISHED and self._get_warning_count():
+            return _("完了 注意%(count)d件") % {"count": self._get_warning_count()}
+        if self.state == RUNNING and not self.is_canceled() and self._job is not None:
+            # 接続と準備に時間がかかることがあるので、段階を見せる
+            if self._job.phase == remote_transfer.PHASE_CONNECTING:
+                return _("実行中（接続中）")
+            if self._job.phase == remote_transfer.PHASE_PREPARING:
+                return _("実行中（準備中 %(count)d件）") % {"count": self._job.found}
+            if self._job.percentage is not None:
+                return _("実行中 %(percentage)d%%") % {"percentage": self._job.percentage}
+        return super().get_state_string()
+
+    def get_progress_string(self):
+        text = self.get_state_string()
+        statistics = self._get_running_statistics()
+        if statistics is None:
+            return text
+        remaining = statistics.get_remaining_seconds()
+        if remaining is not None:
+            text += " " + _("残り %(time)s") % {"time": format_duration(remaining)}
+        speed = statistics.get_speed()
+        if speed is not None:
+            text += " " + format_speed(speed)
+        return text
+
+    def _get_running_statistics(self):
+        """転送中なら、転送の状況（remote_transfer.TransferStatistics）を返す"""
+        if self.state != RUNNING or self._job is None:
+            return None
+        return getattr(self._job, "statistics", None)
+
+    def get_status_lines(self):
+        statistics = self._get_running_statistics()
+        if statistics is None:
+            return []
+        lines = []
+        if statistics.file_name:
+            lines.append(_("ファイル: %(name)s（%(index)d / %(count)d）") % {
+                "name": statistics.file_name, "index": statistics.file_index, "count": statistics.file_count})
+        lines.append(_("サイズ: %(done)s / %(total)s") % {
+            "done": misc.ConvertBytesTo(statistics.done_bytes, misc.UNIT_AUTO, True),
+            "total": misc.ConvertBytesTo(statistics.total_bytes, misc.UNIT_AUTO, True)})
+        speed = statistics.get_speed()
+        lines.append(_("速度: %(speed)s") % {"speed": format_speed(speed) if speed is not None else _("計測中")})
+        remaining = statistics.get_remaining_seconds()
+        lines.append(_("残り時間: %(time)s") % {"time": format_duration(remaining) if remaining is not None else _("計算中")})
+        return lines
+
+    def get_finish_message(self):
+        if self.state == FINISHED and self._get_warning_count():
+            return _("%(name)sが完了しました。注意が%(count)d件あります。") % {"name": self.name, "count": self._get_warning_count()}
+        return super().get_finish_message()
+
+
+class DownloadOperation(RemoteOperation):
+    """FTP・SFTP のサーバーからのダウンロード"""
+
+    def __init__(self, request):
+        # ダウンロード中のサーバーの項目を削除・移動しないように、転送元も重なりの確認に使う
+        sources = [request.location.get_url(item.path) for item in request.items]
+        super().__init__(_("ダウンロード"), {request.directory}, [request.directory] + sources, request)
+        self.set_title([item.get_name() for item in request.items], request.directory)
+
+    def _make_job(self):
+        return remote_transfer.DownloadJob(self._request)
+
+
+class UploadOperation(RemoteOperation):
+    """FTP・SFTP のサーバーへのアップロード。終わったら、アップロード先のフォルダの一覧を更新する"""
+
+    def __init__(self, request, on_success=None):
+        url = request.location.get_url()
+        # アップロード中のファイルを削除・移動しないように、転送元も重なりの確認に使う
+        super().__init__(_("アップロード"), {url}, [url] + [item.local_path for item in request.items], request)
+        self.set_title([item.local_path for item in request.items], url)
+        # 成功したときにメインスレッドで呼ぶ関数（編集したファイルの書き戻しで使う）
+        self.on_success = on_success
+
+    def _make_job(self):
+        return remote_transfer.UploadJob(self._request)
+
+
+class RemoteDeleteOperation(RemoteOperation):
+    """FTP・SFTP のサーバー上の項目の削除。サーバーにはごみ箱がないので、完全に削除する"""
+
+    lane = _LANE_DELETE
+
+    def __init__(self, request):
+        url = request.location.get_url()
+        super().__init__(_("削除"), {url}, [request.location.get_url(item.path) for item in request.items], request)
+        names = [item.get_name() for item in request.items]
+        if len(names) == 1:
+            self.title = _("%(name)s: %(item)s") % {"name": self.name, "item": names[0]}
+        else:
+            self.title = _("%(name)s: %(count)d項目") % {"name": self.name, "count": len(names)}
+
+    def _make_job(self):
+        return remote_transfer.DeleteJob(self._request)
+
+
 class OperationManager:
     """ファイル操作の一覧を持ち、順番に実行する。メソッドはメインスレッドから呼ぶこと。"""
 
@@ -506,9 +682,8 @@ class OperationManager:
         """実行中の操作の進み具合と、確認待ちの件数を読み上げる"""
         messages = []
         for running in self.get_running_operations():
-            percentage = running.get_percentage()
             messages.append(running.title)
-            messages.append(running.get_state_string() if percentage is None else _("%(percentage)d%%") % {"percentage": percentage})
+            messages.append(running.get_progress_string())
         waiting = sum(operation.state == WAITING for operation in self.operations)
         if waiting:
             messages.append(_("待機中 %(count)d件") % {"count": waiting})
@@ -596,6 +771,8 @@ class OperationManager:
     def _on_finish(self, operation):
         """操作が終わったときの処理"""
         operation.update_result_state()
+        if isinstance(operation, UploadOperation) and operation.state == FINISHED and operation.on_success is not None:
+            operation.on_success()
         self._directories |= operation.directories
         self._deleted_paths += operation.deleted_paths
         if isinstance(operation, DeleteOperation):

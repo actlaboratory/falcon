@@ -95,10 +95,13 @@ class DriveList(FalconListBase):
 
     def _append_network_places(self):
         """ネットワークの場所を一覧に加える。リンク先には接続しない。"""
-        for place in network_place.get_places():
-            # リンク先に接続せずにアイコンを得るため、ファイルの属性だけからアイコンを決める
-            dummy, info = shell.SHGetFileInfo(
-                place.folder, win32file.FILE_ATTRIBUTE_DIRECTORY, shellcon.SHGFI_ICON | shellcon.SHGFI_USEFILEATTRIBUTES)
+        places = network_place.get_places()
+        if not places:
+            return
+        # リンク先に接続せずにアイコンを得るため、ファイルの属性だけからフォルダのアイコンを決める
+        dummy, info = shell.SHGetFileInfo(
+            "dummy", win32file.FILE_ATTRIBUTE_DIRECTORY, shellcon.SHGFI_ICON | shellcon.SHGFI_USEFILEATTRIBUTES)
+        for place in places:
             elem = browsableObjects.NetworkPlace()
             elem.initialize_place(place.name, place.target, place.folder, info[0])
             self.networkResources.append(elem)

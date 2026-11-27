@@ -23,6 +23,7 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
   - 文字列はダブルクォート、関数・クラスには docstring、コメントは日本語
   - viewkit のメソッドをオーバーライドするときは viewkit 側の名前（`getSetting`、`showSubWindow` など camelCase）をそのまま使う
   - 既存の古いコード（tabs/, lists/ など）は、触る範囲だけ新しい書き方にそろえる。無関係な箇所の一括リネームはしない
+- ログに書くメッセージはすべて英語にする。`_()` で翻訳した利用者向けの文章はログに書かない。OS やサーバーが返したエラーの文章は、提供元の言語のまま書く（勝手に翻訳しない）
 - 翻訳対象の文字列は `_()` で囲む。`_` は gettext なので、使わない戻り値の受け取りには `dummy` を使う（`edit, dummy = creator.inputbox(...)`）
 - 既存の機能を壊さないこと。挙動が変わる場合は、報告時に明記する
 - コミットメッセージは日本語。1行目に要約、空行の後に箇条書きで変更内容
@@ -43,7 +44,9 @@ GUI は ACT Laboratory のテンプレートライブラリ [viewkit](https://gi
 | `menuItemsDic.py` / `menuItemsStore.py` | メニュー項目の表示名と ID。`menuItemsStore` は viewkit の RefStore としても使われる |
 | `archiver.py` / `bin/` | 圧縮と解凍。ZIP・TAR系以外は同梱の7-Zip（`bin/7z.exe`）だけを使う（インストール版は使わない） |
 | `network_resource.py` | ネットワーク上のコンピューターの列挙（シェルの「ネットワーク」フォルダを使う。WNetOpenEnum は SMB1 依存で使えない）、共有フォルダの一覧、認証 |
-| `network_drive.py` / `network_place.py` | ネットワークドライブの割り当て・切断と、ネットワークの場所（`Network Shortcuts` フォルダ内の desktop.ini＋target.lnk）の追加・削除・一覧。ネットワークの場所はドライブ一覧に `browsableObjects.NetworkPlace` として表示する |
+| `network_drive.py` / `network_place.py` | ネットワークドライブの割り当て・切断と、ネットワークの場所（`Network Shortcuts` フォルダ内の desktop.ini＋target.lnk）の追加・削除・一覧。ネットワークの場所はドライブ一覧に `browsableObjects.NetworkPlace` として表示する。FTP・SFTP の場所は Windows の形式で保存できないので、設定の `remote_places`（名前→URL）に保存する |
+| `remote_storage.py` / `remote_connect.py` / `remote_transfer.py` | FTP・FTPS（Explicit）・SFTP の閲覧、転送（ダウンロード・アップロード。同じ名前があるときは別名・スキップ・上書き・新しい場合だけ上書き・続きから）、フォルダ・空ファイルの作成、名前の変更、同じサーバー内の移動、削除、パーミッションの変更。転送と削除は `remote_transfer` のジョブを `operation_manager` の `DownloadOperation` / `UploadOperation` / `RemoteDeleteOperation` で実行する。サーバー上の項目のコピー・切り取りは Windows のクリップボードに入れられないので `remote_clipboard.py` で覚え（クリップボードには URL の文字列を入れ、更新番号が変わったら無効）、ファイル一覧での貼り付けでダウンロードする。開いたファイルの編集は `remote_edit.py` で追跡し、falcon のウィンドウに戻ったときにアップロードするかを尋ねる。場所は `sftp://user@host:port/path` の URL で表し、`tabs/remote_list.py`（`RemoteListTab`）と `lists/remote.py` で表示する。`remote_storage` は別スレッド用で画面に触らず、認証・SFTP のホスト鍵・FTPS の証明書の確認は例外で知らせ、`remote_connect.run()` がメインスレッドで画面を出してやり直す。パスワードはメモリと（指定時のみ）Windows の資格情報マネージャーに保存し、設定ファイルや URL には入れない。確認したホスト鍵は `known_hosts`（設定ファイルと同じ場所）に保存する。FTPS で検証できない証明書は、利用者が指紋（SHA256）を確かめて許可したものだけをピン留めして `trusted_certificates.json` に保存し、違う証明書なら接続しない（データ用の接続も確かめる）。ftps のポート 990 は Implicit FTPS。ftplib はデータ用の接続で TLS セッションを再利用しないため（vsftpd・FileZilla Server で失敗する）、`_FtpTls.ntransfercmd` で再利用する。データ用の接続は常にパッシブで、サーバーが返すアドレスは使わない。SFTP の鍵ファイルは設定の `remote_key_files`（サーバーの key → パス）に保存し、パスフレーズはパスワード欄で受け取る。設定の `remote.use_proxy` が有効なら、HTTP プロキシの CONNECT で接続する。接続の使い回しでは、使う前に NOOP などで確かめ、操作の途中で切れてもやり直さない（2回実行しないため）。ダウンロードしたファイルには Zone.Identifier（インターネットから来た印）を付ける。フォルダをたどるときは、実際のパスでリンクのループを見つけ（SFTP）、調べられない場合は深さの上限（64）で止める。SFTP は paramiko を使う（読み込みが遅いので使うときだけ import）。ログ: 接続・失敗の原因・転送の結果は INFO 以上、FTP のコマンドと応答・SFTP の操作は DEBUG で `falcon.log` に書く。PASS は `_mask_command` で隠し、パスワードはログに書かない。`RemoteError` の本文は利用者向けの翻訳された文章なので、ログには英語の `detail`（サーバー・OS のエラーはそのまま含める）を `remote_storage.get_log_text(err)` で書く。転送のエラー・注意は `RemoteJob._add_error` / `_add_warning` / `_add_exception` で加える。paramiko のログ（INFO 以上）も `falcon.log` に回している |
+| `folder_compare.py` | 「フォルダの比較」（ツールメニュー）。表示中の一覧どうしを比べ（相手にない・種類が違う・大きさが違う・こちらが新しい）、違う項目にチェックを付ける。サーバーやディスクには問い合わせない |
 | `operation_manager.py` / `views/operation_progress.py` | コピー・移動・圧縮・解凍・削除を別スレッドで順番に実行し（場所が重ならない削除は待たずに始める）、進行状況を表示する。画面やフォーカスを勝手に切り替えず、終了・確認待ちは読み上げで知らせる。プログレスバーは、メインウィンドウか進行状況のウィンドウのどちらか一方だけに表示する（スクリーンリーダーの報告が重ならないように） |
 | `fileOperator/elevation.py` / `fileop.py` | アクセス拒否になったファイル操作を、falcon 自身を `--fileop` 付きで管理者権限で起動してやり直す（別の exe は使わない）。受け渡しは名前付きパイプと JSON のみで、pickle と一時ファイルは使わない。管理者権限の側はファイル（ログ・設定）に書き込まない。割り当てたネットワークドライブは見えないので UNC パスにして渡す |
 | `background_wait.py` | 時間のかかる処理を別スレッドで実行し、ウィンドウを固めずに待つ。渡す関数の中で画面の部品や表示中の一覧を変更しないこと |
@@ -99,6 +102,7 @@ value = result.user_object
 ## 確認方法
 
 - 変更後は、少なくとも全モジュールの import と `python falcon.py` での起動を確認する。`errorLog.txt` が作られていないこと、`falcon.log` に ERROR がないことを見る
+- 自動テスト: `python -m pip install -r requirements-test.txt` の後、`python -m unittest discover -s tests -p "test_*.py"`（CI でも実行する）。FTP・FTPS・SFTP の接続テスト（`tests/test_remote_ftp.py`・`tests/test_remote_sftp.py`）は、ローカルで起動したテスト用のサーバー（`tests/remote_servers.py`。FTP は pyftpdlib、SFTP は paramiko）に接続する。共通の操作・転送のテストは `tests/remote_test_base.py` にあり、資格情報・証明書・ホスト鍵は一時フォルダに分ける（PC の資格情報マネージャーや設定に触らない）。`remote_storage`・`remote_transfer` を変更したら実行する
 - 画面を変更した場合は、そのウィンドウを生成・レイアウト・`result()` 取得・破棄できることを確認する。自動で閉じるには `wx.CallLater(500, window.EndModal, wx.ID_OK)` などを使う
 - テスト用に起動した falcon はタイムアウトなどで必ず終了させる。wx のアサーションダイアログを出したままにしない
 - スクリーンリーダーでの読み上げなど、実機でしか確認できないことは、未確認であることをユーザーに伝える。ただし、プルリクエストの説明にはスクリーンリーダーの動作が未確認であることを書かない

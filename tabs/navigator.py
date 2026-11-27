@@ -21,8 +21,9 @@ import constants
 import misc
 import network_resource
 import pywintypes
+import remote_storage
 import views.ViewCreator
-from . import fileList, driveList, streamList, searchResult, grepResult, NetworkResourceList
+from . import fileList, driveList, streamList, searchResult, grepResult, NetworkResourceList, remote_list
 from simpleDialog import dialog
 
 log = logging.getLogger("falcon.navigator")
@@ -73,6 +74,21 @@ def Navigate(
         # かならずviews.Main.Navigateを経由して呼び出されているはず
         return newtab
     # end targetが辞書の時の特殊処理
+
+    if remote_storage.is_remote_url(target):  # FTP・SFTP のサーバー
+        lst = lists.RemoteList()
+        result = lst.Initialize(target)
+        if result != errorCodes.OK:
+            return result
+        if cursor != "":
+            targetItemIndex = lst.Search(cursor)
+        if isinstance(previous_tab, remote_list.RemoteListTab):  # 再利用
+            newtab = previous_tab
+        else:
+            newtab = remote_list.RemoteListTab(environment)
+            newtab.Initialize(parent, creator, hListCtrl)
+        _show_list(newtab, previous_tab, lst, targetItemIndex)
+        return _finish_navigate(newtab, previous_tab)
 
     target = os.path.expandvars(target)
     if target != "" and not network_resource.is_server_path(target):
@@ -155,16 +171,31 @@ def Navigate(
             newtab = fileList.FileListTab(environment)
             newtab.Initialize(parent, creator, hListCtrl)
         # end 再利用するかどうか
-    newtab.Update(lst, targetItemIndex)
+    _show_list(newtab, previous_tab, lst, targetItemIndex)
     if target == "" and targetItemIndex == -1 and network_resource.is_server_path(cursor):
         newtab.set_pending_focus(cursor)
     # end ターゲットにフォーカス
+    return _finish_navigate(newtab, previous_tab)
+# end Navigate
+
+
+def _show_list(newtab, previous_tab, lst, cursor):
+    """移動先のタブに一覧を表示する。"""
+    if newtab is not previous_tab and previous_tab is not None:
+        # リストコントロールは新しいタブに引き継がれる。一覧の表示中に、前のタブで遅れて届いた結果
+        # （ドライブの容量など）が新しい一覧に反映されないように、表示する前に前のタブを止める。
+        # replace_current_tab でもう一度呼ばれるが、OnClose は何度呼んでもよい
+        previous_tab.OnClose()
+    newtab.Update(lst, cursor)
+
+
+def _finish_navigate(newtab, previous_tab):
+    """移動先の一覧を表示した後の、読み上げとタブの入れ替えを行い、Navigate の戻り値を返す。"""
     if globalVars.app.settings.get_bool("on_list_moved", "read_item_count", True):
         newtab.ReadListItemNumber(short=True)
     if newtab != previous_tab and previous_tab is not None:
         globalVars.app.main_window.replace_current_tab(newtab)
     return newtab
-# end Navigate
 
 
 def go_to_parent(tab, path):

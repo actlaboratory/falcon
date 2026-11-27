@@ -71,6 +71,9 @@ defaultKeymap["MAINVIEW"] = {
     "TOOL_DISCONNECT_NETWORK_DRIVE": "",
     "TOOL_ADD_NETWORK_PLACE": "",
     "TOOL_REMOVE_NETWORK_PLACE": "",
+    "TOOL_DOWNLOAD": "ctrl+d",
+    "TOOL_UPLOAD": "ctrl+u",
+    "TOOL_COMPARE_TABS": "",
 
     "VIEW_SORTNEXT": "shift+F1",
     "VIEW_SORTSELECT": "ctrl+S",

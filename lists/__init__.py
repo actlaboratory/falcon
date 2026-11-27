@@ -10,4 +10,5 @@ from lists.stream import *
 from lists.searchResult import *
 from lists.grepResult import *
 from lists.networkResource import *
+from lists.remote import RemoteList
 from lists.constants import *

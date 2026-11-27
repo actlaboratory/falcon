@@ -73,6 +73,9 @@ dic = {
     "TOOL_DISCONNECT_NETWORK_DRIVE": _("ネットワークドライブの切断"),
     "TOOL_ADD_NETWORK_PLACE": _("ネットワークの場所の追加"),
     "TOOL_REMOVE_NETWORK_PLACE": _("ネットワークの場所の削除"),
+    "TOOL_DOWNLOAD": _("ダウンロード"),
+    "TOOL_UPLOAD": _("アップロード"),
+    "TOOL_COMPARE_TABS": _("フォルダの比較"),
 
     "VIEW_SORTNEXT": _("次の並び順"),
     "VIEW_SORTSELECT": _("並び順を選択"),

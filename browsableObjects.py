@@ -458,5 +458,41 @@ class NetworkPlace(NetworkResource):
     def initialize_place(self, name, target, place_folder, hIcon=-1):
         """必要な情報をセットする"""
         self.Initialize(name, target, "", hIcon)
-        self.typeString = _("ネットワークの場所")
+        scheme = target.split("://", 1)[0].upper() if "://" in target else ""
+        # FTP・SFTP の場所は、種類の列で方式がわかるようにする
+        self.typeString = _("ネットワークの場所（%(scheme)s）") % {"scheme": scheme} if scheme else _("ネットワークの場所")
         self.place_folder = place_folder
+
+
+class RemoteFile(FalconBrowsableBase):
+    """
+    FTP・SFTP のサーバー上のファイルを表す。fullpath は URL、path はサーバー上のパス。
+    ドライブ一覧のファイルと同じ列（名前・サイズ・更新日時・種類）で表示する。
+    """
+
+    def Initialize(self, location, path, size=-1, modDate=None, typeString="", hIcon=-1, permissions=None, is_link=False):
+        """必要な情報をセットする。location は remote_storage.Location"""
+        self.location = location
+        # UNIX のパーミッション（わからない場合は None）と、シンボリックリンクかどうか
+        self.permissions = permissions
+        self.is_link = is_link
+        self.path = path
+        self.basename = path.rsplit("/", 1)[-1]
+        self.fullpath = location.get_url(path)
+        self.size = size
+        self.modDate = modDate.astimezone(globalVars.app.timezone) if modDate is not None else None
+        self.typeString = typeString
+        self.hIcon = hIcon
+
+    def GetListTuple(self):
+        """表示に必要なタプルを返す。"""
+        return (
+            self.basename,
+            misc.ConvertBytesTo(self.size, misc.UNIT_AUTO, True),
+            misc.PTime2string(self.modDate) if self.modDate is not None else "",
+            self.typeString
+        )
+
+
+class RemoteFolder(RemoteFile):
+    """FTP・SFTP のサーバー上のフォルダを表す。"""

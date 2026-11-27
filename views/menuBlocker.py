@@ -6,6 +6,7 @@
 import win32file
 
 import browsableObjects
+import menuItemsDic
 import tabs.navigator  # 全てのタブのモジュールを、循環importにならない順序で読み込む
 import menuItemsStore
 
@@ -37,12 +38,16 @@ tabTypeBlockList = {
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
         "VIEW_TOGGLE_EXTENSION",
+        "TOOL_DOWNLOAD",
+        "TOOL_UPLOAD",
+        "TOOL_COMPARE_TABS",
     ],
     tabs.fileList.FileListTab: [
         "TOOL_EJECT_DRIVE",
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
-        "TOOL_REMOVE_NETWORK_PLACE"
+        "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
     ],
     tabs.NetworkResourceList.NetworkResourceListTab: [
         "FILE_RENAME",
@@ -71,6 +76,9 @@ tabTypeBlockList = {
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
+        "TOOL_UPLOAD",
+        "TOOL_COMPARE_TABS",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
@@ -106,6 +114,9 @@ tabTypeBlockList = {
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
+        "TOOL_UPLOAD",
+        "TOOL_COMPARE_TABS",
         "TOOL_EXEC_PROGRAM",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
@@ -113,6 +124,72 @@ tabTypeBlockList = {
         "VIEW_TOGGLE_EXTENSION",
     ]
 }
+
+# FTP・SFTP の一覧のタブでは、サーバーで実行できる機能だけを使えるようにする
+_REMOTE_ALLOWED = {
+    "FILE_RENAME",
+    "FILE_CHANGEATTRIBUTE",  # パーミッションの変更になる
+    "FILE_TRASH",  # サーバーにはごみ箱がないので、確認してから完全に削除する
+    "FILE_DELETE",
+    "FILE_NEW",
+    "FILE_MKDIR",
+    "FILE_MKFILE",  # 空のファイルだけを作れる
+    "FILE_VIEW_DETAIL",
+    "FILE_EXIT",
+    "EDIT_COPY",
+    "EDIT_CUT",
+    "EDIT_PAST",
+    "EDIT_NAMECOPY",
+    "EDIT_FULLPATHCOPY",
+    "EDIT_SELECTALL",
+    "EDIT_UPDATEFILELIST",
+    "EDIT_MARKITEM",
+    "EDIT_MARKITEM_ALL",
+    "EDIT_UNMARKITEM_ALL",
+    "EDIT_MARKITEM_INVERSE",
+    "EDIT_OPENCONTEXTMENU",
+    "MOVE_FORWARD",
+    "MOVE_FORWARD_TAB",
+    "MOVE_FORWARD_STREAM",  # フォルダでは中に入る（右矢印キー）
+    "MOVE_BACKWARD",
+    "MOVE_NEWTAB",
+    "MOVE_CLOSECURRENTTAB",
+    "MOVE_SPECIAL_UP",
+    "MOVE_SPECIAL_DOWN",
+    "MOVE_TOPFILE",
+    "MOVE_HIST_NEXT",
+    "MOVE_HIST_PREV",
+    "MOVE_MARKSET",
+    "MOVE_MARK",
+    "MOVE_INPUT_DIR",
+    "MOVE_SETTING_FAVORITE",
+    "MOVE_SETTING_OPEN_HERE",
+    "READ_CURRENTFOLDER",
+    "READ_LISTITEMNUMBER",
+    "READ_LISTINFO",
+    "READ_PROGRESS",
+    "READ_SETMOVEMENTREAD",
+    "TOOL_MAP_NETWORK_DRIVE",
+    "TOOL_ADD_NETWORK_PLACE",
+    "TOOL_DOWNLOAD",
+    "TOOL_UPLOAD",
+    "TOOL_COMPARE_TABS",
+    "VIEW_SORTNEXT",
+    "VIEW_SORTSELECT",
+    "VIEW_SORTCYCLEAD",
+    "VIEW_PROGRESS",
+    "VIEW_SORT_COLUMN",
+    "ENV_REGIST_ORIGINAL_ASSOCIATION",
+    "ENV_KEY_CONFIG",
+    "ENV_TESTDIALOG",
+    "ENV_FONTTEST",
+    "ENV_SETTINGS",
+    "HELP_VERINFO",
+    "HELP_UPDATE",
+}
+tabTypeBlockList[tabs.remote_list.RemoteListTab] = [identifier for identifier in menuItemsDic.dic if identifier and identifier not in _REMOTE_ALLOWED]
+# 「ここで開く」は、表示中のフォルダのパスをコマンドに渡すため使えない
+tabTypeBlockList[tabs.remote_list.RemoteListTab].append("MOVE_OPEN_HERE_")
 
 # 検索結果タブ共通のブロック要素を適用
 for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
@@ -137,6 +214,8 @@ for t in (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab):
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
+        "TOOL_COMPARE_TABS",
         "TOOL_EXEC_PROGRAM"
     ]
 
@@ -171,6 +250,7 @@ selectedItemCountBlockList = {
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
         "READ_CONTENT_PREVIEW",
         "READ_CONTENT_READHEADER",
         "READ_CONTENT_READFOOTER",
@@ -221,6 +301,7 @@ selectedItemTypeBlockList = {
     ],
     browsableObjects.Drive: [
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
     ],
     browsableObjects.NetworkResource: [
         "FILE_RENAME",
@@ -228,7 +309,14 @@ selectedItemTypeBlockList = {
         "TOOL_EJECT_DEVICE",
         "TOOL_DISCONNECT_NETWORK_DRIVE",
         "TOOL_REMOVE_NETWORK_PLACE",
+        "TOOL_DOWNLOAD",
         "READ_CONTENT_PREVIEW"
+    ],
+    browsableObjects.RemoteFile: [
+        "MOVE_FORWARD_TAB",
+        "MOVE_FORWARD_STREAM",  # サーバー上のファイルにストリームはない
+    ],
+    browsableObjects.RemoteFolder: [
     ],
     browsableObjects.NetworkPlace: [
         "FILE_RENAME",  # ドライブ一覧での名前の変更はボリュームラベルの変更になるため
@@ -307,6 +395,10 @@ def testMenu(tab):
     for i in lst:
         if isinstance(i, browsableObjects.Drive):
             ret |= _remote_drive_refs if i.type == win32file.DRIVE_REMOTE else _local_drive_refs
+
+    # サーバーの一覧では、何も選んでいなくてもメニューを開ける（貼り付け・フォルダの作成など）
+    if count == 0 and isinstance(tab, tabs.remote_list.RemoteListTab):
+        ret.discard(menuItemsStore.getRef("EDIT_OPENCONTEXTMENU"))
 
     # 結果を返却
     return ret

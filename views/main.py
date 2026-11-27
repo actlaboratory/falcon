@@ -30,6 +30,7 @@ import wx
 
 from logging import getLogger
 from viewkit.menu import Menu as ViewkitMenu
+from win32com.shell import shell
 
 import archiver
 import background_wait
@@ -40,6 +41,7 @@ import defaultKeymap
 import deviceCtrl
 import disk_info
 import errorCodes
+import folder_compare
 import file_properties
 import fileSystemManager
 import globalVars
@@ -51,13 +53,19 @@ import network_drive
 import network_place
 import network_resource
 import operation_manager
+import remote_connect
+import remote_edit
+import remote_storage
+import remote_transfer
 import reparse_link
 import shortcut_link
 import tabs.navigator
 import views.add_network_place
 import views.bulk_rename
 import views.changeAttribute
+import views.compare_tabs
 import views.compress
+import views.download
 import views.extract
 import views.favoriteDirectory
 import views.file_properties
@@ -74,9 +82,11 @@ import views.objectDetail
 import views.openHere
 import views.operation_progress
 import views.registerOriginalAssociation
+import views.remote_permissions
 import views.search
 import views.settingsDialog
 import views.SimpleInputDialog
+import views.upload
 import views.versionDialog
 import views.ViewCreator
 import workerThreads
@@ -111,6 +121,26 @@ def _menu_item(identifier: str, accessor_letter: str) -> viewkit.MenuItemDefinit
     return viewkit.MenuItemDefinition(identifier, name, accessor_letter)
 
 
+def _get_known_permissions(elem):
+    """項目のパーミッション。わからない場合は、フォルダなら 755、ファイルなら 644 とみなす"""
+    if elem.permissions is not None:
+        return elem.permissions
+    return 0o755 if isinstance(elem, browsableObjects.RemoteFolder) else 0o644
+
+
+def _find_focus_after_removal(old_paths, index, items):
+    """
+    カーソルのあった項目がなくなったときに、新しい一覧でカーソルを置く位置を返す。
+    元の位置の近くの項目を、上下に交互に探す。サーバーの一覧でも使えるように、ディスクではなく新しい一覧で確かめる
+    """
+    positions = {item.fullpath: i for i, item in enumerate(items)}
+    for distance in range(1, len(old_paths)):
+        for candidate in (index - distance, index + distance):
+            if 0 <= candidate < len(old_paths) and old_paths[candidate] in positions:
+                return positions[old_paths[candidate]]
+    return min(max(index, 0), len(items) - 1)
+
+
 class MainWindow(viewkit.MainWindow):
     def __init__(self, ctx: viewkit.ApplicationContext):
         self.app = globalVars.app
@@ -143,6 +173,8 @@ class MainWindow(viewkit.MainWindow):
         self.operations = operation_manager.OperationManager(self)
         self.Bind(wx.EVT_CLOSE, self._on_close)
         self.Bind(wx.EVT_MENU_OPEN, self._on_menu_open)
+        # サーバー上のファイルを開いて編集した後、falcon に戻ってきたときにアップロードするかを尋ねる
+        self.Bind(wx.EVT_ACTIVATE, self._on_activate)
 
     # ---- viewkit.MainWindow のオーバーライド ----
 
@@ -240,6 +272,9 @@ class MainWindow(viewkit.MainWindow):
                 _menu_item("TOOL_DISCONNECT_NETWORK_DRIVE", "N"),
                 _menu_item("TOOL_ADD_NETWORK_PLACE", "A"),
                 _menu_item("TOOL_REMOVE_NETWORK_PLACE", "L"),
+                _menu_item("TOOL_DOWNLOAD", "W"),
+                _menu_item("TOOL_UPLOAD", "U"),
+                _menu_item("TOOL_COMPARE_TABS", "K"),
             ]),
             viewkit.TopMenuDefinition(_("表示"), "V", [
                 _menu_item("VIEW_SORTNEXT", "N"),
@@ -480,7 +515,7 @@ class MainWindow(viewkit.MainWindow):
         directories = {os.path.normcase(directory) for directory in directories}
         for tab in self.tabs:
             # 検索結果のタブは FileListTab の派生だが、再検索になるため更新しない
-            if type(tab) is tabs.fileList.FileListTab and os.path.normcase(tab.listObject.rootDirectory) in directories:
+            if type(tab) in (tabs.fileList.FileListTab, tabs.remote_list.RemoteListTab) and os.path.normcase(tab.listObject.rootDirectory) in directories:
                 self._refresh_file_list(tab)
             elif deleted_paths and isinstance(tab, (tabs.searchResult.SearchResultTab, tabs.grepResult.GrepResultTab)):
                 tab.remove_deleted_items(deleted_paths)
@@ -503,7 +538,7 @@ class MainWindow(viewkit.MainWindow):
             return
         if focused is not None and focused.fullpath not in {item.fullpath for item in items}:
             # カーソルのあった項目がなくなった
-            tab.Focus(min(tab._findFocusAfterDeletion(old_paths, index), len(items) - 1))
+            tab.Focus(_find_focus_after_removal(old_paths, index, items))
         for i, item in enumerate(items):
             if item.fullpath in selected:
                 tab.hListCtrl.Select(i)
@@ -552,6 +587,7 @@ class MainWindow(viewkit.MainWindow):
         self.log.info("received close event(force=" + ("true" if not event.CanVeto() else "false") + ")")
         if not event.CanVeto():  # 強制シャットダウン
             self.operations.shutdown()
+            self._close_remote()
             self.Destroy()
             return
         if not self._confirm_stop_operations():
@@ -571,7 +607,16 @@ class MainWindow(viewkit.MainWindow):
                 self.log.info("CloseEvent.Veto(). user select cancel.")
                 return
         self.operations.shutdown()
+        self._close_remote()
         event.Skip()
+
+    def _close_remote(self):
+        """FTP・SFTP の接続を閉じ、サーバーと同じ内容のままの一時ファイルを消す"""
+        try:
+            remote_storage.pool.close_all()
+            remote_edit.edit_tracker.cleanup()
+        except Exception:
+            self.log.exception("cannot close remote connections")
 
     def _confirm_stop_operations(self):
         """終わっていないファイル操作があれば、終了してよいか確認する。"""
@@ -757,6 +802,9 @@ class MainWindow(viewkit.MainWindow):
             "TOOL_DISCONNECT_NETWORK_DRIVE": self._on_disconnect_network_drive,
             "TOOL_ADD_NETWORK_PLACE": self._on_add_network_place,
             "TOOL_REMOVE_NETWORK_PLACE": self._on_remove_network_place,
+            "TOOL_DOWNLOAD": self._on_download,
+            "TOOL_UPLOAD": self._on_upload,
+            "TOOL_COMPARE_TABS": self._on_compare_tabs,
 
             "VIEW_SORTNEXT": lambda event: self._delaied_call(self._sort_next),
             "VIEW_SORTSELECT": tab("SortSelect"),
@@ -808,6 +856,9 @@ class MainWindow(viewkit.MainWindow):
         self.Close()
 
     def _on_change_attribute(self, event):
+        if isinstance(self.active_tab, tabs.remote_list.RemoteListTab):
+            self._change_remote_permissions()
+            return
         result = self.showSubWindow(views.changeAttribute.ChangeAttributeWindow, _("属性変更"), self.active_tab.GetSelectedItems().GetAttributeCheckState())
         if result.code == wx.ID_CANCEL:
             return
@@ -844,6 +895,12 @@ class MainWindow(viewkit.MainWindow):
         self.active_tab.MakeDirectory(value)
 
     def _on_make_file(self, event):
+        # サーバーの一覧では、空のファイルだけを作れる
+        if isinstance(self.active_tab, tabs.remote_list.RemoteListTab):
+            value = self.input_text(_("ファイル作成"), _("ファイル名"))
+            if value is not None:
+                self.active_tab.make_empty_file(value)
+            return
         # ファイル一覧タブにだけある機能
         if not hasattr(self.active_tab, "MakeFile"):
             return
@@ -1063,12 +1120,18 @@ class MainWindow(viewkit.MainWindow):
         elif ret == errorCodes.UNKNOWN:
             dialog(_("エラー"), _("デバイスの取り外しに失敗しました。"))
 
-    def _get_network_path_for_input(self):
+    def _get_network_path_for_input(self, allow_remote=False):
         r"""
         ネットワークドライブの割り当てなどで、フォルダの入力欄に最初に入れておくパスを返す。
         選択中の項目がネットワーク上のフォルダ・コンピューターならそのパス、そうでなければ表示中の場所が \\ で始まればそのパス。
+        allow_remote=True の場合は、FTP・SFTP のフォルダの URL も返す。
         """
         elem = self.active_tab.GetFocusedElement()
+        if allow_remote:
+            if isinstance(elem, (browsableObjects.RemoteFolder, browsableObjects.NetworkPlace)) and remote_storage.is_remote_url(elem.fullpath):
+                return elem.fullpath
+            if isinstance(self.active_tab, tabs.remote_list.RemoteListTab):
+                return self.active_tab.listObject.rootDirectory
         if isinstance(elem, (browsableObjects.Folder, browsableObjects.NetworkResource)) and network_resource.is_unc_path(elem.fullpath):
             return network_drive.get_initial_path(elem.fullpath)
         return network_drive.get_initial_path(getattr(self.active_tab.listObject, "rootDirectory", ""))
@@ -1145,26 +1208,29 @@ class MainWindow(viewkit.MainWindow):
 
     def _on_add_network_place(self, event):
         """ネットワークの場所を追加する"""
-        result = self.showSubWindow(views.add_network_place.AddNetworkPlaceWindow, _("ネットワークの場所の追加"), self._get_network_path_for_input())
+        result = self.showSubWindow(views.add_network_place.AddNetworkPlaceWindow, _("ネットワークの場所の追加"), self._get_network_path_for_input(allow_remote=True))
         if result.code == wx.ID_CANCEL:
             return
         request = result.user_object
         if not self._check_network_folder(request.target):
             return
         try:
-            folder = network_place.add(request.name, request.target)
+            network_place.add(request.name, request.target)
         except (OSError, pywintypes.error, pywintypes.com_error) as err:
             self.log.error("cannot add network place %s: %s" % (request.name, err))
             dialog(_("エラー"), _("ネットワークの場所を追加できませんでした。\n(%(error)s)") % {"error": err})
             return
-        self._update_drive_lists(lambda elem: isinstance(elem, browsableObjects.NetworkPlace) and elem.place_folder == folder)
+        self._update_drive_lists(lambda elem: isinstance(elem, browsableObjects.NetworkPlace) and elem.basename == request.name)
         self.app.say(_("ネットワークの場所を追加しました。"))
 
     def _check_network_folder(self, path):
         """
         ネットワーク上のフォルダを開けるかどうかを確かめ、開けなければエラーを表示してFalseを返す。
         認証が必要な場合は、資格情報の入力画面が出る。コンピューター(\\server)は確かめずにTrueを返す。
+        FTP・SFTP の URL の場合は、接続してフォルダの中身を取得できるかを確かめる。
         """
+        if remote_storage.is_remote_url(path):
+            return self._check_remote_folder(path)
         if network_resource.is_server_path(path):
             return True
         try:
@@ -1185,6 +1251,195 @@ class MainWindow(viewkit.MainWindow):
             return False
         return True
 
+    def _check_remote_folder(self, url):
+        """FTP・SFTP のフォルダを開けるかどうかを確かめ、開けなければエラーを表示してFalseを返す。"""
+        location = remote_storage.parse_url(url)
+        try:
+            remote_connect.run(location, lambda client: client.list_dir(location.path or client.get_initial_path()))
+        except background_wait.Canceled:
+            return False
+        except remote_storage.RemoteError as err:
+            dialog(_("エラー"), _("%(url)s を開けませんでした。\n%(error)s") % {"url": url, "error": err})
+            return False
+        return True
+
+    def _on_download(self, event):
+        """選択中のファイル・フォルダを、FTP・SFTP のサーバーからダウンロードする"""
+        tab = self.active_tab
+        # FTP・SFTP の一覧以外では menuBlocker で無効にしている
+        if not isinstance(tab, tabs.remote_list.RemoteListTab):
+            return
+        elems = [elem for elem in tab.GetSelectedItems() if isinstance(elem, browsableObjects.RemoteFile)]
+        if not elems:
+            return
+        directory = self.app.settings.get_str("remote", "download_directory", "")
+        if directory == "" or not os.path.isdir(directory):
+            directory = shell.SHGetKnownFolderPath(shell.FOLDERID_Downloads)
+        result = self.showSubWindow(views.download.DownloadWindow, _("ダウンロード"), directory)
+        if result.code == wx.ID_CANCEL:
+            return
+        directory, conflict = result.user_object
+        self.app.settings.set("remote", "download_directory", directory)
+        items = [remote_transfer.DownloadItem(elem.path, isinstance(elem, browsableObjects.RemoteFolder), elem.is_link) for elem in elems]
+        request = remote_transfer.DownloadRequest(tab.listObject.location, items, directory, conflict)
+        self.operations.add(operation_manager.DownloadOperation(request))
+
+    def _on_upload(self, event):
+        """
+        FTP・SFTP のサーバーにアップロードする。
+        サーバーの一覧では、ファイルを選んで表示中のフォルダに、ファイル一覧では、選択中の項目を指定したフォルダにアップロードする。
+        """
+        tab = self.active_tab
+        if isinstance(tab, tabs.remote_list.RemoteListTab):
+            tab.upload_files()
+            return
+        # ファイル一覧以外では menuBlocker で無効にしている
+        if not isinstance(tab, tabs.fileList.FileListTab):
+            return
+        paths = [elem.fullpath for elem in tab.GetSelectedItems() if isinstance(elem, browsableObjects.File)]
+        if not paths:
+            dialog(_("エラー"), _("アップロードする項目が選択されていません。"))
+            return
+        result = self.showSubWindow(views.upload.UploadWindow, _("アップロード"), self._get_upload_parameters())
+        if result.code == wx.ID_CANCEL:
+            return
+        location, conflict = result.user_object
+        self.app.settings.set("remote", "upload_directory", location.get_url())
+        items = [remote_transfer.UploadItem(path) for path in paths]
+        self._start_upload(remote_transfer.UploadRequest(location, items, conflict))
+
+    def _get_upload_parameters(self):
+        """アップロード先の候補（開いているサーバーのタブ、前回のアップロード先、ネットワークの場所）"""
+        candidates = []
+        for tab in self.tabs:
+            if isinstance(tab, tabs.remote_list.RemoteListTab):
+                candidates.append(tab.listObject.rootDirectory)
+        last = self.app.settings.get_str("remote", "upload_directory", "")
+        if last:
+            candidates.append(last)
+        for place in network_place.get_places():
+            if remote_storage.is_remote_url(place.target):
+                candidates.append(place.target)
+        # 順番を保ったまま、重なりを除く
+        candidates = list(dict.fromkeys(candidates))
+        return views.upload.UploadParameters(candidates, candidates[0] if candidates else "")
+
+    def _start_upload(self, request, on_success=None):
+        """
+        アップロードを始める。一覧を開いていないサーバーでも転送の途中で画面を出さないよう、
+        先に接続を確かめ、ログインやサーバーの確認が必要ならここで済ませる。
+        """
+        try:
+            remote_connect.run(request.location, lambda client: None)
+        except background_wait.Canceled:
+            return
+        except remote_storage.RemoteError as err:
+            dialog(_("エラー"), _("%(url)s に接続できませんでした。\n%(error)s") % {"url": request.location.get_url(), "error": err})
+            return
+        self.operations.add(operation_manager.UploadOperation(request, on_success))
+
+    def _is_comparable_tab(self, tab):
+        """他のタブとの比較に使えるタブ（ファイル一覧・サーバーの一覧）かどうか"""
+        return type(tab) in (tabs.fileList.FileListTab, tabs.remote_list.RemoteListTab)
+
+    def _on_compare_tabs(self, event):
+        """
+        アクティブなタブのフォルダを、ほかのタブのフォルダと比べ、違う項目にチェックを付ける。
+        相手にない項目、大きさが違うファイル、こちらのほうが新しいファイルが対象。チェックした項目をコピーなどで転送すれば同期できる。
+        """
+        tab = self.active_tab
+        if not self._is_comparable_tab(tab):
+            return
+        others = [t for t in self.tabs if t is not tab and self._is_comparable_tab(t)]
+        if not others:
+            dialog(_("エラー"), _("比較できるタブが他にありません。"))
+            return
+        other = others[0]
+        if len(others) > 1:
+            names = ["%s (%s)" % (t.GetTabName(), t.listObject.rootDirectory) for t in others]
+            result = self.showSubWindow(views.compare_tabs.CompareTabsWindow, _("フォルダの比較"), names)
+            if result.code == wx.ID_CANCEL:
+                return
+            other = others[result.user_object]
+        # サーバー同士なら名前の大文字と小文字を区別する。Windows のフォルダと比べる場合は区別しない
+        case_sensitive = isinstance(tab, tabs.remote_list.RemoteListTab) and isinstance(other, tabs.remote_list.RemoteListTab)
+        differences = folder_compare.compare(tab.listObject.GetItemList(), other.listObject.GetItemList(), case_sensitive)
+        self._set_checked_items(tab, {difference.element for difference in differences})
+        if not differences:
+            self.app.say(_("差異なし"), interrupt=True)
+            return
+        counts = {}
+        for difference in differences:
+            counts[difference.kind] = counts.get(difference.kind, 0) + 1
+        self.app.say(_(
+            "差異 %(total)d件を選択。比較先に存在しない %(only)d件、種類の不一致 %(type)d件、"
+            "サイズの不一致 %(size)d件、更新日時が新しい %(newer)d件") % {
+            "total": len(differences), "only": counts.get(folder_compare.ONLY_HERE, 0),
+            "type": counts.get(folder_compare.TYPE_DIFFERS, 0), "size": counts.get(folder_compare.SIZE_DIFFERS, 0),
+            "newer": counts.get(folder_compare.NEWER, 0)}, interrupt=True)
+
+    def _set_checked_items(self, tab, elements):
+        """タブの項目のチェックを、elements だけに付けた状態にする（読み上げやカーソルの移動はしない）"""
+        for index, item in enumerate(tab.listObject.GetItemList()):
+            if item in elements:
+                tab.checkedItem.add(item)
+                tab.hListCtrl.SetItemBackgroundColour(index, "#0000FF")
+            else:
+                tab.checkedItem.discard(item)
+                tab.hListCtrl.SetItemBackgroundColour(index, "#000000")
+            tab.hListCtrl.RefreshItem(index)
+        self.menu.enable("EDIT_UNMARKITEM_ALL", tab.hasCheckedItem())
+        self.menu.enable("EDIT_MARKITEM_ALL", len(tab.checkedItem) != len(tab.listObject))
+
+    def _change_remote_permissions(self):
+        """サーバーの一覧で、選択中の項目のパーミッションを変える"""
+        tab = self.active_tab
+        elems = [elem for elem in tab.GetSelectedItems() if isinstance(elem, browsableObjects.RemoteFile)]
+        if not elems:
+            return
+        focused = tab.GetFocusedElement()
+        base = focused if focused in elems else elems[0]
+        target = elems[0].basename if len(elems) == 1 else _("%(count)d項目") % {"count": len(elems)}
+        modes = [_get_known_permissions(elem) for elem in elems]
+        # パーミッションが違う項目をまとめて変える場合は、変えたビットだけを各項目に反映する
+        mixed = len(set(modes)) > 1
+        initial = _get_known_permissions(base)
+        parameters = views.remote_permissions.RemotePermissionsParameters(
+            target, base.permissions, initial, mixed)
+        result = self.showSubWindow(views.remote_permissions.RemotePermissionsWindow, _("パーミッションの変更"), parameters)
+        if result.code == wx.ID_CANCEL:
+            return
+        mode = result.user_object
+        if mixed:
+            added, removed = mode & ~initial, initial & ~mode
+            modes = [(item | added) & ~removed for item in modes]
+        else:
+            modes = [mode] * len(elems)
+        tab.change_permissions(elems, modes)
+
+    def _on_activate(self, event):
+        """ウィンドウがアクティブになった。開いて編集したサーバー上のファイルが変わっていれば、アップロードするか尋ねる"""
+        event.Skip()
+        if event.GetActive():
+            # アクティブになった直後は、フォーカスの移動の読み上げと重なるので少し待つ
+            wx.CallLater(300, self._check_edited_files)
+
+    def _check_edited_files(self):
+        if not self.can_ask():
+            return
+        for edited in remote_edit.edit_tracker.pop_changed():
+            message = _(
+                "%(name)s が変更されました。\n"
+                "%(url)s にアップロードして上書きしますか？") % {
+                "name": edited.get_name(), "url": edited.location.get_url(edited.path)}
+            if not self._ask_yes_no(_("ファイルの変更"), message):
+                continue
+            item = remote_transfer.UploadItem(edited.local_path, edited.get_name())
+            request = remote_transfer.UploadRequest(edited.location, [item], remote_transfer.CONFLICT_OVERWRITE)
+            stamp = edited.begin_upload()
+            # 成功したら、終了時に一時ファイルを消してよい状態にする
+            self._start_upload(request, lambda edited=edited, stamp=stamp: edited.finish_upload(stamp))
+
     def _on_remove_network_place(self, event):
         """選択中のネットワークの場所を削除する"""
         place = self.active_tab.GetFocusedElement()
@@ -1194,9 +1449,9 @@ class MainWindow(viewkit.MainWindow):
         if not self._ask_yes_no(_("確認"), _("ネットワークの場所「%(name)s」を削除しますか？\nリンク先のフォルダとその中身は削除されません。") % {"name": place.basename}):
             return
         try:
-            network_place.remove(place.place_folder)
+            network_place.remove(place.basename, place.place_folder)
         except (OSError, ValueError) as err:
-            self.log.error("cannot remove network place %s: %s" % (place.place_folder, err))
+            self.log.error("cannot remove network place %s: %s" % (place.basename, err))
             dialog(_("エラー"), _("ネットワークの場所を削除できませんでした。\n(%(error)s)") % {"error": err})
             return
         self._update_drive_lists()
@@ -1333,6 +1588,17 @@ class MainWindow(viewkit.MainWindow):
         d = views.objectDetail.ObjectDetailParameters()
         d.add(_("名前"), elem.basename)
         d.add(_("パス"), elem.fullpath)
+        if isinstance(elem, browsableObjects.RemoteFile):
+            if elem.size >= 0:
+                d.add(_("サイズ"), misc.ConvertBytesTo(elem.size, misc.UNIT_AUTO, True))
+                d.add(_("サイズ(バイト)"), elem.size)
+            if elem.modDate is not None:
+                d.add(_("更新日時"), misc.PTime2string(elem.modDate))
+            d.add(_("種類"), elem.typeString)
+            if elem.permissions is not None:
+                d.add(_("パーミッション"), remote_storage.format_permissions(elem.permissions))
+            if elem.is_link:
+                d.add(_("シンボリックリンク"), _("はい"))
         if isinstance(elem, browsableObjects.File) or isinstance(elem, browsableObjects.Stream):
             if elem.size >= 0:
                 d.add(_("サイズ"), misc.ConvertBytesTo(elem.size, misc.UNIT_AUTO, True))

@@ -1,0 +1,814 @@
+# -*- coding: utf-8 -*-
+# Falcon remote transfer
+# Note: All comments except these top lines will be written in Japanese.
+
+"""
+FTP・SFTP のサーバーとの間で、ファイルとフォルダを転送（ダウンロード・アップロード）したり、
+サーバー上の項目を削除したりする処理です。
+operation_manager の RemoteOperation から、別スレッドで実行します。
+一覧の表示に使っている接続とは別に、転送用の接続を作ります。画面の部品には触りません。
+"""
+
+import datetime
+import logging
+import os
+import re
+import tempfile
+import threading
+import time
+
+import remote_storage
+
+log = logging.getLogger("falcon.remote_transfer")
+
+# 同じ名前のファイル・フォルダがあるとき
+CONFLICT_RENAME = "rename"
+CONFLICT_SKIP = "skip"
+CONFLICT_OVERWRITE = "overwrite"
+# 転送元のほうが新しい場合だけ上書きする
+CONFLICT_NEWER = "newer"
+# 転送先のファイルが転送元より小さい場合は、続きから転送する（途中で止まった転送の再開）
+CONFLICT_RESUME = "resume"
+CONFLICTS = (CONFLICT_RENAME, CONFLICT_SKIP, CONFLICT_OVERWRITE, CONFLICT_NEWER, CONFLICT_RESUME)
+
+# Windows のファイル名に使えない文字
+_INVALID_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+# フォルダをたどる深さの上限。シンボリックリンクがループしていて、実際のパスを調べられない場合に止めるため
+MAX_DEPTH = 64
+_RESERVED_NAMES = re.compile(r"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$", re.IGNORECASE)
+
+
+def get_conflict_names():
+    """CONFLICTS と同じ順の、同じ名前があるときの扱いの表示名"""
+    return [
+        _("名前を変更して保存"),
+        _("スキップ"),
+        _("上書き"),
+        _("転送元が新しい場合のみ上書き"),
+        _("レジューム（転送先が小さい場合）"),
+    ]
+
+
+# 上書きするファイルを一時的に保存するときの、名前の末尾
+_PARTIAL_SUFFIX = ".falcon-part"
+
+
+def _remove_quietly(path):
+    """ファイルを消す。消せなくてもよい"""
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
+class DownloadItem:
+    """ダウンロードする項目"""
+
+    def __init__(self, path, is_dir, is_link=False):
+        # サーバー上のパス
+        self.path = path
+        self.is_dir = is_dir
+        # シンボリックリンクかどうか（削除するときに、リンク先の中身を消さないため）
+        self.is_link = is_link
+
+    def get_name(self):
+        return remote_storage.get_name(self.path)
+
+
+class UploadItem:
+    """アップロードする項目"""
+
+    def __init__(self, local_path, name=None):
+        self.local_path = local_path
+        # サーバーに保存する名前。None ならローカルと同じ名前
+        self.name = name or os.path.basename(local_path.rstrip("\\/"))
+
+    def get_name(self):
+        return self.name
+
+
+class DownloadRequest:
+    """ダウンロードの内容"""
+
+    def __init__(self, location, items, directory, conflict=CONFLICT_RENAME):
+        # サーバー（remote_storage.Location）
+        self.location = location
+        # DownloadItem のリスト
+        self.items = items
+        # 保存先のフォルダ
+        self.directory = directory
+        self.conflict = conflict
+
+
+class UploadRequest:
+    """アップロードの内容"""
+
+    def __init__(self, location, items, conflict=CONFLICT_RENAME):
+        # アップロード先のフォルダ（remote_storage.Location。path がフォルダ）
+        self.location = location
+        # UploadItem のリスト
+        self.items = items
+        self.conflict = conflict
+
+
+class DeleteRequest:
+    """サーバー上の項目の削除の内容"""
+
+    def __init__(self, location, items):
+        # 削除する項目のあるフォルダ（remote_storage.Location）
+        self.location = location
+        # DownloadItem のリスト（パスとフォルダかどうか）
+        self.items = items
+
+
+def get_local_name(name):
+    """サーバー上の名前を、Windows で使える名前にする。変える必要がなければそのまま返す"""
+    result = _INVALID_CHARS.sub("_", name).rstrip(". ")
+    if result == "":
+        result = "_"
+    if _RESERVED_NAMES.match(result):
+        result = "_" + result
+    return result
+
+
+def _numbered_names(name):
+    """「名前 (2).txt」「名前 (3).txt」… を順に返す"""
+    base, extension = os.path.splitext(name)
+    number = 2
+    while True:
+        yield "%s (%d)%s" % (base, number, extension)
+        number += 1
+
+
+def make_unique_path(path):
+    """同じ名前のファイル・フォルダがあれば、「名前 (2).txt」のように番号を付けたパスを返す"""
+    if not os.path.lexists(path):
+        return path
+    directory, name = os.path.split(path)
+    for candidate in _numbered_names(name):
+        candidate = os.path.join(directory, candidate)
+        if not os.path.lexists(candidate):
+            return candidate
+
+
+def make_unique_name(name, existing):
+    """existing（名前の集まり）にない名前を返す。name がなければそのまま"""
+    if name not in existing:
+        return name
+    for candidate in _numbered_names(name):
+        if candidate not in existing:
+            return candidate
+
+
+def decide(conflict, source_size, source_modified, destination_size, destination_modified, precision=1):
+    """
+    転送先に同じ名前のファイルがあるときに、どうするかを決める。
+    戻り値は (転送するかどうか, 転送を始める位置)。CONFLICT_RENAME と CONFLICT_SKIP は呼び出し側で扱う。
+    """
+    if conflict == CONFLICT_NEWER:
+        if source_modified is None or destination_modified is None:
+            # 比べられない場合は、転送しておく
+            return True, 0
+        tolerance = datetime.timedelta(seconds=max(precision, 1))
+        return source_modified - destination_modified >= tolerance, 0
+    if conflict == CONFLICT_RESUME:
+        if source_size < 0 or destination_size < 0 or destination_size > source_size:
+            return True, 0
+        if destination_size == source_size:
+            return False, 0
+        return True, destination_size
+    return True, 0
+
+
+def mark_from_internet(local_path, url):
+    """
+    ダウンロードしたファイルに、インターネットから来たことを表す印（Zone.Identifier）を付ける。
+    Windows の SmartScreen や Office の保護ビューが、ブラウザーでダウンロードしたファイルと同じように働く。
+    印を付けられないドライブ（FAT など）では何もしない。url にはユーザー名を含めないこと。
+    """
+    try:
+        with open(local_path + ":Zone.Identifier", "w", encoding="utf-8") as f:
+            f.write("[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=%s\r\n" % url)
+    except OSError as err:
+        log.debug("Cannot mark %s: %s" % (local_path, err))
+
+
+def _get_local_modified(path):
+    try:
+        return datetime.datetime.fromtimestamp(os.stat(path).st_mtime, datetime.timezone.utc)
+    except (OSError, ValueError, OverflowError):
+        return None
+
+
+# 転送速度を求めるときに使う、直近の期間（秒）と、記録する間隔（秒）
+_SPEED_PERIOD = 5
+_SPEED_SAMPLE_INTERVAL = 0.25
+
+
+class TransferStatistics:
+    """
+    転送の状況（転送したバイト数、全体のバイト数、ファイルの数、転送速度、残り時間）。
+    転送のスレッドが書き込み、画面のスレッドが読む。値の読み書きだけなので、ロックは使わない
+    """
+
+    def __init__(self, total_bytes, file_count):
+        self.total_bytes = total_bytes
+        self.done_bytes = 0
+        self.file_count = file_count
+        # 転送中のファイルの番号（1から）と名前
+        self.file_index = 0
+        self.file_name = ""
+        # 直近の (時刻, 転送したバイト数)
+        self._samples = [(time.monotonic(), 0)]
+
+    def add(self, size):
+        """(転送のスレッド) size バイト転送した"""
+        self.done_bytes += size
+        now = time.monotonic()
+        samples = self._samples
+        if now - samples[-1][0] >= _SPEED_SAMPLE_INTERVAL:
+            # 古い記録を捨てる。新しいリストに置き換えるので、読む側が途中の状態を見ることはない
+            self._samples = [sample for sample in samples if now - sample[0] <= _SPEED_PERIOD] + [(now, self.done_bytes)]
+
+    def get_speed(self):
+        """直近の転送速度（バイト/秒）。測り始めたばかりでわからなければ None"""
+        samples = self._samples
+        now = time.monotonic()
+        start_time, start_bytes = samples[0]
+        if now - start_time < 1:
+            return None
+        return (self.done_bytes - start_bytes) / (now - start_time)
+
+    def get_remaining_seconds(self):
+        """残り時間（秒）。わからなければ None"""
+        speed = self.get_speed()
+        if not speed or self.total_bytes <= 0:
+            return None
+        return max(self.total_bytes - self.done_bytes, 0) / speed
+
+
+class _File:
+    """転送するファイル1つ"""
+
+    def __init__(self, source, destination, size, offset=0, modified=None):
+        # ダウンロードではサーバー上のパスとローカルのパス、アップロードではその逆
+        self.source = source
+        self.destination = destination
+        self.size = size
+        self.offset = offset
+        # 転送元の更新日時。転送後に転送先へ設定する
+        self.modified = modified
+
+
+# 操作の段階。転送を始める前の接続とファイルの洗い出しには時間がかかることがあるので、状態として見せる
+PHASE_CONNECTING = "connecting"
+PHASE_PREPARING = "preparing"
+PHASE_RUNNING = "running"
+
+
+class RemoteJob:
+    """サーバーへの操作を別スレッドで実行し、進み具合と結果を持つ。操作ごとに派生クラスを作る"""
+
+    def __init__(self, location):
+        self._location = location
+        self._cancel = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._client = None
+        self.percentage = None
+        self.phase = PHASE_CONNECTING
+        # 準備の段階で見つけた、転送するファイルの数
+        self.found = 0
+        # 転送の状況（TransferStatistics）。転送を始めるまでは None
+        self.statistics = None
+        # 利用者に知らせる注意（名前を変えて保存した項目など）の (対象, 内容) のリスト
+        self.warnings = []
+        # 失敗した項目の (対象, 内容) のリスト
+        self.errors = []
+        self.canceled = False
+
+    def start(self):
+        self._thread.start()
+
+    def wait(self, seconds):
+        self._thread.join(seconds)
+        return self.is_finished()
+
+    def is_finished(self):
+        return not self._thread.is_alive()
+
+    def cancel(self):
+        """中止を指示する。実際に止まるのは少し後"""
+        self._cancel.set()
+
+    def _check_canceled(self, size=0):
+        if self._cancel.is_set():
+            raise remote_storage.Canceled()
+
+    def _run(self):
+        name = self.__class__.__name__
+        log.info("%s started: %s" % (name, self._describe()))
+        start = time.monotonic()
+        # 接続や準備の間も、プログレスバーを出しておく
+        self.percentage = 0
+        try:
+            self._prepare()
+            self._connect()
+            self._execute()
+        except remote_storage.Canceled:
+            self.canceled = True
+        except (remote_storage.RemoteError, OSError) as err:
+            self._add_exception(self._location.get_url(), err)
+        except Exception as err:
+            log.exception("remote operation failed")
+            self._add_exception(self._location.get_url(), err)
+        finally:
+            if self._client is not None:
+                try:
+                    self._client.close()
+                except Exception as err:
+                    log.debug("close failed: %s" % err)
+            log.info("%s %s (%.1fs, %s, errors: %d, warnings: %d)" % (
+                name, "canceled" if self.canceled else "finished", time.monotonic() - start,
+                self._get_summary(), len(self.errors), len(self.warnings)))
+
+    def _add_error(self, target, message, detail):
+        """
+        利用者に見せるエラーを加える。message は利用者向けの文章（翻訳されている）。
+        ログには英語の detail を書く（利用者向けの文章は書かない）
+        """
+        self.errors.append((target, message))
+        log.warning("%s error: %s: %s" % (self.__class__.__name__, target, detail))
+
+    def _add_warning(self, target, message, detail):
+        """利用者に見せる注意を加える。ログには英語の detail を書く"""
+        self.warnings.append((target, message))
+        log.info("%s warning: %s: %s" % (self.__class__.__name__, target, detail))
+
+    def _add_exception(self, target, err):
+        """例外を、利用者に見せるエラーとして加える。ログには remote_storage.get_log_text の説明を書く"""
+        self._add_error(target, getattr(err, "strerror", None) or str(err), remote_storage.get_log_text(err))
+
+    def _describe(self):
+        """ログに書く、操作の内容"""
+        return self._location.get_url()
+
+    def _get_summary(self):
+        """ログに書く、結果のまとめ"""
+        return "-"
+
+    def _prepare(self):
+        """接続する前の準備"""
+
+    def _execute(self):
+        raise NotImplementedError
+
+    def _connect(self):
+        location = self._location
+        try:
+            self._client = remote_storage.connect(location, remote_storage.credential_store.get(location))
+        except (remote_storage.AuthRequired, remote_storage.UnknownHostKey, remote_storage.UntrustedCertificate) as err:
+            # 一覧を開いたときに確認しているので、通常は起きない
+            raise remote_storage.RemoteError(
+                _("接続できませんでした。\n(%(error)s)") % {"error": err}, "cannot connect: %s" % remote_storage.get_log_text(err))
+
+    def _reconnect(self):
+        log.info("%s: reconnect to %s" % (self.__class__.__name__, self._location.get_server_key()))
+        try:
+            self._client.close()
+        except Exception as err:
+            log.debug("close failed: %s" % err)
+        self._client = None
+        self._connect()
+
+
+class TransferJob(RemoteJob):
+    """ダウンロードとアップロードに共通の処理"""
+
+    def __init__(self, location, conflict):
+        super().__init__(location)
+        self._conflict = conflict
+        # 転送先のほうが新しい・同じ大きさなどの理由で、転送しなかったファイルの数
+        self._skipped = 0
+        # ログに書くための、転送したファイルの数とバイト数
+        self._transferred_files = 0
+        self._transferred_bytes = 0
+
+    def _get_summary(self):
+        return "%d files, %d bytes, skipped: %d" % (self._transferred_files, self._transferred_bytes, self._skipped)
+
+    def _execute(self):
+        self.phase = PHASE_PREPARING
+        files = self._plan()
+        self.phase = PHASE_RUNNING
+        self._transfer(files)
+        if self._skipped:
+            self._add_warning(self._get_destination_name(), _(
+                "転送先の同名のファイルが新しいか同じサイズのため、%(count)d件をスキップ") % {"count": self._skipped},
+                "%d files not transferred (the destination is newer or has the same size)" % self._skipped)
+
+    def _plan(self):
+        """転送するファイルの一覧を作る。転送先のフォルダはここで作る"""
+        raise NotImplementedError
+
+    def _get_destination_name(self):
+        raise NotImplementedError
+
+    def _transfer_file(self, f, on_progress):
+        raise NotImplementedError
+
+    def _set_modified(self, f):
+        """転送先の更新日時を、転送元に合わせる。できなくてもエラーにしない"""
+        raise NotImplementedError
+
+    def _decide_file(self, source_size, source_modified, destination_size, destination_modified, precision=1):
+        """転送先に同じ名前のファイルがある場合に、転送するかどうかと始める位置を決める"""
+        transfer, offset = decide(self._conflict, source_size, source_modified, destination_size, destination_modified, precision)
+        if not transfer:
+            self._skipped += 1
+        return transfer, offset
+
+    def _transfer(self, files):
+        total = sum(max(f.size - f.offset, 0) for f in files)
+        log.info("%s: %d files, %d bytes (conflict: %s)" % (self.__class__.__name__, len(files), total, self._conflict))
+        statistics = TransferStatistics(total, len(files))
+        self.statistics = statistics
+        self.percentage = 0
+
+        def on_progress(size):
+            self._check_canceled()
+            statistics.add(size)
+            self._transferred_bytes += size
+            if total > 0:
+                self.percentage = min(100, statistics.done_bytes * 100 // total)
+
+        for index, f in enumerate(files):
+            self._check_canceled()
+            statistics.file_index = index + 1
+            statistics.file_name = remote_storage.get_name(f.source) if isinstance(self, DownloadJob) else os.path.basename(f.source)
+            log.debug("transfer %s -> %s (size: %d, offset: %d)" % (f.source, f.destination, f.size, f.offset))
+            start = time.monotonic()
+            try:
+                self._transfer_file(f, on_progress)
+                self._transferred_files += 1
+                log.debug("transferred %s (%.2fs)" % (f.source, time.monotonic() - start))
+            except remote_storage.ConnectError as err:
+                # 接続が切れた場合は、つなぎ直して続ける
+                self._add_exception(f.source, err)
+                self._reconnect()
+                continue
+            except (remote_storage.RemoteError, OSError) as err:
+                self._add_exception(f.source, err)
+                continue
+            if f.modified is not None:
+                try:
+                    self._set_modified(f)
+                except remote_storage.ConnectError:
+                    self._reconnect()
+                except (remote_storage.RemoteError, OSError, ValueError, OverflowError) as err:
+                    log.info("Cannot set the modified time of %s: %s" % (f.destination, remote_storage.get_log_text(err)))
+            if total <= 0:
+                # 大きさがわからない（すべて 0 バイトの場合も）ときは、ファイルの数で進み具合を出す
+                self.percentage = (index + 1) * 100 // len(files)
+        self.percentage = 100
+
+
+class DownloadJob(TransferJob):
+    """ダウンロード"""
+
+    def __init__(self, request):
+        super().__init__(request.location, request.conflict)
+        self._request = request
+        # この操作で保存するパス（normcase）。サーバー上では違う名前が、Windows では同じ名前になる場合に区別する
+        self._planned = set()
+
+    def _describe(self):
+        return "%s %s -> %s" % (
+            self._location.get_url(path="", with_user=False), [item.path for item in self._request.items], self._request.directory)
+
+    def _prepare(self):
+        os.makedirs(self._request.directory, exist_ok=True)
+
+    def _reserve(self, path, source):
+        """
+        この操作の中で、ほかの項目と同じ保存先にならないようにしたパスを返す
+        （「a:b」と「a_b」は、どちらも「a_b」になるため）。
+        """
+        if os.path.normcase(path) in self._planned:
+            directory, name = os.path.split(path)
+            for candidate in _numbered_names(name):
+                candidate_path = os.path.join(directory, candidate)
+                if os.path.normcase(candidate_path) not in self._planned and not os.path.lexists(candidate_path):
+                    self._add_warning(
+                        source, _("名前が重複するため「%(name)s」として保存") % {"name": candidate}, "saved as %s (duplicate name)" % candidate)
+                    path = candidate_path
+                    break
+        self._planned.add(os.path.normcase(path))
+        return path
+
+    def _get_destination_name(self):
+        return self._request.directory
+
+    def _plan(self):
+        files = []
+        for item in self._request.items:
+            self._check_canceled()
+            try:
+                local_path, merge = self._get_top_local_path(item)
+                if local_path is None:
+                    continue
+                local_path = self._reserve(local_path, item.path)
+                if item.is_dir:
+                    real = self._client.get_real_path(item.path)
+                    self._plan_folder(item.path, local_path, files, {real} if real else set(), real, 0)
+                else:
+                    entry = self._client.get_entry(item.path)
+                    self._add_file(item.path, entry, local_path, files, merge)
+            except remote_storage.ConnectError:
+                raise
+            except (remote_storage.RemoteError, OSError) as err:
+                self._add_exception(item.path, err)
+        return files
+
+    def _get_top_local_path(self, item):
+        """
+        選ばれた項目の保存先のパスを、同じ名前があるときの指定に従って決める。
+        (パス, 既にある項目に上書き・追加するかどうか) を返す。保存しない場合はパスが None
+        """
+        name = item.get_name()
+        local_name = get_local_name(name)
+        if local_name != name:
+            self._add_warning(
+                item.path, _("Windows で使用できない文字を含むため「%(name)s」として保存") % {"name": local_name},
+                "saved as %s (invalid characters for Windows)" % local_name)
+        local_path = os.path.join(self._request.directory, local_name)
+        if not os.path.lexists(local_path):
+            return local_path, False
+        conflict = self._conflict
+        if conflict == CONFLICT_SKIP:
+            self._add_warning(item.path, _("保存先に同名の項目が存在するためスキップ"), "skipped (the destination exists)")
+            return None, False
+        if conflict == CONFLICT_RENAME:
+            return make_unique_path(local_path), False
+        # フォルダとファイルの種類が違う場合は上書きできない
+        if item.is_dir != os.path.isdir(local_path):
+            self._add_error(
+                item.path, _("保存先に種類の異なる同名の項目が存在するため、上書きできません。"),
+                "cannot overwrite (the destination is of a different type)")
+            return None, False
+        return local_path, True
+
+    def _add_file(self, path, entry, local_path, files, merge):
+        """ダウンロードするファイルを files に加える。保存先に同じ名前のファイルがあれば、指定に従う"""
+        offset = 0
+        if merge and os.path.isfile(local_path):
+            transfer, offset = self._decide_file(
+                entry.size, entry.modified, os.path.getsize(local_path), _get_local_modified(local_path), entry.precision)
+            if not transfer:
+                return
+        files.append(_File(path, local_path, entry.size, offset, entry.modified))
+        self.found += 1
+
+    def _plan_folder(self, path, local_path, files, ancestors, real, depth):
+        """
+        フォルダの中を順に調べ、フォルダを作ってファイルを files に加える。
+        ancestors はたどってきたフォルダの実際のパス、real はこのフォルダの実際のパス（わからなければ None）。
+        リンクの先がたどってきたフォルダならループなので、たどらない。
+        実際のパスを調べられないサーバー（FTP）では、深さの上限で止める。
+        """
+        if depth >= MAX_DEPTH:
+            self._add_error(
+                path, _("階層の上限を超えたため、以下をスキップ（シンボリックリンクのループの可能性）"),
+                "skipped (exceeded the depth limit %d)" % MAX_DEPTH)
+            return
+        os.makedirs(local_path, exist_ok=True)
+        for entry in self._client.list_dir(path):
+            self._check_canceled()
+            child_path = remote_storage.join_path(path, entry.name)
+            local_name = get_local_name(entry.name)
+            if local_name != entry.name:
+                self._add_warning(
+                    child_path, _("Windows で使用できない文字を含むため「%(name)s」として保存") % {"name": local_name},
+                    "saved as %s (invalid characters for Windows)" % local_name)
+            child_local = self._reserve(os.path.join(local_path, local_name), child_path)
+            if entry.is_dir:
+                if entry.is_link:
+                    # リンクだけはサーバーに実際のパスを尋ねる。それ以外は親の実際のパスから求める
+                    child_real = self._client.get_real_path(child_path)
+                    if child_real is not None and child_real in ancestors:
+                        self._add_warning(
+                            child_path, _("シンボリックリンクのループを検出したため、中身をスキップ"),
+                            "skipped the contents (symbolic link loop to %s)" % child_real)
+                        continue
+                else:
+                    child_real = remote_storage.join_path(real, entry.name) if real else None
+                child_ancestors = ancestors | {child_real} if child_real else ancestors
+                try:
+                    self._plan_folder(child_path, child_local, files, child_ancestors, child_real, depth + 1)
+                except remote_storage.ConnectError:
+                    raise
+                except (remote_storage.RemoteError, OSError) as err:
+                    self._add_exception(child_path, err)
+            elif os.path.isdir(child_local):
+                self._add_error(
+                    child_path, _("保存先に、同じ名前のフォルダがあるため、上書きできません。"),
+                    "cannot overwrite (a folder with the same name exists)")
+            else:
+                self._add_file(child_path, entry, child_local, files, True)
+
+    def _transfer_file(self, f, on_progress):
+        if f.offset or not os.path.lexists(f.destination):
+            self._client.download(f.source, f.destination, on_progress, f.offset)
+        else:
+            # 上書きするときは、別の名前に保存してから入れ替える。失敗・中止しても元のファイルが残るようにする
+            handle, temporary = tempfile.mkstemp(
+                prefix="." + os.path.basename(f.destination)[:100] + ".", suffix=_PARTIAL_SUFFIX,
+                dir=os.path.dirname(f.destination))
+            os.close(handle)
+            try:
+                self._client.download(f.source, temporary, on_progress)
+                os.replace(temporary, f.destination)
+            except BaseException:
+                _remove_quietly(temporary)
+                raise
+        mark_from_internet(f.destination, self._location.get_url(f.source, with_user=False))
+
+    def _set_modified(self, f):
+        timestamp = f.modified.timestamp()
+        os.utime(f.destination, (timestamp, timestamp))
+
+
+class UploadJob(TransferJob):
+    """アップロード"""
+
+    def __init__(self, request):
+        super().__init__(request.location, request.conflict)
+        self._request = request
+
+    def _get_destination_name(self):
+        return self._request.location.get_url()
+
+    def _describe(self):
+        return "%s -> %s" % ([item.local_path for item in self._request.items], self._location.get_url(with_user=False))
+
+    def _plan(self):
+        directory = self._request.location.path
+        if not directory:
+            # パスのない URL は、ログインしたときのフォルダ
+            directory = self._client.get_initial_path()
+        # アップロード先のフォルダがなければ作る
+        self._client.make_dirs(directory)
+        existing = {entry.name: entry for entry in self._client.list_dir(directory)}
+        files = []
+        for item in self._request.items:
+            self._check_canceled()
+            try:
+                self._plan_top(item, directory, existing, files)
+            except remote_storage.ConnectError:
+                raise
+            except (remote_storage.RemoteError, OSError) as err:
+                self._add_exception(item.local_path, err)
+        return files
+
+    def _plan_top(self, item, directory, existing, files):
+        """選ばれた項目の、アップロード先の名前を同じ名前があるときの指定に従って決め、files に加える"""
+        name = item.get_name()
+        is_dir = os.path.isdir(item.local_path)
+        if not is_dir and not os.path.isfile(item.local_path):
+            self._add_error(item.local_path, _("見つかりません。"), "not found")
+            return
+        entry = existing.get(name)
+        if entry is not None:
+            if self._conflict == CONFLICT_SKIP:
+                self._add_warning(item.local_path, _("アップロード先に同名の項目が存在するためスキップ"), "skipped (the destination exists)")
+                return
+            if self._conflict == CONFLICT_RENAME:
+                name = make_unique_name(name, existing)
+                entry = None
+            elif entry.is_dir != is_dir:
+                self._add_error(
+                    item.local_path, _("アップロード先に種類の異なる同名の項目が存在するため、上書きできません。"),
+                    "cannot overwrite (the destination is of a different type)")
+                return
+        # 同じ操作の中で、同じ名前を2回使わないようにする
+        existing.setdefault(name, remote_storage.Entry(name, is_dir))
+        path = remote_storage.join_path(directory, name)
+        if is_dir:
+            self._plan_folder(item.local_path, path, files, entry is not None, {_real_path(item.local_path)}, 0)
+        else:
+            self._add_file(item.local_path, path, entry, files)
+
+    def _add_file(self, local_path, path, entry, files):
+        """アップロードするファイルを files に加える。アップロード先に同じ名前のファイルがあれば、指定に従う"""
+        size = os.path.getsize(local_path)
+        modified = _get_local_modified(local_path)
+        offset = 0
+        if entry is not None and not entry.is_dir:
+            transfer, offset = self._decide_file(size, modified, entry.size, entry.modified, entry.precision)
+            if not transfer:
+                return
+        files.append(_File(local_path, path, size, offset, modified))
+        self.found += 1
+
+    def _plan_folder(self, local_path, path, files, merge, ancestors, depth):
+        """
+        フォルダの中を順に調べ、サーバーにフォルダを作ってファイルを files に加える。
+        ancestors はたどってきたフォルダの実際のパス。ジャンクションやシンボリックリンクがその中を指していれば、たどらない。
+        """
+        if depth >= MAX_DEPTH:
+            self._add_error(local_path, _("階層の上限を超えたため、以下をスキップ"), "skipped (exceeded the depth limit %d)" % MAX_DEPTH)
+            return
+        if merge:
+            existing = {entry.name: entry for entry in self._client.list_dir(path)}
+        else:
+            self._client.make_dir(path)
+            existing = {}
+        with os.scandir(local_path) as it:
+            children = sorted(it, key=lambda e: e.name)
+        for child in children:
+            self._check_canceled()
+            child_path = remote_storage.join_path(path, child.name)
+            entry = existing.get(child.name)
+            try:
+                if child.is_dir():
+                    if entry is not None and not entry.is_dir:
+                        self._add_error(
+                            child.path, _("アップロード先に同名のファイルが存在するため、上書きできません。"),
+                            "cannot overwrite (a file with the same name exists)")
+                        continue
+                    real = _real_path(child.path)
+                    if real in ancestors:
+                        self._add_warning(
+                            child.path, _("ジャンクションまたはシンボリックリンクのループを検出したため、中身をスキップ"),
+                            "skipped the contents (junction or symbolic link loop to %s)" % real)
+                        continue
+                    self._plan_folder(child.path, child_path, files, entry is not None, ancestors | {real}, depth + 1)
+                elif child.is_file():
+                    if entry is not None and entry.is_dir:
+                        self._add_error(
+                            child.path, _("アップロード先に同名のフォルダが存在するため、上書きできません。"),
+                            "cannot overwrite (a folder with the same name exists)")
+                        continue
+                    self._add_file(child.path, child_path, entry, files)
+            except remote_storage.ConnectError:
+                raise
+            except (remote_storage.RemoteError, OSError) as err:
+                self._add_exception(child.path, err)
+
+    def _transfer_file(self, f, on_progress):
+        self._client.upload(f.source, f.destination, on_progress, f.offset)
+
+    def _set_modified(self, f):
+        self._client.set_modified(f.destination, f.modified)
+
+
+def _real_path(path):
+    """ローカルのフォルダの、リンクをたどった実際のパス（大文字・小文字をそろえたもの）"""
+    return os.path.normcase(os.path.realpath(path))
+
+
+class DeleteJob(RemoteJob):
+    """サーバー上のファイル・フォルダの削除。フォルダは中身も削除する"""
+
+    def __init__(self, request):
+        super().__init__(request.location)
+        self._request = request
+        # 削除できた項目のパス
+        self.deleted = []
+
+    def _describe(self):
+        return "%s %s" % (self._location.get_url(path="", with_user=False), [item.path for item in self._request.items])
+
+    def _get_summary(self):
+        return "deleted: %d" % len(self.deleted)
+
+    def _execute(self):
+        items = self._request.items
+        self.phase = PHASE_RUNNING
+        self.percentage = 0
+        for index, item in enumerate(items):
+            self._check_canceled()
+            try:
+                if item.is_dir and not item.is_link:
+                    self._remove_folder(item.path)
+                else:
+                    self._client.remove_file(item.path)
+                self.deleted.append(item.path)
+            except remote_storage.ConnectError as err:
+                self._add_exception(item.path, err)
+                self._reconnect()
+            except remote_storage.RemoteError as err:
+                self._add_exception(item.path, err)
+            self.percentage = (index + 1) * 100 // len(items)
+
+    def _remove_folder(self, path):
+        """フォルダの中身を消してから、フォルダを消す"""
+        log.debug("remove the folder %s" % path)
+        for entry in self._client.list_dir(path):
+            self._check_canceled()
+            child = remote_storage.join_path(path, entry.name)
+            # シンボリックリンクは、リンク先ではなくリンクそのものを消す
+            if entry.is_dir and not entry.is_link:
+                self._remove_folder(child)
+            else:
+                self._client.remove_file(child)
+        self._client.remove_dir(path)

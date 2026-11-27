@@ -9,6 +9,7 @@ import wx
 
 import network_drive
 import network_place
+import remote_storage
 import simpleDialog
 
 
@@ -23,6 +24,7 @@ class AddNetworkPlaceRequest:
 class AddNetworkPlaceWindow(viewkit.SubWindow):
     """
     追加するネットワークの場所のリンク先と名前を入力するウィンドウ。
+    リンク先は UNC パスか、FTP・FTPS・SFTP の URL。
     parameters はリンク先の初期値。結果は AddNetworkPlaceRequest。
     """
 
@@ -32,7 +34,7 @@ class AddNetworkPlaceWindow(viewkit.SubWindow):
 
         creator = self.creator.makeChild(wx.VERTICAL, 20, style=wx.ALL | wx.EXPAND, margin=20)
         self.target, dummy = creator.inputbox(
-            _("フォルダ（\\\\サーバー名\\共有名 の形式）"), default_value=parameters,
+            _("フォルダ（\\\\サーバー名\\共有名、または ftp://、ftps://、sftp:// で始まる URL）"), default_value=parameters,
             x=400, style=wx.BORDER_RAISED | wx.TE_DONTWRAP)
         self.target.hideScrollBar(wx.HORIZONTAL)
         self.name, dummy = creator.inputbox(
@@ -44,8 +46,16 @@ class AddNetworkPlaceWindow(viewkit.SubWindow):
         footer.cancelbutton(_("キャンセル"))
 
     def _on_ok(self, event):
-        target = network_drive.normalize_remote_path(self.target.GetLineText(0))
-        error = network_drive.validate_folder_path(target, allow_server=True)
+        text = self.target.GetLineText(0)
+        if remote_storage.is_remote_url(text.strip()):
+            try:
+                target = remote_storage.parse_url(text).get_url()
+                error = ""
+            except ValueError as e:
+                error = str(e)
+        else:
+            target = network_drive.normalize_remote_path(text)
+            error = network_drive.validate_folder_path(target, allow_server=True)
         if error:
             simpleDialog.errorDialog(error, self)
             self.target.SetFocus()
