@@ -14,10 +14,16 @@ import logging
 import os
 import re
 import threading
+import time
 
 import remote_storage
 
 log = logging.getLogger("falcon.remote_transfer")
+
+
+def _one_line(text):
+    """ログに書くために、文章を1行にする"""
+    return str(text).replace("\r", " ").replace("\n", " ")
 
 # 同じ名前のファイル・フォルダがあるとき
 CONFLICT_RENAME = "rename"
@@ -233,6 +239,9 @@ class RemoteJob:
             raise remote_storage.Canceled()
 
     def _run(self):
+        name = self.__class__.__name__
+        log.info("%s started: %s" % (name, self._describe()))
+        start = time.monotonic()
         try:
             self._prepare()
             self._connect()
@@ -250,8 +259,24 @@ class RemoteJob:
             if self._client is not None:
                 try:
                     self._client.close()
-                except Exception:
-                    pass
+                except Exception as err:
+                    log.debug("close failed: %s" % err)
+            # 利用者には一覧で見せる内容を、ログにも残す
+            for target, message in self.warnings:
+                log.info("%s warning: %s: %s" % (name, target, _one_line(message)))
+            for target, message in self.errors:
+                log.warning("%s error: %s: %s" % (name, target, _one_line(message)))
+            log.info("%s %s (%.1fs, %s, errors: %d, warnings: %d)" % (
+                name, "canceled" if self.canceled else "finished", time.monotonic() - start,
+                self._get_summary(), len(self.errors), len(self.warnings)))
+
+    def _describe(self):
+        """ログに書く、操作の内容"""
+        return self._location.get_url()
+
+    def _get_summary(self):
+        """ログに書く、結果のまとめ"""
+        return "-"
 
     def _prepare(self):
         """接続する前の準備"""
@@ -268,10 +293,11 @@ class RemoteJob:
             raise remote_storage.RemoteError(_("接続できませんでした。\n(%(error)s)") % {"error": err})
 
     def _reconnect(self):
+        log.info("%s: reconnect to %s" % (self.__class__.__name__, self._location.get_server_key()))
         try:
             self._client.close()
-        except Exception:
-            pass
+        except Exception as err:
+            log.debug("close failed: %s" % err)
         self._client = None
         self._connect()
 
@@ -284,6 +310,12 @@ class TransferJob(RemoteJob):
         self._conflict = conflict
         # 転送先のほうが新しい・同じ大きさなどの理由で、転送しなかったファイルの数
         self._skipped = 0
+        # ログに書くための、転送したファイルの数とバイト数
+        self._transferred_files = 0
+        self._transferred_bytes = 0
+
+    def _get_summary(self):
+        return "%d files, %d bytes, skipped: %d" % (self._transferred_files, self._transferred_bytes, self._skipped)
 
     def _execute(self):
         files = self._plan()
@@ -315,19 +347,25 @@ class TransferJob(RemoteJob):
 
     def _transfer(self, files):
         total = sum(max(f.size - f.offset, 0) for f in files)
+        log.info("%s: %d files, %d bytes (conflict: %s)" % (self.__class__.__name__, len(files), total, self._conflict))
         done = [0]
         self.percentage = 0
 
         def on_progress(size):
             self._check_canceled()
             done[0] += size
+            self._transferred_bytes += size
             if total > 0:
                 self.percentage = min(100, done[0] * 100 // total)
 
         for f in files:
             self._check_canceled()
+            log.debug("transfer %s -> %s (size: %d, offset: %d)" % (f.source, f.destination, f.size, f.offset))
+            start = time.monotonic()
             try:
                 self._transfer_file(f, on_progress)
+                self._transferred_files += 1
+                log.debug("transferred %s (%.2fs)" % (f.source, time.monotonic() - start))
             except remote_storage.ConnectError as err:
                 # 接続が切れた場合は、つなぎ直して続ける
                 self.errors.append((f.source, str(err)))
@@ -354,6 +392,10 @@ class DownloadJob(TransferJob):
         self._request = request
         # この操作で保存するパス（normcase）。サーバー上では違う名前が、Windows では同じ名前になる場合に区別する
         self._planned = set()
+
+    def _describe(self):
+        return "%s %s -> %s" % (
+            self._location.get_url(path="", with_user=False), [item.path for item in self._request.items], self._request.directory)
 
     def _prepare(self):
         os.makedirs(self._request.directory, exist_ok=True)
@@ -490,6 +532,9 @@ class UploadJob(TransferJob):
     def _get_destination_name(self):
         return self._request.location.get_url()
 
+    def _describe(self):
+        return "%s -> %s" % ([item.local_path for item in self._request.items], self._location.get_url(with_user=False))
+
     def _plan(self):
         directory = self._request.location.path
         # アップロード先のフォルダがなければ作る
@@ -603,6 +648,12 @@ class DeleteJob(RemoteJob):
         # 削除できた項目のパス
         self.deleted = []
 
+    def _describe(self):
+        return "%s %s" % (self._location.get_url(path="", with_user=False), [item.path for item in self._request.items])
+
+    def _get_summary(self):
+        return "deleted: %d" % len(self.deleted)
+
     def _execute(self):
         items = self._request.items
         self.percentage = 0
@@ -623,6 +674,7 @@ class DeleteJob(RemoteJob):
 
     def _remove_folder(self, path):
         """フォルダの中身を消してから、フォルダを消す"""
+        log.debug("remove the folder %s" % path)
         for entry in self._client.list_dir(path):
             self._check_canceled()
             child = remote_storage.join_path(path, entry.name)

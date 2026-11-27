@@ -27,6 +27,9 @@ log = logging.getLogger("falcon.remote_connect")
 # SFTP の鍵ファイルを保存する設定のセクション（サーバーの key -> パス）
 KEY_FILE_SECTION = "remote_key_files"
 
+# 最後にログに書いたプロキシの設定（(使うかどうか, プロキシ)）
+_logged_proxy = [None]
+
 
 def run(location, func, *args, pass_task=False):
     """
@@ -43,13 +46,17 @@ def run(location, func, *args, pass_task=False):
             # 保存していたパスワードが違っていた場合に、次から使わないようにする
             remote_storage.credential_store.forget(location)
             if not ask_login(location, str(err)):
+                log.info("login to %s canceled by the user" % location.get_server_key())
                 raise background_wait.Canceled()
         except remote_storage.UnknownHostKey as err:
             if not _confirm_host_key(location, err):
+                log.info("the host key of %s rejected by the user: %s" % (location.get_server_key(), err.get_fingerprint()))
                 raise background_wait.Canceled()
             remote_storage.add_known_host(err)
         except remote_storage.UntrustedCertificate as err:
             if not _confirm_certificate(location, err):
+                log.info("the certificate of %s rejected by the user: %s (changed: %s)" % (
+                    location.get_server_key(), err.fingerprint or "-", err.changed))
                 raise background_wait.Canceled()
             remote_storage.certificate_trust.trust(location, err.fingerprint)
 
@@ -65,7 +72,16 @@ def apply_settings():
     """falcon の設定（SFTP の鍵ファイル、プロキシ）を remote_storage に反映する。転送を始める前にも呼ぶ"""
     settings = globalVars.app.settings
     remote_storage.credential_store.set_key_files(settings.get_section(KEY_FILE_SECTION) or {})
-    remote_storage.set_proxy(get_proxy() if settings.get_bool("remote", "use_proxy", False) else None)
+    use_proxy = settings.get_bool("remote", "use_proxy", False)
+    proxy = get_proxy() if use_proxy else None
+    if (use_proxy, proxy) != _logged_proxy[0]:
+        # 操作のたびに呼ばれるので、変わったときだけログに書く
+        _logged_proxy[0] = (use_proxy, proxy)
+        if use_proxy and proxy is None:
+            log.warning("remote.use_proxy is enabled, but no proxy is found. connect directly")
+        else:
+            log.info("proxy for FTP/SFTP: %s" % ("%s:%d" % proxy if proxy is not None else "none"))
+    remote_storage.set_proxy(proxy)
 
 
 def get_proxy():

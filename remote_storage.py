@@ -35,11 +35,13 @@ import socket
 import ssl
 import stat
 import threading
+import time
 import warnings
 
 import pywintypes
 import win32cred
 
+# ログにはパスワード・パスフレーズを書かない。FTP のコマンドは _mask_command で隠してから書く
 log = logging.getLogger("falcon.remote_storage")
 
 SCHEME_FTP = "ftp"
@@ -335,6 +337,7 @@ class CredentialStore:
         key = location.get_server_key()
         with self._lock:
             self._memory[key] = credentials
+        log.info("remember the credentials of %s (user: %s, saved: %s)" % (key, credentials.user, save))
         if save:
             try:
                 win32cred.CredWrite({
@@ -350,6 +353,7 @@ class CredentialStore:
     def forget(self, location):
         """覚えている資格情報を消す（パスワードが違っていたときに使う）"""
         key = location.get_server_key()
+        log.info("forget the credentials of %s" % key)
         with self._lock:
             self._memory.pop(key, None)
         try:
@@ -412,6 +416,7 @@ class TrustStore:
             self._load()
             self._pins[location.get_server_key()] = fingerprint
             pins = dict(self._pins)
+        log.info("trust the certificate of %s: %s" % (location.get_server_key(), fingerprint))
         path = self._get_path()
         try:
             with open(path, "w", encoding="utf-8") as f:
@@ -467,7 +472,9 @@ def open_socket(host, port, timeout):
     """
     proxy = get_proxy()
     if proxy is None:
+        log.debug("open %s:%d" % (host, port))
         return socket.create_connection((host, port), timeout)
+    log.debug("open %s:%d via the proxy %s:%d" % (host, port, proxy[0], proxy[1]))
     sock = socket.create_connection(proxy, timeout)
     try:
         target = "[%s]:%d" % (host, port) if ":" in host else "%s:%d" % (host, port)
@@ -483,6 +490,7 @@ def open_socket(host, port, timeout):
         status = response.split(b"\r\n", 1)[0].decode("latin-1")
         parts = status.split(" ", 2)
         if len(parts) < 2 or parts[1] != "200":
+            log.warning("the proxy refused CONNECT %s: %s" % (target, status))
             raise ConnectionError(_("プロキシサーバーが CONNECT を拒否しました。(%(status)s)") % {"status": status})
         # CONNECT の応答の後に、サーバーからのデータが続いて届いていることはない（サーバーはまだ何も送っていない）
         return sock
@@ -496,11 +504,29 @@ def get_known_hosts_path():
     return os.path.abspath(KNOWN_HOSTS_FILE_NAME)
 
 
+class _ForwardHandler(logging.Handler):
+    """paramiko のログを falcon のログ（falcon.log）に書く。記録の名前は paramiko.transport などのまま"""
+
+    def emit(self, record):
+        logging.getLogger("falcon.paramiko").handle(record)
+
+
+_paramiko_log_handler = None
+
+
 def _import_paramiko():
     """paramiko を読み込む。読み込みに時間がかかるため、SFTP を使うときだけ読み込む"""
+    global _paramiko_log_handler
     # 32bit の Python では遅いという警告が出るが、利用者には関係ないので出さない
     warnings.filterwarnings("ignore", message=".*32-bit Python.*")
     import paramiko
+    if _paramiko_log_handler is None:
+        # paramiko のロガーは falcon の下にないので、ログを falcon.log に回す。
+        # INFO では接続先のソフトウェアや認証方式の成否が出る（DEBUG は鍵交換の詳細まで出て多すぎる）
+        _paramiko_log_handler = _ForwardHandler()
+        paramiko_log = logging.getLogger("paramiko")
+        paramiko_log.setLevel(logging.INFO)
+        paramiko_log.addHandler(_paramiko_log_handler)
     return paramiko
 
 
@@ -513,6 +539,7 @@ def add_known_host(error):
     """利用者が確認したホスト鍵を覚えて、ファイルに保存する。error は UnknownHostKey"""
     with _accepted_host_keys_lock:
         _accepted_host_keys.append((error.host_key_name, error.key))
+    log.info("accept the host key of %s: %s" % (error.host_key_name, error.get_fingerprint()))
     paramiko = _import_paramiko()
     path = get_known_hosts_path()
     keys = paramiko.HostKeys()
@@ -623,14 +650,58 @@ def connect(location, credentials):
     サーバーに接続してログインした Client を返す。credentials が None の場合は、匿名や SSH の鍵で接続を試みる。
     失敗した場合は RemoteError の派生クラスになる。
     """
-    if location.scheme == SCHEME_SFTP:
-        return _SftpClient(location, credentials)
-    return _FtpClient(location, credentials)
+    key = location.get_server_key()
+    log.info("connect to %s (user: %s, auth: %s, proxy: %s)" % (
+        key, (credentials.user if credentials is not None else "") or location.user or "-",
+        _describe_credentials(credentials), "%s:%d" % get_proxy() if get_proxy() is not None else "none"))
+    start = time.monotonic()
+    try:
+        if location.scheme == SCHEME_SFTP:
+            client = _SftpClient(location, credentials)
+        else:
+            client = _FtpClient(location, credentials)
+    except (AuthRequired, UnknownHostKey, UntrustedCertificate) as err:
+        # 利用者に確認してからやり直すもの
+        log.info("connection to %s needs confirmation: %s: %s" % (key, err.__class__.__name__, _one_line(err)))
+        raise
+    except RemoteError as err:
+        log.warning("cannot connect to %s (%.1fs): %s" % (key, time.monotonic() - start, _one_line(err)))
+        raise
+    log.info("connected to %s (%.1fs)" % (key, time.monotonic() - start))
+    return client
+
+
+def _describe_credentials(credentials):
+    """ログに書くための、認証に使うものの説明。パスワードそのものは含めない"""
+    if credentials is None:
+        return "none"
+    if credentials.key_file:
+        return "key file %s%s" % (credentials.key_file, " with passphrase" if credentials.password else "")
+    return "password" if credentials.password else "no password"
+
+
+def _one_line(err):
+    """ログに書くために、例外のメッセージを1行にする"""
+    return str(err).replace("\r", " ").replace("\n", " ")
+
+
+def _loggable(args):
+    """ログに書くための操作の引数。パスや数値以外（ファイルや関数）は種類の名前にする"""
+    return tuple(arg if isinstance(arg, (str, int, float)) or arg is None else type(arg).__name__ for arg in args)
 
 
 def _connection_error_message(location, err):
     return _("%(host)s に接続できませんでした。\n(%(error)s)") % {
         "host": location.get_display_host(), "error": _describe(err)}
+
+
+def _connect_error(location, err):
+    """
+    通信の失敗 err から、利用者に見せる ConnectError を作る。
+    利用者に見せる文章には err の詳しい内容が出ないので、ここで元の例外をログに書く。
+    """
+    log.warning("communication with %s failed: %r" % (location.get_server_key(), err))
+    return ConnectError(_connection_error_message(location, err))
 
 
 def _describe(err):
@@ -655,6 +726,22 @@ _DOS_LIST = re.compile(
     r"^(?P<date>\d{2}-\d{2}-\d{2,4})\s+(?P<time>\d{1,2}:\d{2}[AaPp][Mm])\s+(?P<size><DIR>|\d+)\s+(?P<name>.+)$")
 _MONTHS = {name: index + 1 for index, name in enumerate(
     ("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"))}
+
+
+def _mask_command(line):
+    """ログに書く FTP のコマンド。パスワードは長さもわからないように隠す"""
+    if line[:5].upper() in ("PASS ", "ACCT "):
+        return line[:5] + "****"
+    return line
+
+
+def _log_tls(host, kind, sock):
+    """TLS の接続の内容（版・暗号）をログに書く"""
+    try:
+        cipher = sock.cipher()
+        log.info("%s: %s connection %s %s" % (host, kind, sock.version(), cipher[0] if cipher else ""))
+    except (OSError, ValueError) as err:
+        log.debug("Cannot get the TLS information: %s" % err)
 
 
 class _CertificateChanged(Exception):
@@ -684,17 +771,31 @@ class _ConnectionMixin:
         self.af = self.sock.family
         if self._implicit:
             self.sock = self.context.wrap_socket(self.sock, server_hostname=host)
+            _log_tls(host, "control (implicit)", self.sock)
             self._check_pin(self.sock)
         self.file = self.sock.makefile("r", encoding=self.encoding)
         self.welcome = self.getresp()
         return self.welcome
+
+    def putcmd(self, line):
+        # ftplib の debugging は標準出力に書くので使わず、送ったコマンドをログに書く
+        log.debug("%s > %s" % (self.host, _mask_command(line)))
+        super().putcmd(line)
+
+    def getmultiline(self):
+        # 応答は、エラーの応答（4xx・5xx）も含めて、ここを通る
+        response = super().getmultiline()
+        log.debug("%s < %s" % (self.host, response))
+        return response
 
     def _check_pin(self, sock):
         """ピン留めした証明書と違えば _CertificateChanged を投げる"""
         if self._pin is None:
             return
         der = sock.getpeercert(binary_form=True) or b""
-        if get_certificate_fingerprint(der) != self._pin:
+        fingerprint = get_certificate_fingerprint(der)
+        if fingerprint != self._pin:
+            log.warning("the certificate of %s does not match the trusted one: %s" % (self.host, fingerprint))
             raise _CertificateChanged(der)
 
     def makepasv(self):
@@ -708,7 +809,9 @@ class _ConnectionMixin:
             dummy, port = ftplib.parse229(self.sendcmd("EPSV"), self.sock.getpeername())
         if get_proxy() is not None:
             return self.host, port
-        return self.sock.getpeername()[0], port
+        address = self.sock.getpeername()[0]
+        log.debug("%s: data connection to %s:%d" % (self.host, address, port))
+        return address, port
 
     def ntransfercmd(self, cmd, rest=None):
         host, port = self.makepasv()
@@ -743,6 +846,7 @@ class _FtpTls(_ConnectionMixin, ftplib.FTP_TLS):
 
     def auth(self):
         resp = super().auth()
+        _log_tls(self.host, "control", self.sock)
         self._check_pin(self.sock)
         return resp
 
@@ -753,6 +857,7 @@ class _FtpTls(_ConnectionMixin, ftplib.FTP_TLS):
                 # vsftpd や FileZilla Server は、データ用の接続で制御用の接続の TLS セッションを再利用することを求める。
                 # ftplib はこれに対応していないので、ここで再利用する
                 conn = self.context.wrap_socket(conn, server_hostname=self.host, session=self.sock.session)
+                log.debug("%s: data connection TLS session reused: %s" % (self.host, conn.session_reused))
                 self._check_pin(conn)
             except BaseException:
                 conn.close()
@@ -813,9 +918,14 @@ class _FtpClient(Client):
             ftp = _FtpTls(self._implicit, self._pin, context=self._make_context(), timeout=_TIMEOUT, encoding="utf-8")
         else:
             ftp = _Ftp(timeout=_TIMEOUT, encoding="utf-8")
+        if location.scheme == SCHEME_FTPS:
+            log.info("%s: %s FTPS, certificate: %s" % (
+                location.get_server_key(), "implicit" if self._implicit else "explicit",
+                "pinned %s" % self._pin if self._pin is not None else "verify"))
         try:
             ftp.connect(location.host, location.port)
         except ssl.SSLCertVerificationError as err:
+            log.warning("cannot verify the certificate of %s: %s" % (location.get_server_key(), err))
             ftp.close()
             raise self._untrusted(err)
         except _CertificateChanged as err:
@@ -823,7 +933,7 @@ class _FtpClient(Client):
             raise self._changed(err)
         except (OSError, EOFError, ftplib.Error) as err:
             ftp.close()
-            raise ConnectError(_connection_error_message(location, err))
+            raise _connect_error(location, err)
         try:
             if location.scheme == SCHEME_FTPS and not self._implicit:
                 ftp.auth()
@@ -837,12 +947,14 @@ class _FtpClient(Client):
             if location.scheme == SCHEME_FTPS:
                 ftp.prot_p()
         except ssl.SSLCertVerificationError as err:
+            log.warning("cannot verify the certificate of %s: %s" % (location.get_server_key(), err))
             ftp.close()
             raise self._untrusted(err)
         except _CertificateChanged as err:
             ftp.close()
             raise self._changed(err)
         except ftplib.error_perm as err:
+            log.info("%s: login failed: %s" % (location.get_server_key(), err))
             ftp.close()
             if str(err).startswith("530"):
                 raise AuthRequired(_("ユーザー名またはパスワードが正しくありません。") if credentials else _("認証が必要です。"))
@@ -855,12 +967,12 @@ class _FtpClient(Client):
             raise
         except (OSError, EOFError, ftplib.Error) as err:
             ftp.close()
-            raise ConnectError(_connection_error_message(location, err))
+            raise _connect_error(location, err)
         try:
             # ファイル名を UTF-8 でやり取りする。対応していないサーバーでは無視される
             ftp.sendcmd("OPTS UTF8 ON")
-        except (ftplib.Error, OSError):
-            pass
+        except (ftplib.Error, OSError) as err:
+            log.debug("%s: OPTS UTF8 ON failed: %s" % (location.get_server_key(), err))
         return ftp
 
     def _call(self, func, *args):
@@ -875,6 +987,7 @@ class _FtpClient(Client):
             self._ftp.encoding = "cp932"
             return self._call(func, *args)
         except ftplib.error_perm as err:
+            log.info("%s: %s%r failed: %s" % (self.location.get_server_key(), func.__name__, _loggable(args), err))
             code = str(err)[:3]
             if code == "550":
                 raise RemoteError(_("存在しないか、アクセスが拒否されました。\n(%(error)s)") % {"error": err})
@@ -884,9 +997,10 @@ class _FtpClient(Client):
             raise ConnectError(str(self._changed(err)))
         except ValueError as err:
             # 改行を含む名前など、FTP のコマンドで送れない名前
+            log.info("%s: %s%r failed: %s" % (self.location.get_server_key(), func.__name__, _loggable(args), err))
             raise RemoteError(_("この名前は FTP で使用できません。\n(%(error)s)") % {"error": err})
         except (OSError, EOFError, ftplib.Error) as err:
-            raise ConnectError(_connection_error_message(self.location, err))
+            raise _connect_error(self.location, err)
 
     def check_alive(self):
         self._call(self._ftp.voidcmd, "NOOP")
@@ -904,6 +1018,7 @@ class _FtpClient(Client):
             except ftplib.error_perm as err:
                 if str(err)[:3] not in ("500", "501", "502", "504"):
                     raise
+                log.info("%s: MLSD is not supported, use LIST: %s" % (self.location.get_server_key(), err))
                 self._mlsd_supported = False
         return self._list_list(path)
 
@@ -1179,10 +1294,12 @@ class _SftpClient(Client):
             self._sftp = self._ssh.open_sftp()
             # 応答が返ってこないときに、いつまでも待たないようにする（中止もできなくなるため）
             self._sftp.get_channel().settimeout(_TIMEOUT)
+            self._log_transport()
         except UnknownHostKey:
             self._ssh.close()
             raise
-        except paramiko.BadHostKeyException:
+        except paramiko.BadHostKeyException as err:
+            log.warning("the host key of %s has changed: %s" % (location.get_server_key(), err))
             self._ssh.close()
             raise ConnectError(_(
                 "%(host)s のホスト鍵が、以前に接続したときと違います。\n"
@@ -1190,7 +1307,8 @@ class _SftpClient(Client):
         except paramiko.PasswordRequiredException:
             self._ssh.close()
             raise AuthRequired(_("鍵ファイルのパスフレーズを入力してください。"))
-        except paramiko.AuthenticationException:
+        except paramiko.AuthenticationException as err:
+            log.info("%s: authentication failed: %r" % (location.get_server_key(), err))
             self._ssh.close()
             if key_file:
                 message = _("鍵ファイル、パスフレーズ、またはユーザー名が正しくありません。")
@@ -1201,26 +1319,48 @@ class _SftpClient(Client):
             raise AuthRequired(message)
         except (OSError, EOFError, paramiko.SSHException) as err:
             self._ssh.close()
-            raise ConnectError(_connection_error_message(location, err))
+            raise _connect_error(location, err)
+
+    def _log_transport(self):
+        """接続したサーバーのソフトウェアと、使っている暗号をログに書く"""
+        transport = self._ssh.get_transport()
+        if transport is None:
+            return
+        try:
+            key = transport.get_remote_server_key()
+            log.info("%s: %s, host key %s, cipher %s/%s, auth %s" % (
+                self.location.get_server_key(), transport.remote_version, key.get_name(),
+                transport.remote_cipher, transport.remote_mac, transport.auth_handler.auth_method
+                if transport.auth_handler is not None else "-"))
+        except Exception as err:
+            log.debug("Cannot get the SSH information: %s" % err)
 
     def _call(self, func, *args):
+        log.debug("%s: sftp %s%r" % (self.location.get_server_key(), func.__name__, _loggable(args)))
         try:
             return func(*args)
-        except FileNotFoundError:
+        except FileNotFoundError as err:
+            self._log_failure(func, args, err)
             raise RemoteError(_("見つかりません。"))
-        except PermissionError:
+        except PermissionError as err:
+            self._log_failure(func, args, err)
             raise RemoteError(_("アクセスが拒否されました。"))
         except (socket.timeout, socket.gaierror, ConnectionError, EOFError, self._paramiko.SSHException) as err:
-            raise ConnectError(_connection_error_message(self.location, err))
-        except UnicodeDecodeError:
+            raise _connect_error(self.location, err)
+        except UnicodeDecodeError as err:
+            self._log_failure(func, args, err)
             raise RemoteError(_("ファイル名の文字コードを判別できません。"))
         except OSError as err:
             # SFTP サーバーが返したエラー
+            self._log_failure(func, args, err)
             raise RemoteError(_describe(err))
+
+    def _log_failure(self, func, args, err):
+        log.info("%s: sftp %s%r failed: %r" % (self.location.get_server_key(), func.__name__, _loggable(args), err))
 
     def check_alive(self):
         if not self._ssh.get_transport() or not self._ssh.get_transport().is_active():
-            raise ConnectError(_connection_error_message(self.location, ConnectionError(_("接続が切断されました"))))
+            raise _connect_error(self.location, ConnectionError(_("接続が切断されました")))
         self._call(self._sftp.normalize, ".")
 
     def get_real_path(self, path):
@@ -1376,6 +1516,8 @@ class SessionPool:
                     return self._call(location, client, func, args)
             finally:
                 busy.release()
+        elif busy is not None:
+            log.info("the connection to %s is busy, open another one" % key)
         client = connect(location, credential_store.get(location))
         busy = threading.Lock()
         with busy:
@@ -1387,16 +1529,24 @@ class SessionPool:
             return self._call(location, client, func, args)
 
     def _call(self, location, client, func, args):
+        name = getattr(func, "__qualname__", repr(func))
+        log.debug("%s: run %s%r" % (location.get_server_key(), name, _loggable(args)))
+        start = time.monotonic()
         try:
-            return func(client, *args)
+            result = func(client, *args)
         except ConnectError:
             self.discard(location, client)
             raise
-        except RemoteError:
+        except RemoteError as err:
+            log.info("%s: %s failed: %s" % (location.get_server_key(), name, _one_line(err)))
             raise
-        except BaseException:
+        except BaseException as err:
+            # 中止（background_wait.Canceled など）や想定外の例外
+            log.info("%s: %s stopped by %r, discard the connection" % (location.get_server_key(), name, err))
             self.discard(location, client)
             raise
+        log.debug("%s: %s done (%.2fs)" % (location.get_server_key(), name, time.monotonic() - start))
+        return result
 
     def discard(self, location, client=None):
         """接続を捨てる。client を指定した場合は、その接続を使っているときだけ捨てる"""
@@ -1406,11 +1556,14 @@ class SessionPool:
             if current is None or (client is not None and current[0] is not client):
                 return
             del self._sessions[key]
+        log.debug("discard the connection to %s" % key)
         _close_quietly(current[0])
 
     def close_all(self):
         with self._lock:
             sessions, self._sessions = self._sessions, {}
+        if sessions:
+            log.info("close the connections: %s" % ", ".join(sessions))
         for client, dummy in sessions.values():
             _close_quietly(client)
 
