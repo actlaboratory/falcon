@@ -576,7 +576,9 @@ class DownloadOperation(RemoteOperation):
     """FTP・SFTP のサーバーからのダウンロード"""
 
     def __init__(self, request):
-        super().__init__(_("ダウンロード"), {request.directory}, [request.directory], request)
+        # ダウンロード中のサーバーの項目を削除・移動しないように、転送元も重なりの確認に使う
+        sources = [request.location.get_url(item.path) for item in request.items]
+        super().__init__(_("ダウンロード"), {request.directory}, [request.directory] + sources, request)
         self.set_title([item.get_name() for item in request.items], request.directory)
 
     def _make_job(self):
@@ -588,7 +590,8 @@ class UploadOperation(RemoteOperation):
 
     def __init__(self, request, on_success=None):
         url = request.location.get_url()
-        super().__init__(_("アップロード"), {url}, [url], request)
+        # アップロード中のファイルを削除・移動しないように、転送元も重なりの確認に使う
+        super().__init__(_("アップロード"), {url}, [url] + [item.local_path for item in request.items], request)
         self.set_title([item.local_path for item in request.items], url)
         # 成功したときにメインスレッドで呼ぶ関数（編集したファイルの書き戻しで使う）
         self.on_success = on_success

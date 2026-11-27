@@ -234,6 +234,15 @@ class ClientOperationsMixin:
     def test_check_alive(self):
         self.connect().check_alive()
 
+    def test_pool_separates_users(self):
+        # 同じサーバーでもユーザーが違えば、接続を使い回さない
+        remote_storage.credential_store.remember(self.location, self.credentials)
+        other = remote_storage.Location(self.location.scheme, self.location.host, self.location.port, "other", "/")
+        first = remote_storage.pool.run(self.location, lambda client: client)
+        self.assertIs(remote_storage.pool.run(self.location, lambda client: client), first)
+        with self.assertRaises(remote_storage.AuthRequired):
+            remote_storage.pool.run(other, lambda client: client)
+
     def test_pool_reuses_connection(self):
         remote_storage.credential_store.remember(self.location, self.credentials)
         clients = []
@@ -360,6 +369,43 @@ class TransferJobMixin:
             self.location.child("/"), [remote_transfer.UploadItem(local_path)], remote_transfer.CONFLICT_OVERWRITE)))
         self.assertEqual(job.errors, [])
         self.assertEqual(read(os.path.join(self.server_root, "big.bin")), b"new")
+
+    def test_download_job_conflict_overwrite(self):
+        with open(os.path.join(self.local, "big.bin"), "wb") as f:
+            f.write(b"old")
+        items = [remote_transfer.DownloadItem("/big.bin", False)]
+        job = self.run_job(remote_transfer.DownloadJob(remote_transfer.DownloadRequest(
+            self.location, items, self.local, remote_transfer.CONFLICT_OVERWRITE)))
+        self.assertEqual(job.errors, [])
+        self.assertEqual(read(os.path.join(self.local, "big.bin")), BIG_CONTENT)
+        # 一時的に保存したファイルが残らないこと
+        self.assertEqual(os.listdir(self.local), ["big.bin"])
+
+    def test_download_job_overwrite_canceled_keeps_original(self):
+        # 上書きの途中で中止しても、元のファイルが残ること
+        with open(os.path.join(self.local, "big.bin"), "wb") as f:
+            f.write(b"old")
+
+        def cancel(statistics, size):
+            raise remote_storage.Canceled()
+
+        self._patch(remote_transfer.TransferStatistics, "add", cancel)
+        items = [remote_transfer.DownloadItem("/big.bin", False)]
+        job = self.run_job(remote_transfer.DownloadJob(remote_transfer.DownloadRequest(
+            self.location, items, self.local, remote_transfer.CONFLICT_OVERWRITE)))
+        self.assertTrue(job.canceled)
+        self.assertEqual(read(os.path.join(self.local, "big.bin")), b"old")
+        self.assertEqual(os.listdir(self.local), ["big.bin"])
+
+    def test_upload_job_to_initial_folder(self):
+        # パスのない URL には、ログインしたときのフォルダにアップロードする
+        local_path = os.path.join(self.local, "single.txt")
+        with open(local_path, "wb") as f:
+            f.write(b"single")
+        job = self.run_job(remote_transfer.UploadJob(remote_transfer.UploadRequest(
+            self.location.child(""), [remote_transfer.UploadItem(local_path)])))
+        self.assertEqual(job.errors, [])
+        self.assertEqual(read(os.path.join(self.server_root, "single.txt")), b"single")
 
     def test_delete_job(self):
         items = [remote_transfer.DownloadItem("/folder", True), remote_transfer.DownloadItem("/big.bin", False)]

@@ -7,6 +7,7 @@ FTP・FTPS（Explicit）の接続テストです。ローカルで pyftpdlib の
 実行: python -m unittest discover -s tests -p "test_*.py"
 """
 
+import ftplib
 import os
 import unittest
 
@@ -40,6 +41,30 @@ class TestFtpOperations(ClientOperationsMixin, FtpTestCase):
         self.assertEqual(entries["big.bin"].size, len(remote_test_base.BIG_CONTENT))
         self.assertTrue(entries["folder"].is_dir)
         self.assertIsNotNone(entries["big.bin"].modified)
+
+    def test_list_command_includes_hidden_files(self):
+        # LIST では . で始まるファイルも一覧に入れる（LIST -a）
+        with open(os.path.join(self.server_root, ".hidden"), "wb") as f:
+            f.write(b"x")
+        client = self.connect()
+        client._mlsd_supported = False
+        self.assertIn(".hidden", [entry.name for entry in client.list_dir("/")])
+        self.assertIs(client._list_all_supported, True)
+
+    def test_list_command_without_list_all(self):
+        # LIST -a を受け付けないサーバーでは LIST を使う
+        client = self.connect()
+        client._mlsd_supported = False
+        original = client._ftp.retrlines
+
+        def retrlines(command, callback=None):
+            if command == "LIST -a":
+                raise ftplib.error_perm("501 Invalid option")
+            return original(command, callback)
+
+        client._ftp.retrlines = retrlines
+        self.assertIn("big.bin", [entry.name for entry in client.list_dir("/")])
+        self.assertIs(client._list_all_supported, False)
 
     def test_chmod(self):
         # pyftpdlib は SITE CHMOD に対応している（Windows では読み取り専用かどうかだけが変わる）
@@ -141,6 +166,22 @@ class TestFtpsCertificate(FtpsTestCase):
             remote_storage.connect(self.location, self.credentials)
         self.assertTrue(context.exception.changed)
         self.assertEqual(context.exception.fingerprint, remote_storage.get_certificate_fingerprint(self.certificate))
+
+
+class TestFtpsNotSupported(FtpTestCase):
+    """FTPS に対応していないサーバー"""
+
+    def test_auth_tls_rejected_with_530(self):
+        # AUTH TLS に 530 を返すサーバー（TLS を使わない vsftpd など）は、パスワードの誤りとして扱わない
+        location = remote_storage.parse_url("ftps://%s@127.0.0.1:%d/" % (remote_servers.USER, self.server.port))
+
+        def auth(ftp):
+            raise ftplib.error_perm("530 Please login with USER and PASS.")
+
+        self._patch(remote_storage._FtpTls, "auth", auth)
+        with self.assertRaises(remote_storage.ConnectError) as context:
+            remote_storage.connect(location, self.credentials)
+        self.assertNotIsInstance(context.exception, remote_storage.AuthRequired)
 
 
 class TestFtpsOperations(ClientOperationsMixin, FtpsTestCase):

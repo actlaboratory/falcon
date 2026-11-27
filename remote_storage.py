@@ -36,6 +36,7 @@ import ssl
 import stat
 import threading
 import time
+import urllib.parse
 import warnings
 
 import pywintypes
@@ -152,8 +153,17 @@ class Location:
         self.path = path
 
     def get_server_key(self):
-        """同じサーバーへの接続を見分けるための文字列"""
+        """同じサーバーを見分けるための文字列。ホスト鍵・証明書・鍵ファイルの保存に使う"""
         return "%s://%s:%d" % (self.scheme, self.host.lower(), self.port)
+
+    def get_account_key(self):
+        """
+        同じサーバーの同じユーザーを見分けるための文字列。接続の使い回しと資格情報の保存に使う。
+        ユーザー名のない URL では、ログインの画面で入力したユーザーの資格情報を、この key で覚える
+        """
+        if not self.user:
+            return self.get_server_key()
+        return "%s://%s@%s:%d" % (self.scheme, urllib.parse.quote(self.user, safe=""), self.host.lower(), self.port)
 
     def get_url(self, path=None, with_user=True):
         """URL を返す。path を指定した場合は、そのパスの URL を返す"""
@@ -338,12 +348,15 @@ class CredentialStore:
         保存されている資格情報を返す。なければ None。URL のユーザー名と違うものは返さない。
         パスワードがなくても鍵ファイルが指定されていれば、鍵ファイルだけの資格情報を返す。
         """
-        key = location.get_server_key()
+        key = location.get_account_key()
         with self._lock:
             credentials = self._memory.get(key)
-            key_file = self._key_files.get(key, "")
+            key_file = self._key_files.get(location.get_server_key(), "")
         if credentials is None:
             credentials = self._read_windows(key)
+        if credentials is None and location.user:
+            # ユーザー名のない URL で覚えたもの（以前の版で保存したものを含む）。ユーザー名が同じときだけ使う
+            credentials = self._get_without_user(location)
         if credentials is not None and location.user and credentials.user != location.user:
             credentials = None
         if credentials is None:
@@ -361,9 +374,17 @@ class CredentialStore:
         with self._lock:
             return self._key_files.get(location.get_server_key(), "")
 
+    def _get_without_user(self, location):
+        key = location.get_server_key()
+        with self._lock:
+            credentials = self._memory.get(key)
+        if credentials is None:
+            credentials = self._read_windows(key)
+        return credentials
+
     def remember(self, location, credentials, save=False):
         """資格情報を覚える。save=True なら資格情報マネージャーにも保存する"""
-        key = location.get_server_key()
+        key = location.get_account_key()
         with self._lock:
             self._memory[key] = credentials
         log.info("remember the credentials of %s (user: %s, saved: %s)" % (key, credentials.user, save))
@@ -380,15 +401,20 @@ class CredentialStore:
                 log.warning("Cannot save the credentials of %s: %s" % (key, err))
 
     def forget(self, location):
-        """覚えている資格情報を消す（パスワードが違っていたときに使う）"""
-        key = location.get_server_key()
-        log.info("forget the credentials of %s" % key)
-        with self._lock:
-            self._memory.pop(key, None)
-        try:
-            win32cred.CredDelete(_CREDENTIAL_PREFIX + key, win32cred.CRED_TYPE_GENERIC, 0)
-        except pywintypes.error:
-            pass  # 保存されていない
+        """覚えている資格情報を消す（パスワードが違っていたときに使う）。他のユーザーの資格情報は消さない"""
+        keys = [location.get_account_key()]
+        if location.user:
+            old = self._get_without_user(location)
+            if old is not None and old.user == location.user:
+                keys.append(location.get_server_key())
+        for key in keys:
+            log.info("forget the credentials of %s" % key)
+            with self._lock:
+                self._memory.pop(key, None)
+            try:
+                win32cred.CredDelete(_CREDENTIAL_PREFIX + key, win32cred.CRED_TYPE_GENERIC, 0)
+            except pywintypes.error:
+                pass  # 保存されていない
 
     def _read_windows(self, key):
         try:
@@ -897,14 +923,29 @@ class _FtpTls(_ConnectionMixin, ftplib.FTP_TLS):
         return conn, size
 
 
+# サーバーの key -> UTF-8 で読めなかったサーバーの文字コード。falcon を終了するまで覚える
+_ftp_encodings = {}
+
+
+def _close_quietly_ftp(ftp):
+    """ftplib の接続を閉じる。失敗してもよい"""
+    try:
+        ftp.close()
+    except (OSError, EOFError, ftplib.Error):
+        pass
+
+
 class _FtpClient(Client):
     """FTP・FTPS の接続"""
 
     def __init__(self, location, credentials):
         super().__init__(location)
         self._mlsd_supported = True
+        # LIST -a（. で始まる隠しファイルも返す）が使えるか。None はまだわからない
+        self._list_all_supported = None
         self._implicit = location.scheme == SCHEME_FTPS and location.port == IMPLICIT_FTPS_PORT
         self._pin = certificate_trust.get_pin(location) if location.scheme == SCHEME_FTPS else None
+        self._credentials = credentials
         self._ftp = self._open(credentials)
 
     def _make_context(self, verify=True):
@@ -948,10 +989,12 @@ class _FtpClient(Client):
 
     def _open(self, credentials):
         location = self.location
+        # 制御用の接続の読み込みは、接続するときの文字コードで行われるので、先に決めておく
+        encoding = _ftp_encodings.get(location.get_server_key(), "utf-8")
         if location.scheme == SCHEME_FTPS:
-            ftp = _FtpTls(self._implicit, self._pin, context=self._make_context(), timeout=_TIMEOUT, encoding="utf-8")
+            ftp = _FtpTls(self._implicit, self._pin, context=self._make_context(), timeout=_TIMEOUT, encoding=encoding)
         else:
-            ftp = _Ftp(timeout=_TIMEOUT, encoding="utf-8")
+            ftp = _Ftp(timeout=_TIMEOUT, encoding=encoding)
         if location.scheme == SCHEME_FTPS:
             log.info("%s: %s FTPS, certificate: %s" % (
                 location.get_server_key(), "implicit" if self._implicit else "explicit",
@@ -968,9 +1011,26 @@ class _FtpClient(Client):
         except (OSError, EOFError, ftplib.Error) as err:
             ftp.close()
             raise _connect_error(location, err)
-        try:
-            if location.scheme == SCHEME_FTPS and not self._implicit:
+        if location.scheme == SCHEME_FTPS and not self._implicit:
+            try:
                 ftp.auth()
+            except ftplib.error_perm as err:
+                # TLS に対応していないサーバーは、530（ログインしてください）を返すこともある。
+                # パスワードの誤りとして扱うと、パスワードを何度も尋ねることになる
+                ftp.close()
+                raise ConnectError(_("%(host)s は FTPS (AUTH TLS) に対応していません。\n(%(error)s)") % {
+                    "host": location.get_display_host(), "error": err}, "AUTH TLS is not supported: %s" % err)
+            except ssl.SSLCertVerificationError as err:
+                log.warning("cannot verify the certificate of %s: %s" % (location.get_server_key(), err))
+                ftp.close()
+                raise self._untrusted(err)
+            except _CertificateChanged as err:
+                ftp.close()
+                raise self._changed(err)
+            except (OSError, EOFError, ftplib.Error) as err:
+                ftp.close()
+                raise _connect_error(location, err)
+        try:
             if credentials is None:
                 user, password = (location.user or "anonymous"), ("" if location.user else "anonymous@")
                 if location.user:
@@ -1020,7 +1080,14 @@ class _FtpClient(Client):
             if self._ftp.encoding == "cp932":
                 raise RemoteError(_("ファイル名の文字コードを判別できません。"), "cannot decode the file name")
             log.info("switch the encoding to cp932: %s" % self.location.get_server_key())
-            self._ftp.encoding = "cp932"
+            # 読み込みの途中で失敗すると、サーバーの応答が残って接続の状態がわからなくなるので、つなぎ直す。
+            # 同じサーバーへの、この後の接続（転送用など）も cp932 にする
+            _ftp_encodings[self.location.get_server_key()] = "cp932"
+            old = self._ftp
+            _close_quietly_ftp(old)
+            self._ftp = self._open(self._credentials)
+            if getattr(func, "__self__", None) is old:
+                func = getattr(self._ftp, func.__name__)
             return self._call(func, *args)
         except ftplib.error_perm as err:
             # err はサーバーの応答
@@ -1074,11 +1141,36 @@ class _FtpClient(Client):
                 _parse_octal(facts.get("unix.mode")), is_link=is_link))
         return entries
 
+    def _read_list(self):
+        """
+        今のフォルダの LIST の行を返す。LIST は . で始まるファイルを返さないサーバーが多いので、LIST -a を試す。
+        -a をパスとして扱うサーバーもあるので、エラーか空になった場合は LIST で確かめる
+        """
+        if self._list_all_supported is not False:
+            lines = []
+            try:
+                self._ftp.retrlines("LIST -a", lines.append)
+            except (ftplib.error_perm, ftplib.error_temp) as err:
+                if str(err)[:3] not in ("450", "500", "501", "502", "504", "550"):
+                    raise
+                log.info("%s: LIST -a is not supported: %s" % (self.location.get_server_key(), err))
+                self._list_all_supported = False
+            else:
+                if lines or self._list_all_supported:
+                    self._list_all_supported = True
+                    return lines
+        lines = []
+        self._ftp.retrlines("LIST", lines.append)
+        if lines and self._list_all_supported is None:
+            # LIST -a が空で LIST に中身がある場合は、-a に対応していない
+            log.info("%s: LIST -a returned nothing, use LIST" % self.location.get_server_key())
+            self._list_all_supported = False
+        return lines
+
     def _list_list(self, path):
         # LIST に空白を含むパスを渡すと正しく扱えないサーバーがあるので、移動してから取得する
         self._ftp.cwd(path)
-        lines = []
-        self._ftp.retrlines("LIST", lines.append)
+        lines = self._read_list()
         entries = []
         for line in lines:
             entry = self._parse_list_line(path, line)
@@ -1572,7 +1664,7 @@ class SessionPool:
         func の途中で切れた場合はやり直さない（フォルダの作成などを2回実行しないため）。
         func が RemoteError 以外の例外（中止など）で終わった場合は、接続の状態がわからないので捨てる。
         """
-        key = location.get_server_key()
+        key = location.get_account_key()
         with self._lock:
             client, busy = self._sessions.get(key, (None, None))
         # 中止されて置き去りにしたスレッドが使っている場合は、別の接続を作る
@@ -1623,7 +1715,7 @@ class SessionPool:
 
     def discard(self, location, client=None):
         """接続を捨てる。client を指定した場合は、その接続を使っているときだけ捨てる"""
-        key = location.get_server_key()
+        key = location.get_account_key()
         with self._lock:
             current = self._sessions.get(key)
             if current is None or (client is not None and current[0] is not client):

@@ -13,6 +13,7 @@ import datetime
 import logging
 import os
 import re
+import tempfile
 import threading
 import time
 
@@ -46,6 +47,18 @@ def get_conflict_names():
         _("転送元が新しい場合のみ上書き"),
         _("レジューム（転送先が小さい場合）"),
     ]
+
+
+# 上書きするファイルを一時的に保存するときの、名前の末尾
+_PARTIAL_SUFFIX = ".falcon-part"
+
+
+def _remove_quietly(path):
+    """ファイルを消す。消せなくてもよい"""
+    try:
+        os.remove(path)
+    except OSError:
+        pass
 
 
 class DownloadItem:
@@ -603,7 +616,20 @@ class DownloadJob(TransferJob):
                 self._add_file(child_path, entry, child_local, files, True)
 
     def _transfer_file(self, f, on_progress):
-        self._client.download(f.source, f.destination, on_progress, f.offset)
+        if f.offset or not os.path.lexists(f.destination):
+            self._client.download(f.source, f.destination, on_progress, f.offset)
+        else:
+            # 上書きするときは、別の名前に保存してから入れ替える。失敗・中止しても元のファイルが残るようにする
+            handle, temporary = tempfile.mkstemp(
+                prefix="." + os.path.basename(f.destination)[:100] + ".", suffix=_PARTIAL_SUFFIX,
+                dir=os.path.dirname(f.destination))
+            os.close(handle)
+            try:
+                self._client.download(f.source, temporary, on_progress)
+                os.replace(temporary, f.destination)
+            except BaseException:
+                _remove_quietly(temporary)
+                raise
         mark_from_internet(f.destination, self._location.get_url(f.source, with_user=False))
 
     def _set_modified(self, f):
@@ -626,6 +652,9 @@ class UploadJob(TransferJob):
 
     def _plan(self):
         directory = self._request.location.path
+        if not directory:
+            # パスのない URL は、ログインしたときのフォルダ
+            directory = self._client.get_initial_path()
         # アップロード先のフォルダがなければ作る
         self._client.make_dirs(directory)
         existing = {entry.name: entry for entry in self._client.list_dir(directory)}
