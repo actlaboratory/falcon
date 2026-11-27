@@ -396,5 +396,9 @@ def testMenu(tab):
         if isinstance(i, browsableObjects.Drive):
             ret |= _remote_drive_refs if i.type == win32file.DRIVE_REMOTE else _local_drive_refs
 
+    # サーバーの一覧では、何も選んでいなくてもメニューを開ける（貼り付け・フォルダの作成など）
+    if count == 0 and isinstance(tab, tabs.remote_list.RemoteListTab):
+        ret.discard(menuItemsStore.getRef("EDIT_OPENCONTEXTMENU"))
+
     # 結果を返却
     return ret

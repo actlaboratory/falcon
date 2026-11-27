@@ -185,11 +185,11 @@ class RemoteListTab(base.FalconTabBase):
         request = remote_transfer.DeleteRequest(self.listObject.location, items)
         globalVars.app.main_window.operations.add(operation_manager.RemoteDeleteOperation(request))
 
-    def change_permissions(self, elems, mode):
-        """項目のパーミッションを変える"""
+    def change_permissions(self, elems, modes):
+        """項目のパーミッションを変える。modes は elems と同じ順の、新しいパーミッション"""
         def change(client):
             errors = []
-            for elem in elems:
+            for elem, mode in zip(elems, modes):
                 try:
                     client.chmod(elem.path, mode)
                 except remote_storage.ConnectError:
@@ -346,6 +346,15 @@ class RemoteListTab(base.FalconTabBase):
 
     # ---- 読み上げ ----
 
+    def GoToTopFile(self):
+        """先頭のファイルに移動する。フォルダが先に並んでいる"""
+        if self.listObject.files:
+            self.Focus(len(self.listObject.folders))
+            globalVars.app.say(_("先頭ファイル"))
+        else:
+            self.Focus(self.hListCtrl.GetItemCount() - 1)
+            globalVars.app.say(_("ファイルなし"))
+
     def ReadCurrentFolder(self):
         globalVars.app.say(_("現在は、%(host)sの %(folder)s") % {
             "host": self.listObject.location.get_display_host(), "folder": self._get_folder_name()}, interrupt=True)
@@ -386,7 +395,15 @@ class RemoteListTab(base.FalconTabBase):
                 "FILE_RENAME", "FILE_DELETE", "FILE_CHANGEATTRIBUTE", "FILE_MKDIR", "EDIT_FULLPATHCOPY",
                 "FILE_VIEW_DETAIL", "EDIT_UPDATEFILELIST", "TOOL_ADD_NETWORK_PLACE"]
         globalVars.app.main_window.menu.register_menu_command(menu, commands)
-        globalVars.app.main_window.PopupMenu(menu)
+        window = globalVars.app.main_window
+        index = self.GetFocusedItem()
+        if event is None and index >= 0:
+            # キーボードで開いた場合は、カーソルのある項目の位置に出す
+            rect = self.hListCtrl.GetItemRect(index, wx.LIST_RECT_LABEL)
+            window.PopupMenu(menu, window.ScreenToClient(self.hListCtrl.ClientToScreen(rect.GetBottomRight())))
+        else:
+            window.PopupMenu(menu)
+        menu.Destroy()
 
 
 def _download(client, task, path, local_path):

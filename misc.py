@@ -10,6 +10,7 @@ import socket
 import pythoncom
 import pywintypes
 import os
+import posixpath
 import re
 import threading
 import time
@@ -483,6 +484,12 @@ def isLink(path):
     return attrs & win32con.FILE_ATTRIBUTE_REPARSE_POINT != 0
 
 
+def _is_windows_path(path):
+    """ドライブ名（C: など）・UNC パス・空文字列（ドライブ一覧）かどうか"""
+    path = path.strip()
+    return path == "" or (len(path) >= 2 and path[1] == ":") or path.startswith("\\\\")
+
+
 def analyzeUserInputPath(path, parent="C:\\"):
     """
             ユーザが入力したパスを最適化
@@ -498,6 +505,16 @@ def analyzeUserInputPath(path, parent="C:\\"):
     if remote_storage.is_remote_url(path):
         # FTP・SFTP の URL は、Windows のパスとして整えない
         return path.strip()
+    if remote_storage.is_remote_url(parent) and not _is_windows_path(path):
+        # サーバーの一覧での相対パス（..、sub、/ など）は、同じサーバーのパスにする
+        try:
+            location = remote_storage.parse_url(parent)
+        except ValueError:
+            return None
+        relative = path.strip().replace("\\", "/")
+        base = location.path or "/"
+        return location.get_url(remote_storage.normalize_path(
+            relative if relative.startswith("/") else posixpath.join(base, relative)))
     if len(path) == 2 and path[0].upper(
     ) >= 'A' and path[0].upper() <= 'Z' and path[1] == ':':
         # アルファベット:はドライブルートと仮定

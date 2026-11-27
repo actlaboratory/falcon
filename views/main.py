@@ -121,6 +121,26 @@ def _menu_item(identifier: str, accessor_letter: str) -> viewkit.MenuItemDefinit
     return viewkit.MenuItemDefinition(identifier, name, accessor_letter)
 
 
+def _get_known_permissions(elem):
+    """項目のパーミッション。わからない場合は、フォルダなら 755、ファイルなら 644 とみなす"""
+    if elem.permissions is not None:
+        return elem.permissions
+    return 0o755 if isinstance(elem, browsableObjects.RemoteFolder) else 0o644
+
+
+def _find_focus_after_removal(old_paths, index, items):
+    """
+    カーソルのあった項目がなくなったときに、新しい一覧でカーソルを置く位置を返す。
+    元の位置の近くの項目を、上下に交互に探す。サーバーの一覧でも使えるように、ディスクではなく新しい一覧で確かめる
+    """
+    positions = {item.fullpath: i for i, item in enumerate(items)}
+    for distance in range(1, len(old_paths)):
+        for candidate in (index - distance, index + distance):
+            if 0 <= candidate < len(old_paths) and old_paths[candidate] in positions:
+                return positions[old_paths[candidate]]
+    return min(max(index, 0), len(items) - 1)
+
+
 class MainWindow(viewkit.MainWindow):
     def __init__(self, ctx: viewkit.ApplicationContext):
         self.app = globalVars.app
@@ -518,7 +538,7 @@ class MainWindow(viewkit.MainWindow):
             return
         if focused is not None and focused.fullpath not in {item.fullpath for item in items}:
             # カーソルのあった項目がなくなった
-            tab.Focus(min(tab._findFocusAfterDeletion(old_paths, index), len(items) - 1))
+            tab.Focus(_find_focus_after_removal(old_paths, index, items))
         for i, item in enumerate(items):
             if item.fullpath in selected:
                 tab.hListCtrl.Select(i)
@@ -1380,11 +1400,22 @@ class MainWindow(viewkit.MainWindow):
         focused = tab.GetFocusedElement()
         base = focused if focused in elems else elems[0]
         target = elems[0].basename if len(elems) == 1 else _("%(count)d項目") % {"count": len(elems)}
-        parameters = views.remote_permissions.RemotePermissionsParameters(target, base.permissions)
+        modes = [_get_known_permissions(elem) for elem in elems]
+        # パーミッションが違う項目をまとめて変える場合は、変えたビットだけを各項目に反映する
+        mixed = len(set(modes)) > 1
+        initial = _get_known_permissions(base)
+        parameters = views.remote_permissions.RemotePermissionsParameters(
+            target, base.permissions, initial, mixed)
         result = self.showSubWindow(views.remote_permissions.RemotePermissionsWindow, _("パーミッションの変更"), parameters)
         if result.code == wx.ID_CANCEL:
             return
-        tab.change_permissions(elems, result.user_object)
+        mode = result.user_object
+        if mixed:
+            added, removed = mode & ~initial, initial & ~mode
+            modes = [(item | added) & ~removed for item in modes]
+        else:
+            modes = [mode] * len(elems)
+        tab.change_permissions(elems, modes)
 
     def _on_activate(self, event):
         """ウィンドウがアクティブになった。開いて編集したサーバー上のファイルが変わっていれば、アップロードするか尋ねる"""

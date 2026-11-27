@@ -22,11 +22,15 @@ _BITS = [
 class RemotePermissionsParameters:
     """RemotePermissionsWindow に渡す値"""
 
-    def __init__(self, target, mode):
+    def __init__(self, target, mode, initial=0o644, mixed=False):
         # 対象の表示名（「a.txt」「3項目」など）
         self.target = target
         # 今のパーミッション。わからない場合は None
         self.mode = mode
+        # 最初に表示するパーミッション（わからない場合に使う）
+        self.initial = mode if mode is not None else initial
+        # パーミッションが違う複数の項目を変えるかどうか
+        self.mixed = mixed
 
 
 class RemotePermissionsWindow(viewkit.SubWindow):
@@ -36,11 +40,13 @@ class RemotePermissionsWindow(viewkit.SubWindow):
         super().__init__(parent, ctx, title, parameters)
         self._result = None
         # 特殊なビット（setuid など）は、数値で入力したときだけ変える
-        self._mode = parameters.mode if parameters.mode is not None else 0o644
+        self._mode = parameters.initial
         self._updating = False
         creator = self.creator.makeChild(wx.VERTICAL, 20, style=wx.ALL | wx.EXPAND, margin=20)
         message = _("対象: %(target)s") % {"target": parameters.target}
-        if parameters.mode is None:
+        if parameters.mixed:
+            message += "\n" + _("パーミッションが異なる項目を含みます。変更したビットだけを各項目に反映します。")
+        elif parameters.mode is None:
             message += "\n" + _("現在のパーミッション: 不明")
         creator.staticText(message)
         self.checks = []
