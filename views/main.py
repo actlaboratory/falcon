@@ -155,11 +155,7 @@ class MainWindow(viewkit.MainWindow):
         # メニューのrefは、falcon全体で使っている menuItemsStore で管理する
         self.window_ctx.ref_store = menuItemsStore.getStore()
 
-        title = ""
-        if ctypes.windll.shell32.IsUserAnAdmin():
-            title += "[" + _("管理者") + "]"
-        title += constants.APP_NAME
-        self.SetTitle(title)
+        self._update_title()
 
         self.menu = FalconMenu(self, KEYMAP_IDENTIFIER)
         self._add_user_command_keys()
@@ -451,6 +447,7 @@ class MainWindow(viewkit.MainWindow):
         self.active_tab = self.tabs[page_no]
         self.tab_ctrl.SetSelection(page_no)
         self._applyAcceleratorTable()
+        self._update_title()
         if trigger_on_reactivate:
             self.active_tab.onReactivate()
 
@@ -573,6 +570,20 @@ class MainWindow(viewkit.MainWindow):
         index = self.get_tab_index(self.active_tab)
         if index >= 0:
             self.tab_ctrl.SetPageText(index, self.active_tab.GetTabName())
+        self._update_title()
+
+    def _update_title(self):
+        """
+        ウィンドウのタイトルを「アクティブなタブの名前 - falcon」にする。
+        Windows 11 のエクスプローラーと同じく、どの場所を開いているウィンドウかがわかるようにする
+        """
+        title = constants.APP_NAME
+        if self.active_tab is not None:
+            title = "%s - %s" % (self.active_tab.GetTabName(), title)
+        if ctypes.windll.shell32.IsUserAnAdmin():
+            title = "[" + _("管理者") + "]" + title
+        if self.GetTitle() != title:
+            self.SetTitle(title)
 
     def _update_menu_state(self, new):
         # メニューの有効・無効を変更
